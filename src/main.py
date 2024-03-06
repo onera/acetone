@@ -20,7 +20,7 @@
 
 import argparse
 import numpy as np
-from src.neural_network import CodeGenerator_V1, CodeGenerator_V2, CodeGenerator_V3
+from src.code_generator import CodeGenerator_V1, CodeGenerator_V2, CodeGenerator_V3
 
 def main(model_file, test_dataset_file, function_name, nb_tests, version, output_dir):
 
