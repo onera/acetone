@@ -5,11 +5,11 @@ Predictable programming framework for ML applications in safety-critical systems
 
 ### Requirements 
 
-Before instaling ACETONE, install the packages listed in [*requirements.txt*](./requirements.txt)
+Before instaling ACETONE, install the packages listed in [`requirements.txt`](./requirements.txt)
 
-'''
-    pip install -r requirements.txt
-'''
+```
+pip install -r requirements.txt
+```
 
 ### Instalation
 
