@@ -27,7 +27,21 @@ pip install -r requirements.txt
 
 ## How to use it
 
-example of how to use ACETONE
+The following commands generate a test neural network before generating the corresponding C code using ACETONE.
+
+### Generating the neural network
+
+* Go to the *init* directory
+    `cd acetone/init`
+
+* Run the *initial_setup.py* code
+    `python3 initial_setup.py`
+
+This script defines a neural network with a Lenet-5 architecture using the framework Keras. It then save the model in *.h5* and *.json* files. The later one is created using a specific function, developped by us, to write the keras model in ACETONE's format. The scripts also creates a random input to test the neural network. Finally, the scripts saves and prints, as a reference, the output of the inference done by the Keras framework.
+
+### Generating the C code with ACETONE
+
+
 
 ## Tests
 
