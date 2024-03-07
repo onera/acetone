@@ -17,11 +17,16 @@ The folder [init](./init/) includes the source files creating the test files.
 The [src](./src/) folder contains the backend code of ACETONE.
 
 ## Istallation
-
-Firstly, install the packages listed in [`requirements.txt`](./requirements.txt)
+Clone the GitHub repo on your computer
 
 ```
-pip install -r requirements.txt
+git clone https://github.com/onera/acetone.git
+```
+
+Then install the packages listed in [`requirements.txt`](./requirements.txt)
+
+```
+pip install -r acetone/requirements.txt
 ```
 
 
@@ -81,8 +86,6 @@ make all
 * Compare the output given by Keras and ACETONE
 ```
 cd ../../../src
-```
-```
 python3 eval_semantic_preservation.py ../data/example/output_keras.txt ../data/example/v1/output_acetone.txt 1
 ```
 
@@ -98,17 +101,11 @@ To reproduce the result of semantic experiment with ACETONE as described in the 
 * For the acas_decr128 model
 ```
 cd acetone/src
-
 pyhton3 main.py ../data/acas_decr128/acas_decr128.json ../data/acas_decr128/test_input_acas_decr128.txt acas_decr128 1000 v1 ../output/acas_decr128/v1
-
 cd ../output/acas_decr128/v1
-
 make all
-
 ./acas_decr128 output_acetone.txt
-
 cd ../../../src
-
 python3 eval_semantic_preservation ../data/acas_decr128/output_keras.txt ../output/acas_decr128/v1/output_acetone.txt
 ```
 
@@ -116,17 +113,11 @@ python3 eval_semantic_preservation ../data/acas_decr128/output_keras.txt ../outp
 
 ```
 cd acetone/src
-
 pyhton3 main.py ../data/lenet5_trained/lenet5_trained.json ../data/lenet5_trained/test_input_lenet5.txt lenet5_trained 1000 v1 ../output/lenet5_trained/v1
-
 cd ../output/lenet5_trained/v1
-
 make all
-
 ./lenet5_trained output_acetone.txt
-
 cd ../../../src
-
 python3 eval_semantic_preservation ../data/lenet5_trained/output_keras.txt ../output/lenet5_trained/v1/output_acetone.txt
 ```
 
