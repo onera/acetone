@@ -83,32 +83,78 @@ make all
 cd ../../../src
 ```
 ```
-python3 eval_semantic_preservation.py ../data/example/output_keras.txt ../data/example/v1/output_acetone.txt
+python3 eval_semantic_preservation.py ../data/example/output_keras.txt ../data/example/v1/output_acetone.txt 1
 ```
 
 
 ## Tests
 
+
+
 ## Reproduce the paper's experiments
 
-describe how to reproduce the paper's experiments
+To reproduce the result of semantic experiment with ACETONE as described in the paper, use the following commands:
+
+* For the acas_decr128 model
+```
+cd acetone/src
+```
+```
+pyhton3 main.py ../data/acas_decr128/acas_decr128.json ../data/acas_decr128/test_input_acas_decr128.txt acas_decr128 1000 v1 ../output/acas_decr128/v1
+```
+```
+cd ../output/acas_decr128/v1
+```
+```
+make all
+```
+```
+./acas_decr128 output_acetone.txt
+```
+```
+cd ../../../src
+```
+```
+python3 eval_semantic_preservation ../data/acas_decr128/output_keras.txt ../output/acas_decr128/v1/output_acetone.txt
+```
+
+* For the lent5 model
+
+```
+cd acetone/src
+```
+```
+pyhton3 main.py ../data/lenet5_trained/lenet5_trained.json ../data/lenet5_trained/test_input_lenet5.txt lenet5_trained 1000 v1 ../output/lenet5_trained/v1
+```
+```
+cd ../output/lenet5_trained/v1
+```
+```
+make all
+```
+```
+./lenet5_trained output_acetone.txt
+```
+```
+cd ../../../src
+```
+```
+python3 eval_semantic_preservation ../data/lenet5_trained/output_keras.txt ../output/lenet5_trained/v1/output_acetone.txt
+```
 
 ## Capability
 
 As of the 07/03/2024, the framework can generate code for neural network meeting the following condition:
 
 * The neural network is Sequential and Feedforward
-
-* It's layers are amongst the following:
+* Its layers are amongst the following:
   * Dense
   * Convolutional
   * Pooling
-  * Softmax
 
-* It's activation layers are amongst the following:
+* Its activation layers are amongst the following:
   * Linear
   * Tanh
   * ReLu
   * Sigmoid
-
-
+  * Softmax
