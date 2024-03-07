@@ -1,4 +1,4 @@
-# acetone
+# ACETONE
 Predictable programming framework for ML applications in safety-critical systems.
 
 ## Code architecture
@@ -25,7 +25,7 @@ pip install -r requirements.txt
 ```
 
 
-## How to use it
+## Code Generation
 
 The following commands generate a test neural network before generating the corresponding C code using ACETONE.
 
@@ -45,6 +45,46 @@ This script defines a neural network with a Lenet-5 architecture using the frame
 
 ### Generating the C code with ACETONE
 
+Then, generate the C code with ACETONE.
+
+* Go to the framework's directory
+```
+cd ../src
+```
+
+* Call ACETONE with the following arguments:
+  * The JSON file describing the model
+  * The input file with the test data
+  * The name of the function to generate (here 'lenet5')
+  * The number of test to run (here 1)
+  * The version to use ('v1', 'v2' or 'v3')
+  * The directory in which the code will be generated
+
+For the first version
+```
+python3 main.py ../data/example/lenet5.json ../data/example/test_input_lenet5.txt lenet5 1 v1 ../data/example/v1
+```
+
+* Compile the code
+```
+cd ../data/example/v1
+```
+```
+make all
+```
+
+* Execute the file with the path to the directory of the output file as argument
+```
+./lenet5 output_acetone.txt
+```
+
+* Compare the output given by Keras and ACETONE
+```
+cd ../../../src
+```
+```
+python3 eval_semantic_preservation.py ../data/example/output_keras.txt ../data/example/v1/output_acetone.txt
+```
 
 
 ## Tests

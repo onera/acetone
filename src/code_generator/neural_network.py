@@ -23,8 +23,8 @@ import json
 import numpy as np
 from pathlib import Path
 from itertools import islice
-from src.activation_functions import Linear, ReLu, Sigmoid, TanH
-from src.layers import AveragePooling2D, MaxPooling2D, InputLayer, Dense, Conv2D, Softmax
+from src.code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
+from src.code_generator.layers import AveragePooling2D, MaxPooling2D, InputLayer, Dense, Conv2D, Softmax
 from abc import ABC, abstractmethod
 
 class CodeGenerator(ABC):
