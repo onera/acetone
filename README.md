@@ -95,5 +95,20 @@ describe how to reproduce the paper's experiments
 
 ## Capability
 
-which type of CNN can be deal with
+As of the 07/03/2024, the framework can generate code for neural network meeting the following condition:
+
+* The neural network is Sequential and Feedforward
+
+* It's layers are amongst the following:
+  * Dense
+  * Convolutional
+  * Pooling
+  * Softmax
+
+* It's activation layers are amongst the following:
+  * Linear
+  * Tanh
+  * ReLu
+  * Sigmoid
+
 
