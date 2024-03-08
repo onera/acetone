@@ -14,6 +14,8 @@ The [data](./data/) folder contains the generated test files.
 
 The folder [init](./init/) includes the source files creating the test files.
 
+The [test](./test/) directory includes several tests for the framework (currently empty).
+
 The [src](./src/) folder contains the backend code of ACETONE.
 
 ## Istallation
@@ -128,8 +130,9 @@ As of the 07/03/2024, the framework can generate code for neural network meeting
 * The neural network is Sequential and Feedforward
 * Its layers are amongst the following:
   * Dense
-  * Convolutional
-  * Pooling
+  * Convolutional (Conv2D)
+  * Pooling (AveragePooling2D, MaxPooling2D)
+  * Flatten
 
 * Its activation layers are amongst the following:
   * Linear
@@ -137,3 +140,7 @@ As of the 07/03/2024, the framework can generate code for neural network meeting
   * ReLu
   * Sigmoid
   * Softmax
+
+## License
+
+The project is under the GNU Lesser General Public License as published by the Free Software Foundation ; either version 3 of  the License or (at your option) any later version.
