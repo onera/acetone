@@ -1,6 +1,10 @@
 # ACETONE
 Predictable programming framework for ML applications in safety-critical systems.
 
+This repo contains the code of the framework presented in the ECRTS'22 paper  "ACETONE: Predictable programming framework for ML applications in safety-critical systems".
+
+This framework aims at, for a given neural network, generate a C code corresponding to this neural network to later imbed it on a critical system.
+
 ## Code architecture
 
 You'll find in the home directory the files regarding the licencing and copyright of the framework:
@@ -94,7 +98,8 @@ python3 eval_semantic_preservation.py ../data/example/output_keras.txt ../data/e
 
 ## Tests
 
-
+No tests are implemented yet. 
+This service will be provided soon.
 
 ## Reproduce the paper's experiments
 
