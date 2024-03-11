@@ -3,7 +3,8 @@ Predictable programming framework for ML applications in safety-critical systems
 
 This repo contains the code of the framework presented in the ECRTS'22 paper  "ACETONE: Predictable programming framework for ML applications in safety-critical systems".
 
-This framework aims at, for a given neural network, generate a C code corresponding to this neural network to later imbed it on a critical system.
+This framework generate a C code corresponding to a neural network given as input.
+
 
 ## Code architecture
 
@@ -14,11 +15,7 @@ You'll find in the home directory the files regarding the licencing and copyrigh
 
 This directory also contains the [requirements.txt](./requirements.txt) which list the package versionning used in the framework.
 
-The [data](./data/) folder contains the generated test files.
-
-The folder [init](./init/) includes the source files creating the test files.
-
-The [test](./test/) directory includes several tests for the framework (currently empty).
+The [test](./test/) directory includes several tests for the framework and the data to run them..
 
 The [src](./src/) folder contains the backend code of ACETONE.
 
@@ -44,7 +41,7 @@ The following commands generate a test neural network before generating the corr
 
 * Go to the *init* directory
 ```
-cd acetone/init
+cd acetone/src/format_importer/initial_setup.py
 ```
 
 * Run the *initial_setup.py* code
@@ -73,12 +70,12 @@ cd ../src
 
 For the first version
 ```
-python3 main.py ../data/example/lenet5.json ../data/example/test_input_lenet5.txt lenet5 1 v1 ../data/example/v1
+python3 main.py ../test/data/example/lenet5.json ../test/data/example/test_input_lenet5.txt lenet5 1 v1 ../test/data/example/v1
 ```
 
 * Compile the code
 ```
-cd ../data/example/v1
+cd ../test/data/example/v1
 ```
 ```
 make all
@@ -92,13 +89,13 @@ make all
 * Compare the output given by Keras and ACETONE
 ```
 cd ../../../src
-python3 eval_semantic_preservation.py ../data/example/output_keras.txt ../data/example/v1/output_acetone.txt 1
+python3 eval_semantic_preservation.py ../tets/data/example/output_keras.txt ../test/data/example/v1/output_acetone.txt 1
 ```
 
 
 ## Tests
 
-No tests are implemented yet. 
+No tests are implemented yet.
 This service will be provided soon.
 
 ## Reproduce the paper's experiments
@@ -108,24 +105,24 @@ To reproduce the result of semantic experiment with ACETONE as described in the 
 * For the acas_decr128 model
 ```
 cd acetone/src
-pyhton3 main.py ../data/acas_decr128/acas_decr128.json ../data/acas_decr128/test_input_acas_decr128.txt acas_decr128 1000 v1 ../output/acas_decr128/v1
+pyhton3 main.py ../test/data/acas_decr128/acas_decr128.json ../test/data/acas_decr128/test_input_acas_decr128.txt acas_decr128 1000 v1 ../output/acas_decr128/v1
 cd ../output/acas_decr128/v1
 make all
 ./acas_decr128 output_acetone.txt
 cd ../../../src
-python3 eval_semantic_preservation ../data/acas_decr128/output_keras.txt ../output/acas_decr128/v1/output_acetone.txt
+python3 eval_semantic_preservation ../test/data/acas_decr128/output_keras.txt ../output/acas_decr128/v1/output_acetone.txt
 ```
 
 * For the lent5 model
 
 ```
 cd acetone/src
-pyhton3 main.py ../data/lenet5_trained/lenet5_trained.json ../data/lenet5_trained/test_input_lenet5.txt lenet5_trained 1000 v1 ../output/lenet5_trained/v1
+pyhton3 main.py ../test/data/lenet5_trained/lenet5_trained.json ../test/data/lenet5_trained/test_input_lenet5.txt lenet5_trained 1000 v1 ../output/lenet5_trained/v1
 cd ../output/lenet5_trained/v1
 make all
 ./lenet5_trained output_acetone.txt
 cd ../../../src
-python3 eval_semantic_preservation ../data/lenet5_trained/output_keras.txt ../output/lenet5_trained/v1/output_acetone.txt
+python3 eval_semantic_preservation ../test/data/lenet5_trained/output_keras.txt ../output/lenet5_trained/v1/output_acetone.txt
 ```
 
 ## Capability
@@ -133,6 +130,11 @@ python3 eval_semantic_preservation ../data/lenet5_trained/output_keras.txt ../ou
 As of the 07/03/2024, the framework can generate code for neural network meeting the following condition:
 
 * The neural network is Sequential and Feedforward
+
+* The neural-network is describeb in one of the following formats:
+  * JSON (specifique decription mad efor the framework. Confer to the file [JSON_from_keras_model.py](./src/format_importer/JSON_importer/JSON_from_keras_model.py))
+  * NNET (by transforming the format into a JSON description)
+
 * Its layers are amongst the following:
   * Dense
   * Convolutional (Conv2D)
@@ -149,3 +151,4 @@ As of the 07/03/2024, the framework can generate code for neural network meeting
 ## License
 
 The project is under the GNU Lesser General Public License as published by the Free Software Foundation ; either version 3 of  the License or (at your option) any later version.
+See LICENSE for details.
