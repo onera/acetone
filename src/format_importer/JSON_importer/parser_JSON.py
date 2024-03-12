@@ -95,6 +95,7 @@ def load_json(file_to_parse):
             elif layer['class_name'] == 'Flatten':
                 nb_flatten_layers = 1
                 continue
+            
             else:
                 raise TypeError("Error: layer"+layer['class_name']+" not supported\n")
             

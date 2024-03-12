@@ -20,8 +20,9 @@
 
 
 import numpy as np
-import src.code_generator.layers as layers
 import onnx
+
+import src.code_generator.layers as layers
 import src.code_generator.activation_functions as activation_functions
 
 ###### Utility functions ######
