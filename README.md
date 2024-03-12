@@ -41,7 +41,7 @@ The following commands generate a test neural network before generating the corr
 
 * Go to the *example* directory
 ```
-cd acetone/src/format_importer/initial_setup.py
+cd acetone/test/example/
 ```
 
 * Run the *initial_setup.py* code
