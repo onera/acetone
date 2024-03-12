@@ -15,7 +15,7 @@ You'll find in the home directory the files regarding the licencing and copyrigh
 
 This directory also contains the [requirements.txt](./requirements.txt) which list the package versionning used in the framework.
 
-The [test](./test/) directory includes several tests for the framework and the data to run them..
+The [test](./test/) directory includes several tests for the framework and the data to run them. It also contains a [example](./test/example/) used for the example describeb below.
 
 The [src](./src/) folder contains the backend code of ACETONE.
 
@@ -39,7 +39,7 @@ The following commands generate a test neural network before generating the corr
 
 ### Generating the neural network
 
-* Go to the *init* directory
+* Go to the *example* directory
 ```
 cd acetone/src/format_importer/initial_setup.py
 ```
@@ -69,12 +69,12 @@ cd ../src
 
 For the first version
 ```
-python3 main.py ../test/data/example/lenet5.json ../test/data/example/test_input_lenet5.txt lenet5 1 ../test/data/example
+python3 main.py ../test/example/lenet5.json ../test/example/test_input_lenet5.txt lenet5 1 ../test/example/lenet5_generated
 ```
 
 * Compile the code
 ```
-cd ../test/data/example
+cd ../test/example/lenet5_generated
 ```
 ```
 make all
@@ -88,7 +88,7 @@ make all
 * Compare the output given by Keras and ACETONE
 ```
 cd ../../../src
-python3 eval_semantic_preservation.py ../tets/data/example/output_keras.txt ../test/data/example/output_acetone.txt 1
+python3 eval_semantic_preservation.py ../tets/example/output_keras.txt ../test/example/lenet5_generated/output_acetone.txt 1
 ```
 
 
@@ -104,24 +104,24 @@ To reproduce the result of semantic experiment with ACETONE as described in the 
 * For the acas_decr128 model
 ```
 cd acetone/src
-pyhton3 main.py ../test/data/acas_decr128/acas_decr128.json ../test/data/acas_decr128/test_input_acas_decr128.txt acas_decr128 1000 ../output/acas_decr128
-cd ../output/acas_decr128
+pyhton3 main.py ../test/data/acas_decr128/acas_decr128.json ../test/data/acas_decr128/test_input_acas_decr128.txt acas_decr128 1000 ../test/data/output/acas_decr128
+cd ../test/data/output/acas_decr128
 make all
 ./acas_decr128 output_acetone.txt
-cd ../../../src
-python3 eval_semantic_preservation ../test/data/acas_decr128/output_keras.txt ../output/acas_decr128/output_acetone.txt
+cd ../../../../src
+python3 eval_semantic_preservation ../test/data/acas_decr128/output_keras.txt ../test/data/output/acas_decr128/output_acetone.txt
 ```
 
 * For the lent5 model
 
 ```
 cd acetone/src
-pyhton3 main.py ../test/data/lenet5_trained/lenet5_trained.json ../test/data/lenet5_trained/test_input_lenet5.txt lenet5_trained 1000  ../output/lenet5_trained
-cd ../output/lenet5_trained
+pyhton3 main.py ../test/data/lenet5_trained/lenet5_trained.json ../test/data/lenet5_trained/test_input_lenet5.txt lenet5_trained 1000  ../test/data/output/lenet5_trained
+cd ../test/data/output/lenet5_trained
 make all
 ./lenet5_trained output_acetone.txt
-cd ../../../src
-python3 eval_semantic_preservation ../test/data/lenet5_trained/output_keras.txt ../output/lenet5_trained/output_acetone.txt
+cd ../../../../src
+python3 eval_semantic_preservation ../test/data/lenet5_trained/output_keras.txt ../test/data/output/lenet5_trained/output_acetone.txt
 ```
 
 ## Capability
