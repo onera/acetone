@@ -17,6 +17,7 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+
 import keras
 
 from JSON_importer.parser_JSON import load_json
@@ -39,24 +40,32 @@ def parser(file_to_parse):
 
     if("json" in  file_to_parse[-4:]):
         return load_json(file_to_parse)
+    
     elif("onnx" in file_to_parse[-4:]):
         return load_onnx(file_to_parse)
+    
     elif("h5" in file_to_parse[-4:]):
         keras.models.load_model(file_to_parse)
+
         print("Creating the .json file...\n")
         new_path = get_path(file_to_parse,"json")
         JSON_from_keras_model(model, new_path)
         print("File created")
+
         return load_json(new_path)
+    
     elif("nnet" in file_to_parse[-4:]):
         print("Creating the .h5 model...\n")
         model = nnet_to_h5(file_to_parse)
         print("Model created.\n")
+
         print("Creating the .json file...\n")
         new_path = get_path(file_to_parse,"json")
         JSON_from_keras_model(model, new_path)
         print("File created")
+
         return load_json(new_path)
+    
     else:
         print("\nError: model description ."+file_to_parse[-4:]+" not supported")
-        return None
+        raise TypeError("Error: model description ."+file_to_parse[-4:]+" not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")

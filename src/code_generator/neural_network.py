@@ -22,7 +22,7 @@ import os
 import numpy as np
 from pathlib import Path
 from abc import ABC
-from src.format_importer.JSON_importer.parser_JSON import load_json
+from src.format_importer.parser import parser
 
 class CodeGenerator(ABC):
 
@@ -33,7 +33,7 @@ class CodeGenerator(ABC):
         self.function_name = function_name
         self.nb_tests = nb_tests
 
-        l, dtype, dtype_py = load_json(self.json_file)
+        l, dtype, dtype_py = parser(self.json_file)
         self.layers = l
         self.data_type = dtype
         self.data_type_py = dtype_py
