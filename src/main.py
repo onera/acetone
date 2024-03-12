@@ -22,12 +22,13 @@ import argparse
 import numpy as np
 from src.code_generator.neural_network import CodeGenerator
 
-def main(model_file, test_dataset_file, function_name, nb_tests, version, output_dir):
+def main(model_file, test_dataset_file, function_name, nb_tests, output_dir):
 
     print("CODE GENERATOR FOR NEURAL NETWORKS")
 
     net = CodeGenerator(json_file = model_file, test_dataset_file = test_dataset_file, function_name = function_name, nb_tests = nb_tests)
     net.generate_c_files(output_dir)
+    # net.compute_inference(output_dir)
 
     
 if __name__ == "__main__":

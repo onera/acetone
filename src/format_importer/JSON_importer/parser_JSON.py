@@ -38,9 +38,9 @@ def create_actv_function_obj(activation_str):
         elif activation_str == 'softmax':
             return Softmax()
 
-def load_json(json_file):
+def load_json(file_to_parse):
         
-        file = open(json_file, 'r')
+        file = open(file_to_parse, 'r')
         model = json.load(file)
 
         data_type = model['config']['layers'][0]['config']['dtype']
