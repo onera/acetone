@@ -18,8 +18,8 @@
  ******************************************************************************
 """
 import onnx
-from create_layer import *
-from src.graph.graph_interpretor import tri_topo
+from format_importer.ONNX_importer.create_layer import *
+from graph.graph_interpretor import tri_topo
 
 def load_onnx(file_to_parse):
     #Loading the model and adding value_info if it's not already in it 

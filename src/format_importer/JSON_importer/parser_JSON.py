@@ -22,8 +22,10 @@ import json
 from itertools import islice
 import numpy as np
 
-from src.code_generator.layers import InputLayer, Dense, Conv2D, AveragePooling2D, MaxPooling2D, Softmax
-from src.code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
+import graph.graph_interpretor as graph
+
+from code_generator.layers import InputLayer, Dense, Conv2D, AveragePooling2D, MaxPooling2D, Softmax
+from code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
 
 def create_actv_function_obj(activation_str):
 
@@ -113,8 +115,11 @@ def load_json(file_to_parse):
                 l_temp = current_layer
                 layers.append(current_layer)
 
+        layers, listRoad, maxRoad, dict_cst = graph.tri_topo(layers)
+        layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
         print("Finished model initialization.")    
-        return layers, data_type, data_type_py
+        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst
+
 
 def create_actv_function_obj(activation_str):
 

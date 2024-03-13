@@ -19,11 +19,10 @@
 """
 
 import keras
-
-from JSON_importer.parser_JSON import load_json
-from ONNX_importer.parser_ONNX import load_onnx
-from NNET_importer.load_acas import nnet_to_h5
-from H5_importer.JSON_from_keras_model import JSON_from_keras_model
+from format_importer.JSON_importer.parser_JSON import load_json
+from format_importer.ONNX_importer.parser_ONNX import load_onnx
+from format_importer.NNET_importer.load_acas import nnet_to_h5
+from format_importer.H5_importer.JSON_from_keras_model import JSON_from_keras_model
 
 def get_path(file, new_type):
     new_path = ""

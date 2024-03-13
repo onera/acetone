@@ -39,7 +39,7 @@ class Layers(ABC):
         super().__init__()
 
     @abstractmethod
-    def write_to_layer_c_files(self):
+    def write_to_function_source_file(self):
         pass
 
     @abstractmethod
@@ -95,13 +95,13 @@ class Layers(ABC):
             output_str = 'cst_'+str(dict_cst[self])
         #Or it can directly go to the next layer
         else:
-            output_str = 'output_pre_'+str(self.road)
+            output_str = 'output_'+str(self.road)
         self.output_str = output_str
         return self
 
     def write_activation_and_fusion(self, source_file, output_str, indice, temp_str, space):
         #Allow to have both a fusion (ex: add) and an activation (ex: relu)
-        a = self.activation_function.write_activation_str(output_str)
+        a = self.activation_function.write_activation_str(temp_str)
         #if there is a fusion, we must deal with it
         if(self.fused_layer):
             #if the activation function is anything beside linear, we compute it before the fusion.
@@ -132,7 +132,7 @@ class InputLayer(Layers):
 
     def feedforward(self, input):
         
-        return input
+        return input 
 
 
 class Dense(Layers):
@@ -163,7 +163,8 @@ class Dense(Layers):
         source_file.write( '            dotproduct += '+output_str+'[j] * weights_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[(j + ' + str(self.previous_layer[0].size) + '*i)];\n        }\n')
         source_file.write( '        dotproduct += biases_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[i];\n')
         
-        self.write_activation_and_fusion(source_file, 'output_'+str(self.road)+'[i]', 'i', self.local_var,'        ')
+        self.write_activation_and_fusion(source_file, 'tensor_temp[i]', 'i', self.local_var,'        ')
+        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n\n')
 
     def feedforward(self, input):
 
@@ -171,7 +172,7 @@ class Dense(Layers):
 
         return self.activation_function.compute((np.dot(input, self.weights) + self.biases))
 
-      
+
 class Conv2D(Layers):
     
     def __init__(self, idx, conv_algorithm, data_format, size, padding, strides, kernel_h, kernel_w, dilation_rate, nb_filters, input_shape, output_shape, weights, biases, activation_function):
@@ -210,6 +211,326 @@ class Conv2D(Layers):
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)
         self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(self.padding,self.input_height, self.input_width, self.kernel_h, self.kernel_w, self.strides, self.dilation_rate)
+    
+    @abstractmethod
+    def write_to_function_source_file(self, source_file):
+        pass
+
+    def feedforward(self, input):
+        # Conv for chw
+        if(self.data_format == 'channels_last'):
+            input = input.reshape(self.input_height, self.input_width, self.input_channels)
+            input= np.transpose(input,(2,0,1))
+            
+        elif(self.data_format == 'channels_first'):
+            input = input.reshape(self.input_channels, self.input_height, self.input_width)
+        
+        output = np.zeros((self.nb_filters, self.output_height, self.output_width))
+        print(self.weights.shape)
+
+        if self.pad_right and self.pad_left and self.pad_top and self.pad_bottom:
+            input_padded = np.zeros((self.input_channels, self.input_height + self.pad_top + self.pad_bottom, self.input_width + self.pad_left + self.pad_right))
+            input_padded[:, self.pad_top:-self.pad_bottom, self.pad_left:-self.pad_right] = input
+        else:
+            input_padded = input
+            
+        for f in range(self.nb_filters):
+            for i in range(self.output_height):
+                for j in range(self.output_width):
+                        output[f,i,j]=np.sum(input_padded[:, i*self.strides:i*self.strides+self.kernel_h, j*self.strides:j*self.strides+self.kernel_w] 
+                                            * self.weights[:,:,:,f]) + self.biases[f]
+        if(self.data_format == 'channels_last'):
+            output= np.transpose(output,(1,2,0))
+        return self.activation_function.compute(output)
+
+class Conv2D_6loops(Conv2D):
+    """Implements Conv2D using the six-loops algorithm (direc conv)"""
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+   
+    def write_to_function_source_file(self, source_file):
+        output_str = self.previous_layer[0].output_str
+        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
+        source_file.write('    for (int f = 0; f < ' + str(self.nb_filters) + '; ++f)\n    {\n')
+        source_file.write('        for (int i = 0; i < '+str(self.output_height)+'; ++i)\n        {\n')
+        source_file.write('            for (int j = 0; j < '+str(self.output_width)+'; ++j)\n            {\n')
+        source_file.write('                sum = 0;\n')
+        source_file.write('                for (int c = 0; c < '+str(self.input_channels)+'; ++c)\n                {\n')
+        source_file.write('                    for (int m = 0; m < '+str(self.kernel_h)+'; ++m)\n                    {\n')
+        source_file.write('                        for (int n = 0; n < '+str(self.kernel_w)+'; ++n)\n                        {\n')
+        source_file.write('                            int ii = i*'+str(self.strides)+' + m*'+str(self.dilation_rate)+' - '+str(self.pad_left)+';\n')
+        source_file.write('                            int jj = j*'+str(self.strides)+' + n*'+str(self.dilation_rate)+' - '+str(self.pad_top)+';\n\n')
+        source_file.write('                            if (ii >= 0 && ii < '+str(self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n                            {\n')
+        
+        source_file.write('                                sum += '+output_str+'[jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)] * weights_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[n + '+str(self.kernel_w)+'*(m + '+str(self.kernel_h)+'*(c + '+str(self.input_channels)+'*f))];\n')
+        source_file.write('                            }\n                        }\n                    }\n                }\n')                                            
+        source_file.write('                sum += biases_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[f];\n'            )
+        
+        a = self.activation_function.write_activation_str(self.local_var)
+        
+        if(self.fused_layer):
+            b=self.fused_layer.write_activation_str(self.local_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)')
+            if(self.activation_function.name != 'linear'):
+                source_file.write('                '+self.local_var+' = '+a+';\n')
+            source_file.write('                output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)] = '+ b +';\n')
+        else:
+            source_file.write('                output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)] = '+ a +';\n')
+        source_file.write('            }\n        }\n    }\n\n')
+
+class Conv2D_gemm(Conv2D):
+    """Implements Conv2D using indirect im2col (or im2row) and GeMM"""
+   
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        
+        self.patches_height = self.input_channels * self.kernel_h * self.kernel_w
+        self.patches_width = self.output_height * self.output_width
+        self.patches_size = self.patches_height * self.patches_width
+
+        self.conv_algorithm = self.conv_algorithm[-7:]
+        self.algo_gemm_mapping = { 'gemm_nn' : self.write_gemm_nn,
+                                   'gemm_nt' : self.write_gemm_nt,
+                                   'gemm_tn' : self.write_gemm_tn,
+                                   'gemm_tt' : self.write_gemm_tt}
+
+   
+    @abstractmethod
+    def write_gemm_nn(self, m, n, k, A, B, C):
+        pass
+
+    @abstractmethod
+    def write_gemm_nt(self, m, n, k, A, B, C):
+        pass
+    
+    @abstractmethod
+    def write_gemm_tn(self, m, n, k, A, B, C):
+        pass
+
+    @abstractmethod
+    def write_gemm_tt(self, m, n, k, A, B, C):
+       pass
+
+class Conv2D_indirect_gemm(Conv2D_gemm):
+    """Implements Conv2D using indirect im2col (or im2row) and GeMM"""
+   
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def create_ppatches(self):
+        if (self.pad_right or self.pad_left or self.pad_bottom or self.pad_top):
+            self.input_h_padded = self.input_height + self.pad_top + self.pad_bottom
+            self.input_w_padded = self.input_width + self.pad_left + self.pad_right
+
+            start_idx = np.arange(self.kernel_h)[:,None]*self.input_w_padded + np.arange(self.kernel_w)
+            c=self.input_h_padded*self.input_w_padded*np.arange(self.input_channels)
+            start_idx=(c[:,None]+start_idx.ravel()).reshape((-1,self.kernel_h,self.kernel_w))
+            offset_idx = np.arange(self.output_height, step=self.strides)[:,None]*self.input_w_padded + np.arange(self.output_width, step=self.strides)
+            idx_padded_input = (start_idx.ravel()[:,None] + offset_idx.ravel()).flatten()
+
+            idx_of_zeros = []
+            j_zeros = np.concatenate((np.arange(self.pad_left), np.arange(self.pad_right)+(self.input_w_padded-self.pad_right)))
+            i_zeros = np.concatenate((np.arange(self.pad_top), np.arange(self.pad_bottom)+(self.input_h_padded-self.pad_bottom)))
+            for c in range(self.input_channels):
+                for i in range(self.input_h_padded):
+                    for j in range(self.input_w_padded):
+                        if (np.isin(i, i_zeros) or np.isin(j, j_zeros)):
+                            idx_of_zeros.append(j + self.input_w_padded*(i+self.input_h_padded*c))
+            
+            idx_padded_input = np.where(np.isin(idx_padded_input, idx_of_zeros), np.nan, idx_padded_input)
+            _, idx_padded_input = np.unique(idx_padded_input, return_inverse=True) 
+            self.ppatches=np.where(idx_padded_input==self.input_shape, np.nan, idx_padded_input)
+
+        else:
+            start_idx = np.arange(self.kernel_h)[:,None]*self.input_width + np.arange(self.kernel_w)
+            c=self.input_height*self.input_width*np.arange(self.input_channels)
+            start_idx=(c[:,None]+start_idx.ravel()).reshape((-1,self.kernel_h,self.kernel_w))
+            offset_idx = np.arange(self.output_height, step=self.strides)[:,None]*self.input_width + np.arange(self.output_width, step=self.strides)
+            self.ppatches = (start_idx.ravel()[:,None] + offset_idx.ravel()).flatten()
+            
+        if ('gemm_nt' or 'gemm_tt') in self.conv_algorithm:
+            self.ppatches = self.ppatches.reshape((self.patches_height, self.patches_width)).transpose().flatten()  
+  
+        
+        output_str = self.previous_layer[0].output_str
+        if('output' in output_str):
+            output_str = 'tensor_temp'
+        
+        s = '\n        {'
+        for i in range(len(self.ppatches)):
+            if np.isnan(self.ppatches[i]):
+                s += '&zero, '
+            else:
+                s += '&'+output_str+'[' + str(int(self.ppatches[i])) + '], '
+
+        s=s[:-2]
+        s+='}'
+
+        return s
+
+    def write_gemm_nn(self, m, n, k, A, B, C, ):
+
+        self.m = m
+        self.n = n
+        self.k = k
+        self.A = A
+        self.ldA = k
+        self.B = B
+        self.ldB = n
+        self.C = C
+        self.ldC = n
+        a = self.activation_function.write_activation_str('output')
+
+        s = '    // gemm_nn\n'
+        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
+        s+= '        for (int p=0; p<'+str(self.k)+'; ++p){\n'
+        s+= '            register float weight = '+str(self.A)+'[i*'+str(self.ldA)+'+p];\n'
+        s+= '            for(int j=0; j<'+str(self.n)+'; ++j){\n'
+        s+= '                tensor_temp[i*'+str(self.ldC)+' + j] += weight * *('+str(self.B)+'[p*'+str(self.ldB)+' + j]);\n'
+        s+= '            }\n'
+        s+= '        }\n'
+        s+= '        for(int j=0; j<'+str(self.n)+'; ++j){\n'
+        s+= '            register float output = tensor_temp[i*'+str(self.ldC)+' + j];\n'
+        s+= '            output += biases_' + self.name + '_' + str('{:02d}'.format(self.idx))+'[i];\n'
+
+        if(self.fused_layer):
+            b=self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')
+            if(self.activation_function.name != 'linear'):
+                s+= '            output = '+a+';\n'
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+b+';\n'
+        else:
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
+        s+= '        }\n'
+        s+= '    }\n\n'
+        
+        return s
+    
+    def write_gemm_nt(self, m, n, k, A, B, C):
+
+        self.m = m
+        self.n = n
+        self.k = k
+        self.A = A
+        self.ldA = k
+        self.B = B
+        self.ldB = k
+        self.C = C
+        self.ldC = n
+        a = self.activation_function.write_activation_str('output')
+
+        s = '    // gemm_nt\n'
+        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
+        s+= '       for(int j=0; j<'+str(self.n)+'; ++j){\n'
+        s+= '           register float output = 0;\n'
+        s+= '           for (int p=0; p<'+str(self.k)+'; ++p){\n'
+        s+= '               output += '+str(self.A)+'[i*'+str(self.ldA)+'+p] * *('+str(self.B)+'[j*'+str(self.ldB)+' + p]);\n'
+        s+= '           }\n'
+        s+= '           output += biases_'+ self.name + '_' + str("{:02d}".format(self.idx))+'[i];\n'
+
+        if(self.fused_layer):
+            b=self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')
+            if(self.activation_function.name != 'linear'):
+                s+= '            output = '+a+';\n'
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+b+';\n'
+        else:
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
+
+        s+= '       }\n'
+        s+= '    }\n\n'
+        
+        return s
+
+    def write_gemm_tn(self, m, n, k, A, B, C):
+
+        self.m = m
+        self.n = n
+        self.k = k
+        self.A = A
+        self.ldA = m
+        self.B = B
+        self.ldB = n
+        self.C = C
+        self.ldC = n
+        a = self.activation_function.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]')
+
+        s = '    // gemm_tn\n'
+        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
+        s+= '       for (int p=0; p<'+str(self.k)+'; ++p){\n'
+        s+= '           float register weight = '+str(self.A)+'[p*'+str(self.ldA)+'+i];\n'
+        s+= '           for(int j=0; j<'+str(self.n)+'; ++j){\n'
+        s+= '               tensor_temp[i*'+str(self.ldC)+' + j] += weight * *('+str(self.B)+'[p*'+str(self.ldB)+' + j]);\n'
+        
+        if(self.fused_layer):
+            if(self.activation_function.name != 'linear'):
+                s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
+        else:
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
+
+        s+= '           }\n'
+        s+= '       }\n'
+        s+= '    }\n\n'
+        
+        return s
+
+    def write_gemm_tt(self, m, n, k, A, B, C):
+
+        self.m = m
+        self.n = n
+        self.k = k
+        self.A = A
+        self.ldA = m
+        self.B = B
+        self.ldB = k
+        self.C = C
+        self.ldC = n
+        a = self.activation_function.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]')
+
+        s = '    // gemm_tt\n'
+        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
+        s+= '       for(int j=0; j<'+str(self.n)+'; ++j){\n'
+        s+= '           float register sum = 0;\n'
+        s+= '           for (int p=0; p<'+str(self.k)+'; ++p){\n'
+        s+= '               sum += '+str(self.A)+'[p*'+str(self.ldA)+'+i] * *('+str(self.B)+'[j*'+str(self.ldB)+' + p]);\n'
+        s+= '           }\n'
+        s+= '           tensor_temp[i*'+str(self.ldC)+' + j] += sum;\n'
+
+        if(self.fused_layer):
+            if(self.activation_function.name != 'linear'):
+                s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
+        else:
+            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
+
+        s+= '       }\n'
+        s+= '    }\n\n'
+        
+        return s
+
+    def write_to_function_source_file(self, source_file):
+        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
+        if('cst' not in self.previous_layer[0].output_str):
+            source_file.write('    for (int k = 0; k < '+str(self.input_channels*self.input_height*self.input_width)+'; ++k){\n        tensor_temp[k] = output_'+str(self.road)+'[k];\n    }\n')
+        patch_building_code = self.algo_patch_building_mapping[self.conv_algorithm]()
+        source_file.write(patch_building_code)
+        source_file.write('    for (int k = 0; k < '+str(self.nb_filters*self.patches_width)+'; ++k){\n        tensor_temp[k] = 0;\n    }\n')
+
+        gemm_code = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.road))
+        source_file.write(gemm_code)
+        if(self.data_format == 'channels_last'):
+            source_file.write('    for (int f = 0; f < ' + str(self.nb_filters) + '; ++f){\n')
+            source_file.write('        for (int i = 0; i < '+str(self.output_height)+'; ++i){\n')
+            source_file.write('            for (int j = 0; j < '+str(self.output_width)+'; ++j){\n')
+            self.source_file.write('                output_'+str(self.road)+'[(i * '+str(self.output_width) +' + j) * ' + str(self.nb_filters) + ' + f] = tensor_temp[(f * '+str(self.output_height)+' + i) * '+str(self.output_width)+' + j];\n\n')
+            self.source_file.write('            }\n        }\n    }\n\n')
+        else:
+            source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n\n')
+        
+        return 0
+
+class Conv2D_std_gemm(Conv2D_gemm):
+    
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         
         self.algo_patch_building_mapping = { 'gemm_nn' : self.write_im2col,
                                              'gemm_nt' : self.write_im2row,
@@ -391,6 +712,7 @@ class Conv2D(Layers):
         s+= '    }\n\n'
         
         return s
+    
     def write_to_function_source_file(self, source_file):
         source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
         if('cst' not in self.previous_layer[0].output_str):

@@ -22,27 +22,44 @@ import os
 import numpy as np
 from pathlib import Path
 from abc import ABC
-from src.format_importer.parser import parser
+
+from format_importer.parser import parser
+from code_generator.layers import *
 
 class CodeGenerator(ABC):
 
-    def __init__(self, json_file, test_dataset_file = None, function_name = 'inference', nb_tests = None, **kwds):
+    def __init__(self, file, test_dataset_file = None, function_name = 'inference', nb_tests = None, conv_algorithm = 'conv_gemm_optim', **kwargs):
 
-        self.json_file = json_file
+        self.file = file
         self.test_dataset_file = test_dataset_file
         self.function_name = function_name
         self.nb_tests = nb_tests
+        self.conv_algorithm = conv_algorithm
 
-        l, dtype, dtype_py = parser(self.json_file)
+        l, dtype, dtype_py, listRoad, maxRoad, dict_cst = parser(self.file)
+
         self.layers = l
         self.data_type = dtype
         self.data_type_py = dtype_py
+        self.maxRoad = maxRoad
+        self.listRoad = listRoad
+        self.dict_cst = dict_cst
 
-        ds = self.load_test_dataset()
-        self.test_dataset = ds
+        if test_dataset_file:
+            ds = self.load_test_dataset()
+            self.test_dataset = ds
+        else:
+            print("creating random dataset")
+            ds = self.create_test_dataset()
+            self.test_dataset = ds
+            
 
         self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile']
         
+    def create_test_dataset(self):
+        test_dataset = np.float32(np.random.default_rng(seed=10).random((int(self.nb_tests),1,int(self.layers[0].size))))
+        return test_dataset 
+     
     def load_test_dataset(self):
         
         test_dataset = []
@@ -70,15 +87,55 @@ class CodeGenerator(ABC):
     def compute_inference(self, c_files_directory):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
-            
-                previous_layer_result = nn_input  # for the very first layer, it is the neural network input
                 
+                previous_layer_result = [nn_input for i in range(self.maxRoad)]  # for the very first layer, it is the neural network input
+                
+                to_store = {} #a dictionnary containing the values to store
                 for layer in self.layers:
-                    current_layer_result = layer.feedforward(previous_layer_result)
-                    previous_layer_result = current_layer_result
-                
-                nn_output = current_layer_result
-        
+                    if(not layer.previous_layer):
+                        previous_layer_result[layer.road] = layer.feedforward(previous_layer_result[layer.road]) #if the layer is an input layer, it directly take the vaue from it's road
+                    elif(len(layer.previous_layer)==1):
+                        if(len(layer.previous_layer[0].next_layer) == 1):
+                            previous_layer_result[layer.road] = layer.feedforward(previous_layer_result[layer.previous_layer[0].road]) #if the layer has exactly one previous_layer, it takes the value from it's father's road
+                        else:
+                            previous_layer_result[layer.road] = layer.feedforward(to_store[layer.previous_layer[0].idx]) #if the father is stored, we take it from the storage
+                            layer.previous_layer[0].sorted +=1 #the number of children already "taken care of"
+                    else:#if the layer has multiple ancestors, we take all of their value
+                        prev_layer = []
+                        for prev in layer.previous_layer:
+                            if(len(prev.next_layer) == 1):
+                                prev_layer.append(previous_layer_result[prev.road])
+                            else:
+                                prev_layer.append(to_store[prev.idx])
+                                prev.sorted +=1
+                        previous_layer_result[layer.road] = layer.feedforward(prev_layer)
+                    
+                    #After having computed the value of the layer, we check if there is a fused layer.
+                    if(layer.fused_layer):
+                        #If the current layer is the last layer to be updated, the fused layer must be computed
+                        if((layer.fused_layer.count_updated_prior_layers == len(layer.fused_layer.prior_layers)-1)):
+                            fused = layer.fused_layer
+                            #The layer has multiple ancestors (otherwise, it is treated as an activation function)
+                            prev_layer = []
+                            for prev in fused.prior_layers:
+                                if(prev.idx not in to_store):# Taking the value where it is stored
+                                    prev_layer.append(previous_layer_result[prev.road])
+                                else:
+                                    prev_layer.append(to_store[prev.idx])
+                                    prev.sorted +=1
+                            previous_layer_result[layer.road] = fused.feedforward(prev_layer)
+                        #Else, we notify the fused layer that another one of its ancestors have been computed
+                        else:
+                            layer.fused_layer.count_updated_prior_layers+=1
+                    
+                    if (len(layer.next_layer) > 1): #if the layer has more than one child, it needs to be stored
+                        to_store[layer.idx] = previous_layer_result[layer.road]
+                        
+                    for prev in layer.previous_layer:
+                        if ((prev.sorted == len(prev.next_layer)) and (prev in to_store)):#if all the children of the parent layer are "taken care of", we "forget" the parent's value ( *2 because of the creation of the dict in graph.to_save)
+                            to_store.pop(prev.idx)
+                            
+                nn_output = previous_layer_result[layer.road]
                 # print(nn_output) # write to file instead
                 
                 # Write results in text files to compare prediction.
@@ -260,27 +317,74 @@ class CodeGenerator(ABC):
         self.source_file.write('#include "inference.h"\n\n')
 
         self.source_file.write('int inference(' + self.data_type + ' prediction[' + str(self.layers[-1].size) + '], ' + self.data_type + ' nn_input[' + str(self.layers[0].size) + '])\n{\n')
-        self.source_file.write('    static ' + self.data_type + ' output_pre[' + str(self.l_size_max) + '];\n')
-        self.source_file.write('    static ' + self.data_type + ' output_cur[' + str(self.l_size_max) + '];\n')
-        self.source_file.write('    ' + self.data_type + ' dotproduct;\n')
-        self.source_file.write('    ' + self.data_type + ' sum;\n')
-        self.source_file.write('    ' + self.data_type + ' max;\n')
-        self.source_file.write('    int count;\n\n')
+        # self.source_file.write('    static ' + self.data_type + ' output_cur[' + str(self.l_size_max) + '];\n')
+        # self.source_file.write('    static ' + self.data_type + ' output_pre[' + str(self.l_size_max) + '];\n')
+
+        def write_cst_cubic_interpolation():
+            #the two points for a 1D interpolation and their values if the non void dimension is the width of the tensor
+            s = '    float a;\n'
+            s+= '    float result_interpolation;\n'
+            s+= '    float f_1;\n'
+            s+= '    float f0;\n'
+            s+= '    float f1;\n'
+            s+= '    float f2;\n'
+            s+= '    float s;\n'
+            return s
+        
+        
+        def write_cst_linear_interpolation():
+            #the four points for a 2D interpolation and their values
+            s = '    int y2;\n'
+            s+= '    int y1;\n'
+            s+= '    int x2;\n'
+            s+= '    int x1;\n'
+            s+= '    float f11;\n'
+            s+= '    float f12;\n'
+            s+= '    float f21;\n'
+            s+= '    float f22;\n'
+            return s
+            
+        if any(isinstance(layer, Dense) for layer in self.layers):
+            self.source_file.write('    ' + self.data_type + ' dotproduct;\n')
+        
+        if (any(isinstance(layer, Conv2D_6loops) or isinstance(layer, AveragePooling2D)) for layer in self.layers):
+            self.source_file.write('    ' + self.data_type + ' sum;\n')
+        
+        if any(isinstance(layer, MaxPooling2D) for layer in self.layers):
+            self.source_file.write('    ' + self.data_type + ' max;\n')
+               
+        if any(isinstance(layer, AveragePooling2D) for layer in self.layers):
+            self.source_file.write('    int count;\n\n')
+            
+        if any(isinstance(layer,ResizeLinear) or isinstance(layer,ResizeCubic) or isinstance(layer,ResizeNearest) for layer in self.layers):
+            self.source_file.write('    float x;\n    float y;\n')
+        
+        if any(isinstance(layer, ResizeCubic) for layer in self.layers):
+            self.source_file.write(write_cst_cubic_interpolation())
+            
+        if any(isinstance(layer, ResizeLinear) for layer in self.layers):
+            self.source_file.write(write_cst_linear_interpolation())
+        
 
         for layer in self.layers:
-
-            layer.write_to_function_source_file(self.data_type, self.source_file)
+            layer.write_to_function_source_file(self.source_file)
             
-            if layer.idx > 0:
+            if(layer in self.dict_cst):
                 self.source_file.write('    for (int k = 0; k < ' + str(layer.size) + '; ++k)\n')
-
-                if layer.idx == len(self.layers)-1:
-                    self.source_file.write('        prediction[k] = output_cur[k];\n\n')
-                else:
-                    self.source_file.write('        output_pre[k] = output_cur[k];\n\n')
+                self.source_file.write('    {\n        cst_'+ str(self.dict_cst[layer]) +'[k] = output_'+str(layer.road)+'[k];\n    }\n\n')
             
+            if layer == self.layers[-1]:
+                self.source_file.write('    for (int k = 0; k < ' + str(layer.size) + '; ++k)\n')
+                self.source_file.write('        prediction[k] = output_'+str(layer.road)+'[k];\n\n')
+                
         self.source_file.write('    return 0;\n}')
 
+    def write_ouput_in_file(self,str_size,source_file):
+        for i in range(self.maxRoad):
+            source_file.write('// output list for road ' + str(i)+'\n')
+            source_file.write(self.data_type + ' output_'+str(i)+'[' + str_size + '];\n')
+        source_file.write('\n')
+        
     def generate_function_header_file(self):
 
         self.header_file.write('#ifndef INFERENCE_H_ \n')
@@ -289,10 +393,42 @@ class CodeGenerator(ABC):
         self.nb_weights_max = 1
         self.nb_biases_max = 1
 
+        self.patches_size_max = 1
+        self.concate_size_max = 0
+        for layer in self.layers: 
+            if isinstance(layer, Conv2D_std_gemm):
+                if layer.patches_size > self.patches_size_max : self.patches_size_max = layer.patches_size
+            if isinstance(layer,Concatenate):
+                self.patches_size_max = max(self.patches_size_max,layer.size)
+                
+        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):  
+            self.write_ouput_in_file(str(max(self.l_size_max,self.patches_size_max)),self.header_file)           
+        else:
+            self.write_ouput_in_file(str(self.l_size_max),self.header_file)
+            
+            
+        written = {}
+        for layer in self.dict_cst:
+            if self.dict_cst[layer] not in written:
+                written[self.dict_cst[layer]] = layer.size
+            else:
+                written[self.dict_cst[layer]] = max(written[self.dict_cst[layer]],layer.size)
+        for cst in written:
+            self.header_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
+        self.header_file.write('\n')
+        
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense))) for layer in self.layers):
+            self.header_file.write(self.data_type + ' tensor_temp[' + str(max(self.l_size_max,self.patches_size_max)) + '];\n\n')
+            
+
         for layer in self.layers:
             if hasattr(layer, 'weights'):
                 self.header_file.write('extern '+ self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '];\n')
                 self.header_file.write('extern '+ self.data_type + ' biases_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_biases) + '];\n')
+                
+                if type(layer) is Conv2D_indirect_gemm:
+                    self.header_file.write('extern '+ self.data_type + ' *ppatches_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.patches_height*layer.patches_width) + '];\n')
+                
                 if layer.nb_weights > self.nb_weights_max : self.nb_weights_max = layer.nb_weights
                 if layer.nb_biases > self.nb_biases_max : self.nb_biases_max = layer.nb_biases
 
@@ -303,10 +439,50 @@ class CodeGenerator(ABC):
 
         self.globalvars_file.write('#include "inference.h" \n\n')
 
+        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):       
+            self.write_ouput_in_file(str(max(self.l_size_max,self.patches_size_max)),self.globalvars_file)
+        
+        else:
+            self.write_ouput_in_file(str(self.l_size_max),self.globalvars_file)
+        
+        
+        written = {}
+        for layer in self.dict_cst:
+            if self.dict_cst[layer] not in written:
+                written[self.dict_cst[layer]] = layer.size
+            else:
+                written[self.dict_cst[layer]] = max(written[self.dict_cst[layer]],layer.size)
+        for cst in written:
+            self.globalvars_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
+        self.globalvars_file.write('\n')
+        
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_gemm)) or any(isinstance(layer, Dense))) for layer in self.layers):
+            self.globalvars_file.write(self.data_type + ' tensor_temp[' + str(max(self.l_size_max,self.patches_size_max)) + '];\n\n')
+             
+        if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):
+            self.globalvars_file.write(self.data_type + ' zero = 0.0f;\n\n')
+
+        
+
         for layer in self.layers:
                 if hasattr(layer, 'weights'):
-                    self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
+                    if("json" in self.file):
+                        self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
+                                            + self.flatten_array_hybrid(layer.weights) + ';\n')
+                        if(len(layer.weights.shape)!=3):
+                            layer.weights = np.expand_dims(layer.weights, axis=-1)
+                        layer.weights = np.moveaxis(layer.weights, 2, 0)
+                    
+                    elif("onnx" in self.file):
+                        self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
                                             + self.flatten_array_orderc(layer.weights) + ';\n')
+                        if(isinstance(layer, Conv2D_std_gemm)):
+                            layer.weights = np.moveaxis(layer.weights, 0, 3)
+                    
                     self.globalvars_file.write(self.data_type + ' biases_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_biases) + '] = ' \
                                             + self.flatten_array_orderc(layer.biases) + ';\n\n')
+                    
+                    if type(layer) is Conv2D_indirect_gemm:
+                        self.globalvars_file.write(self.data_type + ' *ppatches_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.patches_height*layer.patches_width) + '] = ' \
+                                            + layer.create_ppatches(self.dict_cst) + ';\n\n')
    
