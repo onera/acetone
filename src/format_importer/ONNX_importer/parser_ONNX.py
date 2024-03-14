@@ -21,7 +21,7 @@ import onnx
 from format_importer.ONNX_importer.create_layer import *
 from graph.graph_interpretor import tri_topo
 
-def load_onnx(file_to_parse):
+def load_onnx(file_to_parse, conv_algorithm):
     #Loading the model and adding value_info if it's not already in it 
     model = onnx.load(file_to_parse)
     if (not model.graph.value_info):
@@ -45,7 +45,7 @@ def load_onnx(file_to_parse):
     for node in model.graph.node:
         if(node.op_type in layer_type): #If the node is a useful layer, we add it to the list
             if(node.op_type == "Conv"):    
-                layers.append(layer_type[node.op_type](node,idx,dict_input,dict_output,model))
+                layers.append(layer_type[node.op_type](node,idx,dict_input,dict_output,model,conv_algorithm))
                 idx+=1
             else:
                 layers.append(layer_type[node.op_type](node,idx,dict_input,dict_output,model))

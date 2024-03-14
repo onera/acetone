@@ -65,6 +65,7 @@ cd ../src
   * The input file with the test data
   * The name of the function to generate (here 'lenet5')
   * The number of test to run (here 1)
+  * The algorithm used for the convolution layer ('6loops','indirect_gemm_'+TYPE, 'std_gemm_'+TYPE, with TYPE being amongst 'nn','nt','tn','tt')
   * The directory in which the code will be generated
 
 For the first version

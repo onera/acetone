@@ -27,6 +27,18 @@ import code_generator.activation_functions as activation_functions
 
 ###### Utility functions ######
 
+def create_conv2d_obj(algorithm, **kwargs):
+       
+    if '6loops' in algorithm:
+        return layers.Conv2D_6loops(**kwargs)
+
+    elif 'std_gemm' in algorithm:
+        return layers.Conv2D_std_gemm(**kwargs)   
+
+    elif 'indirect_gemm' in algorithm:
+        return layers.Conv2D_indirect_gemm(**kwargs)
+        
+
 def create_resize_obj(mode, **kwargs):
     if mode == b'nearest':
         return layers.ResizeNearest(**kwargs)
@@ -133,7 +145,7 @@ def create_Conv(node,idx,dict_input,dict_output,model,conv_algorithm):
     else:
         biases = np.zeros(output_shape[1])
         
-    return layers.Conv2D(algorithm=conv_algorithm,
+    return create_conv2d_obj(algorithm=conv_algorithm,
                                 conv_algorithm=conv_algorithm,
                                 idx= idx,
                                 data_format= 'channels_first',
@@ -165,7 +177,8 @@ def create_Concat(node,idx,dict_input,dict_output,model):
                                 size, 
                                 attributs['axis'],
                                 input_shapes,
-                                output_shape)
+                                output_shape,
+                                activation_function= activation_functions.Linear())
     
 #Create a layer Resize
 def create_Resize(node,idx,dict_input,dict_output,model):
@@ -213,7 +226,8 @@ def create_Resize(node,idx,dict_input,dict_output,model):
                              boolean_resize = bool_resize,
                              roi = roi,
                              extrapolation_value = attributs['extrapolation_value'],
-                             nearest_mode = attributs['nearest_mode'])
+                             nearest_mode = attributs['nearest_mode'],
+                             activation_function = activation_functions.Linear())
     
 #create a layer Pad
 def create_Pad(node,idx,dict_input,dict_output,model):
@@ -235,7 +249,8 @@ def create_Pad(node,idx,dict_input,dict_output,model):
                           pads = onnx.numpy_helper.to_array(initializers[0]),
                           constant_value = onnx.numpy_helper.to_array(initializers[1]),
                           axes = axes,
-                          input_shape = input_shape)
+                          input_shape = input_shape,
+                          activation_function = activation_functions.Linear())
 
 
 #create a layer Gather
@@ -252,7 +267,8 @@ def create_Gather(node,idx,dict_input,dict_output,model):
                          axis = attributs['axis'],
                          indices = initializer,
                          input_shape = input_shape,
-                         output_shape = output_shape)
+                         output_shape = output_shape,
+                         activation_function = activation_functions.Linear())
 
 #create a layer Gemm
 def create_Gemm(node,idx,dict_input,dict_output,model):
@@ -286,30 +302,6 @@ def create_Gemm(node,idx,dict_input,dict_output,model):
                        input_shape = input_shape,
                        output_shape = output_shape,
                        activation_function = activation_functions.Linear())
-
-#create a layer MatMul
-def create_MatMul(node,idx,dict_input,dict_output,model):
-    output_shape = get_shape(node.output[0],model)
-    size = find_size(output_shape)
-    A = look_for_initializer(node.input[0],model)
-    dict_input[idx] = [node.input[1]]
-    dict_output[node.output[0]] = idx
-    return layers.MatMul(idx=idx,
-                            size=size,
-                            weights=np.reshape(onnx.numpy_helper.to_array(A),(get_shape(node.input[1],model)[-1],1,1,output_shape[-1])),
-                            activation_function=activation_functions.Linear())
-
-def create_Add_Biases(node,idx,dict_input,dict_output,model):
-    output_shape = get_shape(node.output[0],model)
-    size = find_size(output_shape)
-    dict_input[idx] = [node.input[0]]
-    dict_output[node.output[0]] = idx
-    A = look_for_initializer(node.input[1],model)
-    return layers.Add_Biass(idx=idx,
-                            size=size,
-                            biass=onnx.numpy_helper.to_array(A),
-                            activation_function=activation_functions.Linear())
-    
     
 
 ### Pooling layers ###
@@ -390,7 +382,8 @@ def create_Add(node,idx,dict_input,dict_output,model):
     return layers.Add(idx=idx,
                       size=size,
                       input_shapes=input_shapes,
-                      output_shape=output_shape)
+                      output_shape=output_shape,
+                      activation_function= activation_functions.Linear())
 
 #create a layer Div
 def create_Div(node,idx,dict_input,dict_output,model):
@@ -404,7 +397,8 @@ def create_Div(node,idx,dict_input,dict_output,model):
     return layers.Divide(idx=idx,
                       size=size,
                       input_shapes=input_shapes,
-                      output_shape=output_shape)
+                      output_shape=output_shape,
+                      activation_function= activation_functions.Linear())
 
 #create a layer Mul
 def create_Mul(node,idx,dict_input,dict_output,model):
@@ -418,7 +412,8 @@ def create_Mul(node,idx,dict_input,dict_output,model):
     return layers.Multiply(idx=idx,
                       size=size,
                       input_shapes=input_shapes,
-                      output_shape=output_shape)
+                      output_shape=output_shape,
+                      activation_function= activation_functions.Linear())
 
 #create a layer Sub
 def create_Sub(node,idx,dict_input,dict_output,model):
@@ -432,7 +427,8 @@ def create_Sub(node,idx,dict_input,dict_output,model):
     return layers.Subtract(idx=idx,
                       size=size,
                       input_shapes=input_shapes,
-                      output_shape=output_shape)
+                      output_shape=output_shape,
+                      activation_function= activation_functions.Linear())
     
 #create a layer Max
 def create_Max(node,idx,dict_input,dict_output,model):
@@ -446,7 +442,8 @@ def create_Max(node,idx,dict_input,dict_output,model):
     return layers.Maximum(idx=idx,
                       size=size,
                       input_shapes=input_shapes,
-                      output_shape=output_shape)
+                      output_shape=output_shape,
+                      activation_function= activation_functions.Linear())
 
 #create a layer Min
 def create_Min(node,idx,dict_input,dict_output,model):
@@ -460,7 +457,8 @@ def create_Min(node,idx,dict_input,dict_output,model):
     return layers.Minimum(idx=idx,
                       size=size,
                       input_shapes=input_shapes,
-                      output_shape=output_shape)
+                      output_shape=output_shape,
+                      activation_function= activation_functions.Linear())
 
 #create a layer Average
 def create_Avg(node,idx,dict_input,dict_output,model):
@@ -474,7 +472,8 @@ def create_Avg(node,idx,dict_input,dict_output,model):
     return layers.Average(idx=idx,
                       size=size,
                       input_shapes=input_shapes,
-                      output_shape=output_shape)
+                      output_shape=output_shape,
+                      activation_function= activation_functions.Linear())
 
 ### Element Wise layers ###
 
@@ -508,7 +507,6 @@ layer_type = {"Softmax":create_Softmax,
          "MaxPool":create_MaxPool,
          "AveragePool":create_AveragePool,
          "GlobalAveragePool":create_GlobalAveragePool,
-         "Add":create_Add_Biases,
          "Mul":create_Mul,
          "Div":create_Div,
          "Sub":create_Sub,
@@ -516,8 +514,7 @@ layer_type = {"Softmax":create_Softmax,
          "Min":create_Min,
          "Mean":create_Avg,
          "Exp":create_Exp,
-         "Log":create_Log,
-         "MatMul":create_MatMul}
+         "Log":create_Log}
 
 
 ###### Function to deal with the 'non important' layers of the graph ######

@@ -760,7 +760,7 @@ class Conv2D_std_gemm(Conv2D_gemm):
         return self.activation_function.compute(output)
 
 class Pooling2D(Layers):
-    def __init__(self, idx, data_format, size, padding, strides, pool_size, input_shape, output_shape, activation_function,**kwargs):
+    def __init__(self, idx, data_format, size, padding, strides, pool_size, input_shape, output_shape,**kwargs):
         
         super().__init__()
         self.idx = idx
@@ -790,8 +790,6 @@ class Pooling2D(Layers):
         self.local_var_2 = ''
         self.output_var = ''
 
-        self.activation_function = activation_function
-
         self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(self.padding,self.input_height, self.input_width, self.pool_size,self.pool_size, self.strides)
 
     @abstractmethod    
@@ -816,10 +814,8 @@ class Pooling2D(Layers):
         source_file.write(self.specific_function('jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)', output_str))
         source_file.write('                        }\n                    }\n                }\n')
         
-        self.write_activation_and_fusion(source_file,
-                                         'output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)]',
-                                         'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)',
-                                         self.local_var,'            ')
+        b=self.fused_layer.write_activation_str('output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)]',self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)')
+        source_file.write('            output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)]'+' = '+ b +';\n    }\n\n')
         
         source_file.write('            }\n        }\n    }\n\n')
 
@@ -838,7 +834,7 @@ class Pooling2D(Layers):
             for j in range(self.output_width): 
                 for i in range(self.output_height):
                     output[i,j,c]= self.pooling_function((input_padded[i*self.strides:i*self.strides+self.pool_size, j*self.strides:j*self.strides+self.pool_size, c]))
-        return self.activation_function.compute(output)
+        return output
 
 class AveragePooling2D(Pooling2D):
     def __init__(self, **kwds):
@@ -929,7 +925,7 @@ class Softmax(Layers):
 #input: a list of tensor to concatenate
 #output: the concatenated tensor 
 class Concatenate(Layers):
-    def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
+    def __init__(self, idx, size, axis, input_shapes,output_shape):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -939,7 +935,6 @@ class Concatenate(Layers):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.output_channels = output_shape[1]
-        self.activation_function = activation_function
 
     def write_concat(self, source_file):
         borne_sup = 0
@@ -983,8 +978,7 @@ class Concatenate(Layers):
         source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
         self.write_concat(source_file)
         source_file.write('            }\n        }\n    }\n\n')
-        a = self.activation_function.write_activation_str('tensor_temp[k]')
-        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = '+a+';\n    }\n')
+        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = output;\n    }\n')
 
     def feedforward(self, inputs):
         output = inputs[0]
@@ -1243,7 +1237,7 @@ class Gemm(Layers):
 #input: a list of tensor
 #output: the resultant tensor
 class Broadcast(Layers):
-    def __init__(self, idx, size, input_shapes, output_shape, activation_function):
+    def __init__(self, idx, size, input_shapes, output_shape,activation_function):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -2013,8 +2007,8 @@ class Pad(Layers):
 #Use a constant to fill paddings
 class Constant_Pad(Pad):
     
-    def __init__(self, idx, size, pads, constant_value, axes,input_shape):
-        super().__init__(idx, size, pads, constant_value, axes,input_shape)
+    def __init__(self, idx, size, pads, constant_value, axes,input_shape,activation_function):
+        super().__init__(idx, size, pads, constant_value, axes,input_shape,activation_function)
         self.mode = 'constant'
     
     def write_padding(self,source_file):
@@ -2035,8 +2029,8 @@ class Constant_Pad(Pad):
 #Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
 class Reflect_pad(Pad):
     
-    def __init__(self, idx, size, pads, constant_value, axes, input_shape):
-        super().__init__(idx, size, pads, constant_value, axes, input_shape)
+    def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
+        super().__init__(idx, size, pads, constant_value, axes, input_shape,activation_function)
         self.mode = 'reflect'
     
     #A function to find the correponding coordinates in the input tensor
@@ -2062,8 +2056,8 @@ class Reflect_pad(Pad):
 #Pads with the edge values of array.
 class Edge_pad(Pad):
     
-    def __init__(self, idx, size, pads, constant_value, axes, input_shape):
-        super().__init__(idx, size, pads, constant_value, axes, input_shape)
+    def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
+        super().__init__(idx, size, pads, constant_value, axes, input_shape,activation_function)
         self.mode = 'edge'
     
     #Either go the the edge coordinates, or stay with the same coordinates
