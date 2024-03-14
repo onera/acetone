@@ -59,7 +59,7 @@ class Layers(ABC):
             filter_width = (kernel_w - (kernel_w-1)*(dilation_rate-1))
 
             # The total padding applied along the height and width is computed as:
-            if(padding == 'VALID'):
+            if(padding == 'VALID' or padding == 'valid'):
                 pad_right, pad_left, pad_bottom, pad_top = 0,0,0,0
             else:
                 if (in_height % strides == 0):
@@ -727,8 +727,8 @@ class Conv2D_std_gemm(Conv2D_gemm):
             source_file.write('    for (int f = 0; f < ' + str(self.nb_filters) + '; ++f){\n')
             source_file.write('        for (int i = 0; i < '+str(self.output_height)+'; ++i){\n')
             source_file.write('            for (int j = 0; j < '+str(self.output_width)+'; ++j){\n')
-            self.source_file.write('                output_'+str(self.road)+'[(i * '+str(self.output_width) +' + j) * ' + str(self.nb_filters) + ' + f] = tensor_temp[(f * '+str(self.output_height)+' + i) * '+str(self.output_width)+' + j];\n\n')
-            self.source_file.write('            }\n        }\n    }\n\n')
+            source_file.write('                output_'+str(self.road)+'[(i * '+str(self.output_width) +' + j) * ' + str(self.nb_filters) + ' + f] = tensor_temp[(f * '+str(self.output_height)+' + i) * '+str(self.output_width)+' + j];\n\n')
+            source_file.write('            }\n        }\n    }\n\n')
         else:
             source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n\n')
         
@@ -755,6 +755,7 @@ class Conv2D_std_gemm(Conv2D_gemm):
                 for j in range(self.output_width):
                         output[f,i,j]=np.sum(input_padded[:, i*self.strides:i*self.strides+self.kernel_h, j*self.strides:j*self.strides+self.kernel_w] 
                                             * self.weights[:,:,:,f]) + self.biases[f]
+        
         if(self.data_format == 'channels_last'):
             output= np.transpose(output,(1,2,0))
         return self.activation_function.compute(output)
@@ -814,8 +815,12 @@ class Pooling2D(Layers):
         source_file.write(self.specific_function('jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)', output_str))
         source_file.write('                        }\n                    }\n                }\n')
         
-        b=self.fused_layer.write_activation_str('output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)]',self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)')
-        source_file.write('            output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)]'+' = '+ b +';\n    }\n\n')
+        if (self.fused_layer):
+            b = self.fused_layer.write_activation_str(self.output_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)')
+        else: 
+            b = self.output_var
+
+        source_file.write('            output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)]'+' = '+ b +';\n')
         
         source_file.write('            }\n        }\n    }\n\n')
 
@@ -909,9 +914,12 @@ class Softmax(Layers):
         source_file.write('    sum = 0;\n\n')
         source_file.write('    for (int i = 0; i < ' + str(self.size) + '; ++i)\n')
         source_file.write('        sum += exp('+output_str+'[i]);\n\n')
-        source_file.write('    for (int j = 0; j < ' + str(self.size) + '; ++j)\n')
+        source_file.write('    for (int j = 0; j < ' + str(self.size) + '; ++j)\n    {\n')
         source_file.write('        output_'+str(self.road)+'[j] = exp('+output_str+'[j])/sum;\n\n')
-        self.write_activation_and_fusion(source_file,'output_'+str(self.road)+'[j]','j','output_'+str(self.road)+'[j]','        ')
+        if (self.fused_layer):
+            b = self.fused_layer.write_activation_str('output_'+str(self.road)+'[j]', self.idx, 'j')
+            source_file.write('        output_'+str(self.road)+'[j] = '+ b +';\n')
+        source_file.write('    }\n\n')
 
     def feedforward(self, input):
         

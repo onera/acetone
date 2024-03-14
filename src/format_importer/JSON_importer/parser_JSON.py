@@ -114,22 +114,26 @@ def load_json(file_to_parse, conv_algorithm):
                                       create_actv_function_obj(layer['config']['activation']))
             
             elif layer['class_name'] == 'Conv2D': 
-                current_layer = create_conv2d_obj(conv_algorithm,
-                                                  idx,
-                                                  layer['config']['size'],
-                                                  layer['config']['padding'],
-                                                  layer['config']['strides'][0],
-                                                  layer['config']['kernel_size'][0], 
-                                                  layer['config']['dilation_rate'][0],
-                                                  layer['config']['filters'],
-                                                  layer['config']['input_shape'],
-                                                  layer['config']['output_shape'],
-                                                  data_type_py(layer['weights']), 
-                                                  data_type_py(layer['biases']),
-                                                  create_actv_function_obj(layer['config']['activation']))
+                current_layer = create_conv2d_obj(algorithm = conv_algorithm,
+                                                  conv_algorithm = conv_algorithm,
+                                                  idx = idx,
+                                                  data_format = layer['config']['data_format'],
+                                                  size = layer['config']['size'],
+                                                  padding = layer['config']['padding'],
+                                                  strides = layer['config']['strides'][0],
+                                                  kernel_h = layer['config']['kernel_size'][0],
+                                                  kernel_w = layer['config']['kernel_size'][1],
+                                                  dilation_rate = layer['config']['dilation_rate'][0],
+                                                  nb_filters = layer['config']['filters'],
+                                                  input_shape = layer['config']['input_shape'],
+                                                  output_shape = layer['config']['output_shape'],
+                                                  weights = data_type_py(layer['weights']), 
+                                                  biases = data_type_py(layer['biases']),
+                                                  activation_function = create_actv_function_obj(layer['config']['activation']))
             
             elif layer['class_name'] == 'AveragePooling2D':
                 current_layer = AveragePooling2D(idx = idx,
+                                                 data_format = layer['config']['data_format'],
                                                  size = layer['config']['size'],
                                                  padding = layer['config']['padding'],
                                                  strides = layer['config']['strides'][0],
@@ -144,7 +148,8 @@ def load_json(file_to_parse, conv_algorithm):
                                              strides = layer['config']['strides'][0],
                                              pool_size = layer['config']['pool_size'][0],
                                              input_shape = layer['config']['input_shape'],
-                                             output_shape = layer['config']['output_shape'])
+                                             output_shape = layer['config']['output_shape'],
+                                             activation_layer = Linear())
             
             elif layer['class_name'] == 'Flatten':
                 nb_flatten_layers = 1
@@ -155,7 +160,7 @@ def load_json(file_to_parse, conv_algorithm):
                                     size = layer['config']['size'],
                                     input_shapes = layer['config']['input_shape'],
                                     output_shape = layer['config']['output_shape'],
-                                    activation_function= Linear())
+                                    activation_function = Linear())
 
             elif layer['class_name'] == 'Multiply':
                 current_layer = Multiply(idx = layer['config']['idx'],
@@ -262,8 +267,8 @@ def load_json(file_to_parse, conv_algorithm):
                 raise TypeError("Error: layer"+layer['class_name']+" not supported\n")
             
             for i in layer['config']['prev_layer_idx']:
-                current_layer.previous_layer.append(layers[i-nb_flatten_layers+1])
-                layers[i-nb_flatten_layers+1].next_layer.append(current_layer)
+                current_layer.previous_layer.append(layers[i-nb_flatten_layers])
+                layers[i-nb_flatten_layers].next_layer.append(current_layer)
 
             l_temp = current_layer
             layers.append(current_layer)

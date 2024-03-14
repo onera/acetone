@@ -466,14 +466,14 @@ class CodeGenerator(ABC):
 
         for layer in self.layers:
                 if hasattr(layer, 'weights'):
-                    if("json" in self.file):
+                    if(("json" in self.file[-4:]) or ("h5" in self.file[-4:]) or ("nnet" in self.file[-4:])):
                         self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
                                             + self.flatten_array_hybrid(layer.weights) + ';\n')
-                        if(len(layer.weights.shape)!=3):
+                        if(len(layer.weights.shape)<3):
                             layer.weights = np.expand_dims(layer.weights, axis=-1)
                         layer.weights = np.moveaxis(layer.weights, 2, 0)
                     
-                    elif("onnx" in self.file):
+                    elif("onnx" in self.file[-4:]):
                         self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
                                             + self.flatten_array_orderc(layer.weights) + ';\n')
                         if(isinstance(layer, Conv2D_std_gemm)):

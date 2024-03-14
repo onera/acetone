@@ -57,20 +57,19 @@ Then, generate the C code with ACETONE.
 
 * Go to the framework's directory
 ```
-cd ../src
+cd ../../src
 ```
 
 * Call ACETONE with the following arguments:
   * The JSON file describing the model
-  * The input file with the test data
   * The name of the function to generate (here 'lenet5')
   * The number of test to run (here 1)
-  * The algorithm used for the convolution layer ('6loops','indirect_gemm_'+TYPE, 'std_gemm_'+TYPE, with TYPE being amongst 'nn','nt','tn','tt')
+  * The algorithm used for the convolution layer ('6loops','indirect_gemm_'+TYPE, 'std_gemm_'+TYPE, with TYPE being amongst 'nn','nt',    'tn','tt')
   * The directory in which the code will be generated
+  * The input file with the test data
 
-For the first version
 ```
-python3 main.py ../test/example/lenet5.json ../test/example/test_input_lenet5.txt lenet5 1 ../test/example/lenet5_generated
+python3 main.py ../test/example/lenet5.h5  lenet5 1 std_gemm_nn ../test/example/lenet5_generated ../test/example/test_input_lenet5.txt
 ```
 
 * Compile the code
@@ -89,7 +88,7 @@ make all
 * Compare the output given by Keras and ACETONE
 ```
 cd ../../../src
-python3 eval_semantic_preservation.py ../tets/example/output_keras.txt ../test/example/lenet5_generated/output_acetone.txt 1
+python3 eval_semantic_preservation.py ../test/example/output_keras.txt ../test/example/lenet5_generated/output_acetone.txt 1
 ```
 
 

@@ -21,7 +21,6 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import json
-from acetone.src.format_importer.JSON_importer.JSON_from_keras_model import JSON_from_keras_model
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -50,10 +49,6 @@ print("LeNet-5 architecture created in Keras' framework. Random weights and bias
 ### Save neural network model in h5 format to be used in Keras2C framework ###
 model.save('./lenet5.h5')
 print("Neural network model exported to acetone/test/example/lenet5.h5")
-
-### Save neural network model in JSON format to be used in ACETONE framework ###
-JSON_from_keras_model(model, './lenet5.json')
-print("Neural network model exported to acetone/test/data/example/lenet5.json")
 
 ### Define a random input of shape (1,1,28*28*1) ###
 random_input = np.random.default_rng().random((1,28, 28, 1))
