@@ -30,6 +30,7 @@ def JSON_from_keras_model(keras_model, output_dir_json):
     for i in range(1, len(keras_model.input.shape)): #start in idx 1 cause idx 0 represents batch size, so it's None in inference phase
         input_layer_size = input_layer_size * keras_model.input.shape[i]
 
+    
 
     if keras_model.layers[0].__class__.__name__ == 'InputLayer':
         start = 0
@@ -38,9 +39,9 @@ def JSON_from_keras_model(keras_model, output_dir_json):
         start = 1
         model_dict['config']['layers'][0]['config']['size'] = input_layer_size
         # pretty_json['config']['layers'][0]['config']['dtype'] = "float32"
-
+    print(start)
     i=0
-    idx = 1
+    idx = start
     for layer_json, layer_keras in zip((model_dict['config']['layers'])[start:], keras_model.layers):
         
         layer_size = 1
@@ -66,7 +67,7 @@ def JSON_from_keras_model(keras_model, output_dir_json):
         print(layer_json['class_name'], i)
         layer_json['config']['prev_layer_idx'] = []
 
-        if('inbound_nodes' in layer_json.keys()):
+        if(('inbound_nodes' in layer_json.keys()) and (layer_json['inbound_nodes'])):
             for prev_layer_json in model_dict['config']['layers'][start:idx]:
                 for k in range(len(layer_json['inbound_nodes'][0])):
                     if (prev_layer_json['config']['name'] == layer_json['inbound_nodes'][0][k][0]):

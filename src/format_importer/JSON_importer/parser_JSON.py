@@ -218,14 +218,6 @@ def load_json(file_to_parse, conv_algorithm):
                                      min= layer['config']['min'], 
                                      max=layer['config']['max'])
             
-            elif layer['class_name'] == 'Gather':
-                current_layer = Gather(idx = layer['config']['idx'], 
-                                       size = layer['config']['size'], 
-                                       axis=layer['config']['axis'], 
-                                       indices=layer['inbound_nodes'][0][0][3]['indices'],
-                                       input_shape = layer['config']['input_shape'], 
-                                       output_shape = layer['config']['output_shape'])
-            
             elif layer['class_name'] == 'UpSampling2D': # Need to make sure that the 'size' attribut of the Layer is renamed
                 current_layer = create_resize_obj(mode = layer['config']['interpolation'],
                                                   idx = layer['config']['idx'],
