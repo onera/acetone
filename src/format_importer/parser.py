@@ -35,13 +35,13 @@ def get_path(file, new_type):
     new_path += file_name + "." + new_type
     return new_path
 
-def parser(file_to_parse):
+def parser(file_to_parse,conv_algorithm):
 
     if("json" in  file_to_parse[-4:]):
-        return load_json(file_to_parse)
+        return load_json(file_to_parse,conv_algorithm)
     
     elif("onnx" in file_to_parse[-4:]):
-        return load_onnx(file_to_parse)
+        return load_onnx(file_to_parse,conv_algorithm)
     
     elif("h5" in file_to_parse[-4:]):
         keras.models.load_model(file_to_parse)

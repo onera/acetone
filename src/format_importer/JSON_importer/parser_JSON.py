@@ -149,10 +149,6 @@ def load_json(file_to_parse, conv_algorithm):
             elif layer['class_name'] == 'Flatten':
                 nb_flatten_layers = 1
                 continue
-
-            elif layer['class_name'] == 'Flatten':
-                nb_flatten_layers = 1
-                continue
             
             elif layer['class_name'] == 'Add':
                 current_layer = Add(idx = layer['config']['idx'],
@@ -249,13 +245,26 @@ def load_json(file_to_parse, conv_algorithm):
                                              axes = [],
                                              input_shape = layer['config']['input_shape'],
                                              activation_function = Linear())
+            
+            elif  'Normalization' in layer['class_name']:
+                continue
+
+            elif  'Dropout' in layer['class_name']:
+                continue
+
+            elif  layer['class_name'] == 'Reshape':
+                continue
+
+            elif  layer['class_name'] == 'Permute':
+                continue
 
             else:
                 raise TypeError("Error: layer"+layer['class_name']+" not supported\n")
             
             for i in layer['config']['prev_layer_idx']:
-                current_layer.previous_layer.append(layers[i-nb_flatten_layers])
-                layers[i-nb_flatten_layers].next_layer.append(current_layer)
+                current_layer.previous_layer.append(layers[i-nb_flatten_layers+1])
+                layers[i-nb_flatten_layers+1].next_layer.append(current_layer)
+
             l_temp = current_layer
             layers.append(current_layer)
 

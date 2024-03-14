@@ -925,7 +925,7 @@ class Softmax(Layers):
 #input: a list of tensor to concatenate
 #output: the concatenated tensor 
 class Concatenate(Layers):
-    def __init__(self, idx, size, axis, input_shapes,output_shape):
+    def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -935,6 +935,7 @@ class Concatenate(Layers):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.output_channels = output_shape[1]
+        self.activation_function = activation_function
 
     def write_concat(self, source_file):
         borne_sup = 0
@@ -978,7 +979,8 @@ class Concatenate(Layers):
         source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
         self.write_concat(source_file)
         source_file.write('            }\n        }\n    }\n\n')
-        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = output;\n    }\n')
+        a = self.activation_function.write_activation_str('tensor_temp[k]')
+        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = '+a+';\n    }\n')
 
     def feedforward(self, inputs):
         output = inputs[0]
@@ -1285,11 +1287,11 @@ class Broadcast(Layers):
         source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')
         source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
         source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n             {\n')
-        source_file.write('                float register output = ')
+        source_file.write('                tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = ')
         self.write_add_a_tensor(source_file)
         source_file.write('            }\n        }\n    }\n\n ')
-        a = self.activation_function.write_activation_str('output')
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {        output_'+str(self.road)+'='+a+';\n    }\n')
+        a = self.activation_function.write_activation_str('tensor_temp[f]')
+        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {        output_'+str(self.road)+'[f] = '+a+';\n    }\n')
     
     @abstractmethod
     def feedforward(self, inputs):

@@ -55,7 +55,7 @@ def load_onnx(file_to_parse, conv_algorithm):
         elif(node.op_type in activation_layers):
             activation_layers[node.op_type](node,dict_output,model,layers)
         else:
-            raise TypeError("Error: layer"+node.op_type+" not supported\n")
+            raise TypeError("Error: layer "+node.op_type+" not supported\n")
     
     for layer_idx in dict_input: #Going through all the indices in the list
         layer = layers[layer_idx] #The indice of a layer is the same a it's position in the list

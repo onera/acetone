@@ -36,7 +36,7 @@ class CodeGenerator(ABC):
         self.nb_tests = nb_tests
         self.conv_algorithm = conv_algorithm
 
-        l, dtype, dtype_py, listRoad, maxRoad, dict_cst = parser(self.file)
+        l, dtype, dtype_py, listRoad, maxRoad, dict_cst = parser(self.file, self.conv_algorithm)
 
         self.layers = l
         self.data_type = dtype
