@@ -417,7 +417,7 @@ class CodeGenerator(ABC):
             self.header_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
         self.header_file.write('\n')
         
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
             self.header_file.write(self.data_type + ' tensor_temp[' + str(max(self.l_size_max,self.patches_size_max)) + '];\n\n')
             
 
@@ -456,7 +456,7 @@ class CodeGenerator(ABC):
             self.globalvars_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
         self.globalvars_file.write('\n')
         
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_gemm)) or any(isinstance(layer, Dense))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_gemm)) or any(isinstance(layer, Dense))  or any(isinstance(layer, Add))) for layer in self.layers):
             self.globalvars_file.write(self.data_type + ' tensor_temp[' + str(max(self.l_size_max,self.patches_size_max)) + '];\n\n')
              
         if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):

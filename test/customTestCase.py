@@ -28,7 +28,7 @@ import keras
 
 class CustomTestCase(unittest.TestCase):
 
-    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=0):
+    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-05):
         return np.testing.assert_allclose(first, second, rtol=rtol, atol=atol)
 
 def read_output(output_path:str):

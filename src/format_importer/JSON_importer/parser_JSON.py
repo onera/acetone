@@ -187,7 +187,8 @@ def load_json(file_to_parse, conv_algorithm):
                                             size = layer['config']['size'],
                                             axis = layer['config']['axis'], 
                                             input_shapes = layer['config']['input_shape'], 
-                                            output_shape = layer['config']['output_shape'])
+                                            output_shape = layer['config']['output_shape'],
+                                            activation_function=Linear())
             
             elif layer['class_name'] == 'Maximum':
                 current_layer = Maximum(idx = layer['config']['idx'],
