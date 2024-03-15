@@ -109,6 +109,7 @@ def load_json(file_to_parse, conv_algorithm):
             if layer['class_name'] == 'Dense':
                 current_layer = Dense(idx,
                                       layer['config']['units'],
+                                      layer['config']['input_shape'],
                                       data_type_py(layer['weights']),
                                       data_type_py(layer['biases']),
                                       create_actv_function_obj(layer['config']['activation']))

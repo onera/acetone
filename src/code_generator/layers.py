@@ -137,7 +137,7 @@ class InputLayer(Layers):
 
 class Dense(Layers):
 
-    def __init__(self, idx, size, weights, biases, activation_function):
+    def __init__(self, idx, size, input_shape, weights, biases, activation_function):
         
         super().__init__()
         self.idx = idx
@@ -147,6 +147,7 @@ class Dense(Layers):
         self.biases = np.asarray(biases)
         self.activation_function = activation_function
         self.local_var = 'dotproduct'
+        self.input_shape = input_shape
         
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)
@@ -167,10 +168,8 @@ class Dense(Layers):
         source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n\n')
 
     def feedforward(self, input):
-
-        input = input.reshape((self.previous_layer[0]).size) 
-
-        return self.activation_function.compute((np.dot(input, self.weights) + self.biases))
+        input = input.reshape(self.previous_layer[0].size)
+        return self.activation_function.compute(np.dot(input, self.weights) + self.biases)
 
 
 class Conv2D(Layers):
