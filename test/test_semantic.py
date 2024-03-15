@@ -76,21 +76,38 @@ class TestDenseLayer(unittest.TestCase):
     """Test for Dense Layer"""
 
     def test_Dense1(self):
-        testshape = (5,23,16)
-        units = 100
+        testshape = (1,1,16)
+        units = 8
 
         input = Input(testshape)
-        out = Dense(units, activation=None)(input)
+        out = Dense(units, activation=None, bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
         print(model.summary())
         dataset = create_dataset(testshape)
 
 
-        acetone_result = run_acetone_for_test(model,'./temp_dir/dataset.txt')
+        acetone_result = run_acetone_for_test(model,'./tmp_dir/dataset.txt')
         keras_result = model.predict(dataset)
 
-        self.assertEqual(acetone_result,keras_result)
+        self.assertEqual(acetone_result.all(),keras_result.all())
+    
+    def test_Dense2(self):
+        testshape = (1,1,56)
+        units = 98
+
+        input = Input(testshape)
+        out = Dense(units, activation=None, bias_initializer='he_normal')(input)
+
+        model = keras.Model(input,out)
+        print(model.summary())
+        dataset = create_dataset(testshape)
+
+
+        acetone_result = run_acetone_for_test(model,'./tmp_dir/dataset.txt')
+        keras_result = model.predict(dataset)
+
+        self.assertEqual(acetone_result.all(),keras_result.all())
 
 if __name__ == '__main__':
     unittest.main()
