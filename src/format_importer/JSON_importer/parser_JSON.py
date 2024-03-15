@@ -93,7 +93,8 @@ def load_json(file_to_parse, conv_algorithm):
         nb_flatten_layers = 0
 
         for idx, layer in list(islice(enumerate(model['config']['layers']), 1, None)):
-
+            add_softmax_layer = False
+            
             idx += nb_softmax_layers
             idx -= nb_flatten_layers
 
@@ -101,10 +102,6 @@ def load_json(file_to_parse, conv_algorithm):
                 if layer['config']['activation'] == 'softmax':
                     layer['config']['activation'] = 'linear'
                     add_softmax_layer = True
-                else:
-                    add_softmax_layer = False
-            else:
-                pass
         
             if layer['class_name'] == 'Dense':
                 current_layer = Dense(idx,
@@ -145,6 +142,7 @@ def load_json(file_to_parse, conv_algorithm):
             elif layer['class_name'] == 'MaxPooling2D':
                 current_layer = MaxPooling2D(idx = idx,
                                              size = layer['config']['size'],
+                                             data_format = layer['config']['data_format'],
                                              padding = layer['config']['padding'],
                                              strides = layer['config']['strides'][0],
                                              pool_size = layer['config']['pool_size'][0],

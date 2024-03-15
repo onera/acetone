@@ -808,6 +808,10 @@ class Pooling2D(Layers):
 
     def write_to_function_source_file(self, source_file):
         output_str = self.previous_layer[0].output_str
+        if(self.data_format == 'channels_first'):
+            indice = 'jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)'
+        elif(self.data_format == 'channels_last'):
+            indice = 'c + '+str(self.input_channels)+'*(jj + '+str(self.input_width)+'*ii)'
         
         source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
         source_file.write('    for (int c = 0; c < '+str(self.input_channels)+'; ++c)\n    {\n')
@@ -821,7 +825,7 @@ class Pooling2D(Layers):
         source_file.write('                        int ii = i*'+str(self.strides)+' + m - '+str(self.pad_left)+';\n')
         source_file.write('                        int jj = j*'+str(self.strides)+' + n - '+str(self.pad_top)+';\n\n')
         source_file.write('                        if (ii >= 0 && ii < '+str( self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n                        {\n')
-        source_file.write(self.specific_function('jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)', output_str))
+        source_file.write(self.specific_function(indice, output_str))
         source_file.write('                        }\n                    }\n                }\n')
         
         if (self.fused_layer):
@@ -834,20 +838,29 @@ class Pooling2D(Layers):
         source_file.write('            }\n        }\n    }\n\n')
 
     def feedforward(self, input):
-
-        input = input.reshape(self.input_height, self.input_width, self.input_channels)
-        output = np.zeros((self.output_height, self.output_width, self.input_channels))
+        if(self.data_format == 'channels_last'):
+            input = input.reshape(self.input_height, self.input_width, self.input_channels)
+            input= np.transpose(input,(2,0,1))
+            
+        elif(self.data_format == 'channels_first'):
+            input = input.reshape(self.input_channels, self.input_height, self.input_width)
+            
         
+        output = np.zeros((self.input_channels, self.output_height, self.output_width))
+                
         if self.pad_right and self.pad_left and self.pad_top and self.pad_bottom:
-            input_padded = np.zeros((self.input_height + self.pad_top + self.pad_bottom, self.input_width + self.pad_left + self.pad_right, self.input_channels))
-            input_padded[self.pad_top:-self.pad_bottom, self.pad_left:-self.pad_right, :] = input
+            input_padded = np.zeros((self.input_channels, self.input_height + self.pad_top + self.pad_bottom, self.input_width + self.pad_left + self.pad_right))
+            input_padded[:, self.pad_top:-self.pad_bottom, self.pad_left:-self.pad_right] = input
         else:
             input_padded = input
 
         for c in range(self.input_channels):
-            for j in range(self.output_width): 
-                for i in range(self.output_height):
-                    output[i,j,c]= self.pooling_function((input_padded[i*self.strides:i*self.strides+self.pool_size, j*self.strides:j*self.strides+self.pool_size, c]))
+            for i in range(self.output_height):
+                for j in range(self.output_width): 
+                    output[c,i,j]= self.pooling_function((input_padded[c, i*self.strides:i*self.strides+self.pool_size, j*self.strides:j*self.strides+self.pool_size]))
+        
+        if(self.data_format == 'channels_last'):
+            output= np.transpose(output,(1,2,0))
         return output
 
 class AveragePooling2D(Pooling2D):
