@@ -540,7 +540,12 @@ class Conv2D_std_gemm(Conv2D_gemm):
         output_str = self.previous_layer[0].output_str
         if('output' in output_str):
             output_str = 'tensor_temp'
-            
+        
+        if(self.data_format == 'channels_first'):
+            indice = '(c_offset*'+str(self.input_height)+' + ii)*'+str(self.input_width)+' + jj'
+        elif(self.data_format == 'channels_last'):
+            indice = '(ii*'+str(self.input_width)+' + jj)*'+str(self.input_channels)+' + c_offset'
+
         s = '    // im2col\n'
         s+= '    for (int i = 0; i < '+str(self.patches_height)+'; ++i) {\n\n'
         s+= '        int i_offset = (i / '+str(self.kernel_w)+') % '+str(self.kernel_h)+';\n'
@@ -552,7 +557,7 @@ class Conv2D_std_gemm(Conv2D_gemm):
         s+= '                int jj = w * '+str(self.strides)+' - '+str(self.pad_left)+' + j_offset;\n\n'
         s+= '                int j = h*'+str(self.output_width)+' + w;\n'
         s+= '                if (ii >= 0 && ii < '+str(self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n'
-        s+= '                    output_'+str(self.road)+'[i*'+str(self.patches_width)+' + j] = '+output_str+'[(c_offset*'+str(self.input_height)+' + ii)*'+str(self.input_width)+' + jj];\n'
+        s+= '                    output_'+str(self.road)+'[i*'+str(self.patches_width)+' + j] = '+output_str+'['+indice+'];\n'
         s+= '                else\n'
         s+= '                    output_'+str(self.road)+'[i*'+str(self.patches_width)+' + j] = 0;\n'
         s+= '            }\n'
@@ -566,6 +571,11 @@ class Conv2D_std_gemm(Conv2D_gemm):
         output_str = self.previous_layer[0].output_str
         if('output' in output_str):
             output_str = 'tensor_temp'
+        
+        if(self.data_format == 'channels_first'):
+            indice = '(c_offset*'+str(self.input_height)+' + ii)*'+str(self.input_width)+' + jj'
+        elif(self.data_format == 'channels_last'):
+            indice = '(ii*'+str(self.input_width)+' + jj)*'+str(self.input_channels)+' + c_offset'
             
         s = '    // im2row\n'
         s+= '    for (int i = 0; i < '+str(self.patches_height)+'; ++i) {\n\n'
@@ -578,7 +588,7 @@ class Conv2D_std_gemm(Conv2D_gemm):
         s+= '                int jj = w * '+str(self.strides)+' - '+str(self.pad_left)+' + j_offset;\n\n'
         s+= '                int j = w*'+str(self.output_height)+' + h;\n'
         s+= '                if (ii >= 0 && ii < '+str(self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n'
-        s+= '                    output_'+str(self.road)+'[j*'+str(self.patches_height)+' + i] = '+output_str+'[(c_offset*'+str(self.input_height)+' + ii)*'+str(self.input_width)+' + jj];\n'
+        s+= '                    output_'+str(self.road)+'[j*'+str(self.patches_height)+' + i] = '+output_str+'['+indice+'];\n'
         s+= '                else\n'
         s+= '                    output_'+str(self.road)+'[j*'+str(self.patches_height)+' + i] = 0;\n'
         s+= '            }\n'
