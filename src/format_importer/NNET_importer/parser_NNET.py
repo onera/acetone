@@ -22,11 +22,14 @@
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
+from src.code_generator.layers.Dense import Dense
+from src.code_generator.layers.Input import InputLayer
+from src.code_generator.activation_functions import Linear, ReLu
 
 tf.keras.backend.set_floatx('float32')
 
 
-def load_nnet(model_file_nnet):
+def load_nnet(file_to_parse, normalize):
     """
     Reads nnet networks from ACAS project and to pull it in .h5 format
     Inspired from : # https://github.com/NeuralNetworkVerification/Marabou/blob/master/maraboupy/MarabouNetworkNNet.py  read function
@@ -45,11 +48,16 @@ def load_nnet(model_file_nnet):
     #Moyennes de normalisation
     #ranges de normalisation 
     #weights
-    #biais 
+    #biaises
 
-    print("\n Reading the file : "+model_file_nnet+"\n")
+    layers = []
+    listRoad = [0,1]
+    maxRoad = 1
+    dict_cst = {}
+    data_type = 'float'
+    data_type_py = 'float32'
 
-    with open(model_file_nnet) as f:
+    with open(file_to_parse) as f:
      
         line = f.readline()
 
@@ -115,34 +123,42 @@ def load_nnet(model_file_nnet):
 
     f.close()
 
+    layers.append(InputLayer(idx=0, size=layerSizes[0]))
+    layers[0].find_output_str(dict_cst)
+    layers[0].road = 0
+
     # list of lists -> list of arrays
-    weights = [np.array(weight) for weight in weights]
-    biases = [np.array(bias) for bias in biases]
+    weights = [np.transpose(np.array(weight)) for weight in weights]
+    biases = [np.transpose(np.array(bias)) for bias in biases]
 
-    keras_weights = []
-    # in here we append the weights of each layer followed by the biases of the same layer until numLayers, to be keras compliant 
-    for i in range(len(weights)):
-        keras_weights.append(weights[i])
-        keras_weights.append(biases[i]) 
-
-    
-    # weights and biases are both lists of lists, we need a list of arrays
-    keras_weights = [np.transpose(np.array(weight)) for weight in keras_weights] # for non conventional nnet
-    # keras_weights = [(np.array(weight)) for weight in keras_weights]
-    
-   
-    # create keras model 
-    model = keras.Sequential()
-
-    model.add(keras.Input(shape=(layerSizes[0],)))    
-    # define every layer size and actv function (relu for hidden layers, linear for output layer)
     for i in range(1,numLayers+1):
-        if i == numLayers:
-            model.add(keras.layers.Dense(layerSizes[i], activation='linear'))
+
+        weight = weights[i]
+        if(len(weight.shape) < 3):
+            for i in range(3-len(weight.shape)): 
+                weight = np.expand_dims(weight, axis=-1)
+        weight = np.moveaxis(weight, 2, 0)
+
+        if(i == numLayers):
+            layer = Dense(idx=i,
+                        size=layerSizes[i],
+                        weights=weight,
+                        biases=biases[i],
+                        activation_function=Linear)
         else:
-            model.add(keras.layers.Dense(layerSizes[i], activation='relu'))
+            layer = Dense(idx=i,
+                        size=layerSizes[i],
+                        weights=weight,
+                        biases=biases[i],
+                        activation_function=ReLu)
+        layer.find_output_str(dict_cst)
+        layer.road = 0
 
-    model.set_weights(keras_weights)
-    print(" Model translated from .nnet to .h5 ")
+        layers.append(layer)
+    
+    print("Finished model initialization.")
 
-    return model
+    if(normalize):
+        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst, inputMaximums, inputMinimums, means, ranges
+    else:
+        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst

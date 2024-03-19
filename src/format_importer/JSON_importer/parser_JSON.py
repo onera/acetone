@@ -104,14 +104,18 @@ def load_json(file_to_parse, conv_algorithm):
                     add_softmax_layer = True
         
             if layer['class_name'] == 'Dense':
+                weights = np.array(data_type_py(layer['weights']))
+                weights = np.moveaxis(weights, 2, 0)
                 current_layer = Dense(idx,
                                       layer['config']['units'],
                                       layer['config']['input_shape'],
-                                      data_type_py(layer['weights']),
+                                      weights,
                                       data_type_py(layer['biases']),
                                       create_actv_function_obj(layer['config']['activation']))
             
             elif layer['class_name'] == 'Conv2D': 
+                weights = np.array(data_type_py(layer['weights']))
+                weights = np.moveaxis(weights, 2, 0)
                 current_layer = create_conv2d_obj(algorithm = conv_algorithm,
                                                   conv_algorithm = conv_algorithm,
                                                   idx = idx,
@@ -125,7 +129,7 @@ def load_json(file_to_parse, conv_algorithm):
                                                   nb_filters = layer['config']['filters'],
                                                   input_shape = layer['config']['input_shape'],
                                                   output_shape = layer['config']['output_shape'],
-                                                  weights = data_type_py(layer['weights']), 
+                                                  weights = weights, 
                                                   biases = data_type_py(layer['biases']),
                                                   activation_function = create_actv_function_obj(layer['config']['activation']))
             

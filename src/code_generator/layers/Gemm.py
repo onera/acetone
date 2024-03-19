@@ -26,7 +26,7 @@ import numpy as np
 #data: alpha and beta constante used in the operation, transpo un tuple saying if the tensor T or W must be transposed before the operation
 #output: The result of the operation """alpha*T*W + beta*B"""
 class Gemm(Layers.Layers):
-    def __init__(self, idx, size, alpha, beta, transA, transB, weight, bias, input_shape, output_shape,activation_function):
+    def __init__(self, idx, size, alpha, beta, transA, transB, weights, bias, input_shape, output_shape,activation_function):
         super().__init__() 
         self.name = 'Gemm'
         self.idx = idx
@@ -49,7 +49,7 @@ class Gemm(Layers.Layers):
             self.input_height = 1
             self.input_width = 1
         
-        self.weights = np.asarray(weight)
+        self.weights = np.asarray(weights)
         self.biases = np.asarray(bias)
         self.activation_function = activation_function
         self.nb_weights = self.count_elements_array(self.weights)

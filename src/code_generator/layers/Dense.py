@@ -23,7 +23,7 @@ import numpy as np
 
 class Dense(Layers.Layers):
 
-    def __init__(self, idx, size, input_shape, weights, biases, activation_function):
+    def __init__(self, idx, size, weights, biases, activation_function):
         
         super().__init__()
         self.idx = idx
@@ -33,7 +33,6 @@ class Dense(Layers.Layers):
         self.biases = np.asarray(biases)
         self.activation_function = activation_function
         self.local_var = 'dotproduct'
-        self.input_shape = input_shape
         
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)

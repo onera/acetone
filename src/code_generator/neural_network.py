@@ -24,7 +24,18 @@ from pathlib import Path
 from abc import ABC
 
 from format_importer.parser import parser
-from code_generator.layers import *
+
+from code_generator.layers.Dense import Dense
+from code_generator.layers.Resize_layers.ResizeLinear import ResizeLinear
+from code_generator.layers.Resize_layers.ResizeNearest import ResizeNearest
+from code_generator.layers.Resize_layers.ResizeCubic import ResizeCubic
+from code_generator.layers.Conv_layers.Conv2D_6loops import Conv2D_6loops
+from code_generator.layers.Conv_layers.Conv2D_indirect_gemm import Conv2D_indirect_gemm
+from code_generator.layers.Conv_layers.Conv2D_std_gemm import Conv2D_std_gemm
+from code_generator.layers.Concatenate import Concatenate
+from code_generator.layers.Pooling_layers.AveragePooling2D import AveragePooling2D
+from code_generator.layers.Pooling_layers.MaxPooling2D import MaxPooling2D
+from code_generator.layers.Broadcast_layers.Add import Add
 
 class CodeGenerator(ABC):
 
@@ -54,7 +65,7 @@ class CodeGenerator(ABC):
             self.test_dataset = ds
             
 
-        self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile']
+        self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile', 'test_dataset.h', 'test_dataset.c']
         
     def create_test_dataset(self):
         test_dataset = np.float32(np.random.default_rng(seed=10).random((int(self.nb_tests),1,int(self.layers[0].size))))
@@ -272,9 +283,6 @@ class CodeGenerator(ABC):
     def generate_c_files(self, c_files_directory):  
 
         self.c_files_directory = c_files_directory
-
-        testdataset_files = ['test_dataset.h', 'test_dataset.c']
-        self.files_to_gen.extend(testdataset_files)
         
         q = 0
         for file in self.files_to_gen:
@@ -456,7 +464,12 @@ class CodeGenerator(ABC):
             self.globalvars_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
         self.globalvars_file.write('\n')
         
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_gemm)) or any(isinstance(layer, Dense))  or any(isinstance(layer, Add))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) 
+                or any(isinstance(layer, Conv2D_indirect_gemm)) 
+                or any(isinstance(layer, Conv2D_std_gemm)) 
+                or any(isinstance(layer, Dense))  
+                or any(isinstance(layer, Add))) 
+                for layer in self.layers):
             self.globalvars_file.write(self.data_type + ' tensor_temp[' + str(max(self.l_size_max,self.patches_size_max)) + '];\n\n')
              
         if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):
@@ -469,15 +482,10 @@ class CodeGenerator(ABC):
                     if(("json" in self.file[-4:]) or ("h5" in self.file[-4:]) or ("nnet" in self.file[-4:])):
                         self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
                                             + self.flatten_array_hybrid(layer.weights) + ';\n')
-                        if(len(layer.weights.shape)<3):
-                            layer.weights = np.expand_dims(layer.weights, axis=-1)
-                        layer.weights = np.moveaxis(layer.weights, 2, 0)
                     
                     elif("onnx" in self.file[-4:]):
                         self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
                                             + self.flatten_array_orderc(layer.weights) + ';\n')
-                        if(isinstance(layer, Conv2D_std_gemm)):
-                            layer.weights = np.moveaxis(layer.weights, 0, 3)
                     
                     self.globalvars_file.write(self.data_type + ' biases_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_biases) + '] = ' \
                                             + self.flatten_array_orderc(layer.biases) + ';\n\n')

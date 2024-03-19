@@ -27,7 +27,7 @@ def load_onnx(file_to_parse, conv_algorithm):
     if (not model.graph.value_info):
         model = onnx.shape_inference.infer_shapes(model)
     
-    #The list of layres
+    #The list of layers
     layers = []
     #Dictionnary of the outputs of each layers: {output_name:layer_idx_from_which_the_output_come_from}
     dict_output = {}

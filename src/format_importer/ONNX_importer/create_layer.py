@@ -158,7 +158,7 @@ def create_Conv(node,idx,dict_input,dict_output,model,conv_algorithm):
                                 nb_filters= initializers[0].dims[0],
                                 input_shape= input_shape, 
                                 output_shape= output_shape,
-                                weights= onnx.numpy_helper.to_array(initializers[0]),
+                                weights= np.moveaxis(onnx.numpy_helper.to_array(initializers[0]), 0,3),
                                 biases= biases,
                                 activation_function= activation_functions.Linear())
     
@@ -297,7 +297,7 @@ def create_Gemm(node,idx,dict_input,dict_output,model):
                        beta = attributs['beta'],
                        transA = attributs['transA'],
                        transB = attributs['transB'],
-                       weight = onnx.numpy_helper.to_array(B_tensor),
+                       weights = np.moveaxis(onnx.numpy_helper.to_array(B_tensor),0,3),
                        bias = onnx.numpy_helper.to_array(C_tensor),
                        input_shape = input_shape,
                        output_shape = output_shape,

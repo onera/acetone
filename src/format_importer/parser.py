@@ -35,13 +35,13 @@ def get_path(file, new_type):
     new_path += file_name + "." + new_type
     return new_path
 
-def parser(file_to_parse,conv_algorithm):
+def parser(file_to_parse, conv_algorithm, normalize=False):
 
     if("json" in  file_to_parse[-4:]):
-        return load_json(file_to_parse,conv_algorithm)
+        return load_json(file_to_parse, conv_algorithm)
     
     elif("onnx" in file_to_parse[-4:]):
-        return load_onnx(file_to_parse,conv_algorithm)
+        return load_onnx(file_to_parse, conv_algorithm)
     
     elif("h5" in file_to_parse[-4:]):
         model = keras.models.load_model(file_to_parse)
@@ -54,16 +54,7 @@ def parser(file_to_parse,conv_algorithm):
         return load_json(new_path, conv_algorithm)
     
     elif("nnet" in file_to_parse[-4:]):
-        print("Creating the .h5 model...\n")
-        model = load_nnet(file_to_parse)
-        print("Model created.\n")
-
-        print("Creating the .json file...\n")
-        new_path = get_path(file_to_parse,"json")
-        JSON_from_keras_model(model, new_path)
-        print("File created")
-
-        return load_json(new_path)
+        return load_nnet(file_to_parse,normalize)
     
     else:
         print("\nError: model description ."+file_to_parse[-4:]+" not supported")
