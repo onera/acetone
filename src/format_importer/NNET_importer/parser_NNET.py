@@ -26,7 +26,7 @@ import numpy as np
 tf.keras.backend.set_floatx('float32')
 
 
-def nnet_to_h5(model_file_nnet):
+def load_nnet(model_file_nnet):
     """
     Reads nnet networks from ACAS project and to pull it in .h5 format
     Inspired from : # https://github.com/NeuralNetworkVerification/Marabou/blob/master/maraboupy/MarabouNetworkNNet.py  read function
@@ -63,20 +63,20 @@ def nnet_to_h5(model_file_nnet):
         # input layer size, layer1size, layer2size...
         layerSizes = [int(x) for x in line.strip().split(",")[:-1]]
 
-        # line = f.readline()
+        line = f.readline()
         # symmetric = int(line.strip().split(",")[0])
 
-        # line = f.readline()
-        # inputMinimums = [float(x) for x in line.strip().split(",")[:-1]]
+        line = f.readline()
+        inputMinimums = [float(x) for x in line.strip().split(",")[:-1]]
 
-        # line = f.readline()
-        # inputMaximums = [float(x) for x in line.strip().split(",")[:-1]]
+        line = f.readline()
+        inputMaximums = [float(x) for x in line.strip().split(",")[:-1]]
 
-        # line = f.readline()
-        # means = [float(x) for x in line.strip().split(",")[:-1]]
+        line = f.readline()
+        means = [float(x) for x in line.strip().split(",")[:-1]]
 
-        # line = f.readline()
-        # ranges = [float(x) for x in line.strip().split(",")[:-1]]
+        line = f.readline()
+        ranges = [float(x) for x in line.strip().split(",")[:-1]]
 
 
         for i in range(5): # skip the next five lines 

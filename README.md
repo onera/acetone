@@ -19,7 +19,7 @@ The [test](./test/) directory includes several tests for the framework and the d
 
 The [src](./src/) folder contains the backend code of ACETONE.
 
-## Istallation
+## Installation
 Clone the GitHub repo on your computer
 
 ```

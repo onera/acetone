@@ -91,3 +91,32 @@ class Linear(ActivationFunctions):
         s = local_var
         
         return s
+    
+class Exponential(ActivationFunctions):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Exponential'
+    
+    def compute(self, z):
+        return np.exp(z)
+    
+    def write_activation_str(self, local_var):
+
+        s = 'exp('+local_var+')'
+
+        return s
+    
+class Logarithm(ActivationFunctions):
+    def __init__(self):
+        super().__init__()
+        self.name = 'Logarithm'
+    
+    def compute(self, z):
+        return np.log(z)
+    
+    def write_activation_str(self, local_var):
+        
+        s = 'log('+local_var+')'
+        
+        return s
+    

@@ -17,4 +17,20 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
-import unittest
+
+import Broadcast
+
+#Return a tensor with where each position (f,i,j) contains the average of all the values at position (f,i,j) in each tensor
+class Average(Broadcast.Broadcast):
+    def __init__(self, idx, size):
+        super().__init__(idx, size)
+        self.name = 'Average'
+
+    def specific_operator(self, source_file):
+        source_file.write(' + ')
+
+    def feedforward(self, inputs):
+        output = inputs[0]
+        for input in inputs[1:]:
+            output +=input 
+        return self.activation_function.compute(output/(len(inputs)))

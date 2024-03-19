@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import customTestCase
+import test.acetoneTestCase as acetoneTestCase
 
 import tensorflow as tf
 import keras
@@ -28,7 +28,7 @@ from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, C
 tf.keras.backend.set_floatx('float32')
 
 
-class TestLayers(customTestCase.CustomTestCase):
+class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Dense Layer"""
 
     
@@ -40,10 +40,10 @@ class TestLayers(customTestCase.CustomTestCase):
         out = Dense(units, activation=None, bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
-        dataset = customTestCase.create_dataset(testshape)
+        dataset = acetoneTestCase.create_dataset(testshape)
 
 
-        acetone_result = customTestCase.run_acetone_for_test(model,'./tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(model,'./tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
 
         self.assertListAlmostEqual(list(acetone_result), list(keras_result))
@@ -57,10 +57,10 @@ class TestLayers(customTestCase.CustomTestCase):
         out = Dense(units, activation=None, bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
-        dataset = customTestCase.create_dataset(testshape)
+        dataset = acetoneTestCase.create_dataset(testshape)
 
 
-        acetone_result = customTestCase.run_acetone_for_test(model,'./tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(model,'./tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
     
@@ -73,9 +73,9 @@ class TestLayers(customTestCase.CustomTestCase):
         out = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
         model = keras.Model(input,out)
 
-        dataset = customTestCase.create_dataset(testshape)
+        dataset = acetoneTestCase.create_dataset(testshape)
 
-        acetone_result = customTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
     
@@ -88,9 +88,9 @@ class TestLayers(customTestCase.CustomTestCase):
         out = MaxPooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
         model = keras.Model(input,out)
 
-        dataset = customTestCase.create_dataset(testshape)
+        dataset = acetoneTestCase.create_dataset(testshape)
 
-        acetone_result = customTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
     
@@ -104,9 +104,9 @@ class TestLayers(customTestCase.CustomTestCase):
         out = AveragePooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
         model = keras.Model(input,out)
 
-        dataset = customTestCase.create_dataset(testshape)
+        dataset = acetoneTestCase.create_dataset(testshape)
 
-        acetone_result = customTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
 
@@ -121,11 +121,11 @@ class TestLayers(customTestCase.CustomTestCase):
         out = Concatenate(axis=3)([x1, x2])
         model = keras.Model(inputs=[input], outputs=out)
 
-        dataset = customTestCase.create_dataset(testshape)
+        dataset = acetoneTestCase.create_dataset(testshape)
 
-        acetone_result = customTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
     
 if __name__ == '__main__':
-    customTestCase.main()
+    acetoneTestCase.main()

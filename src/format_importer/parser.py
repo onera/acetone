@@ -21,7 +21,7 @@
 import keras
 from format_importer.JSON_importer.parser_JSON import load_json
 from format_importer.ONNX_importer.parser_ONNX import load_onnx
-from format_importer.NNET_importer.load_acas import nnet_to_h5
+from format_importer.NNET_importer.parser_NNET import load_nnet
 from format_importer.H5_importer.JSON_from_keras_model import JSON_from_keras_model
 
 def get_path(file, new_type):
@@ -55,7 +55,7 @@ def parser(file_to_parse,conv_algorithm):
     
     elif("nnet" in file_to_parse[-4:]):
         print("Creating the .h5 model...\n")
-        model = nnet_to_h5(file_to_parse)
+        model = load_nnet(file_to_parse)
         print("Model created.\n")
 
         print("Creating the .json file...\n")
