@@ -18,10 +18,10 @@
  ******************************************************************************
 """
 
-import Layers
+import code_generator.layers.Layers as Layers
 import numpy as np
 
-class Softmax(Layers):
+class Softmax(Layers.Layers):
 
     def __init__(self, idx, size):
         

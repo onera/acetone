@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Pad
+import code_generator.layers.Pad_layers.Pad as Pad
 
 #The Edge mode of the Pad layers
 #Pads with the edge values of array.

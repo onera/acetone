@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Pooling2D
+import code_generator.layers.Pooling_layers.Pooling2D as Pooling2D
 import numpy as np
 
 class MaxPooling2D(Pooling2D.Pooling2D):

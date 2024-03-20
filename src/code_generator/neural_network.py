@@ -22,6 +22,7 @@ import os
 import numpy as np
 from pathlib import Path
 from abc import ABC
+import pystache
 
 from format_importer.parser import parser
 
@@ -203,7 +204,7 @@ class CodeGenerator(ABC):
         s+='}'
         
         return s
-
+    
     def generate_testdataset_files(self):
 
         testdataset_header = open(self.c_files_directory + '/test_dataset.h' , "w+")
@@ -235,30 +236,11 @@ class CodeGenerator(ABC):
 
     def generate_main_file(self):
 
-        self.main_file.write('#include <stdio.h> \n#include <math.h> \n#include <time.h> \n#include "test_dataset.h" \n#include "inference.h"\n\n')
-        self.main_file.write('struct timeval GetTimeStamp();\n\n')
-        self.main_file.write('int main(int argc, char** argv)\n{\n')
-        self.main_file.write('    char *path = argv[1];\n\n')
-        self.main_file.write('    FILE *fp = fopen(path, "w+");\n\n')
-        self.main_file.write('    '+self.data_type+' predictions[nb_samples][nn_output_size];\n\n')
-        self.main_file.write('    clock_t t0 = clock();\n')
-        self.main_file.write('    for (int i = 0; i < nb_samples; ++i){\n')
-        self.main_file.write('        inference(predictions[i], nn_test_inputs[i]);\n    }\n')
-        self.main_file.write('    clock_t t1 = clock();\n\n')
-        self.main_file.write('    printf("   Average time over %d tests: %e s \\n", nb_samples,\n')
-        self.main_file.write('        (float)(t1-t0)/(float)CLOCKS_PER_SEC/(float)100);\n\n')
-        self.main_file.write('    printf("   ACETONE framework\'s inference output: \\n");\n')
-        self.main_file.write('    for (int i = 0; i < nb_samples; ++i){\n')
-        self.main_file.write('        for (int j = 0; j < nn_output_size; ++j){\n')
-        self.main_file.write('            fprintf(fp,"%.9g ", predictions[i][j]);\n')
-        self.main_file.write('            printf("%.9g ", predictions[i][j]);\n')
-        self.main_file.write('            if (j == nn_output_size - 1){\n')
-        self.main_file.write('                fprintf(fp, "\\n");\n')
-        self.main_file.write('                printf("\\n");\n')
-        self.main_file.write('            }\n        }\n    }\n\n')
-        self.main_file.write('    fclose(fp);\n')
-        self.main_file.write('    fp = NULL;\n\n')
-        self.main_file.write('    return 0;\n}')
+        with open('src/templates/template_main_file.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        self.main_file.write(pystache.render(template, {'data_type':self.data_type}))
 
     def generate_makefile(self):
 
@@ -269,16 +251,11 @@ class CodeGenerator(ABC):
             elif '.h' in filename : header_files.append(filename)
             else : pass
 
-        self.makefile.write('CC = gcc\n')
-        self.makefile.write('CFLAGS = -g -w -lm\n\n')
-        self.makefile.write('SRC = ' + ' '.join(source_files) + '\n')
-        self.makefile.write('HEADERS = ' + ' '.join(header_files) + '\n')
-        self.makefile.write('OBJ = $(SRC:.cc=.o) $(HEADERS)\n')
-        self.makefile.write('EXEC = '+ self.function_name +'\n\n')
-        self.makefile.write('all: $(EXEC)\n\n')
-        self.makefile.write('$(EXEC): $(OBJ)\n')
-        self.makefile.write('	$(CC) $(LDFLAGS)  -o $@ $(OBJ) $(LBLIBS) $(CFLAGS)\n\n')
-        self.makefile.write('clean:\n	rm $(EXEC)')
+        with open('src/templates/template_Makefile.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        self.makefile.write(pystache.render(template, {'source_files':' '.join(source_files), 'header_files':' '.join(header_files), 'function_name':self.function_name}))
 
     def generate_c_files(self, c_files_directory):  
 
@@ -395,8 +372,9 @@ class CodeGenerator(ABC):
         
     def generate_function_header_file(self):
 
-        self.header_file.write('#ifndef INFERENCE_H_ \n')
-        self.header_file.write('#define INFERENCE_H_ \n\n')
+        mustach_hash = {}
+        mustach_hash['data_type'] = self.data_type
+        mustach_hash['road'] = [i for i in range(self.maxRoad)]
 
         self.nb_weights_max = 1
         self.nb_biases_max = 1
@@ -409,39 +387,42 @@ class CodeGenerator(ABC):
             if isinstance(layer,Concatenate):
                 self.patches_size_max = max(self.patches_size_max,layer.size)
                 
-        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):  
-            self.write_ouput_in_file(str(max(self.l_size_max,self.patches_size_max)),self.header_file)           
+        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
+            mustach_hash['road_size'] = max(self.l_size_max,self.patches_size_max)          
         else:
-            self.write_ouput_in_file(str(self.l_size_max),self.header_file)
+            mustach_hash['road_size'] = self.l_size_max
             
-            
+        mustach_hash['cst'] = []
         written = {}
         for layer in self.dict_cst:
             if self.dict_cst[layer] not in written:
                 written[self.dict_cst[layer]] = layer.size
             else:
                 written[self.dict_cst[layer]] = max(written[self.dict_cst[layer]],layer.size)
-        for cst in written:
-            self.header_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
-        self.header_file.write('\n')
-        
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
-            self.header_file.write(self.data_type + ' tensor_temp[' + str(max(self.l_size_max,self.patches_size_max)) + '];\n\n')
-            
 
+        for cst in written:
+            mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
+            
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
+            mustach_hash['tensor_temp'] = True
+            mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
+            
+        mustach_hash['layers'] = []
         for layer in self.layers:
             if hasattr(layer, 'weights'):
-                self.header_file.write('extern '+ self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '];\n')
-                self.header_file.write('extern '+ self.data_type + ' biases_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_biases) + '];\n')
-                
+                mustach_hash['layers'].append({'name':layer.name, 'idx':"{:02d}".format(layer.idx), 'nb_weights':layer.nb_weights, 'nb_biases':layer.nb_biases})
+
                 if type(layer) is Conv2D_indirect_gemm:
-                    self.header_file.write('extern '+ self.data_type + ' *ppatches_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.patches_height*layer.patches_width) + '];\n')
-                
+                    mustach_hash['layers'][-1]['patches_size'] = layer.patches_size
+
                 if layer.nb_weights > self.nb_weights_max : self.nb_weights_max = layer.nb_weights
                 if layer.nb_biases > self.nb_biases_max : self.nb_biases_max = layer.nb_biases
+        
+        with open('src/templates/template_header_file.c.tpl', 'r') as template_file:
+            template = template_file.read()
+        template_file.close()
 
-        self.header_file.write('\nint inference('+ self.data_type +' *prediction, '+ self.data_type +' *nn_input);\n\n')
-        self.header_file.write('#endif')
+        self.header_file.write(pystache.render(template,mustach_hash))
     
     def generate_globalvars_file(self):
 
@@ -460,6 +441,7 @@ class CodeGenerator(ABC):
                 written[self.dict_cst[layer]] = layer.size
             else:
                 written[self.dict_cst[layer]] = max(written[self.dict_cst[layer]],layer.size)
+        
         for cst in written:
             self.globalvars_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
         self.globalvars_file.write('\n')

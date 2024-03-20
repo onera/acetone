@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Conv2D
+import code_generator.layers.Conv_layers.Conv2D as Conv2D
 
 class Conv2D_6loops(Conv2D.Conv2D):
     """Implements Conv2D using the six-loops algorithm (direc conv)"""

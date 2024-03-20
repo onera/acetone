@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Pad
+import code_generator.layers.Pad_layers.Pad as Pad
 
 #The Constant mode of the Pad layers
 #Use a constant to fill paddings

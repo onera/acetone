@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Layers
+import code_generator.layers.Layers as Layers
 from abc import abstractmethod
 
 
@@ -77,9 +77,9 @@ class Broadcast(Layers.Layers):
         source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n             {\n')
         source_file.write('                tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = ')
         self.write_add_a_tensor(source_file)
-        source_file.write('            }\n        }\n    }\n\n ')
-        a = self.activation_function.write_activation_str('tensor_temp[f]')
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {        output_'+str(self.road)+'[f] = '+a+';\n    }\n')
+        source_file.write('            }\n        }\n    }\n')
+        a = self.activation_function.write_activation_str('tensor_temp[k]')
+        source_file.write('    for (int k = 0; k < ' + str(self.size) + '; k++){\n        output_'+str(self.road)+'[k] = '+a+';\n    }\n\n')
     
     @abstractmethod
     def feedforward(self, inputs):

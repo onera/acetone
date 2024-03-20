@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Broadcast
+import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
 
 #Division of several tensors
 class Divide(Broadcast.Broadcast):

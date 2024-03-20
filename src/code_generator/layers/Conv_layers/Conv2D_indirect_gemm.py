@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Conv2D
+import code_generator.layers.Conv_layers.Conv2D as Conv2D
 import numpy as np
 
 class Conv2D_indirect_gemm(Conv2D.Conv2D):

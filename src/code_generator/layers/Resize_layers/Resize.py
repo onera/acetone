@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Layers
+import code_generator.layers.Layers as Layers
 from abc import abstractmethod
 
 #The resize Layers

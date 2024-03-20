@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Resize
+import code_generator.layers.Resize_layers.Resize as Resize
 import tensorflow as tf
 import numpy as np
 

@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Pad
+import code_generator.layers.Pad_layers.Pad as Pad
 
 #The Reflect mode of the Pad layers
 #Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.

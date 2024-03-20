@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Broadcast
+import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
 import numpy as np
 
 #Return a tensor with where each position (f,i,j) contains the min of all the values at position (f,i,j) in each tensor

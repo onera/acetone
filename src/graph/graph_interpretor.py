@@ -113,7 +113,7 @@ def to_save(layer,dict_cst):
     if((len(layer.next_layer)>1)):
         #if the layer has more than one child, it must be stored.
         if(len(dict_cst) == 0):
-            dict_cst[layer] = 0 #if the dict is empty, we create the first cst
+            dict_cst[layer] = 1 #if the dict is empty, we create the first cst
 
         else:
             given = False

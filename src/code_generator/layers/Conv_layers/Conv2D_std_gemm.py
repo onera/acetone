@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Conv2D
+import code_generator.layers.Conv_layers.Conv2D as Conv2D
 import numpy as np
 
 class Conv2D_std_gemm(Conv2D.Conv2D):
@@ -246,30 +246,3 @@ class Conv2D_std_gemm(Conv2D.Conv2D):
         else:
             source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n\n')
         
-    def feedforward(self, input):
-        # Conv for chw
-        if(self.data_format == 'channels_last'):
-            input = input.reshape(self.input_height, self.input_width, self.input_channels)
-            input= np.transpose(input,(2,0,1))
-            
-        elif(self.data_format == 'channels_first'):
-            input = input.reshape(self.input_channels, self.input_height, self.input_width)
-        
-        output = np.zeros((self.nb_filters, self.output_height, self.output_width))
-        print(self.weights.shape)
-
-        if self.pad_right and self.pad_left and self.pad_top and self.pad_bottom:
-            input_padded = np.zeros((self.input_channels, self.input_height + self.pad_top + self.pad_bottom, self.input_width + self.pad_left + self.pad_right))
-            input_padded[:, self.pad_top:-self.pad_bottom, self.pad_left:-self.pad_right] = input
-        else:
-            input_padded = input
-            
-        for f in range(self.nb_filters):
-            for i in range(self.output_height):
-                for j in range(self.output_width):
-                        output[f,i,j]=np.sum(input_padded[:, i*self.strides:i*self.strides+self.kernel_h, j*self.strides:j*self.strides+self.kernel_w] 
-                                            * self.weights[:,:,:,f]) + self.biases[f]
-        
-        if(self.data_format == 'channels_last'):
-            output= np.transpose(output,(1,2,0))
-        return self.activation_function.compute(output)

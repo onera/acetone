@@ -22,9 +22,9 @@
 import tensorflow as tf
 from tensorflow import keras
 import numpy as np
-from src.code_generator.layers.Dense import Dense
-from src.code_generator.layers.Input import InputLayer
-from src.code_generator.activation_functions import Linear, ReLu
+from code_generator.layers.Dense import Dense
+from code_generator.layers.Input import InputLayer
+from code_generator.activation_functions import Linear, ReLu
 
 tf.keras.backend.set_floatx('float32')
 
@@ -75,16 +75,16 @@ def load_nnet(file_to_parse, normalize):
         # symmetric = int(line.strip().split(",")[0])
 
         line = f.readline()
-        inputMinimums = [float(x) for x in line.strip().split(",")[:-1]]
+        inputMinimums = [float(x) for x in line.strip().split(",")]
 
         line = f.readline()
-        inputMaximums = [float(x) for x in line.strip().split(",")[:-1]]
+        inputMaximums = [float(x) for x in line.strip().split(",")]
 
         line = f.readline()
-        means = [float(x) for x in line.strip().split(",")[:-1]]
+        means = [float(x) for x in line.strip().split(",")]
 
         line = f.readline()
-        ranges = [float(x) for x in line.strip().split(",")[:-1]]
+        ranges = [float(x) for x in line.strip().split(",")]
 
 
         for i in range(5): # skip the next five lines 

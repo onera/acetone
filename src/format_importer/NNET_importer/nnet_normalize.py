@@ -21,16 +21,16 @@
 import string
 
 def write_pre_processing(source_file):
-    with open('./format_importer/NNET_importer/template_pre_processing.c.tpl','r') as file:
+    with open('./template/template_pre_processing.c.tpl','r') as file:
         text = string.Template(file.read())
     file.close()
 
-    source_file.write(text)
+    source_file.write(text.substitute())
 
 
 def write_post_processing(source_file):
-    with open('./format_importer/NNET_importer/template_post_processing.c.tpl','r') as file:
+    with open('./template/template_post_processing.c.tpl','r') as file:
         text = string.Template(file.read())
     file.close()
 
-    source_file.write(text)
+    source_file.write(text.substitute())

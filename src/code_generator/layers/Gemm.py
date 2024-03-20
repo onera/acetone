@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Layers
+import code_generator.layers.Layers as Layers
 import numpy as np
 
 #The layer which compute the general matrix multiplication

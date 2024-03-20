@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Broadcast
+import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
 
 #Multiplication of several tensors
 class Multiply(Broadcast.Broadcast):

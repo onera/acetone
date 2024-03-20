@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Pad
+import code_generator.layers.Pad_layers.Pad as Pad
 
 #The Wrap mode of the Pad layers
 #Pads with the wrap of the vector along the axis. 

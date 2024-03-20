@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Layers
+import code_generator.layers.Layers as Layers
 import numpy as np
 
 #Confine each element of the entry between two values

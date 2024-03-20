@@ -54,7 +54,7 @@ def create_dataset(shape):
 def run_acetone_for_test(model:keras.Model, datatest_path:str=''):
     model.save('./tmp_dir/model.h5')
 
-    cmd = 'python3'+' ../src/main.py '+'./tmp_dir/model.h5'+' inference'+' 1'+' std_gemm_nn'+' ./tmp_dir/acetone '+datatest_path
+    cmd = 'python3'+' src/cli_acetone.py '+'./tmp_dir/model.h5'+' inference'+' 1'+' std_gemm_nn'+' ./tmp_dir/acetone '+datatest_path
     result = subprocess.run(cmd.split(" ")).returncode
     if result != 0:
         print("\nC code generation failed")

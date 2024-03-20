@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import Broadcast
+import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
 
 #Subtraction of several tensors
 class Subtract(Broadcast.Broadcast):
