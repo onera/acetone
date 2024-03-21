@@ -21,13 +21,19 @@
 
 {{/zero}}
 {{#layers}}
+    {{#nb_weights}}
 extern {{data_type}} weights_{{name}}_{{idx}}[{{nb_weights}}];
+
+    {{/nb_weights}}
+    {{#nb_biases}}
 extern {{data_type}} biases_{{name}}_{{idx}}[{{nb_biases}}];
+
+    {{/nb_biases}}
     {{#patches_size}}
-extern *ppatches_{{layers.name}}_{{layers.idx}}[{{patches_size}}];
+extern {{data_type}} *ppatches_{{layers.name}}_{{layers.idx}}[{{patches_size}}];
+
     {{/patches_size}}
 {{/layers}}
-
 int inference({{data_type}} *prediction, {{data_type}} *nn_input);
 
 #endif

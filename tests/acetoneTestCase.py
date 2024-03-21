@@ -23,12 +23,13 @@ import unittest
 import subprocess
 import json
 import keras
+import onnx
 
 
 
 class AcetoneTestCase(unittest.TestCase):
 
-    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-05):
+    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-07):
         return np.testing.assert_allclose(first, second, rtol=rtol, atol=atol)
 
 def read_output(output_path:str):
@@ -51,10 +52,9 @@ def create_dataset(shape):
     filehandle.close()
     return dataset
 
-def run_acetone_for_test(model:keras.Model, datatest_path:str=''):
-    model.save('./tmp_dir/model.h5')
-
-    cmd = 'python3'+' src/cli_acetone.py '+'./tmp_dir/model.h5'+' inference'+' 1'+' std_gemm_nn'+' ./tmp_dir/acetone '+datatest_path
+def run_acetone_for_test(model:str, datatest_path:str=''):
+ 
+    cmd = 'python3'+' src/cli_acetone.py '+model+' inference'+' 1'+' std_gemm_nn'+' ./tmp_dir/acetone '+datatest_path
     result = subprocess.run(cmd.split(" ")).returncode
     if result != 0:
         print("\nC code generation failed")
@@ -80,3 +80,18 @@ def run_acetone_for_test(model:keras.Model, datatest_path:str=''):
     subprocess.run(['rm','-r','tmp_dir/'])
 
     return output
+
+def create_initializer_tensor(
+            name: str,
+            tensor_array: np.ndarray,
+            data_type: onnx.TensorProto = onnx.TensorProto.FLOAT
+    ) -> onnx.TensorProto:
+
+        # (TensorProto)
+        initializer_tensor = onnx.helper.make_tensor(
+            name=name,
+            data_type=data_type,
+            dims=tensor_array.shape,
+            vals=tensor_array.flatten().tolist())
+
+        return initializer_tensor

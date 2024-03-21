@@ -19,13 +19,14 @@
 """
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
-print(sys.path)
 import acetoneTestCase as acetoneTestCase
 
 import tensorflow as tf
 import keras
 import numpy as np
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Concatenate
+from keras.layers import Input, Conv2D
+import onnx
+import onnxruntime
 
 tf.keras.backend.set_floatx('float32')
 
@@ -37,15 +38,17 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         filters = 3
         kernel_size = (3, 3)
 
+        dataset = acetoneTestCase.create_dataset(testshape)
+
         input = Input(testshape)
         out = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
         model = keras.Model(input,out)
+        model.save('./tmp_dir/model.h5')
 
-        dataset = acetoneTestCase.create_dataset(testshape)
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(model, './tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
+
 
 if __name__ == '__main__':
     acetoneTestCase.main()

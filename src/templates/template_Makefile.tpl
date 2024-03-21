@@ -12,4 +12,4 @@ $(EXEC): $(OBJ)
 	$(CC) $(LDFLAGS)  -o $@ $(OBJ) $(LBLIBS) $(CFLAGS)
 
 clean:
-    rm $(EXEC)
+	rm $(EXEC)

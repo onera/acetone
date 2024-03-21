@@ -175,64 +175,44 @@ class CodeGenerator(ABC):
         
         return s
     
-    def flatten_array_orderf(self, array):
-    
-        flattened_aray = array.flatten(order='F')
+    def flatten_array(self,array):
         s = '\n        {'
-        for i in range(flattened_aray.size):
-            s += str(flattened_aray[i])+', '
+        shape = array.shape
+        for j in range(shape[3]):
+            for k in range(shape[0]):
+                for f in range(shape[1]):
+                    for i in range(shape[2]):
+                        s+= str(array[k,f,i,j])+', '
         s = s[:-2]
         s+='}'
-        
         return s
 
-    def flatten_array_hybrid(self, array):
-
-        ndim = array.ndim
-        
-        if ndim > 2:
-            array = array.reshape(-1, *array.shape[-(ndim-2):])
-            flattened_aray = array.flatten(order='F')
-
-        else:
-            flattened_aray = array.flatten(order='F')
-
-        s = '\n        {'
-        for i in range(flattened_aray.size):
-            s += str(flattened_aray[i])+', '
-        s = s[:-2]
-        s+='}'
-        
-        return s
-    
     def generate_testdataset_files(self):
 
         testdataset_header = open(self.c_files_directory + '/test_dataset.h' , "w+")
         testdataset_source = open(self.c_files_directory + '/test_dataset.c' , "w+")
 
-        s = '#ifndef TEST_DATASET_H_ \n'
-        s += '#define TEST_DATASET_H_ \n\n'
-        s += '#define nb_samples ' + str(self.nb_tests) + '\n'
-        s += '#define nn_input_size ' + str(self.layers[0].size) + '\n'
-        s += '#define nn_output_size ' + str(self.layers[-1].size) + '\n\n' # last element of layers_sizes, corresponding to the size of last layer.
-        s += 'extern '+ self.data_type + ' nn_test_inputs[nb_samples][nn_input_size];\n\n'
-        s += '#endif'
+        with open('src/templates/template_test_dataset_header.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
 
-        testdataset_header.write(s)
+        testdataset_header.write(pystache.render(template, {'nb_tests':self.nb_tests, 'nb_inputs':self.layers[0].size, 'nb_outputs':self.layers[-1].size, 'data_type':self.data_type}))
 
-        t = '#include "test_dataset.h" \n\n'
-        t += self.data_type + ' nn_test_inputs[nb_samples][nn_input_size] = {'
-
+        dataset = '{'
         if self.test_dataset is None:
             pass
         else:
             for j in range(self.test_dataset.shape[0]):
-                t += self.flatten_array_orderc(self.test_dataset[j]) +','
-            t = t[:-1]
+                dataset += self.flatten_array_orderc(self.test_dataset[j]) +','
+            dataset = dataset[:-1]
         
-        t += '};\n'
+        dataset += '};\n'
 
-        testdataset_source.write(t)
+        with open('src/templates/template_test_dataset_source.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        testdataset_source.write(pystache.render(template,{'data_type':self.data_type, 'dataset':dataset}))
 
     def generate_main_file(self):
 
@@ -406,17 +386,32 @@ class CodeGenerator(ABC):
         if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
-            
+
+        if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):
+            mustach_hash['zero'] = True
+ 
         mustach_hash['layers'] = []
         for layer in self.layers:
+            to_print = False
+            layer_hash = {'name':layer.name, 'idx':"{:02d}".format(layer.idx)}
+
             if hasattr(layer, 'weights'):
-                mustach_hash['layers'].append({'name':layer.name, 'idx':"{:02d}".format(layer.idx), 'nb_weights':layer.nb_weights, 'nb_biases':layer.nb_biases})
-
-                if type(layer) is Conv2D_indirect_gemm:
-                    mustach_hash['layers'][-1]['patches_size'] = layer.patches_size
-
+                layer_hash['nb_weights']=layer.nb_weights
                 if layer.nb_weights > self.nb_weights_max : self.nb_weights_max = layer.nb_weights
+                to_print = True
+
+            if hasattr(layer,'biases'):
+                layer_hash['nb_biases']=layer.nb_biases
                 if layer.nb_biases > self.nb_biases_max : self.nb_biases_max = layer.nb_biases
+                to_print =True
+
+            if type(layer) is Conv2D_indirect_gemm:
+                layer_hash['patches_size'] = layer.patches_size
+                to_print = True
+            
+            if (to_print):
+                mustach_hash['layers'].append(layer_hash)
+                
         
         with open('src/templates/template_header_file.c.tpl', 'r') as template_file:
             template = template_file.read()
@@ -426,15 +421,17 @@ class CodeGenerator(ABC):
     
     def generate_globalvars_file(self):
 
-        self.globalvars_file.write('#include "inference.h" \n\n')
+        mustach_hash = {}
 
-        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):       
-            self.write_ouput_in_file(str(max(self.l_size_max,self.patches_size_max)),self.globalvars_file)
-        
+        mustach_hash['data_type'] = self.data_type
+        mustach_hash['road'] = [i for i in range(self.maxRoad)]
+
+        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
+            mustach_hash['road_size'] = max(self.l_size_max,self.patches_size_max)          
         else:
-            self.write_ouput_in_file(str(self.l_size_max),self.globalvars_file)
+            mustach_hash['road_size'] = self.l_size_max
         
-        
+        mustach_hash['cst'] = []
         written = {}
         for layer in self.dict_cst:
             if self.dict_cst[layer] not in written:
@@ -443,36 +440,41 @@ class CodeGenerator(ABC):
                 written[self.dict_cst[layer]] = max(written[self.dict_cst[layer]],layer.size)
         
         for cst in written:
-            self.globalvars_file.write(self.data_type + ' cst_'+str(cst)+'[' + str(written[cst]) + '];\n')
-        self.globalvars_file.write('\n')
+            mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
         
-        if (any(isinstance(layer, Concatenate) 
-                or any(isinstance(layer, Conv2D_indirect_gemm)) 
-                or any(isinstance(layer, Conv2D_std_gemm)) 
-                or any(isinstance(layer, Dense))  
-                or any(isinstance(layer, Add))) 
-                for layer in self.layers):
-            self.globalvars_file.write(self.data_type + ' tensor_temp[' + str(max(self.l_size_max,self.patches_size_max)) + '];\n\n')
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
+            mustach_hash['tensor_temp'] = True
+            mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
              
         if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):
-            self.globalvars_file.write(self.data_type + ' zero = 0.0f;\n\n')
-
+            mustach_hash['zero'] = True
         
+        mustach_hash['layers'] = []
 
         for layer in self.layers:
-                if hasattr(layer, 'weights'):
-                    if(("json" in self.file[-4:]) or ("h5" in self.file[-4:]) or ("nnet" in self.file[-4:])):
-                        self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
-                                            + self.flatten_array_hybrid(layer.weights) + ';\n')
-                    
-                    elif("onnx" in self.file[-4:]):
-                        self.globalvars_file.write(self.data_type + ' weights_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_weights) + '] = ' \
-                                            + self.flatten_array_orderc(layer.weights) + ';\n')
-                    
-                    self.globalvars_file.write(self.data_type + ' biases_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.nb_biases) + '] = ' \
-                                            + self.flatten_array_orderc(layer.biases) + ';\n\n')
-                    
-                    if type(layer) is Conv2D_indirect_gemm:
-                        self.globalvars_file.write(self.data_type + ' *ppatches_' + layer.name + '_' + str("{:02d}".format(layer.idx)) + '[' + str(layer.patches_height*layer.patches_width) + '] = ' \
-                                            + layer.create_ppatches(self.dict_cst) + ';\n\n')
-   
+            to_print = False
+            layer_hash = {'name':layer.name, 'idx':"{:02d}".format(layer.idx)}
+
+            if hasattr(layer, 'weights'):
+                layer_hash['nb_weights'] = layer.nb_weights
+                layer_hash['weights'] = self.flatten_array(layer.weights)
+                to_print = True
+
+            if hasattr(layer,'biases'):
+                layer_hash['nb_biases'] = layer.nb_biases
+                layer_hash['biases'] = self.flatten_array_orderc(layer.biases)
+                to_print =True
+
+            if type(layer) is Conv2D_indirect_gemm:
+                layer_hash['patches_size'] = layer.patches_size
+                layer_hash['patches'] = layer.create_ppatches(self.dict_cst)
+                to_print = True
+            
+            if (to_print):
+                mustach_hash['layers'].append(layer_hash)
+        
+        with open('src/templates/template_global_var_file.c.tpl', 'r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        self.globalvars_file.write(pystache.render(template,mustach_hash))
