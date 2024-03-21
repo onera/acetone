@@ -20,6 +20,7 @@
 
 import code_generator.layers.Layers as Layers
 import numpy as np
+import pystache
 
 class Dense(Layers.Layers):
 
@@ -38,19 +39,35 @@ class Dense(Layers.Layers):
         self.nb_biases = self.count_elements_array(self.biases)
 
         
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
         #Variable indicating under which name the input tensor is
         output_str = self.previous_layer[0].output_str
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['prev_size'] = self.previous_layer[0].size
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        activation_function = self.activation_function.write_activation_str(self.local_var)
+        mustach_hash['activation_function'] = activation_function
+
+        if(self.fused_layer):
+            
+            fused_layer = self.fused_layer.write_activation_str(self.local_var,self.idx,'i')
+            mustach_hash['fused_layer'] = fused_layer
+
+            if(self.activation_function.name == 'linear'):
+                mustach_hash['linear'] = True
         
-        source_file.write(  '    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write( '    for (int i = 0; i < ' + str(self.size) + '; ++i) \n    { \n')
-        source_file.write( '        dotproduct = 0;\n')
-        source_file.write( '        for (int j = 0; j < ' + str(self.previous_layer[0].size) + '; ++j)\n        {\n')
-        source_file.write( '            dotproduct += '+output_str+'[j] * weights_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[(j + ' + str(self.previous_layer[0].size) + '*i)];\n        }\n')
-        source_file.write( '        dotproduct += biases_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[i];\n')
-        
-        self.write_activation_and_fusion(source_file, 'tensor_temp[i]', 'i', self.local_var,'        ')
-        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n\n')
+        with open('src/templates/template_Dense.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
 
     def feedforward(self, input):
         input = input.reshape(self.previous_layer[0].size)

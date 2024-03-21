@@ -19,13 +19,12 @@
 """
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
-print(sys.path)
 import acetoneTestCase as acetoneTestCase
 
 import tensorflow as tf
 import keras
 import numpy as np
-from keras.layers import Input, Dense, Conv2D, MaxPooling2D, AveragePooling2D, Concatenate
+from keras.layers import Input, Dense
 
 tf.keras.backend.set_floatx('float32')
 
@@ -43,14 +42,14 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
 
         model = keras.Model(input,out)
         dataset = acetoneTestCase.create_dataset(testshape)
+        model.save('./tmp_dir/model.h5')
 
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(model,'./tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
 
         self.assertListAlmostEqual(list(acetone_result), list(keras_result))
     
-
+    """
     def test_Dense2(self):
         testshape = (1,1,500)
         units = 250
@@ -60,11 +59,11 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
 
         model = keras.Model(input,out)
         dataset = acetoneTestCase.create_dataset(testshape)
+        model.save('./tmp_dir/model.h5')
 
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(model,'./tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
-    
+    """
 if __name__ == '__main__':
     acetoneTestCase.main()

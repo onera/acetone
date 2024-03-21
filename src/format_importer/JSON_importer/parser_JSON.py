@@ -108,10 +108,12 @@ def load_json(file_to_parse, conv_algorithm):
         
             if layer['class_name'] == 'Dense':
                 weights = np.array(data_type_py(layer['weights']))
-                if(len(weights.shape) < 4):
-                    for i in range(4-len(weights.shape)): 
+                if(len(weights.shape) < 3):
+                    for i in range(3-len(weights.shape)): 
                         weights = np.expand_dims(weights, axis=-1)
                 weights = np.moveaxis(weights, 2, 0)
+                if(len(weights.shape) < 4):
+                    weights = np.expand_dims(weights, axis=0)
                 current_layer = Dense.Dense(idx=idx,
                                       size=layer['config']['units'],
                                       weights=weights,
@@ -120,10 +122,12 @@ def load_json(file_to_parse, conv_algorithm):
             
             elif layer['class_name'] == 'Conv2D': 
                 weights = np.array(data_type_py(layer['weights']))
-                if(len(weights.shape) < 4):
-                    for i in range(4-len(weights.shape)): 
+                if(len(weights.shape) < 3):
+                    for i in range(3-len(weights.shape)): 
                         weights = np.expand_dims(weights, axis=-1)
                 weights = np.moveaxis(weights, 2, 0)
+                if(len(weights.shape) < 4):
+                    weights = np.expand_dims(weights, axis=0)
                 current_layer = create_conv2d_obj(algorithm = conv_algorithm,
                                                   conv_algorithm = conv_algorithm,
                                                   idx = idx,

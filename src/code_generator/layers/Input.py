@@ -19,6 +19,7 @@
 """
 
 import code_generator.layers.Layers as Layers
+import pystache
 
 class InputLayer(Layers.Layers):
 
@@ -29,11 +30,20 @@ class InputLayer(Layers.Layers):
         self.size = size
         self.name = 'Input_layer'
 
-    def write_to_function_source_file(self, source_file):
-        
-        source_file.write(  '    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write( '    for (int i = 0; i < ' + str(self.size) + '; ++i) \n    { \n')
-        source_file.write( '        output_'+str(self.road)+'[i] = nn_input[i]; \n    } \n\n')
+    def write_to_function_source_file(self):
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['size'] = self.size
+        mustach_hash['road'] = self.road
+
+        with open('src/templates/template_Input_Layer.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
 
     def feedforward(self, input):
         

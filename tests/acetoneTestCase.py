@@ -22,10 +22,6 @@ import numpy as np
 import unittest
 import subprocess
 import json
-import keras
-import onnx
-
-
 
 class AcetoneTestCase(unittest.TestCase):
 
@@ -77,21 +73,6 @@ def run_acetone_for_test(model:str, datatest_path:str=''):
         return np.array([])
     
     output = read_output('./tmp_dir/acetone/output_c.txt')
-    subprocess.run(['rm','-r','tmp_dir/'])
+    #subprocess.run(['rm','-r','tmp_dir/'])
 
     return output
-
-def create_initializer_tensor(
-            name: str,
-            tensor_array: np.ndarray,
-            data_type: onnx.TensorProto = onnx.TensorProto.FLOAT
-    ) -> onnx.TensorProto:
-
-        # (TensorProto)
-        initializer_tensor = onnx.helper.make_tensor(
-            name=name,
-            data_type=data_type,
-            dims=tensor_array.shape,
-            vals=tensor_array.flatten().tolist())
-
-        return initializer_tensor

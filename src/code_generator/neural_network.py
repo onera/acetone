@@ -273,82 +273,54 @@ class CodeGenerator(ABC):
       
     def generate_function_source_file(self):
 
+        mustach_hash = {}
+
+        mustach_hash['data_type'] = self.data_type
+        mustach_hash['output_size'] = self.layers[-1].size
+        mustach_hash['input_size'] = self.layers[0].size
+
         self.l_size_max = 1
         for layer in (self.layers):
-            if layer.size > self.l_size_max : self.l_size_max = layer.size            
-
-        self.source_file.write('#include <stdio.h>\n')
-        self.source_file.write('#include <math.h>\n')
-        self.source_file.write('#include "inference.h"\n\n')
-
-        self.source_file.write('int inference(' + self.data_type + ' prediction[' + str(self.layers[-1].size) + '], ' + self.data_type + ' nn_input[' + str(self.layers[0].size) + '])\n{\n')
-        # self.source_file.write('    static ' + self.data_type + ' output_cur[' + str(self.l_size_max) + '];\n')
-        # self.source_file.write('    static ' + self.data_type + ' output_pre[' + str(self.l_size_max) + '];\n')
-
-        def write_cst_cubic_interpolation():
-            #the two points for a 1D interpolation and their values if the non void dimension is the width of the tensor
-            s = '    float a;\n'
-            s+= '    float result_interpolation;\n'
-            s+= '    float f_1;\n'
-            s+= '    float f0;\n'
-            s+= '    float f1;\n'
-            s+= '    float f2;\n'
-            s+= '    float s;\n'
-            return s
+            if layer.size > self.l_size_max : self.l_size_max = layer.size
         
-        
-        def write_cst_linear_interpolation():
-            #the four points for a 2D interpolation and their values
-            s = '    int y2;\n'
-            s+= '    int y1;\n'
-            s+= '    int x2;\n'
-            s+= '    int x1;\n'
-            s+= '    float f11;\n'
-            s+= '    float f12;\n'
-            s+= '    float f21;\n'
-            s+= '    float f22;\n'
-            return s
-            
         if any(isinstance(layer, Dense) for layer in self.layers):
-            self.source_file.write('    ' + self.data_type + ' dotproduct;\n')
+            mustach_hash['is_dense'] = True
         
         if (any(isinstance(layer, Conv2D_6loops) or isinstance(layer, AveragePooling2D)) for layer in self.layers):
-            self.source_file.write('    ' + self.data_type + ' sum;\n')
+            mustach_hash['is_sum'] = True
         
         if any(isinstance(layer, MaxPooling2D) for layer in self.layers):
-            self.source_file.write('    ' + self.data_type + ' max;\n')
+            mustach_hash['is_max'] = True
                
         if any(isinstance(layer, AveragePooling2D) for layer in self.layers):
-            self.source_file.write('    int count;\n\n')
+            mustach_hash['is_count'] = True
             
         if any(isinstance(layer,ResizeLinear) or isinstance(layer,ResizeCubic) or isinstance(layer,ResizeNearest) for layer in self.layers):
-            self.source_file.write('    float x;\n    float y;\n')
+            mustach_hash['is_resize'] = True
         
         if any(isinstance(layer, ResizeCubic) for layer in self.layers):
-            self.source_file.write(write_cst_cubic_interpolation())
+            mustach_hash['is_cubic_interpolation'] = True
             
         if any(isinstance(layer, ResizeLinear) for layer in self.layers):
-            self.source_file.write(write_cst_linear_interpolation())
+            mustach_hash['is_linear_interpolation'] = True
         
-
+        mustach_hash['layers'] = []
         for layer in self.layers:
-            layer.write_to_function_source_file(self.source_file)
+            layer_hash = {'inference_function':layer.write_to_function_source_file(), 'road':layer.road, 'size':layer.size}
             
             if(layer in self.dict_cst):
-                self.source_file.write('    for (int k = 0; k < ' + str(layer.size) + '; ++k)\n')
-                self.source_file.write('    {\n        cst_'+ str(self.dict_cst[layer]) +'[k] = output_'+str(layer.road)+'[k];\n    }\n\n')
+                layer_hash['cst'] = True
             
             if layer == self.layers[-1]:
-                self.source_file.write('    for (int k = 0; k < ' + str(layer.size) + '; ++k)\n')
-                self.source_file.write('        prediction[k] = output_'+str(layer.road)+'[k];\n\n')
-                
-        self.source_file.write('    return 0;\n}')
+                layer_hash['is_last'] = True
 
-    def write_ouput_in_file(self,str_size,source_file):
-        for i in range(self.maxRoad):
-            source_file.write('// output list for road ' + str(i)+'\n')
-            source_file.write(self.data_type + ' output_'+str(i)+'[' + str_size + '];\n')
-        source_file.write('\n')
+            mustach_hash['layers'].append(layer_hash)
+
+        with open('src/templates/template_source_file.c.tpl', 'r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        self.source_file.write(pystache.render(template,mustach_hash))
         
     def generate_function_header_file(self):
 
@@ -456,6 +428,7 @@ class CodeGenerator(ABC):
             layer_hash = {'name':layer.name, 'idx':"{:02d}".format(layer.idx)}
 
             if hasattr(layer, 'weights'):
+                print(layer.weights.shape)
                 layer_hash['nb_weights'] = layer.nb_weights
                 layer_hash['weights'] = self.flatten_array(layer.weights)
                 to_print = True
