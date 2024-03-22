@@ -20,6 +20,7 @@
 
 import code_generator.layers.Layers as Layers
 import numpy as np
+import pystache
 
 class Softmax(Layers.Layers):
 
@@ -30,20 +31,26 @@ class Softmax(Layers.Layers):
         self.size = size
         self.name = 'Softmax'
 
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
         output_str = self.previous_layer[0].output_str
-        
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    sum = 0;\n\n')
-        source_file.write('    for (int i = 0; i < ' + str(self.size) + '; ++i)\n')
-        source_file.write('        sum += exp('+output_str+'[i]);\n\n')
-        source_file.write('    for (int j = 0; j < ' + str(self.size) + '; ++j)\n    {\n')
-        source_file.write('        output_'+str(self.road)+'[j] = exp('+output_str+'[j])/sum;\n\n')
-        if (self.fused_layer):
-            b = self.fused_layer.write_activation_str('output_'+str(self.road)+'[j]', self.idx, 'j')
-            source_file.write('        output_'+str(self.road)+'[j] = '+ b +';\n')
-        source_file.write('    }\n\n')
 
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['size'] = self.size
+        mustach_hash['road'] = self.road
+        mustach_hash['output_str'] = output_str
+
+        if (self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road)+'[j]', self.idx, 'j')
+
+        with open('src/templates/template_Softmax.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+    
     def feedforward(self, input):
         
         exp = np.exp(input, dtype=np.float)

@@ -47,18 +47,16 @@ class Dense(Layers.Layers):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['prev_size'] = self.previous_layer[0].size
         mustach_hash['output_str'] = output_str
         mustach_hash['road'] = self.road
         mustach_hash['size'] = self.size
 
-        activation_function = self.activation_function.write_activation_str(self.local_var)
-        mustach_hash['activation_function'] = activation_function
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
+
+        mustach_hash['prev_size'] = self.previous_layer[0].size
 
         if(self.fused_layer):
-            
-            fused_layer = self.fused_layer.write_activation_str(self.local_var,self.idx,'i')
-            mustach_hash['fused_layer'] = fused_layer
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str(self.local_var,self.idx,'i')
 
             if(self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True

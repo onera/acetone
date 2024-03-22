@@ -27,12 +27,14 @@ import pystache
 from format_importer.parser import parser
 
 from code_generator.layers.Dense import Dense
+from code_generator.layers.Softmax import Softmax
 from code_generator.layers.Resize_layers.ResizeLinear import ResizeLinear
 from code_generator.layers.Resize_layers.ResizeNearest import ResizeNearest
 from code_generator.layers.Resize_layers.ResizeCubic import ResizeCubic
 from code_generator.layers.Conv_layers.Conv2D_6loops import Conv2D_6loops
 from code_generator.layers.Conv_layers.Conv2D_indirect_gemm import Conv2D_indirect_gemm
 from code_generator.layers.Conv_layers.Conv2D_std_gemm import Conv2D_std_gemm
+from code_generator.layers.Conv_layers.Conv2D import Conv2D
 from code_generator.layers.Concatenate import Concatenate
 from code_generator.layers.Pooling_layers.AveragePooling2D import AveragePooling2D
 from code_generator.layers.Pooling_layers.MaxPooling2D import MaxPooling2D
@@ -286,7 +288,7 @@ class CodeGenerator(ABC):
         if any(isinstance(layer, Dense) for layer in self.layers):
             mustach_hash['is_dense'] = True
         
-        if (any(isinstance(layer, Conv2D_6loops) or isinstance(layer, AveragePooling2D)) for layer in self.layers):
+        if (any(isinstance(layer, Conv2D_6loops) or isinstance(layer, AveragePooling2D) or isinstance(layer, Softmax)) for layer in self.layers):
             mustach_hash['is_sum'] = True
         
         if any(isinstance(layer, MaxPooling2D) for layer in self.layers):
@@ -414,7 +416,7 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
         
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
              
@@ -428,7 +430,6 @@ class CodeGenerator(ABC):
             layer_hash = {'name':layer.name, 'idx':"{:02d}".format(layer.idx)}
 
             if hasattr(layer, 'weights'):
-                print(layer.weights.shape)
                 layer_hash['nb_weights'] = layer.nb_weights
                 layer_hash['weights'] = self.flatten_array(layer.weights)
                 to_print = True

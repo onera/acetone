@@ -19,37 +19,49 @@
 """
 
 import code_generator.layers.Conv_layers.Conv2D as Conv2D
+import pystache
 
 class Conv2D_6loops(Conv2D.Conv2D):
     """Implements Conv2D using the six-loops algorithm (direc conv)"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
    
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
         output_str = self.previous_layer[0].output_str
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for (int f = 0; f < ' + str(self.nb_filters) + '; ++f)\n    {\n')
-        source_file.write('        for (int i = 0; i < '+str(self.output_height)+'; ++i)\n        {\n')
-        source_file.write('            for (int j = 0; j < '+str(self.output_width)+'; ++j)\n            {\n')
-        source_file.write('                sum = 0;\n')
-        source_file.write('                for (int c = 0; c < '+str(self.input_channels)+'; ++c)\n                {\n')
-        source_file.write('                    for (int m = 0; m < '+str(self.kernel_h)+'; ++m)\n                    {\n')
-        source_file.write('                        for (int n = 0; n < '+str(self.kernel_w)+'; ++n)\n                        {\n')
-        source_file.write('                            int ii = i*'+str(self.strides)+' + m*'+str(self.dilation_rate)+' - '+str(self.pad_left)+';\n')
-        source_file.write('                            int jj = j*'+str(self.strides)+' + n*'+str(self.dilation_rate)+' - '+str(self.pad_top)+';\n\n')
-        source_file.write('                            if (ii >= 0 && ii < '+str(self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n                            {\n')
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
+
+        mustach_hash['nb_filters'] = self.nb_filters
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['input_channels'] = self.input_channels
+        mustach_hash['kernel_h'] = self.kernel_h
+        mustach_hash['kernel_w'] = self.kernel_w
+        mustach_hash['strides'] = self.strides
+        mustach_hash['dilation_rate'] = self.dilation_rate
+        mustach_hash['pad_left'] = self.pad_left
+        mustach_hash['pad_top'] = self.pad_top
+        mustach_hash['input_height'] = self.input_height
+        mustach_hash['input_width'] = self.input_width
+        if (self.data_format == 'channels_last'):
+            mustach_hash['channels_last'] = True
+
+        if (self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str(self.local_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)')
+
+            if (self.activation_function.name == 'linear'):
+                mustach_hash['linear'] = True
         
-        source_file.write('                                sum += '+output_str+'[jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)] * weights_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[n + '+str(self.kernel_w)+'*(m + '+str(self.kernel_h)+'*(c + '+str(self.input_channels)+'*f))];\n')
-        source_file.write('                            }\n                        }\n                    }\n                }\n')                                            
-        source_file.write('                sum += biases_' + self.name + '_' + str("{:02d}".format(self.idx)) + '[f];\n'            )
-        
-        a = self.activation_function.write_activation_str(self.local_var)
-        
-        if(self.fused_layer):
-            b=self.fused_layer.write_activation_str(self.local_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)')
-            if(self.activation_function.name != 'linear'):
-                source_file.write('                '+self.local_var+' = '+a+';\n')
-            source_file.write('                output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)] = '+ b +';\n')
-        else:
-            source_file.write('                output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)] = '+ a +';\n')
-        source_file.write('            }\n        }\n    }\n\n')
+        with open('src/templates/template_Conv_6loops.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)

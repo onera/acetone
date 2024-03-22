@@ -38,7 +38,7 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         units = 8
 
         input = Input(testshape)
-        out = Dense(units, activation=None, bias_initializer='he_normal')(input)
+        out = Dense(units, activation='softmax', bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
         dataset = acetoneTestCase.create_dataset(testshape)
@@ -49,21 +49,7 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result), list(keras_result))
     
-    
-    def test_Dense2(self):
-        testshape = (1,1,500)
-        units = 250
 
-        input = Input(testshape)
-        out = Dense(units, activation=None, bias_initializer='he_normal')(input)
-
-        model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(testshape)
-        model.save('./tmp_dir/model.h5')
-
-        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
-        keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result)
     
     
 if __name__ == '__main__':

@@ -41,16 +41,18 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 {{/is_linear_interpolation}}
 
 {{#layers}}
-    {{{inference_function}}}
+{{{inference_function}}}
 
     {{#cst}}
-    for (int k; k < {{size}}; k++){
+    for (int k; k < {{size}}; k++)
+    {
         cst_{{cst_name}}[k] = output_{{road}}[k];
     }
 
     {{/cst}}
     {{#is_last}}
-    for (int k; k < {{size}}; k++){
+    for (int k = 0; k < {{size}}; k++)
+    {
         prediction[k] = output_{{road}}[k];
     }
 

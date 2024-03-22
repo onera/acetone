@@ -48,9 +48,9 @@ def create_dataset(shape):
     filehandle.close()
     return dataset
 
-def run_acetone_for_test(model:str, datatest_path:str=''):
+def run_acetone_for_test(model:str, datatest_path:str='',conv_algo:str='std_gemm_nn'):
  
-    cmd = 'python3'+' src/cli_acetone.py '+model+' inference'+' 1'+' std_gemm_nn'+' ./tmp_dir/acetone '+datatest_path
+    cmd = 'python3'+' src/cli_acetone.py '+model+' inference'+' 1 '+conv_algo+' ./tmp_dir/acetone '+datatest_path
     result = subprocess.run(cmd.split(" ")).returncode
     if result != 0:
         print("\nC code generation failed")
@@ -73,6 +73,6 @@ def run_acetone_for_test(model:str, datatest_path:str=''):
         return np.array([])
     
     output = read_output('./tmp_dir/acetone/output_c.txt')
-    #subprocess.run(['rm','-r','tmp_dir/'])
+    subprocess.run(['rm','-r','tmp_dir/'])
 
     return output
