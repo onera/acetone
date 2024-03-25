@@ -28,6 +28,7 @@ from format_importer.parser import parser
 
 from code_generator.layers.Dense import Dense
 from code_generator.layers.Softmax import Softmax
+from code_generator.layers.MatMul import MatMul
 from code_generator.layers.Resize_layers.ResizeLinear import ResizeLinear
 from code_generator.layers.Resize_layers.ResizeNearest import ResizeNearest
 from code_generator.layers.Resize_layers.ResizeCubic import ResizeCubic
@@ -285,7 +286,7 @@ class CodeGenerator(ABC):
         for layer in (self.layers):
             if layer.size > self.l_size_max : self.l_size_max = layer.size
         
-        if any(isinstance(layer, Dense) for layer in self.layers):
+        if any((isinstance(layer, Dense) or isinstance(layer,MatMul)) for layer in self.layers):
             mustach_hash['is_dense'] = True
         
         if (any(isinstance(layer, Conv2D_6loops) or isinstance(layer, AveragePooling2D) or isinstance(layer, Softmax)) for layer in self.layers):

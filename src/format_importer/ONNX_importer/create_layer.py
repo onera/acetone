@@ -27,7 +27,7 @@ from code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Co
 from code_generator.layers.Pad_layers import EdgePad, WrapPad, ReflectPad, ConstantPad
 from code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
 from code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Clip, Gather, Gemm
+from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Clip, Gather, Gemm, MatMul, AddBiase
 from code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
 
 import code_generator.activation_functions as activation_functions
@@ -98,6 +98,9 @@ def get_shape(shape_name,model):
             shape = [output.type.tensor_type.shape.dim[i].dim_value for i in range(len(output.type.tensor_type.shape.dim))]
     if (shape and len(shape)<=3):
         shape = [1 for i in range(3-len(shape))] + shape
+    for i in range(len(shape)):
+        if shape[i] == 0:
+            shape[i] = 1
     return shape
 
 #Return the size of the layer when given the list output_shape
@@ -309,7 +312,47 @@ def create_Gemm(node,idx,dict_input,dict_output,model):
                        input_shape = input_shape,
                        output_shape = output_shape,
                        activation_function = activation_functions.Linear())
-    
+
+def create_MatMul(node,idx,dict_input,dict_output,model):
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_output[node.output[0]] = idx
+    right_tensor = look_for_initializer(node.input[0],model)
+    left_tensor = look_for_initializer(node.input[1],model)
+    if(left_tensor or right_tensor):
+        if(right_tensor and not left_tensor):
+            #the weigth is the right tensor:  MatMul(W,T)
+            side = True
+            weights = onnx.numpy_helper.to_array(right_tensor)
+            weights = np.reshape(weights, (1,1,output_shape[-1],get_shape(node.input[1],model)[-1]))
+            dict_input[idx] = [node.input[1]]
+            input_shape = get_shape(node.input[1],model)
+        if(left_tensor and not right_tensor):
+            #the weigth is the right tensor:  MatMul(W,T)
+            side = False
+            weights = onnx.numpy_helper.to_array(left_tensor)
+            weights = np.reshape(weights, (1,1,get_shape(node.input[0],model)[-1],output_shape[-1]))
+            print(weights)
+            dict_input[idx] = [node.input[0]]
+            input_shape = get_shape(node.input[0],model)
+        return MatMul.MatMul(idx = idx,
+                             size = size,
+                             input_shape = input_shape,
+                             weights = weights,
+                             side = side,
+                             activation_function = activation_functions.Linear())
+    else:
+        dict_input[idx] = node.input
+        input_shapes =[]
+        for input in node.input:
+            input_shapes.append(get_shape(input,model))
+        # to check
+        return Dot.Dot(idx = idx,
+                       size = size,
+                       axis = [-1,-2],
+                       input_shapes = input_shapes,
+                       output_shape = output_shape,
+                       activation_function = activation_functions.Linear())
 
 ### Pooling layers ###
 
@@ -379,19 +422,33 @@ def create_GlobalAveragePool(node,idx,dict_input,dict_output,model):
 
 #create a layer Add
 def create_Add(node,idx,dict_input,dict_output,model):
-    input_shapes =[]
-    for input in node.input:
-        input_shapes.append(get_shape(input,model))
     output_shape = get_shape(node.output[0],model)
     size = find_size(output_shape)
-    dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Add.Add(idx=idx,
-                      size=size,
-                      input_shapes=input_shapes,
-                      output_shape=output_shape,
-                      activation_function= activation_functions.Linear())
-
+    right_tensor = look_for_initializer(node.input[0],model)
+    left_tensor = look_for_initializer(node.input[1],model)
+    if(not right_tensor and not left_tensor):
+        input_shapes =[]
+        for input in node.input:
+            input_shapes.append(get_shape(input,model))
+        dict_input[idx] = node.input
+        return Add.Add(idx=idx,
+                        size=size,
+                        input_shapes=input_shapes,
+                        output_shape=output_shape,
+                        activation_function= activation_functions.Linear())
+    else:
+        if(right_tensor):
+            biases = onnx.numpy_helper.to_array(right_tensor)
+            dict_input[idx] = [node.input[1]]
+        elif(left_tensor):
+            biases = onnx.numpy_helper.to_array(left_tensor)
+            dict_input[idx] = [node.input[0]]
+        return AddBiase.Add_Biass(idx = idx,
+                                  size = size,
+                                  biases = biases,
+                                  activation_function = activation_functions.Linear())
+    
 #create a layer Div
 def create_Div(node,idx,dict_input,dict_output,model):
     input_shapes =[]
@@ -490,6 +547,7 @@ layer_type = {"Softmax":create_Softmax,
          "Concat":create_Concat,
          "Gather":create_Gather,
          "Gemm":create_Gemm,
+         "MatMul":create_MatMul,
          "MaxPool":create_MaxPool,
          "AveragePool":create_AveragePool,
          "GlobalAveragePool":create_GlobalAveragePool,
