@@ -41,7 +41,6 @@
 {{^channels_last}}
     for (int k = 0; k < {{size}}; ++k)
     {
-        
         output_{{road}}[k] = tensor_temp[k];
     }
 {{/channels_last}}

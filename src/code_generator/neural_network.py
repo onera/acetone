@@ -360,9 +360,6 @@ class CodeGenerator(ABC):
         if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
-
-        if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):
-            mustach_hash['zero'] = True
  
         mustach_hash['layers'] = []
         for layer in self.layers:
@@ -441,7 +438,7 @@ class CodeGenerator(ABC):
 
             if type(layer) is Conv2D_indirect_gemm:
                 layer_hash['patches_size'] = layer.patches_size
-                layer_hash['patches'] = layer.create_ppatches(self.dict_cst)
+                layer_hash['patches'] = layer.create_ppatches()
                 to_print = True
             
             if (to_print):

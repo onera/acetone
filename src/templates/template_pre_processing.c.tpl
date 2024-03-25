@@ -1,4 +1,4 @@
-    for (int i = 0; i < 5; ++i) 
+    for (int i = 0; i < {{input_size}}; ++i) 
     { 
         if ( nn_input[i] < input_min[i]){
             nn_input[i] = (input_min[i]-input_mean[i])/input_range[i];

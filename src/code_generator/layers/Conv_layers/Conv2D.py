@@ -51,6 +51,8 @@ class Conv2D(Layers.Layers):
             self.input_channels = input_shape[3]
             self.output_height = output_shape[1]
             self.output_width = output_shape[2]
+        
+        self.input_shape = [self.input_channels, self.input_height, self.input_width]
 
         self.weights = np.asarray(weights)
         self.biases = np.asarray(biases)

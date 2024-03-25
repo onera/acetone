@@ -29,7 +29,7 @@
 
     {{/nb_biases}}
     {{#patches_size}}
-{{data_type}} *ppatches_{{layers.name}}_{{layers.idx}}[{{patches_size}}] = {{patches}};
+{{data_type}} *ppatches_{{name}}_{{idx}}[{{patches_size}}] = {{{patches}}};
 
     {{/patches_size}}
 {{/layers}}
