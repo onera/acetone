@@ -103,7 +103,7 @@ class Conv2D_indirect_gemm(Conv2D_gemm.Conv2D_gemm):
             mustach_hash['input_width'] = self.input_width
             mustach_hash['channels_last'] = True
         
-        with open('src/templates/template_conv_indirect_gemm.c.tpl', 'r') as template_file:
+        with open('src/templates/layers/template_conv_indirect_gemm.c.tpl', 'r') as template_file:
             template = template_file.read()
         template_file.close()        
         

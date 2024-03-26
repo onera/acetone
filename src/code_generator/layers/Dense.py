@@ -61,7 +61,7 @@ class Dense(Layers.Layers):
             if(self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
         
-        with open('src/templates/template_Dense.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_Dense.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

@@ -54,7 +54,7 @@ class Add_Biass(Layers.Layers):
         if(self.fused_layer):
             mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road)+'[i]',self.idx,'i')
 
-        with open('src/templates/template_AddBiase.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_AddBiase.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

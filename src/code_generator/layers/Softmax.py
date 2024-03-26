@@ -45,7 +45,7 @@ class Softmax(Layers.Layers):
         if (self.fused_layer):
             mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road)+'[j]', self.idx, 'j')
 
-        with open('src/templates/template_Softmax.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_Softmax.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

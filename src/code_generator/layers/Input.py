@@ -39,7 +39,7 @@ class InputLayer(Layers.Layers):
         mustach_hash['size'] = self.size
         mustach_hash['road'] = self.road
 
-        with open('src/templates/template_Input_Layer.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_Input_Layer.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

@@ -40,7 +40,7 @@ class Normalizer(ABC):
         return s
 
     def write_pre_processing(self):
-        with open('./src/templates/template_pre_processing.c.tpl','r') as template_file:
+        with open('./src/templates/normalization/template_pre_processing.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -48,7 +48,7 @@ class Normalizer(ABC):
 
 
     def write_post_processing(self):
-        with open('./src/templates/template_post_processing.c.tpl','r') as template_file:
+        with open('./src/templates/normalization/template_post_processing.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -59,7 +59,7 @@ class Normalizer(ABC):
 
         mustach_hash['input_size'] = self.input_size
 
-        with open('./src/templates/template_normalization_cst_in_header_file.c.tpl','r') as template_file:
+        with open('./src/templates/normalization/template_normalization_cst_in_header_file.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -76,7 +76,7 @@ class Normalizer(ABC):
         mustach_hash['output_mean'] = self.means[-1]
         mustach_hash['output_range'] = self.ranges[-1]
 
-        with open('./src/templates/template_normalization_cst_in_global_var_file.c.tpl','r') as template_file:
+        with open('./src/templates/normalization/template_normalization_cst_in_global_var_file.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

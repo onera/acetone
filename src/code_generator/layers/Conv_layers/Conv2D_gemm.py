@@ -60,7 +60,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/template_gemm_nn.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_gemm_nn.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -89,7 +89,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/template_gemm_nt.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_gemm_nt.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -118,7 +118,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/template_gemm_tn.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_gemm_tn.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -147,7 +147,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/template_gemm_tt.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_gemm_tt.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
