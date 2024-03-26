@@ -20,8 +20,10 @@
 
 
 import tensorflow as tf
-from tensorflow import keras
 import numpy as np
+
+import format_importer.NNET_importer.nnet_normalize as nnet_normalize
+
 from code_generator.layers.Dense import Dense
 from code_generator.layers.Input import InputLayer
 from code_generator.activation_functions import Linear, ReLu
@@ -75,21 +77,17 @@ def load_nnet(file_to_parse, normalize):
         # symmetric = int(line.strip().split(",")[0])
 
         line = f.readline()
-        inputMinimums = [float(x) for x in line.strip().split(",")]
+        inputMinimums = [float(x) for x in line.strip().split(",")[:-1]]
 
         line = f.readline()
-        inputMaximums = [float(x) for x in line.strip().split(",")]
+        inputMaximums = [float(x) for x in line.strip().split(",")[:-1]]
 
         line = f.readline()
-        means = [float(x) for x in line.strip().split(",")]
+        means = [float(x) for x in line.strip().split(",")[:-1]]
 
         line = f.readline()
-        ranges = [float(x) for x in line.strip().split(",")]
+        ranges = [float(x) for x in line.strip().split(",")[:-1]]
 
-
-        for i in range(5): # skip the next five lines 
-            next(f)
-        
         weights = []
         biases = []
 
@@ -124,41 +122,45 @@ def load_nnet(file_to_parse, normalize):
     f.close()
 
     layers.append(InputLayer(idx=0, size=layerSizes[0]))
-    layers[0].find_output_str(dict_cst)
     layers[0].road = 0
-
+    layers[0].find_output_str(dict_cst)
+    
     # list of lists -> list of arrays
     weights = [np.transpose(np.array(weight)) for weight in weights]
     biases = [np.transpose(np.array(bias)) for bias in biases]
 
-    for i in range(1,numLayers+1):
-
+    for i in range(0,numLayers):
         weight = weights[i]
-        if(len(weight.shape) < 3):
-            for i in range(3-len(weight.shape)): 
-                weight = np.expand_dims(weight, axis=-1)
-        weight = np.moveaxis(weight, 2, 0)
+        if(len(weight.shape) < 4):
+            for j in range(4-len(weight.shape)): 
+                weight = np.expand_dims(weight, axis=0)
 
-        if(i == numLayers):
-            layer = Dense(idx=i,
-                        size=layerSizes[i],
+        if(i == numLayers-1):
+            layer = Dense(idx=i+1,
+                        size=layerSizes[i+1],
                         weights=weight,
                         biases=biases[i],
-                        activation_function=Linear)
+                        activation_function=Linear())
         else:
-            layer = Dense(idx=i,
-                        size=layerSizes[i],
+            layer = Dense(idx=i+1,
+                        size=layerSizes[i+1],
                         weights=weight,
                         biases=biases[i],
-                        activation_function=ReLu)
-        layer.find_output_str(dict_cst)
+                        activation_function=ReLu())
+        
         layer.road = 0
-
+        layer.find_output_str(dict_cst)
+        layer.previous_layer.append(layers[-1])
+        layers[-1].next_layer.append(layer)
         layers.append(layer)
-    
+
     print("Finished model initialization.")
 
+    
+
+
     if(normalize):
-        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst, inputMaximums, inputMinimums, means, ranges
+        Normalizer = nnet_normalize.Normalizer(input_size = layerSizes[0], output_size = layerSizes[-1], mins = inputMinimums, maxes = inputMaximums, means = means, ranges = ranges)
+        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst, Normalizer
     else:
         return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst

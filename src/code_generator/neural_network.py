@@ -43,15 +43,20 @@ from code_generator.layers.Broadcast_layers.Add import Add
 
 class CodeGenerator(ABC):
 
-    def __init__(self, file, test_dataset_file = None, function_name = 'inference', nb_tests = None, conv_algorithm = 'conv_gemm_optim', **kwargs):
+    def __init__(self, file, test_dataset_file = None, function_name = 'inference', nb_tests = None, conv_algorithm = 'conv_gemm_optim', normalize = False,**kwargs):
 
         self.file = file
         self.test_dataset_file = test_dataset_file
         self.function_name = function_name
         self.nb_tests = nb_tests
         self.conv_algorithm = conv_algorithm
+        self.normalize = normalize
 
-        l, dtype, dtype_py, listRoad, maxRoad, dict_cst = parser(self.file, self.conv_algorithm)
+        if (not self.normalize):
+            l, dtype, dtype_py, listRoad, maxRoad, dict_cst = parser(self.file, self.conv_algorithm)
+        elif(self.normalize):
+            l, dtype, dtype_py, listRoad, maxRoad, dict_cst, Normalizer = parser(self.file, self.conv_algorithm, self.normalize)
+            self.Normalizer = Normalizer
 
         self.layers = l
         self.data_type = dtype
@@ -102,6 +107,9 @@ class CodeGenerator(ABC):
     def compute_inference(self, c_files_directory):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
+
+                if (self.normalize):
+                    nn_input = self.Normalizer.pre_processing(nn_input)
                 
                 previous_layer_result = [nn_input for i in range(self.maxRoad)]  # for the very first layer, it is the neural network input
                 
@@ -156,6 +164,10 @@ class CodeGenerator(ABC):
                 # Write results in text files to compare prediction.
                 
                 nn_output = np.reshape(nn_output, -1)
+
+                if(self.normalize):
+                    nn_output = self.Normalizer.post_processing(nn_output)
+                
                 for j in range(len(nn_output)):
                     print('{:.9g}'.format(nn_output[j]), end=' ', file=fi, flush=True)           
                     # print(decimal.Decimal(nn_output[j]), end=' ', file=fi, flush=True)
@@ -323,6 +335,10 @@ class CodeGenerator(ABC):
             template = template_file.read()
         template_file.close()
 
+        if(self.normalize):
+            mustach_hash['pre_processing'] = self.Normalizer.write_pre_processing()
+            mustach_hash['post_processing'] = self.Normalizer.write_post_processing()
+        
         self.source_file.write(pystache.render(template,mustach_hash))
         
     def generate_function_header_file(self):
@@ -383,7 +399,9 @@ class CodeGenerator(ABC):
             
             if (to_print):
                 mustach_hash['layers'].append(layer_hash)
-                
+        
+        if(self.normalize):
+            mustach_hash['normalization_cst'] = self.Normalizer.write_normalization_cst_in_header_file()
         
         with open('src/templates/template_header_file.c.tpl', 'r') as template_file:
             template = template_file.read()
@@ -450,3 +468,6 @@ class CodeGenerator(ABC):
         template_file.close()
 
         self.globalvars_file.write(pystache.render(template,mustach_hash))
+
+        if(self.normalize):
+            self.globalvars_file.write(self.Normalizer.write_normalization_cst_in_globalvars_file())

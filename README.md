@@ -15,7 +15,7 @@ You'll find in the home directory the files regarding the licencing and copyrigh
 
 This directory also contains the [requirements.txt](./requirements.txt) which list the package versionning used in the framework.
 
-The [test](./test/) directory includes several tests for the framework and the data to run them. It also contains a [example](./test/example/) used for the example describeb below.
+The [test](./test/) directory includes several tests for the framework and the data to run them.
 
 The [src](./src/) folder contains the backend code of ACETONE.
 
@@ -39,14 +39,11 @@ The following commands generate a test neural network before generating the corr
 
 ### Generating the neural network
 
-* Go to the *example* directory
-```
-cd acetone/test/example/
-```
+In the *acetone* directory
 
 * Run the *initial_setup.py* code
 ```
-python3 initial_setup.py
+python3 tests/models/initial_setup.py
 ```
 
 This script defines a neural network with a Lenet-5 architecture using the framework Keras. It then save the model in *.h5* and *.json* files. The later one is created using a specific function, developped by us, to write the keras model in ACETONE's format. The scripts also creates a random input to test the neural network. Finally, the scripts saves and prints, as a reference, the output of the inference done by the Keras framework.
@@ -55,13 +52,8 @@ This script defines a neural network with a Lenet-5 architecture using the frame
 
 Then, generate the C code with ACETONE.
 
-* Go to the framework's directory
-```
-cd ../../src
-```
-
 * Call ACETONE with the following arguments:
-  * The JSON file describing the model
+  * The file describing the model
   * The name of the function to generate (here 'lenet5')
   * The number of test to run (here 1)
   * The algorithm used for the convolution layer ('6loops','indirect_gemm_'+TYPE, 'std_gemm_'+TYPE, with TYPE being amongst 'nn','nt',    'tn','tt')
@@ -69,33 +61,38 @@ cd ../../src
   * The input file with the test data
 
 ```
-python3 main.py ../test/example/lenet5.h5  lenet5 1 std_gemm_nn ../test/example/lenet5_generated ../test/example/test_input_lenet5.txt
+python3 src/cli_acetone.py tests/models/lenet5_example/lenet5.h5  lenet5 1 std_gemm_nn tests/models/lenet5_example/lenet5_generated .tests/models/lenet5_example/test_input_lenet5.txt
 ```
 
 * Compile the code
 ```
-cd ../test/example/lenet5_generated
-```
-```
-make all
+make -C tests/models/lenet5_example all
 ```
 
 * Execute the file with the path to the directory of the output file as argument
 ```
-./lenet5 output_acetone.txt
+./tests/models/lenet5_example/lenet5 ./tests/models/lenet5_example/output_acetone.txt
 ```
 
 * Compare the output given by Keras and ACETONE
 ```
-cd ../../../src
-python3 eval_semantic_preservation.py ../test/example/output_keras.txt ../test/example/lenet5_generated/output_acetone.txt 1
+python3 src/cli_compare.py ./tests/models/lenet5_example/output_keras.txt ./tests/models/lenet5_example/output_acetone.txt 1
 ```
-
 
 ## Tests
 
-No tests are implemented yet.
-This service will be provided soon.
+Tests are implemented in the folder *tests*.
+
+To run all of them, use the following command:
+```
+python3 -m unittest discover tests/test_inference/test_layer tests/tests_network tests/tests_importer
+```
+
+To only run a test, use the command
+```
+python3 -m unittest PATH_TO_TEST
+```
+where PATH_TO_TEST is the path to your test.
 
 ## Reproduce the paper's experiments
 
@@ -103,42 +100,56 @@ To reproduce the result of semantic experiment with ACETONE as described in the 
 
 * For the acas_decr128 model
 ```
-cd acetone/src
-pyhton3 main.py ../test/data/acas_decr128/acas_decr128.json ../test/data/acas_decr128/test_input_acas_decr128.txt acas_decr128 1000 ../test/data/output/acas_decr128
-cd ../test/data/output/acas_decr128
-make all
-./acas_decr128 output_acetone.txt
-cd ../../../../src
-python3 eval_semantic_preservation ../test/data/acas_decr128/output_keras.txt ../test/data/output/acas_decr128/output_acetone.txt
+pyhton3 src/cli_acteone.py tests/models/acas_decr128/acas_decr128.json acas_dcre128 1000 std_gemm_nn tests/models/acas_decr128/output_acetone tests/models/acas_decr128/test_input_acas_decr128.txt
+make -C tests/models/acas_decr128/output_acetone all
+./tests/models/acas_decr128/output_acetone/acas_decr128 tests/models/acas_decr128/output_acetone/output_acetone.txt
+python3 src/cli_compare.py tests/models/acas_decr128/output_keras.txt tests/models/acas_decr128/output_acetone/output_acetone.txt
 ```
 
 * For the lent5 model
 
 ```
-cd acetone/src
-pyhton3 main.py ../test/data/lenet5_trained/lenet5_trained.json ../test/data/lenet5_trained/test_input_lenet5.txt lenet5_trained 1000  ../test/data/output/lenet5_trained
-cd ../test/data/output/lenet5_trained
-make all
-./lenet5_trained output_acetone.txt
-cd ../../../../src
-python3 eval_semantic_preservation ../test/data/lenet5_trained/output_keras.txt ../test/data/output/lenet5_trained/output_acetone.txt
+pyhton3 src/cli_acteone.py tests/models/lenet5_trained/lenet5_trained.json lenet5_trained 1000 std_gemm_nn tests/models/lenet5_trained/output_acetone tests/models/lenet5_trained/test_input_lenet5.txt
+make -C tests/models/lenet5_trained/output_acetone all
+./tests/models/lenet5_trained/output_acetone/lenet5_trained tests/models/lenet5_trained/output_acetone/output_acetone.txt
+python3 src/cli_compare.py tests/models/lenet5_trained/output_keras.txt tests/models/lenet5_trained/output_acetone/output_acetone.txt
 ```
 
 ## Capability
 
-As of the 07/03/2024, the framework can generate code for neural network meeting the following condition:
+As of the 26/03/2024, the framework can generate code for neural network meeting the following condition:
 
 * The neural network is Sequential and Feedforward
 
 * The neural-network is describeb in one of the following formats:
-  * JSON (specifique decription mad efor the framework. Confer to the file [JSON_from_keras_model.py](./src/format_importer/JSON_importer/JSON_from_keras_model.py))
-  * NNET (by transforming the format into a JSON description)
+  * JSON (specifique decription mad efor the framework. Confer to the file [JSON_from_keras_model.py](./src/format_importer/H5_importer/JSON_from_keras_model.py))
+  * NNET 
+  * ONNX
+  * H5 (by transforming into a JSON file)
 
-* Its layers are amongst the following:
+* Its layers are amongst the following (both Keras and Onnx layers):
   * Dense
-  * Convolutional (Conv2D)
+  * Convolutional (Conv2D) (3 option for the algorithm)
   * Pooling (AveragePooling2D, MaxPooling2D)
   * Flatten
+  * Normalization (Normalization layers of Keras)
+  * Dropout (Dropout layers of Keras)
+  * Reshape
+  * Permute
+  * MatMul
+  * Gemm
+  * Gather
+  * Dot
+  * Concatenate
+  * Clip
+  * Add (where one of the inputs is an ONNX initializer)
+  * Resize (Cubic interpolation, Linear interpolation, Nearest)
+  * Pad (Wrap padding, Edge padding, Reflect padding, Constant padding)
+  * Broadcast (Add, Average, Divide, Maximum, Minimum, Multiply, Subtract)
+  * Unsqueeze (ONNX layer)
+  * LRN (ONNX layer)
+  * Shape (ONNX layer)
+  * BatchNormalization (ONNX layer)
 
 * Its activation layers are amongst the following:
   * Linear
@@ -146,6 +157,9 @@ As of the 07/03/2024, the framework can generate code for neural network meeting
   * ReLu
   * Sigmoid
   * Softmax
+  * Exp
+  * Log
+  
 
 ## License
 

@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Layers as Layers
+import code_generator.Layers as Layers
 import numpy as np
 import pystache
 
@@ -71,8 +71,8 @@ class MatMul(Layers.Layers):
         
         input = input.reshape(self.previous_layer[0].size)
         if (self.side):
-            return self.activation_function.compute((np.matmul(self.weights,input)))
+            weights = np.moveaxis(self.weights, 3,0)
+            weights = np.reshape(weights, (weights.shape[1],weights.shape[2],weights.shape[3],weights.shape[0]))
+            return self.activation_function.compute((np.matmul(weights,input)))
         else:
-            print(input.shape)
-            print(self.weights.shape)
             return self.activation_function.compute((np.matmul(input,self.weights)))

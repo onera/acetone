@@ -1,3 +1,4 @@
+    // pre-processing for the normalization
     for (int i = 0; i < {{input_size}}; ++i) 
     { 
         if ( nn_input[i] < input_min[i]){
@@ -10,3 +11,4 @@
             }
         }
     }
+    

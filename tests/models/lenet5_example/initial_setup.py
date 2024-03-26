@@ -47,18 +47,18 @@ model.add(keras.layers.Dense(units=10, activation='softmax', kernel_initializer=
 print("LeNet-5 architecture created in Keras' framework. Random weights and biases are set.")
 
 ### Save neural network model in h5 format to be used in Keras2C framework ###
-model.save('./lenet5.h5')
-print("Neural network model exported to acetone/test/example/lenet5.h5")
+model.save('./tests/models/lenet5_example/lenet5.h5')
+print("Neural network model exported to acetone/tests/models/lenet5_example/lenet5.h5")
 
 ### Define a random input of shape (1,1,28*28*1) ###
 random_input = np.random.default_rng().random((1,28, 28, 1))
-with open('./test_input_lenet5.txt', 'w') as filehandle:
+with open('./tests/models/lenet5_example/test_input_lenet5.txt', 'w') as filehandle:
     for i in range(random_input.shape[0]):
         row = (random_input[i]).flatten(order='C')
         json.dump(row.tolist(), filehandle)
         filehandle.write('\n')
 filehandle.close()
-print("Sample input data exported to acetone/test/example/test_input_lenet5.txt")
+print("Sample input data exported to acetone/tests/models/lenet5_example/test_input_lenet5.txt")
 
 ### Perform inference with Keras ###
 keras_prediction = model.predict(random_input)
@@ -67,7 +67,7 @@ keras_prediction = model.predict(random_input)
 print("Keras' inference output: \n", keras_prediction)
 
 ### Export Keras' output ###
-with open('./output_keras.txt', 'w+') as fi:
+with open('./tests/models/lenet5_example/output_keras.txt', 'w+') as fi:
     for i in range(len(keras_prediction)):
         keras_prediction[i] = np.reshape(keras_prediction[i], -1)
         for j in range(len(keras_prediction[i])):
@@ -75,7 +75,7 @@ with open('./output_keras.txt', 'w+') as fi:
         print(" ",file=fi)     
 fi.close()
 
-print("Keras' inference output exported to acetone/test/example/output_keras.txt")
+print("Keras' inference output exported to acetone/tests/models/lenet5_example/output_keras.txt")
 
 
 

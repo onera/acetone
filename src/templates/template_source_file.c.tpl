@@ -40,6 +40,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     float f22;
 {{/is_linear_interpolation}}
 
+{{{pre_processing}}}
 {{#layers}}
 {{{inference_function}}}
 
@@ -58,5 +59,6 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 
     {{/is_last}}    
 {{/layers}}
+{{{post_processing}}}
     return 0;
 }

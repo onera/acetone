@@ -324,7 +324,8 @@ def create_MatMul(node,idx,dict_input,dict_output,model):
             #the weigth is the right tensor:  MatMul(W,T)
             side = True
             weights = onnx.numpy_helper.to_array(right_tensor)
-            weights = np.reshape(weights, (1,1,output_shape[-1],get_shape(node.input[1],model)[-1]))
+            weights = np.reshape(weights, (get_shape(node.input[1],model)[-1],1,1,output_shape[-1]))
+            weights = np.moveaxis(weights, 0,3)
             dict_input[idx] = [node.input[1]]
             input_shape = get_shape(node.input[1],model)
         if(left_tensor and not right_tensor):
@@ -332,7 +333,6 @@ def create_MatMul(node,idx,dict_input,dict_output,model):
             side = False
             weights = onnx.numpy_helper.to_array(left_tensor)
             weights = np.reshape(weights, (1,1,get_shape(node.input[0],model)[-1],output_shape[-1]))
-            print(weights)
             dict_input[idx] = [node.input[0]]
             input_shape = get_shape(node.input[0],model)
         return MatMul.MatMul(idx = idx,

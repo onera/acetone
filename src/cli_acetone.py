@@ -23,13 +23,14 @@ import pathlib
 
 from code_generator.neural_network import CodeGenerator
 
-def main(model_file, function_name, nb_tests, conv_algorithm, output_dir, test_dataset_file=None):
-
+def main(model_file, function_name, nb_tests, conv_algorithm, output_dir, test_dataset_file=None, normalize=False ):
+    normalize = bool(normalize)
+    print(normalize)
     print("C CODE GENERATOR FOR NEURAL NETWORKS")
 
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    net = CodeGenerator(file = model_file, test_dataset_file = test_dataset_file, function_name = function_name, nb_tests = nb_tests, conv_algorithm = conv_algorithm)
+    net = CodeGenerator(file = model_file, test_dataset_file = test_dataset_file, function_name = function_name, nb_tests = nb_tests, conv_algorithm = conv_algorithm, normalize = normalize)
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)
 
@@ -44,7 +45,8 @@ if __name__ == "__main__":
     parser.add_argument("conv_algorithm", help="Algorithm to be used in convolutional layer. Default is indirect im2col with GeMM")
     parser.add_argument("output_dir", help="Output directory where generated files will be written")
     parser.add_argument("test_dataset_file", nargs='?', default=None, help="Input file that contains test data")
+    parser.add_argument("normalize", nargs='?', default=False, help="Boolean saying if the inputs and outputs needs to be normalized. Only used when the file is in NNET representation")
 
     args = parser.parse_args()
 
-    main(args.model_file, args.function_name, args.nb_tests, args.conv_algorithm, args.output_dir, args.test_dataset_file)
+    main(args.model_file, args.function_name, args.nb_tests, args.conv_algorithm, args.output_dir, args.test_dataset_file, args.normalize)

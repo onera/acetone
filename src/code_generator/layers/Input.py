@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Layers as Layers
+import code_generator.Layers as Layers
 import pystache
 
 class InputLayer(Layers.Layers):
