@@ -18,10 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Conv_layers.Conv2D as Conv2D
+import code_generator.layers.Conv_layers.Conv2D_gemm as Conv2D_gemm
 import numpy as np
+import pystache
 
-class Conv2D_std_gemm(Conv2D.Conv2D):
+class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -46,203 +47,74 @@ class Conv2D_std_gemm(Conv2D.Conv2D):
         if('output' in output_str):
             output_str = 'tensor_temp'
         
-        if(self.data_format == 'channels_first'):
-            indice = '(c_offset*'+str(self.input_height)+' + ii)*'+str(self.input_width)+' + jj'
-        elif(self.data_format == 'channels_last'):
-            indice = '(ii*'+str(self.input_width)+' + jj)*'+str(self.input_channels)+' + c_offset'
+        mustach_hash = {}
+        mustach_hash['patches_height'] = self.patches_height
+        mustach_hash['kernel_w'] = self.kernel_w
+        mustach_hash['kernel_h'] = self.kernel_h
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['strides'] = self.strides
+        mustach_hash['pad_top'] = self.pad_top
+        mustach_hash['pad_left'] = self.pad_left
+        mustach_hash['input_height'] = self.input_height
+        mustach_hash['input_width'] = self.input_width
+        mustach_hash['road'] = self.road
+        mustach_hash['patches_width'] = self.patches_width
+        mustach_hash['output_str'] = output_str
 
-        s = '    // im2col\n'
-        s+= '    for (int i = 0; i < '+str(self.patches_height)+'; ++i) {\n\n'
-        s+= '        int i_offset = (i / '+str(self.kernel_w)+') % '+str(self.kernel_h)+';\n'
-        s+= '        int j_offset = i % '+str(self.kernel_w)+';\n'
-        s+= '        int c_offset = i / '+str(self.kernel_h)+' / '+str(self.kernel_w)+';\n\n'
-        s+= '        for (int h = 0; h < '+str(self.output_height)+'; ++h) {\n'
-        s+= '            for (int w = 0; w < '+str(self.output_width)+'; ++w) {\n\n'
-        s+= '                int ii = h * '+str(self.strides)+' - '+str(self.pad_top)+' + i_offset; \n'
-        s+= '                int jj = w * '+str(self.strides)+' - '+str(self.pad_left)+' + j_offset;\n\n'
-        s+= '                int j = h*'+str(self.output_width)+' + w;\n'
-        s+= '                if (ii >= 0 && ii < '+str(self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n'
-        s+= '                    output_'+str(self.road)+'[i*'+str(self.patches_width)+' + j] = '+output_str+'['+indice+'];\n'
-        s+= '                else\n'
-        s+= '                    output_'+str(self.road)+'[i*'+str(self.patches_width)+' + j] = 0;\n'
-        s+= '            }\n'
-        s+= '        }\n'
-        s+= '    }\n'
-        s+= '    \n\n'
-        
-        return s
+        with open('./src/templates/layers/template_im2col.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
     
     def write_im2row(self):
+
         output_str = self.previous_layer[0].output_str
         if('output' in output_str):
             output_str = 'tensor_temp'
         
-        if(self.data_format == 'channels_first'):
-            indice = '(c_offset*'+str(self.input_height)+' + ii)*'+str(self.input_width)+' + jj'
-        elif(self.data_format == 'channels_last'):
-            indice = '(ii*'+str(self.input_width)+' + jj)*'+str(self.input_channels)+' + c_offset'
-            
-        s = '    // im2row\n'
-        s+= '    for (int i = 0; i < '+str(self.patches_height)+'; ++i) {\n\n'
-        s+= '        int i_offset = (i / '+str(self.kernel_w)+') % '+str(self.kernel_h)+';\n'
-        s+= '        int j_offset = i % '+str(self.kernel_w)+';\n'
-        s+= '        int c_offset = i / '+str(self.kernel_h)+' / '+str(self.kernel_w)+';\n\n'
-        s+= '        for (int h = 0; h < '+str(self.output_height)+'; ++h) {\n'
-        s+= '            for (int w = 0; w < '+str(self.output_width)+'; ++w) {\n\n'
-        s+= '                int ii = h * '+str(self.strides)+' - '+str(self.pad_top)+' + i_offset; \n'
-        s+= '                int jj = w * '+str(self.strides)+' - '+str(self.pad_left)+' + j_offset;\n\n'
-        s+= '                int j = w*'+str(self.output_height)+' + h;\n'
-        s+= '                if (ii >= 0 && ii < '+str(self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n'
-        s+= '                    output_'+str(self.road)+'[j*'+str(self.patches_height)+' + i] = '+output_str+'['+indice+'];\n'
-        s+= '                else\n'
-        s+= '                    output_'+str(self.road)+'[j*'+str(self.patches_height)+' + i] = 0;\n'
-        s+= '            }\n'
-        s+= '        }\n'
-        s+= '    }\n'
-        s+= '    \n\n'
-        
-        return s
+        mustach_hash = {}
+        mustach_hash['patches_height'] = self.patches_height
+        mustach_hash['kernel_w'] = self.kernel_w
+        mustach_hash['kernel_h'] = self.kernel_h
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['strides'] = self.strides
+        mustach_hash['pad_top'] = self.pad_top
+        mustach_hash['pad_left'] = self.pad_left
+        mustach_hash['input_height'] = self.input_height
+        mustach_hash['input_width'] = self.input_width
+        mustach_hash['road'] = self.road
+        mustach_hash['patches_width'] = self.patches_width
+        mustach_hash['output_str'] = output_str
 
-    def write_gemm_nn(self, m, n, k, A, B):
+        with open('./src/templates/layers/template_im2row.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
 
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = k
-        self.B = B
-        self.ldB = n
-        self.ldC = n
-        a = self.activation_function.write_activation_str('output')
-        s = '    // gemm_nn\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '           register float weight = '+str(self.A)+'[i*'+str(self.ldA)+'+p];\n'
-        s+= '           for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '               tensor_temp[i*'+str(self.ldC)+' + j] += weight * '+str(self.B)+'[p*'+str(self.ldB)+' + j];\n'
-        s+= '           }\n'
-        s+= '       }\n'
-        s+= '        for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '            register float output = tensor_temp[i*'+str(self.ldC)+' + j];\n'
-        s+= '            output += biases_' + self.name + '_' + str('{:02d}'.format(self.idx))+'[i];\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            output = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
-        s+= '        }\n'
-        s+= '    }\n\n'        
-        return s
-    
-    def write_gemm_nt(self, m, n, k, A, B):
-
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = k
-        self.B = B
-        self.ldB = k
-        self.ldC = n
-        a = self.activation_function.write_activation_str('output')
-
-        s = '    // gemm_nt\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '           float register output = 0;\n'
-        s+= '           for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '               output += '+str(self.A)+'[i*'+str(self.ldA)+'+p] * '+str(self.B)+'[j*'+str(self.ldB)+' + p];\n'
-        s+= '           }\n'
-        s+= '           output += biases_'+ self.name + '_' + str("{:02d}".format(self.idx))+'[i];\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            output = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
-        s+= '       }\n'
-        s+= '    }\n\n'
-        
-        return s
-
-    def write_gemm_tn(self, m, n, k, A, B):
-
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = m
-        self.B = B
-        self.ldB = n
-        self.ldC = n
-        a = self.activation_function.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]')
-
-        s = '    // gemm_tn\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '           float register weight = '+str(self.A)+'[p*'+str(self.ldA)+'+i];\n'
-        s+= '           for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '               tensor_temp[i*'+str(self.ldC)+' + j] += weight * '+str(self.B)+'[p*'+str(self.ldB)+' + j];\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
-        s+= '           }\n'
-        s+= '       }\n'
-        s+= '    }\n\n'
-        
-        return s
-
-    def write_gemm_tt(self, m, n, k, A, B):
-
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = m
-        self.B = B
-        self.ldB = k
-        self.ldC = n
-        a = self.activation_function.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]')
-
-        s = '    // gemm_tt\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '           float register sum = 0;\n'
-        s+= '           for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '               sum += '+str(self.A)+'[p*'+str(self.ldA)+'+i] * '+str(self.B)+'[j*'+str(self.ldB)+' + p];\n'
-        s+= '           }\n'
-        s+= '           tensor_temp[i*'+str(self.ldC)+' + j] += sum;\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
-        s+= '       }\n'
-        s+= '    }\n\n'
-        
-        return s
+        return pystache.render(template, mustach_hash)
     
     def write_to_function_source_file(self, source_file):
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        if('cst' not in self.previous_layer[0].output_str):
-            source_file.write('    for (int k = 0; k < '+str(self.input_channels*self.input_height*self.input_width)+'; ++k){\n        tensor_temp[k] = output_'+str(self.road)+'[k];\n    }\n')
-        patch_building_code = self.algo_patch_building_mapping[self.conv_algorithm]()
-        source_file.write(patch_building_code)
-        source_file.write('    for (int k = 0; k < '+str(self.nb_filters*self.patches_width)+'; ++k){\n        tensor_temp[k] = 0;\n    }\n')
 
-        gemm_code = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.road))
-        source_file.write(gemm_code)
-        if(self.data_format == 'channels_last'):
-            source_file.write('    for (int f = 0; f < ' + str(self.nb_filters) + '; ++f){\n')
-            source_file.write('        for (int i = 0; i < '+str(self.output_height)+'; ++i){\n')
-            source_file.write('            for (int j = 0; j < '+str(self.output_width)+'; ++j){\n')
-            source_file.write('                output_'+str(self.road)+'[(i * '+str(self.output_width) +' + j) * ' + str(self.nb_filters) + ' + f] = tensor_temp[(f * '+str(self.output_height)+' + i) * '+str(self.output_width)+' + j];\n\n')
-            source_file.write('            }\n        }\n    }\n\n')
-        else:
-            source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n\n')
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['size'] = self.size
+        mustach_hash['road'] = self.road
+
+        mustach_hash['patch_building_code'] = self.algo_patch_building_mapping[self.conv_algorithm]()
+        mustach_hash['patches_size'] = self.nb_filters*self.patches_width
+        mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.road))
+
+        if('cst' not in self.previous_layer[0].output_str):
+            mustach_hash['cst'] = True
+            mustach_hash['input_size'] = self.input_channels*self.input_height*self.input_width
         
+
+        with open('./src/templates/layers/template_Conv_std_gemm.c.tpl','r') as template_file:
+            tempalte = template_file.read()
+        template_file.close()
+
+        return pystache.render(tempalte, mustach_hash)

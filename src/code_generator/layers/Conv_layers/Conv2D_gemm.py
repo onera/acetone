@@ -20,7 +20,6 @@
 
 import code_generator.layers.Conv_layers.Conv2D as Conv2D
 import numpy as np
-from abc import abstractmethod
 import pystache
 
 class Conv2D_gemm(Conv2D.Conv2D):
