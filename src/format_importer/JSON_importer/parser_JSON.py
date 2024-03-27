@@ -155,7 +155,7 @@ def load_json(file_to_parse, conv_algorithm):
                                                  pool_size = layer['config']['pool_size'][0],
                                                  input_shape = layer['config']['input_shape'],
                                                  output_shape = layer['config']['output_shape'],
-                                                 activation_layer = Linear())
+                                                 activation_function = Linear())
             
             elif layer['class_name'] == 'MaxPooling2D':
                 current_layer = MaxPooling2D.MaxPooling2D(idx = idx,
@@ -166,7 +166,7 @@ def load_json(file_to_parse, conv_algorithm):
                                              pool_size = layer['config']['pool_size'][0],
                                              input_shape = layer['config']['input_shape'],
                                              output_shape = layer['config']['output_shape'],
-                                             activation_layer = Linear())
+                                             activation_function = Linear())
             
             elif layer['class_name'] == 'Flatten':
                 nb_flatten_layers = 1

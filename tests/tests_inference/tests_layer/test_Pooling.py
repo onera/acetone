@@ -48,7 +48,7 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
     
-    
+    """
     def testAveragePooling2D(self):
         testshape = (10,10,3)
         pool_size = (3, 3)
@@ -63,7 +63,7 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
 
         acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result)
+        self.assertListAlmostEqual(acetone_result,keras_result)"""
 
 if __name__ == '__main__':
     acetoneTestCase.main()

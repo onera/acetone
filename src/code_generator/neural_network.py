@@ -384,7 +384,7 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
             
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D_std_gemm)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
  

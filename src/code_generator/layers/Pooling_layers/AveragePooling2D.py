@@ -40,13 +40,13 @@ class AveragePooling2D(Pooling2D.Pooling2D):
 
     def update_local_vars(self):
 
-        s = '    '+ self.local_var + ' = 0; '+ self.local_var_2 + ' = 0;\n'
+        s = self.local_var + ' = 0; '+ self.local_var_2 + ' = 0;\n'
   
         return s
 
     def specific_function(self, index, input_of_layer):
         # Computes the average in this subclass AveragePooling2D 
-        s = '                            '+self.local_var+' += '+input_of_layer+'['+index+'];\n'
+        s = self.local_var+' += '+input_of_layer+'['+index+'];\n'
         s += '                            '+self.local_var_2+' ++;\n'
         
         return s

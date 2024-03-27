@@ -64,18 +64,28 @@ class Pooling2D(Layers.Layers):
     def specific_function(self, index, input_of_layer):
         pass
 
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['output_str'] = output_str
         mustach_hash['road'] = self.road
-        mustach_hash['size'] = self.size
 
-        mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.output_var)
+
+        mustach_hash['input_channels'] = self.input_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['update_local_vars'] = self.update_local_vars()
+        mustach_hash['pool_size'] = self.pool_size
+        mustach_hash['strides'] = self.strides
+        mustach_hash['pad_left'] = self.pad_left
+        mustach_hash['pad_top'] = self.pad_top
+        mustach_hash['input_height'] = self.input_height
+        mustach_hash['input_width'] = self.input_width
+        mustach_hash['specific_function'] = self.specific_function('jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)', output_str)
 
         if (self.fused_layer):
             mustach_hash['fused_layer'] = self.fused_layer.write_activation_str(self.output_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)')
@@ -88,35 +98,6 @@ class Pooling2D(Layers.Layers):
         template_file.close()
 
         return pystache.render(template, mustach_hash)
-    
-        if(self.data_format == 'channels_first'):
-            indice = 'jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)'
-        elif(self.data_format == 'channels_last'):
-            indice = 'c + '+str(self.input_channels)+'*(jj + '+str(self.input_width)+'*ii)'
-        
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for (int c = 0; c < '+str(self.input_channels)+'; ++c)\n    {\n')
-        source_file.write('        for (int i = 0; i < '+str(self.output_height)+'; ++i)\n        {\n')
-        source_file.write('            for (int j = 0; j < '+str(self.output_width)+'; ++j)\n            {\n')
-
-        source_file.write('            ' + self.update_local_vars())
-
-        source_file.write('                for (int m = 0; m < '+str(self.pool_size)+'; ++m)\n                {\n')
-        source_file.write('                    for (int n = 0; n < '+str(self.pool_size)+'; ++n)\n                    {\n')
-        source_file.write('                        int ii = i*'+str(self.strides)+' + m - '+str(self.pad_left)+';\n')
-        source_file.write('                        int jj = j*'+str(self.strides)+' + n - '+str(self.pad_top)+';\n\n')
-        source_file.write('                        if (ii >= 0 && ii < '+str( self.input_height)+' && jj >= 0 && jj < '+str(self.input_width)+')\n                        {\n')
-        source_file.write(self.specific_function(indice, output_str))
-        source_file.write('                        }\n                    }\n                }\n')
-        
-        if (self.fused_layer):
-            b = self.fused_layer.write_activation_str(self.output_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)')
-        else: 
-            b = self.output_var
-
-        source_file.write('            output_'+str(self.road)+'[j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)]'+' = '+ b +';\n')
-        
-        source_file.write('            }\n        }\n    }\n\n')
 
     def feedforward(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
