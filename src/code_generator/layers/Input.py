@@ -23,11 +23,13 @@ import pystache
 
 class InputLayer(Layers.Layers):
 
-    def __init__(self, idx, size):
+    def __init__(self, idx, size, input_shape):
        
         super().__init__()
         self.idx = idx
         self.size = size
+        self.input_shape = input_shape
+        self.data_format = 'channels_first'
         self.name = 'Input_layer'
 
     def write_to_function_source_file(self):
@@ -36,8 +38,18 @@ class InputLayer(Layers.Layers):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['size'] = self.size
         mustach_hash['road'] = self.road
+
+        if(self.data_format == 'channels_last'):
+            mustach_hash['channels_last'] = True
+            mustach_hash['input_channels'] = self.input_shape[3]
+            mustach_hash['input_height'] = self.input_shape[1]
+            mustach_hash['input_width'] = self.input_shape[2]
+        else:
+            mustach_hash['size'] = self.size
+
+
+
 
         with open('src/templates/layers/template_Input_Layer.c.tpl','r') as template_file:
             template = template_file.read()

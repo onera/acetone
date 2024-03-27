@@ -57,13 +57,14 @@ class CodeGenerator(ABC):
         elif(self.normalize):
             l, dtype, dtype_py, listRoad, maxRoad, dict_cst, Normalizer = parser(self.file, self.conv_algorithm, self.normalize)
             self.Normalizer = Normalizer
-
+        
         self.layers = l
         self.data_type = dtype
         self.data_type_py = dtype_py
         self.maxRoad = maxRoad
         self.listRoad = listRoad
         self.dict_cst = dict_cst
+        self.data_format = 'channels_first'
 
         if test_dataset_file:
             ds = self.load_test_dataset()
@@ -108,9 +109,11 @@ class CodeGenerator(ABC):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
 
+                if(self.data_format == 'channels_last'): nn_input = np.transpose(np.reshape(nn_input,self.layers[0].input_shape), (2,0,1))
+
                 if (self.normalize):
                     nn_input = self.Normalizer.pre_processing(nn_input)
-                
+
                 previous_layer_result = [nn_input for i in range(self.maxRoad)]  # for the very first layer, it is the neural network input
                 
                 to_store = {} #a dictionnary containing the values to store
@@ -162,7 +165,9 @@ class CodeGenerator(ABC):
                 # print(nn_output) # write to file instead
                 
                 # Write results in text files to compare prediction.
-                
+
+                if(self.data_format == 'channels_last'): nn_output = np.transpose(nn_output, (1,2,0))
+
                 nn_output = np.reshape(nn_output, -1)
 
                 if(self.normalize):
@@ -293,9 +298,17 @@ class CodeGenerator(ABC):
         mustach_hash['data_type'] = self.data_type
         mustach_hash['output_size'] = self.layers[-1].size
         mustach_hash['input_size'] = self.layers[0].size
+        mustach_hash['road'] = self.layers[-1].road
 
         self.l_size_max = 1
         for layer in (self.layers):
+            if(hasattr(layer, 'data_format') and layer.data_format=='channels_last'): 
+                self.layers[0].data_format = 'channels_last'
+                if(isinstance(self.layers[-1], Conv2D) or isinstance(self.layers[-1],MaxPooling2D) or isinstance(self.layers[-1],AveragePooling2D)):
+                    mustach_hash['channels_last'] = True
+                    mustach_hash['output_channels'] = self.layers[-1].output_channels
+                    mustach_hash['output_height'] = self.layers[-1].output_height
+                    mustach_hash['output_width'] = self.layers[-1].output_width
             if layer.size > self.l_size_max : self.l_size_max = layer.size
         
         if any((isinstance(layer, Dense) or isinstance(layer,MatMul)) for layer in self.layers):
@@ -325,9 +338,6 @@ class CodeGenerator(ABC):
             
             if(layer in self.dict_cst):
                 layer_hash['cst'] = True
-            
-            if layer == self.layers[-1]:
-                layer_hash['is_last'] = True
 
             mustach_hash['layers'].append(layer_hash)
 

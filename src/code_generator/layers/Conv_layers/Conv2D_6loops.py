@@ -51,8 +51,6 @@ class Conv2D_6loops(Conv2D.Conv2D):
         mustach_hash['pad_top'] = self.pad_top
         mustach_hash['input_height'] = self.input_height
         mustach_hash['input_width'] = self.input_width
-        if (self.data_format == 'channels_last'):
-            mustach_hash['channels_last'] = True
 
         if (self.fused_layer):
             mustach_hash['fused_layer'] = self.fused_layer.write_activation_str(self.local_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)')

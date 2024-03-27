@@ -64,8 +64,6 @@ class Conv2D_indirect_gemm(Conv2D_gemm.Conv2D_gemm):
   
         
         output_str = self.previous_layer[0].output_str
-        if('output' in output_str):
-            output_str = 'tensor_temp'
         
         s = '\n        {'
         for i in range(len(self.ppatches)):

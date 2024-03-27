@@ -38,6 +38,7 @@ def JSON_from_keras_model(keras_model, output_dir_json):
     else:
         start = 1
         model_dict['config']['layers'][0]['config']['size'] = input_layer_size
+        model_dict['config']['layers'][0]['config']['input_shape'] = keras_model.input_shape
         # pretty_json['config']['layers'][0]['config']['dtype'] = "float32"
     i=0
     idx = start

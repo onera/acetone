@@ -21,6 +21,7 @@
 import pystache
 import numpy as np
 from abc import ABC
+
 class Normalizer(ABC):
 
     def __init__(self, input_size, output_size, mins, maxes, means, ranges):

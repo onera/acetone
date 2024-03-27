@@ -28,7 +28,6 @@ from code_generator.layers.Pad_layers import EdgePad, WrapPad, ReflectPad, Const
 from code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
 from code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
 from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Clip, Gather, Gemm, MatMul, AddBiase
-from code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
 
 import code_generator.activation_functions as activation_functions
 
@@ -120,7 +119,7 @@ def create_Input_Layer(input_layer,idx,dict_output):
         output_shape = [input_layer.type.tensor_type.shape.dim[i].dim_value for i in range(len(input_layer.type.tensor_type.shape.dim))]
         size = find_size(output_shape)
         
-        return Input.InputLayer(idx,size)
+        return Input.InputLayer(idx,size,output_shape)
 
 #Create a layer Softmax
 def create_Softmax(node,idx,dict_input,dict_output,model):
@@ -377,7 +376,8 @@ def create_MaxPool(node,idx,dict_input,dict_output,model):
                                 strides = attributs['strides'][0],
                                 pool_size = attributs['kernel_shape'][0],
                                 input_shape = input_shape,
-                                output_shape = output_shape)
+                                output_shape = output_shape,
+                                activation_function = activation_functions.Linear())
 
 #cerate a layer AveragePool
 def create_AveragePool(node,idx,dict_input,dict_output,model):
@@ -400,7 +400,8 @@ def create_AveragePool(node,idx,dict_input,dict_output,model):
                                    strides=attributs['strides'][0], 
                                    pool_size=attributs['kernel_shape'][0], 
                                    input_shape=input_shape,
-                                   output_shape=output_shape)
+                                   output_shape=output_shape,
+                                   activation_function = activation_functions.Linear())
 
 #Create a layer GlobalAveragePool
 def create_GlobalAveragePool(node,idx,dict_input,dict_output,model):
@@ -416,7 +417,8 @@ def create_GlobalAveragePool(node,idx,dict_input,dict_output,model):
                                     strides = 0,
                                     pool_size = input_shape[2],
                                     input_shape = input_shape,
-                                    output_shape = output_shape)
+                                    output_shape = output_shape,
+                                    activation_function = activation_functions.Linear())
 
 ### Broadcats layers ###
 

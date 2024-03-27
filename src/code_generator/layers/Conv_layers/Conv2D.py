@@ -53,6 +53,7 @@ class Conv2D(Layers.Layers):
             self.output_width = output_shape[2]
         
         self.input_shape = [self.input_channels, self.input_height, self.input_width]
+        self.output_channels = self.nb_filters
 
         self.weights = np.asarray(weights)
         self.biases = np.asarray(biases)
@@ -69,12 +70,7 @@ class Conv2D(Layers.Layers):
 
     def feedforward(self, input):
         # Conv for chw
-        if(self.data_format == 'channels_last'):
-            input = input.reshape(self.input_height, self.input_width, self.input_channels)
-            input= np.transpose(input,(2,0,1))
-            
-        elif(self.data_format == 'channels_first'):
-            input = input.reshape(self.input_channels, self.input_height, self.input_width)
+        input = input.reshape(self.input_channels, self.input_height, self.input_width)
         
         output = np.zeros((self.nb_filters, self.output_height, self.output_width))
         print(self.weights.shape)
@@ -90,6 +86,4 @@ class Conv2D(Layers.Layers):
                 for j in range(self.output_width):
                         output[f,i,j]=np.sum(input_padded[:, i*self.strides:i*self.strides+self.kernel_h, j*self.strides:j*self.strides+self.kernel_w] 
                                             * self.weights[:,:,:,f]) + self.biases[f]
-        if(self.data_format == 'channels_last'):
-            output= np.transpose(output,(1,2,0))
         return self.activation_function.compute(output)

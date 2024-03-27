@@ -49,16 +49,29 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     {
         cst_{{cst_name}}[k] = output_{{road}}[k];
     }
-
     {{/cst}}
-    {{#is_last}}
-    for (int k = 0; k < {{size}}; k++)
+{{/layers}}
+
+{{^channels_last}}
+    for (int k = 0; k < {{output_size}}; k++)
     {
         prediction[k] = output_{{road}}[k];
     }
 
-    {{/is_last}}    
-{{/layers}}
+{{/channels_last}}
+{{#channels_last}}
+    for(int f = 0; f < {{output_channels}}; ++f)
+    {
+        for (int i = 0; i < {{output_height}}; ++i)
+        {
+            for (int j = 0; j < {{output_width}};  ++j)
+            {
+                prediction[(i*{{output_width}} + j)*{{output_channels}} + f] = output_{{road}}[(f*{{output_height}} + i)*{{output_width}} + j];
+            }
+        }
+    }
+
+{{/channels_last}} 
 {{{post_processing}}}
     return 0;
 }

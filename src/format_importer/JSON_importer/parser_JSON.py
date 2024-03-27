@@ -88,7 +88,7 @@ def load_json(file_to_parse, conv_algorithm):
 
         layers = []
 
-        l_temp = Input.InputLayer(0, model['config']['layers'][0]['config']['size'])
+        l_temp = Input.InputLayer(0, model['config']['layers'][0]['config']['size'], model['config']['layers'][0]['config']['input_shape'])
 
         layers.append(l_temp)
 
@@ -120,12 +120,13 @@ def load_json(file_to_parse, conv_algorithm):
                                       biases=data_type_py(layer['biases']),
                                       activation_function=create_actv_function_obj(layer['config']['activation']))
             
-            elif layer['class_name'] == 'Conv2D': 
+            elif layer['class_name'] == 'Conv2D':
                 weights = np.array(data_type_py(layer['weights']))
+                print("json: ",weights.shape)
                 if(len(weights.shape) < 3):
                     for i in range(3-len(weights.shape)): 
                         weights = np.expand_dims(weights, axis=-1)
-                weights = np.moveaxis(weights, 2, 0)
+                weights = np.moveaxis(weights,2,0)
                 if(len(weights.shape) < 4):
                     weights = np.expand_dims(weights, axis=0)
                 current_layer = create_conv2d_obj(algorithm = conv_algorithm,
@@ -153,7 +154,8 @@ def load_json(file_to_parse, conv_algorithm):
                                                  strides = layer['config']['strides'][0],
                                                  pool_size = layer['config']['pool_size'][0],
                                                  input_shape = layer['config']['input_shape'],
-                                                 output_shape = layer['config']['output_shape'])
+                                                 output_shape = layer['config']['output_shape'],
+                                                 activation_layer = Linear())
             
             elif layer['class_name'] == 'MaxPooling2D':
                 current_layer = MaxPooling2D.MaxPooling2D(idx = idx,
