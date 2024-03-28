@@ -64,7 +64,6 @@ class CodeGenerator(ABC):
         self.maxRoad = maxRoad
         self.listRoad = listRoad
         self.dict_cst = dict_cst
-        self.data_format = 'channels_first'
 
         if test_dataset_file:
             ds = self.load_test_dataset()
@@ -109,7 +108,7 @@ class CodeGenerator(ABC):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
 
-                if(self.data_format == 'channels_last'): nn_input = np.transpose(np.reshape(nn_input,self.layers[0].input_shape), (2,0,1))
+                if(self.layers[0].data_format == 'channels_last'): nn_input = np.transpose(np.reshape(nn_input, self.layers[0].input_shape[1:]), (2,0,1))
 
                 if (self.normalize):
                     nn_input = self.Normalizer.pre_processing(nn_input)
@@ -166,7 +165,7 @@ class CodeGenerator(ABC):
                 
                 # Write results in text files to compare prediction.
 
-                if(self.data_format == 'channels_last'): nn_output = np.transpose(nn_output, (1,2,0))
+                if(self.layers[0].data_format == 'channels_last'): nn_output = np.transpose(nn_output, (1,2,0))
 
                 nn_output = np.reshape(nn_output, -1)
 

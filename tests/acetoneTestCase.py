@@ -29,6 +29,21 @@ class AcetoneTestCase(unittest.TestCase):
     def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-07):
         return np.testing.assert_allclose(first, second, rtol=rtol, atol=atol)
 
+def create_initializer_tensor(
+        name: str,
+        tensor_array: np.ndarray,
+        data_type: onnx.TensorProto = onnx.TensorProto.FLOAT
+) -> onnx.TensorProto:
+
+    # (TensorProto)
+    initializer_tensor = onnx.helper.make_tensor(
+        name=name,
+        data_type=data_type,
+        dims=tensor_array.shape,
+        vals=tensor_array.flatten().tolist())
+
+    return initializer_tensor
+
 def read_output(output_path:str):
     with open(output_path,'r') as f:
         line = f.readline()
@@ -77,18 +92,3 @@ def run_acetone_for_test(model:str, datatest_path:str='',conv_algo:str='std_gemm
     subprocess.run(['rm','-r','tmp_dir/'])
 
     return output
-
-def create_initializer_tensor(
-        name: str,
-        tensor_array: np.ndarray,
-        data_type: onnx.TensorProto = onnx.TensorProto.FLOAT
-) -> onnx.TensorProto:
-
-    # (TensorProto)
-    initializer_tensor = onnx.helper.make_tensor(
-        name=name,
-        data_type=data_type,
-        dims=tensor_array.shape,
-        vals=tensor_array.flatten().tolist())
-
-    return initializer_tensor

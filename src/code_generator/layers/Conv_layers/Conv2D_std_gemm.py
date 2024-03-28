@@ -48,6 +48,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
             output_str = 'tensor_temp'
         
         mustach_hash = {}
+
         mustach_hash['patches_height'] = self.patches_height
         mustach_hash['kernel_w'] = self.kernel_w
         mustach_hash['kernel_h'] = self.kernel_h
@@ -75,6 +76,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
             output_str = 'tensor_temp'
         
         mustach_hash = {}
+
         mustach_hash['patches_height'] = self.patches_height
         mustach_hash['kernel_w'] = self.kernel_w
         mustach_hash['kernel_h'] = self.kernel_h
@@ -95,7 +97,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
 
         return pystache.render(template, mustach_hash)
     
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
 
         mustach_hash = {}
 
@@ -106,7 +108,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
 
         mustach_hash['patch_building_code'] = self.algo_patch_building_mapping[self.conv_algorithm]()
         mustach_hash['patches_size'] = self.nb_filters*self.patches_width
-        mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.road))
+        mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.road),'tensor_temp',False)
 
         if('cst' not in self.previous_layer[0].output_str):
             mustach_hash['cst'] = True

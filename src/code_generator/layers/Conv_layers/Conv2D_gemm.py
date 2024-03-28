@@ -49,7 +49,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
         mustach_hash['A'] = A
         mustach_hash['ldA'] = k
         mustach_hash['B'] = B
-        mustach_hash['ldB'] = k
+        mustach_hash['ldB'] = n
         mustach_hash['C'] = C
         mustach_hash['ldC'] = n
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
@@ -78,7 +78,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
         mustach_hash['A'] = A
         mustach_hash['ldA'] = k
         mustach_hash['B'] = B
-        mustach_hash['ldB'] = k
+        mustach_hash['ldB'] = n
         mustach_hash['C'] = C
         mustach_hash['ldC'] = n
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
@@ -107,7 +107,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
         mustach_hash['A'] = A
         mustach_hash['ldA'] = k
         mustach_hash['B'] = B
-        mustach_hash['ldB'] = k
+        mustach_hash['ldB'] = n
         mustach_hash['C'] = C
         mustach_hash['ldC'] = n
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
@@ -136,7 +136,7 @@ class Conv2D_gemm(Conv2D.Conv2D):
         mustach_hash['A'] = A
         mustach_hash['ldA'] = k
         mustach_hash['B'] = B
-        mustach_hash['ldB'] = k
+        mustach_hash['ldB'] = n
         mustach_hash['C'] = C
         mustach_hash['ldC'] = n
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
