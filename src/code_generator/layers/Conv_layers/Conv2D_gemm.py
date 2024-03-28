@@ -139,9 +139,9 @@ class Conv2D_gemm(Conv2D.Conv2D):
         mustach_hash['ldB'] = n
         mustach_hash['C'] = C
         mustach_hash['ldC'] = n
-        mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('sum')
         if (self.fused_layer):
-            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road),self.idx,'i*'+str(self.ldC)+' + j')
 
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True

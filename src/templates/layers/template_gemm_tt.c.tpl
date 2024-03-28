@@ -7,13 +7,13 @@
             }
             sum += biases_{{name}}_{{idx}}[i];
         {{^fused_layer}}
-            tensor_temp[i*{{ldC}}+j] = {{activation_function}}
+            tensor_temp[i*{{ldC}}+j] = {{activation_function}};
         {{/fused_layer}}
         {{#fused_layer}}
             {{^linear}}
-            sum = {{activation_function}}
+            sum = {{activation_function}};
             {{/linear}}
-            tensor_temp[i*{{ldC}}+j] = {{fused_layer}}
+            tensor_temp[i*{{ldC}}+j] = {{fused_layer}};
         {{/fused_layer}}            
         }
     }

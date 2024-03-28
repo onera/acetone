@@ -122,7 +122,6 @@ def load_json(file_to_parse, conv_algorithm):
             
             elif layer['class_name'] == 'Conv2D':
                 weights = np.array(data_type_py(layer['weights']))
-                print("json: ",weights.shape)
                 if(len(weights.shape) < 3):
                     for i in range(3-len(weights.shape)): 
                         weights = np.expand_dims(weights, axis=-1)

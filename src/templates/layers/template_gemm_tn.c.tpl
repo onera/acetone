@@ -6,7 +6,7 @@
                 tensor_temp[i*{{ldC}}+j] += weight * {{#direct}}*{{/direct}}({{B}}[p*{{ldB}}+j]);
             }
             for(int j=0; j<{{n}}; ++j){
-                register float output = tensor_temp[i*{ldC} + j];
+                register float output = tensor_temp[i*{{ldC}} + j];
                 output += biases_{{name}}_{{idx}}[i];
             {{^fused_layer}}
                 tensor_temp[i*{{ldC}} + j] = {{activation_function}};

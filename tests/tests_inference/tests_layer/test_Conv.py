@@ -31,7 +31,7 @@ tf.keras.backend.set_floatx('float32')
 
 class TestConv(acetoneTestCase.AcetoneTestCase):
     """Test for Conv Layer"""
-    """def testConv_6loops(self):
+    def testConv_6loops(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
@@ -47,7 +47,6 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result, atol=1e-6)
     
-    @expectedFailure
     def testConv_indirect_gemm_nn(self):
         testshape = (10,10,3)
         filters = 3
@@ -62,7 +61,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
 
         acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt', 'indirect_gemm_nn').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result, atol=1e-6)"""
+        self.assertListAlmostEqual(acetone_result,keras_result, atol=1e-6)
     
     def testConv_std_gemm_nn(self):
         testshape = (10,10,3)
