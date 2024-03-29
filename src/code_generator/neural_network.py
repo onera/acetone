@@ -165,7 +165,6 @@ class CodeGenerator(ABC):
                 # print(nn_output) # write to file instead
                 
                 # Write results in text files to compare prediction.
-
                 if(self.layers[0].data_format == 'channels_last'): nn_output = np.transpose(nn_output, (1,2,0))
 
                 nn_output = np.reshape(nn_output, -1)
@@ -315,7 +314,7 @@ class CodeGenerator(ABC):
         for layer in (self.layers):
             if(hasattr(layer, 'data_format') and layer.data_format=='channels_last'): 
                 self.layers[0].data_format = 'channels_last'
-                if(isinstance(self.layers[-1], Conv2D) or isinstance(self.layers[-1],MaxPooling2D) or isinstance(self.layers[-1],AveragePooling2D)):
+                if(isinstance(self.layers[-1], Conv2D) or isinstance(self.layers[-1],MaxPooling2D) or isinstance(self.layers[-1],AveragePooling2D) or isinstance(self.layers[-1], Concatenate)):
                     mustach_hash['channels_last'] = True
                     mustach_hash['output_channels'] = self.layers[-1].output_channels
                     mustach_hash['output_height'] = self.layers[-1].output_height
@@ -349,6 +348,7 @@ class CodeGenerator(ABC):
             
             if(layer in self.dict_cst):
                 layer_hash['cst'] = True
+                layer_hash['cst_name'] = self.dict_cst[layer]
 
             mustach_hash['layers'].append(layer_hash)
 

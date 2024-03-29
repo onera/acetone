@@ -43,33 +43,6 @@ class Gather(Layers.Layers):
         self.output_width = output_shape[3]
         self.activation_function = activation_function
         
-        
-    def write_loops(self,source_file):
-        flat_indices = np.ndarray.flatten(np.array(self.indices)) #may have indices like: [[0,1],[1,2]]
-        source_file.write('    int indice['+str(len(flat_indices))+'] = {') #the list of the indices to use
-        for i in flat_indices:
-            source_file.write(str(i))
-            if(i != flat_indices[-1]):
-                source_file.write(", ")
-            else:
-                source_file.write("};\n")
-        #the indice that will change depend on the axis. 
-        if(self.axis == 1): #collecting channels
-            source_file.write('    for (int k = 0; k < ' + str(len(self.indices)) + '; k++)\n    {\n')
-            source_file.write('        int f = indice[k];\n')
-            source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
-            source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
-        if(self.axis == 2): #collecting heights
-            source_file.write('    for (int f = 0; f < ' + str(self.input_channels) + '; f++)\n    {\n')
-            source_file.write('        for (int k = 0; k < ' + str(len(self.indices)) + '; k++)\n        {\n')
-            source_file.write('            int i = indice[k];\n')
-            source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
-        if(self.axis == 3): #collecting widths
-            source_file.write('    for (int f = 0; f < ' + str(self.input_channels) + '; f++)\n    {\n')
-            source_file.write('        for (int i = 0; i < ' + str(self.input_height) + '; i++)\n        {\n')
-            source_file.write('            for (int k = 0; k < ' + str(len(self.indices)) + '; k++)\n            {\n')
-            source_file.write('                int j = indice[k];\n')
-    
     def write_to_function_source_file(self):
         output_str = self.previous_layer[0].output_str
 

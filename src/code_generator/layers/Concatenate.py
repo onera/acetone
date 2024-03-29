@@ -20,6 +20,7 @@
 
 import code_generator.Layers as Layers
 import numpy as np
+import pystache
 
 #Concatenate two tensor alongside a given axis
 #attribut: axis alongside of which the concatenation will be done
@@ -36,53 +37,53 @@ class Concatenate(Layers.Layers):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.output_channels = output_shape[1]
-        self.activation_function = activation_function
-
-    def write_concat(self, source_file):
+        self.activation_function = activation_function            
+    
+    def write_to_function_source_file(self):
         borne_sup = 0
         borne_inf = 0
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[k]')
+
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+
+        if(self.axis == 1):
+            mustach_hash['channels'] = True
+        elif(self.axis == 2):
+            mustach_hash['heights'] = True
+        elif(self.axis == 3):
+            mustach_hash['widths'] = True
+
+        mustach_hash['concat'] = []
         for k in range(len(self.previous_layer)):
-            input_shape = self.input_shapes[k]
-            output_str = self.previous_layer[k].output_str
-            #We take the value of the matrix only if the indices are inside the adequat limits
-            #the max indice is always at one length of matrix after the min indice
-            
-            if (self.axis == 1):
-                #concat alongside the channels
-                borne_sup += input_shape[1]
-                source_file.write('                if((f < '+str(borne_sup) +') && (f >= '+str(borne_inf) +'))\n                {\n')
-                source_file.write('                    tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = ')
-                source_file.write(output_str+'[j  + ' + str(input_shape[3]) + ' * (i + ' + str(input_shape[2]) + ' * (f - ' + str(borne_inf) + ') )];\n                }\n')
-                borne_inf += input_shape[1]
-            if (self.axis == 2):
-                #concat alongside the height
-                borne_sup += input_shape[2]
-                source_file.write('                if((i < '+str(borne_sup) +') && (i >= '+str(borne_inf) +'))\n                {\n')
-                source_file.write('                    tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = ')
-                source_file.write(output_str+'[j  + ' + str(input_shape[3]) + ' * ( (i - ' + str(borne_inf) + ') + ' + str(input_shape[2]) + ' * f )];\n                }\n')
-                borne_inf += input_shape[2]
-            if (self.axis == 3):
-                #concat alongside the width
-                borne_sup += input_shape[3]
-                source_file.write('                if((j < '+str(borne_sup) +') && (j >= '+str(borne_inf) +'))\n                {\n')
-                source_file.write('                    tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = ')
-                source_file.write(output_str+'[(j - ' + str(borne_inf) + ') + ' + str(input_shape[3]) + ' * ( i + ' + str(input_shape[2]) + ' * f )];\n                }\n')
-                borne_inf += input_shape[3]
-            
+            borne_sup += self.input_shapes[k][1]
 
-            
+            layer_to_concat = {}
+            layer_to_concat['input_width'] = self.input_shapes[k][3]
+            layer_to_concat['input_height'] = self.input_shapes[k][2]
+            layer_to_concat['output_str'] = self.previous_layer[k].output_str
+            layer_to_concat['borne_sup'] = borne_sup
+            layer_to_concat['borne_inf'] = borne_inf
+            mustach_hash['concat'].append(layer_to_concat)
+
+            borne_inf += self.input_shapes[k][1]
+
+
+        with open('src/templates/layers/template_Concatenate.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
     
-    def write_to_function_source_file(self, source_file):
-        #we go through all the indices of the tensor then write the opeartion depending on the axis
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')
-        source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
-        source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
-        self.write_concat(source_file)
-        source_file.write('            }\n        }\n    }\n\n')
-        a = self.activation_function.write_activation_str('tensor_temp[k]')
-        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = '+a+';\n    }\n')
-
     def feedforward(self, inputs):
         output = inputs[0]
         output = output.reshape(self.input_shapes[0][1],self.input_shapes[0][2],self.input_shapes[0][3])

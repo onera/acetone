@@ -227,7 +227,8 @@ def load_json(file_to_parse, conv_algorithm):
                                     size = layer['config']['size'],
                                     axis= layer['config']['axes'],
                                     input_shapes = layer['config']['input_shape'], 
-                                    output_shape = layer['config']['output_shape'])
+                                    output_shape = layer['config']['output_shape'],
+                                    activation_function = Linear())
             
             elif layer['class_name'] == 'Clip':
                 current_layer = Clip.Clip(idx = layer['config']['idx'],
