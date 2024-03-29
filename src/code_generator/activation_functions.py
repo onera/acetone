@@ -119,4 +119,18 @@ class Logarithm(ActivationFunctions):
         s = 'log('+local_var+')'
         
         return s
+
+class Clip(ActivationFunctions):
+    def __init__(self,max,min):
+        super().__init__()
+        self.name = 'Clip'
+        self.max = max
+        self.min = min
+    
+    def compute(self, z):
+        return np.clip(z,self.min,self.max)
+    
+    def write_activation_str(self,local_var):
+        s = local_var +' > '+str(self.max)+' ? '+ str(self.max) +' : (' + local_var + ' < ' + str(self.min) + ' ? ' + str(self.min) + ' : ' + local_var + ')'
+        return s
     

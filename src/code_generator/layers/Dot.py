@@ -20,6 +20,7 @@
 
 import code_generator.Layers as Layers
 import numpy as np
+import pystache
 
 
 #Do the dotproduct of two tensors
@@ -56,34 +57,56 @@ class Dot(Layers.Layers):
         output_str = self.previous_layer[i].output_str
         source_file.write(output_str + '[')
         #the k indice correspond to the interation in the dot product, and it's position depend of the axis of the product.
-        if (self.axis[i] == 2):
+        if (self.axis[i] == 2):#width
             source_file.write('k + '+ str(self.input_shapes[i][self.axis[i]]) + ' * ('+ var[0] +' + ' + str(size[0]) + ' * ' + var[1] + ')]')
-        elif(self.axis[i] == 1):
+        elif(self.axis[i] == 1):#height
             source_file.write(var[0] + ' + '+ str(size[0]) + ' * (k + ' + str(self.input_shapes[i][self.axis[i]]) + ' * ' + var[1] + ')]')
-        elif(self.axis[i] == 0):
+        elif(self.axis[i] == 0): #channels
             source_file.write(var[0] + ' + '+ str(size[0]) + ' * ('+ var[1] +' + ' + str(size[1]) + ' * k)]')
 
             
 
-    def write_to_function_source_file(self, source_file):
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for(int g = 0; g < ' + str(self.output_fourth_dim) + '; g++)\n    {\n')
-        source_file.write('        for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n        {\n')#the two non variant dim of the first tensor
-        source_file.write('            for (int i = 0; i < ' + str(self.output_height) + '; i++)\n            {\n')
-        source_file.write('                for (int j = 0; j < ' + str(self.output_width) + '; j++)\n                {\n')#the two non variant dim of the second tensor
-        source_file.write('                    register float output = 0;\n')
-        source_file.write('                    for (int k = 0; k < ' + str(self.input_shapes[0][self.axis[0]]) + '; k++)\n                    {\n')
-        source_file.write('                        output +=')
-        self.write_dot(source_file,0)
-        source_file.write(' * ')
-        self.write_dot(source_file,1)
-        #Apply the activation function and/or the fused function to the output of the layer
-        a = self.activation_function.write_activation_str('output')
-        source_file.write('                output_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * (f + ' + str(self.output_channels) +' * g))] = '+ a +';\n')
-        source_file.write(';\n')
-        source_file.write('                    }\n                }\n            }\n        }\n    }\n\n')
+    def write_to_function_source_file(self):
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['size'] = self.size
+        mustach_hash['road'] = self.road
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
+
+        mustach_hash['output_fourth_dim'] = self.output_fourth_dim
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['axis_dim'] = self.input_shapes[0][self.axis[0]]
+        mustach_hash['output_str_left'] = self.previous_layer[0].output_str
+        mustach_hash['output_str_right'] = self.previous_layer[1].output_str
+
+        if(self.axis[0] == 2):
+            mustach_hash['indice_left'] = 'k + '+ str(self.input_shapes[0][self.axis[0]]) + ' * (f + ' + str(self.output_channels) + ' * g)'
+        elif(self.axis[0] == 1):
+            mustach_hash['indice_left'] = 'f + '+ str(self.output_channels) + ' * (k + ' + str(self.input_shapes[0][self.axis[0]]) + ' * g)'
+        elif(self.axis[0] == 0):
+            mustach_hash['indice_left'] = 'f + '+ str(self.output_channels) + ' * (g + ' + str(self.output_fourth_dim) + ' * k)'
+        
+        if(self.axis[1] == 2):
+            mustach_hash['indice_right'] = 'k + '+ str(self.input_shapes[1][self.axis[1]]) + ' * (j + ' + str(self.output_width) + ' * i)'
+        elif(self.axis[1] == 1):
+            mustach_hash['indice_right'] = 'j + '+ str(self.output_width) + ' * (k + ' + str(self.input_shapes[1][self.axis[1]]) + ' * i)'
+        elif(self.axis[1] == 0):
+            mustach_hash['indice_right'] = 'j + '+ str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * k)'
+        
+        with open('./src/templates/layers/template_Dot.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
     
     def feedforward(self, inputs):
         inputs[0] = inputs[0].reshape(self.input_shapes[0][1],self.input_shapes[0][2],self.input_shapes[0][3])
         inputs[1] = inputs[1].reshape(self.input_shapes[1][1],self.input_shapes[1][2],self.input_shapes[1][3])
-        return self.activation_function.compute(np.tensordot(inputs[0],inputs[1],axes=[self.axis[0]-1,self.axis[1]-1]))
+        output = np.tensordot(inputs[0],inputs[1],axes=[self.axis[0]-1,self.axis[1]-1])
+        return self.activation_function.compute(output)
