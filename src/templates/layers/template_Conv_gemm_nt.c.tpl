@@ -3,17 +3,17 @@
         for (int j=0; j<{{n}}; ++j){
             register float output =0;
             for (int p=0; p<{{k}}; ++p){
-                output += {{#alpha}}{{.}}{{/alpha}} * {{A}}[p*{{m}}+i] * ({{B}}[j*{{k}}+p]);
+                output += {{A}}[i*{{ldA}}+p]* {{#direct}}*{{/direct}}({{B}}[j*{{ldB}}+p]);
             }
-            output += {{#beta}}{{.}}{{/beta}} * biases_{{name}}_{{idx}}[i];
+            output += biases_{{name}}_{{idx}}[i];
         {{^fused_layer}}
-            tensor_temp[j*{{m}}+i] = {{activation_function}};
+            tensor_temp[i*{{ldC}}+j] = {{activation_function}};
         {{/fused_layer}}
         {{#fused_layer}}
             {{^linear}}
             output = {{activation_function}};
             {{/linear}}
-            tensor_temp[j*{{m}}+i] = {{fused_layer}};
+            tensor_temp[i*{{ldC}}+j] = {{fused_layer}};
         {{/fused_layer}}
         }
     }

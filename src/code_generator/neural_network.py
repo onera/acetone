@@ -110,8 +110,8 @@ class CodeGenerator(ABC):
 
                 if(self.layers[0].data_format == 'channels_last'): nn_input = np.transpose(np.reshape(nn_input, self.layers[0].input_shape[1:]), (2,0,1))
 
-                if (self.normalize):
-                    nn_input = self.Normalizer.pre_processing(nn_input)
+                if (self.normalize): nn_input = self.Normalizer.pre_processing(nn_input)
+
 
                 previous_layer_result = [nn_input for i in range(self.maxRoad)]  # for the very first layer, it is the neural network input
                 
@@ -197,6 +197,10 @@ class CodeGenerator(ABC):
     def flatten_array(self,array):
         s = '\n        {'
         shape = array.shape
+        if(len(shape)<4):
+            for i in range(4-len(shape)):
+                shape = (1,) + shape
+            array = np.reshape(array,shape)
         for j in range(shape[3]):
             for k in range(shape[0]):
                 for f in range(shape[1]):

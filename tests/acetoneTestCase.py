@@ -57,10 +57,9 @@ def create_dataset(shape):
     subprocess.run(['mkdir','tmp_dir/'])
     dataset = np.float32(np.random.default_rng(seed=10).random((1,)+ shape))
     with open('./tmp_dir/dataset.txt', 'w') as filehandle:
-        for i in range(dataset.shape[0]):
-            row = (dataset[i]).flatten(order='C')
-            json.dump(row.tolist(), filehandle)
-            filehandle.write('\n')
+        row = (dataset[0]).flatten(order='C')
+        json.dump(row.tolist(), filehandle)
+        filehandle.write('\n')
     filehandle.close()
     return dataset
 

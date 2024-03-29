@@ -20,6 +20,7 @@
 
 import code_generator.Layers as Layers
 import numpy as np
+import pystache
 
 #The layer which compute the general matrix multiplication
 #input: weight tesnsor W and bias tensor B, input tensor T. The tensor must be of 2D
@@ -32,19 +33,23 @@ class Gemm(Layers.Layers):
         self.idx = idx
         self.size = size
         
-        self.alpha = alpha
-        self.beta = beta
+        self.alpha = [alpha]
+        self.beta =  [beta]
         self.transpo = (transA,transB)
         self.algo_gemm_mapping = {(0,0):self.write_gemm_nn,
                              (0,1):self.write_gemm_nt,
                              (1,1):self.write_gemm_tt,
                              (1,0):self.write_gemm_tn}
         
-        self.output_height = output_shape[0]
-        self.output_width = output_shape[1]
+        self.output_height = output_shape[1]
+        self.output_width = output_shape[2]
         if(input_shape):
-            self.input_height = input_shape[0]
-            self.input_width = input_shape[1]
+            if(transA):
+                self.input_height = input_shape[2]
+                self.input_width = input_shape[1]
+            else:
+                self.input_height = input_shape[1]
+                self.input_width = input_shape[2]
         else:
             self.input_height = 1
             self.input_width = 1
@@ -60,140 +65,129 @@ class Gemm(Layers.Layers):
     #None of the tensor ar transposed
     def write_gemm_nn(self, m, n, k, A, B):
 
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = k
-        self.B = B
-        self.ldB = n
-        self.ldC = n
-        a = self.activation_function.write_activation_str('output')
-        s = '    // gemm_nn\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '           float register weight = '+str(self.A)+'[i*'+str(self.ldA)+'+p];\n'
-        s+= '           for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '               tensor_temp[i*'+str(self.ldC)+' + j] += weight * '+str(self.B)+'[p*'+str(self.ldB)+' + j];\n'
-        s+= '           }\n'
-        s+= '       }\n'
-        s+= '        for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '            float register output = tensor_temp[i*'+str(self.ldC)+' + j];\n'
-        s+= '            output += biases_' + self.name + '_' + str('{:02d}'.format(self.idx))+'[i];\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            output = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
-        s+= '        }\n'
-        s+= '    }\n\n'        
-        return s
-    #The tensor weight tensor is transposed
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['m'] = m
+        mustach_hash['n'] = n
+        mustach_hash['k'] = k
+        mustach_hash['A'] = A
+        mustach_hash['B'] = B
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
+        mustach_hash['alpha'] = self.alpha
+        mustach_hash['beta'] = self.beta
+        if (self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')
+
+            if (self.activation_function.name == 'linear'):
+                mustach_hash['linear'] = True
+
+        with open('src/templates/layers/template_gemm_nn.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+    
     def write_gemm_nt(self, m, n, k, A, B):
 
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = k
-        self.B = B
-        self.ldB = k
-        self.ldC = n
-        a = self.activation_function.write_activation_str('output')
+        mustach_hash = {}
 
-        s = '    // gemm_nt\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '           float register output = 0;\n'
-        s+= '           for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '               output += '+str(self.A)+'[i*'+str(self.ldA)+'+p] * '+str(self.B)+'[j*'+str(self.ldB)+' + p];\n'
-        s+= '           }\n'
-        s+= '           output += biases_'+ self.name + '_' + str("{:02d}".format(self.idx))+'[i];\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            output = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
-        s+= '       }\n'
-        s+= '    }\n\n'
-        
-        return s
-    #The tensor input tensor is transposed
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['m'] = m
+        mustach_hash['n'] = n
+        mustach_hash['k'] = k
+        mustach_hash['A'] = A
+        mustach_hash['B'] = B
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
+        mustach_hash['alpha'] = self.alpha
+        mustach_hash['beta'] = self.beta
+        if (self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')
+
+            if (self.activation_function.name == 'linear'):
+                mustach_hash['linear'] = True
+
+        with open('src/templates/layers/template_gemm_nt.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+
     def write_gemm_tn(self, m, n, k, A, B):
 
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = m
-        self.B = B
-        self.ldB = n
-        self.ldC = n
-        a = self.activation_function.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]')
+        mustach_hash = {}
 
-        s = '    // gemm_tn\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '           float register weight = '+str(self.A)+'[p*'+str(self.ldA)+'+i];\n'
-        s+= '           for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '               tensor_temp[i*'+str(self.ldC)+' + j] += weight * '+str(self.B)+'[p*'+str(self.ldB)+' + j];\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
-        s+= '           }\n'
-        s+= '       }\n'
-        s+= '    }\n\n'
-        
-        return s
-    #Both tensors are transposed
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['m'] = m
+        mustach_hash['n'] = n
+        mustach_hash['k'] = k
+        mustach_hash['A'] = A
+        mustach_hash['B'] = B
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
+        mustach_hash['alpha'] = self.alpha
+        mustach_hash['beta'] = self.beta
+        if (self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output',self.idx,'i*'+str(self.ldC)+' + j')
+
+            if (self.activation_function.name == 'linear'):
+                mustach_hash['linear'] = True
+
+        with open('src/templates/layers/template_gemm_tn.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+
     def write_gemm_tt(self, m, n, k, A, B):
 
-        self.m = m
-        self.n = n
-        self.k = k
-        self.A = A
-        self.ldA = m
-        self.B = B
-        self.ldB = k
-        self.ldC = n
-        a = self.activation_function.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]')
+        mustach_hash = {}
 
-        s = '    // gemm_tt\n'
-        s+= '    for (int i=0; i<'+str(self.m)+'; i++){\n'
-        s+= '       for(int j=0; j<'+str(self.n)+'; ++j){\n'
-        s+= '           float register sum = 0;\n'
-        s+= '           for (int p=0; p<'+str(self.k)+'; ++p){\n'
-        s+= '               sum += '+str(self.A)+'[p*'+str(self.ldA)+'+i] * '+str(self.B)+'[j*'+str(self.ldB)+' + p];\n'
-        s+= '           }\n'
-        s+= '           tensor_temp[i*'+str(self.ldC)+' + j] += sum;\n'
-        if(self.fused_layer):
-            if(self.activation_function.name != 'linear'):
-                s+= '            tensor_temp[i*'+str(self.ldC)+' + j] = '+a+';\n'
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+self.fused_layer.write_activation_str('tensor_temp[i*'+str(self.ldC)+' + j]',self.idx,'i*'+str(self.ldC)+' + j')+';\n'
-        else:
-            s+= '            tensor_temp[i*'+str(self.ldC)+' + j] += '+a+';\n'
-        s+= '       }\n'
-        s+= '    }\n\n'
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['m'] = m
+        mustach_hash['n'] = n
+        mustach_hash['k'] = k
+        mustach_hash['A'] = A
+        mustach_hash['B'] = B
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('sum')
+        mustach_hash['alpha'] = self.alpha
+        mustach_hash['beta'] = self.beta
+        if (self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road),self.idx,'i*'+str(self.ldC)+' + j')
+
+            if (self.activation_function.name == 'linear'):
+                mustach_hash['linear'] = True
+
+        with open('src/templates/layers/template_gemm_tt.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
     
     def feedforward(self,input):
         input = input.reshape(self.input_height,self.input_width)
-        if (self.transpo[0]):
-            input = input.transpose()
         if(self.transpo[1]):
             self.weights = self.weights.transpose()
         
-        return self.activation_function.compute(self.alpha * input * self.weights + self.beta * self.biases)
+        return self.activation_function.compute(self.alpha * np.dot(input,self.weights) + self.beta * self.biases)
     
-    def write_to_function_source_file(self,source_file):
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for (int k = 0; k < '+str(self.output_width*self.input_width)+'; ++k){\n        tensor_temp[k] = 0;\n    }\n')
-        gemm_code = self.algo_gemm_mapping[self.transpo](self.output_height, self.output_width, self.input_width, self.previous_layer[0].output_str, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)))
-        source_file.write(gemm_code)
-        source_file.write('    for (int k = 0; k < '+str(self.size)+'; ++k){\n        output_'+str(self.road)+'[k] = tensor_temp[k];\n    }\n')
-        pass
+    def write_to_function_source_file(self):
 
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['size'] = self.size
+        mustach_hash['road'] = self.road
+
+        mustach_hash['patches_size'] = self.output_width*self.output_height
+        mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.transpo](self.output_height, self.output_width, self.input_width, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), self.previous_layer[0].output_str)
+
+        with open('./src/templates/layers/template_Gemm.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)

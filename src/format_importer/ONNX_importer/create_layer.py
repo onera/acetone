@@ -306,7 +306,7 @@ def create_Gemm(node,idx,dict_input,dict_output,model):
                        beta = attributs['beta'],
                        transA = attributs['transA'],
                        transB = attributs['transB'],
-                       weights = np.moveaxis(onnx.numpy_helper.to_array(B_tensor),0,3),
+                       weights = onnx.numpy_helper.to_array(B_tensor),
                        bias = onnx.numpy_helper.to_array(C_tensor),
                        input_shape = input_shape,
                        output_shape = output_shape,
