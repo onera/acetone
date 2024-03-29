@@ -28,6 +28,7 @@ from format_importer.parser import parser
 
 from code_generator.layers.Dense import Dense
 from code_generator.layers.Softmax import Softmax
+from code_generator.layers.Gather import Gather
 from code_generator.layers.MatMul import MatMul
 from code_generator.layers.Resize_layers.ResizeLinear import ResizeLinear
 from code_generator.layers.Resize_layers.ResizeNearest import ResizeNearest
@@ -303,6 +304,13 @@ class CodeGenerator(ABC):
         mustach_hash['input_size'] = self.layers[0].size
         mustach_hash['road'] = self.layers[-1].road
 
+        if any((isinstance(layer, Gather)) for layer in self.layers):
+            mustach_hash['is_gather'] = True
+            indices = []
+            for gather in [layer for layer in self.layers if (isinstance(layer,Gather))]:
+                indices.append({'idx':"{:02d}".format(gather.idx), 'lenght':len(gather.indices.flatten()), 'list':self.flatten_array_orderc(gather.indices)})
+            mustach_hash['indices'] = indices
+
         self.l_size_max = 1
         for layer in (self.layers):
             if(hasattr(layer, 'data_format') and layer.data_format=='channels_last'): 
@@ -387,7 +395,7 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
             
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add)) or any(isinstance(layer, Gather))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
  
@@ -445,7 +453,7 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
         
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))  or any(isinstance(layer, Gather))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
              

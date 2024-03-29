@@ -39,6 +39,12 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     float f21;
     float f22;
 {{/is_linear_interpolation}}
+{{#is_gather}}
+    int position;
+    {{#indices}}
+    int indice_Gather_{{idx}}[{{lenght}}] = {{list}};
+    {{/indices}}
+{{/is_gather}}
 
 {{{pre_processing}}}
 {{#layers}}

@@ -274,7 +274,7 @@ def create_Gather(node,idx,dict_input,dict_output,model):
     return Gather.Gather(idx = idx,
                          size = size,
                          axis = attributs['axis'],
-                         indices = initializer,
+                         indices = onnx.numpy_helper.to_array(initializer),
                          input_shape = input_shape,
                          output_shape = output_shape,
                          activation_function = activation_functions.Linear())

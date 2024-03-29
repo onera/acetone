@@ -20,6 +20,7 @@
 
 import code_generator.Layers as Layers
 import numpy as np
+import pystache
 
 #extract a list of subtensor from a given tensor
 #attribut: axis alongside of which the submatrix will be extracted (if the desired submatrix must have the height, width or channels of the parent tensor)
@@ -27,7 +28,7 @@ import numpy as np
 #output: a list of tensor
 class Gather(Layers.Layers):
     
-    def __init__(self, idx, size, axis,  indices, input_shape, output_shape):
+    def __init__(self, idx, size, axis,  indices, input_shape, output_shape,activation_function):
         
         super().__init__()
         self.idx = idx
@@ -40,6 +41,7 @@ class Gather(Layers.Layers):
         self.input_width = input_shape[3]
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
+        self.activation_function = activation_function
         
         
     def write_loops(self,source_file):
@@ -68,15 +70,47 @@ class Gather(Layers.Layers):
             source_file.write('            for (int k = 0; k < ' + str(len(self.indices)) + '; k++)\n            {\n')
             source_file.write('                int j = indice[k];\n')
     
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
         output_str = self.previous_layer[0].output_str
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    int position = 0;\n')#to know the position of the next element to add
-        self.write_loops(source_file)
-        source_file.write('                output_cur_'+str(self.road)+'[position]'+
-                          ' = '+output_str+'[j + '+str(self.input_width)+' * (i + '+str(self.input_height)+' * f)];\n')
-        source_file.write('                position++;\n')
-        source_file.write('            }\n        }\n    }\n\n ')
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[position]')
+
+        mustach_hash['indices_len'] = len(self.indices.flatten())
+        mustach_hash['input_width'] = self.input_width
+        mustach_hash['input_height'] = self.input_height
+
+        if(self.axis == 1):
+            mustach_hash['channels'] = True
+            mustach_hash['output_height'] = self.output_height
+            mustach_hash['output_width'] = self.output_width
+        elif(self.axis == 2):
+            mustach_hash['heights'] = True
+            mustach_hash['output_channels'] = self.input_channels
+            mustach_hash['output_width'] = self.output_width
+        elif(self.axis == 3):
+            mustach_hash['widths'] = True
+            mustach_hash['output_channels'] = self.input_channels
+            mustach_hash['output_height'] = self.output_height
+
+        if(self.activation_function.name == 'linear'):
+            mustach_hash['linear'] = True
+
+        if(self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tensor_temp[position]',self.idx,'position')
+
+        with open('src/templates/layers/template_Gather.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
         
     def feedforward(self,input):
         input = input.reshape(self.input_channels,self.input_height,self.input_width)
