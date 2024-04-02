@@ -83,6 +83,7 @@ class Conv2D_indirect_gemm(Conv2D_gemm.Conv2D_gemm):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['road'] = self.road
         mustach_hash['size'] = self.size
 
@@ -94,13 +95,7 @@ class Conv2D_indirect_gemm(Conv2D_gemm.Conv2D_gemm):
         if('cst' not in self.previous_layer[0].output_str):
             mustach_hash['cst'] = True
             mustach_hash['prev_size'] = self.input_channels*self.input_height*self.input_width
-    
-        if(self.data_format == 'channels_last'):
-            mustach_hash['input_channels'] = self.input_channels
-            mustach_hash['input_height'] = self.input_height
-            mustach_hash['input_width'] = self.input_width
-            mustach_hash['channels_last'] = True
-        
+            
         with open('src/templates/layers/template_Conv_indirect_gemm.c.tpl', 'r') as template_file:
             template = template_file.read()
         template_file.close()        

@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}
+    // {{name}}_{{idx}}{{comment}}
     {{#cst}}
     for (int k = 0; k < {{input_size}}; ++k)
     {

@@ -27,7 +27,7 @@ from code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Co
 from code_generator.layers.Pad_layers import EdgePad, WrapPad, ReflectPad, ConstantPad
 from code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
 from code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Clip, Gather, Gemm, MatMul, AddBiase
+from code_generator.layers import  Concatenate, Input, Softmax,  Dot, Gather, Gemm, MatMul, AddBiase
 
 import code_generator.activation_functions as activation_functions
 
@@ -119,7 +119,7 @@ def create_Input_Layer(input_layer,idx,dict_output):
         output_shape = [input_layer.type.tensor_type.shape.dim[i].dim_value for i in range(len(input_layer.type.tensor_type.shape.dim))]
         size = find_size(output_shape)
         
-        return Input.InputLayer(idx,size,output_shape)
+        return Input.InputLayer(idx,size,output_shape,'channels_first')
 
 #Create a layer Softmax
 def create_Softmax(node,idx,dict_input,dict_output,model):

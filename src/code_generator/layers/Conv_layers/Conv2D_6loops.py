@@ -33,6 +33,7 @@ class Conv2D_6loops(Conv2D.Conv2D):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
         mustach_hash['road'] = self.road
         mustach_hash['size'] = self.size

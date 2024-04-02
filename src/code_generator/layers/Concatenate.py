@@ -47,6 +47,7 @@ class Concatenate(Layers.Layers):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['road'] = self.road
         mustach_hash['size'] = self.size
 
@@ -65,7 +66,7 @@ class Concatenate(Layers.Layers):
 
         mustach_hash['concat'] = []
         for k in range(len(self.previous_layer)):
-            borne_sup += self.input_shapes[k][1]
+            borne_sup += self.input_shapes[k][self.axis]
 
             layer_to_concat = {}
             layer_to_concat['input_width'] = self.input_shapes[k][3]
@@ -75,7 +76,7 @@ class Concatenate(Layers.Layers):
             layer_to_concat['borne_inf'] = borne_inf
             mustach_hash['concat'].append(layer_to_concat)
 
-            borne_inf += self.input_shapes[k][1]
+            borne_inf += self.input_shapes[k][self.axis]
 
 
         with open('src/templates/layers/template_Concatenate.c.tpl','r') as template_file:

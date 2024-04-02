@@ -30,7 +30,10 @@ def JSON_from_keras_model(keras_model, output_dir_json):
     for i in range(1, len(keras_model.input.shape)): #start in idx 1 cause idx 0 represents batch size, so it's None in inference phase
         input_layer_size = input_layer_size * keras_model.input.shape[i]
 
-    
+    model_dict['config']['data_format'] = 'channels_first'
+    if ((hasattr(layer['config']['data_format']) ) 
+        and (layer['config']['data_format'] == 'channels_last') for layer in model_dict['config']['layers']): 
+        model_dict['config']['data_format'] = 'channels_last'
 
     if keras_model.layers[0].__class__.__name__ == 'InputLayer':
         start = 0
@@ -52,6 +55,13 @@ def JSON_from_keras_model(keras_model, output_dir_json):
         else:
             output_shape = layer_keras.output_shape
             input_shape = layer_keras.input_shape
+        
+        if (model_dict['config']['data_format'] == 'channels_last'):
+            output_shape = (output_shape[0], output_shape[3], output_shape[1], output_shape[2])
+            if type(input_shape) is list:
+                input_shape = [(shape[0], shape[3], shape[1], shape[2]) for shape in input_shape]
+            else:
+                input_shape = (input_shape[0], input_shape[3], input_shape[1], input_shape[2])
 
         print(input_shape, output_shape)
         
@@ -77,10 +87,22 @@ def JSON_from_keras_model(keras_model, output_dir_json):
 
         if layer_json['class_name'] == 'Dense' or layer_json['class_name'] == 'Conv2D' :
             if layer_json['config']['dtype'] == 'float64':
-                layer_json['weights'] = np.float64(layer_keras.get_weights()[0])
+                weights = np.float64(layer_keras.get_weights()[0])
+
+                if(len(weights.shape) < 3):
+                    for i in range(3-len(weights.shape)): 
+                        weights = np.expand_dims(weights, axis=-1)
+                weights = np.moveaxis(weights, 2, 0)
+                if(len(weights.shape) < 4):
+                    weights = np.expand_dims(weights, axis=0)
+                    
+                layer_json['weights'] = weights
                 layer_json['biases'] = np.float64(layer_keras.get_weights()[1])
             elif layer_json['config']['dtype'] == 'float32':
-                layer_json['weights'] = np.float32(layer_keras.get_weights()[0])
+
+                weights = np.float32(layer_keras.get_weights()[0])
+                
+                layer_json['weights'] = weights
                 layer_json['biases'] = np.float32(layer_keras.get_weights()[1])
 
             i = i + 2

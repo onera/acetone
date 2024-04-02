@@ -29,7 +29,7 @@ from code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Co
 from code_generator.layers.Pad_layers import ConstantPad
 from code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
 from code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Clip
+from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot
 from code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
 
 def create_actv_function_obj(activation_str):
@@ -71,6 +71,7 @@ def load_json(file_to_parse, conv_algorithm):
         
         file = open(file_to_parse, 'r')
         model = json.load(file)
+        data_format = model['config']['data_format'] 
 
         data_type = model['config']['layers'][0]['config']['dtype']
 
@@ -88,7 +89,7 @@ def load_json(file_to_parse, conv_algorithm):
 
         layers = []
 
-        l_temp = Input.InputLayer(0, model['config']['layers'][0]['config']['size'], model['config']['layers'][0]['config']['input_shape'])
+        l_temp = Input.InputLayer(0, model['config']['layers'][0]['config']['size'], model['config']['layers'][0]['config']['input_shape'], data_format)
 
         layers.append(l_temp)
 
@@ -116,7 +117,7 @@ def load_json(file_to_parse, conv_algorithm):
                     weights = np.expand_dims(weights, axis=0)
                 current_layer = Dense.Dense(idx=idx,
                                       size=layer['config']['units'],
-                                      weights=weights,
+                                      weights=np.array(data_type_py(layer['weights'])),
                                       biases=data_type_py(layer['biases']),
                                       activation_function=create_actv_function_obj(layer['config']['activation']))
             
@@ -131,7 +132,6 @@ def load_json(file_to_parse, conv_algorithm):
                 current_layer = create_conv2d_obj(algorithm = conv_algorithm,
                                                   conv_algorithm = conv_algorithm,
                                                   idx = idx,
-                                                  data_format = layer['config']['data_format'],
                                                   size = layer['config']['size'],
                                                   padding = layer['config']['padding'],
                                                   strides = layer['config']['strides'][0],
@@ -147,7 +147,6 @@ def load_json(file_to_parse, conv_algorithm):
             
             elif layer['class_name'] == 'AveragePooling2D':
                 current_layer = AveragePooling2D.AveragePooling2D(idx = idx,
-                                                 data_format = layer['config']['data_format'],
                                                  size = layer['config']['size'],
                                                  padding = layer['config']['padding'],
                                                  strides = layer['config']['strides'][0],
@@ -159,7 +158,6 @@ def load_json(file_to_parse, conv_algorithm):
             elif layer['class_name'] == 'MaxPooling2D':
                 current_layer = MaxPooling2D.MaxPooling2D(idx = idx,
                                              size = layer['config']['size'],
-                                             data_format = layer['config']['data_format'],
                                              padding = layer['config']['padding'],
                                              strides = layer['config']['strides'][0],
                                              pool_size = layer['config']['pool_size'][0],
@@ -200,9 +198,15 @@ def load_json(file_to_parse, conv_algorithm):
                                        activation_function= Linear())
             
             elif layer['class_name'] == 'Concatenate':
+                axis = layer['config']['axis']
+                if(data_format == 'channels_last'):
+                    if(axis == 3):
+                        axis = 1
+                    else:
+                        axis = axis + 1
                 current_layer = Concatenate.Concatenate(idx = layer['config']['idx'], 
                                             size = layer['config']['size'],
-                                            axis = layer['config']['axis'], 
+                                            axis = axis, 
                                             input_shapes = layer['config']['input_shape'], 
                                             output_shape = layer['config']['output_shape'],
                                             activation_function=Linear())
@@ -229,12 +233,6 @@ def load_json(file_to_parse, conv_algorithm):
                                     input_shapes = layer['config']['input_shape'], 
                                     output_shape = layer['config']['output_shape'],
                                     activation_function = Linear())
-            
-            elif layer['class_name'] == 'Clip':
-                current_layer = Clip.Clip(idx = layer['config']['idx'],
-                                     size = layer['config']['size'], 
-                                     min= layer['config']['min'], 
-                                     max=layer['config']['max'])
             
             elif layer['class_name'] == 'UpSampling2D': # Need to make sure that the 'size' attribut of the Layer is renamed
                 current_layer = create_resize_obj(mode = layer['config']['interpolation'],
@@ -295,5 +293,5 @@ def load_json(file_to_parse, conv_algorithm):
         layers, listRoad, maxRoad, dict_cst = graph.tri_topo(layers)
         layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
         print("Finished model initialization.")    
-        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst
+        return layers, data_type, data_type_py, data_format, maxRoad, dict_cst
 

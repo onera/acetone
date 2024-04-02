@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}
+    // {{name}}_{{idx}}{{comment}}
     for (int f = 0; f < {{output_channels}}; f++)
     {
         for (int i = 0; i < {{output_height}}; i++)

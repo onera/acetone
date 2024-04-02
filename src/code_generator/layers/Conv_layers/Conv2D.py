@@ -24,11 +24,10 @@ from abc import abstractmethod
 
 class Conv2D(Layers.Layers):
     
-    def __init__(self, idx, conv_algorithm, data_format, size, padding, strides, kernel_h, kernel_w, dilation_rate, nb_filters, input_shape, output_shape, weights, biases, activation_function):
+    def __init__(self, idx, conv_algorithm, size, padding, strides, kernel_h, kernel_w, dilation_rate, nb_filters, input_shape, output_shape, weights, biases, activation_function):
         super().__init__()
         self.conv_algorithm = conv_algorithm
         self.idx = idx
-        self.data_format = data_format
         self.size = size
         self.name = 'Conv2D'
         self.padding = padding
@@ -37,21 +36,13 @@ class Conv2D(Layers.Layers):
         self.kernel_w = kernel_w
         self.dilation_rate = dilation_rate
         self.nb_filters = nb_filters
-        
-        if self.data_format == 'channels_first':
-            self.input_channels = input_shape[1]
-            self.input_height = input_shape[2]
-            self.input_width = input_shape[3]
-            self.output_height = output_shape[2]
-            self.output_width = output_shape[3]
+    
+        self.input_channels = input_shape[1]
+        self.input_height = input_shape[2]
+        self.input_width = input_shape[3]
+        self.output_height = output_shape[2]
+        self.output_width = output_shape[3]
 
-        elif self.data_format == 'channels_last':
-            self.input_height = input_shape[1]
-            self.input_width = input_shape[2]
-            self.input_channels = input_shape[3]
-            self.output_height = output_shape[1]
-            self.output_width = output_shape[2]
-        
         self.input_shape = [self.input_channels, self.input_height, self.input_width]
         self.output_channels = self.nb_filters
 

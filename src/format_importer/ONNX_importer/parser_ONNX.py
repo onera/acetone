@@ -79,6 +79,7 @@ def load_onnx(file_to_parse, conv_algorithm):
     #Sorting the graph and adding the road to the layers
     layers, listRoad, maxRoad, dict_cst = tri_topo(layers)
     layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
+    data_format = 'channels_first'
     
     print("Finished model initialization.")    
-    return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst
+    return layers, data_type, data_type_py, data_format, maxRoad, dict_cst

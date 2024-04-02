@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}
+    // {{name}}_{{idx}}{{comment}}
 
     position = 0;
 

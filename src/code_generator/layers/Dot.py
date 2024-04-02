@@ -72,6 +72,7 @@ class Dot(Layers.Layers):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['size'] = self.size
         mustach_hash['road'] = self.road
 

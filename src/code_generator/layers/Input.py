@@ -23,13 +23,13 @@ import pystache
 
 class InputLayer(Layers.Layers):
 
-    def __init__(self, idx, size, input_shape):
+    def __init__(self, idx, size, input_shape, data_format):
        
         super().__init__()
         self.idx = idx
         self.size = size
         self.input_shape = input_shape
-        self.data_format = 'channels_first'
+        self.data_format = data_format
         self.name = 'Input_layer'
 
     def write_to_function_source_file(self):
@@ -42,9 +42,9 @@ class InputLayer(Layers.Layers):
 
         if(self.data_format == 'channels_last'):
             mustach_hash['channels_last'] = True
-            mustach_hash['input_channels'] = self.input_shape[3]
-            mustach_hash['input_height'] = self.input_shape[1]
-            mustach_hash['input_width'] = self.input_shape[2]
+            mustach_hash['input_channels'] = self.input_shape[1]
+            mustach_hash['input_height'] = self.input_shape[2]
+            mustach_hash['input_width'] = self.input_shape[3]
         else:
             mustach_hash['size'] = self.size
 

@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}
+    // {{name}}_{{idx}}{{comment}}
     for (int k = 0; k < {{patches_size}}; ++k)
     {
         tensor_temp[k] = 0;

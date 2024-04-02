@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}
+    // {{name}}_{{idx}}{{comment}}
     for (int i = 0; i < {{size}}; ++i)
     {
         dotproduct = 0;

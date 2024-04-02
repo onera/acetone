@@ -103,6 +103,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['size'] = self.size
         mustach_hash['road'] = self.road
 

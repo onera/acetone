@@ -54,16 +54,16 @@ class CodeGenerator(ABC):
         self.normalize = normalize
 
         if (not self.normalize):
-            l, dtype, dtype_py, listRoad, maxRoad, dict_cst = parser(self.file, self.conv_algorithm)
+            l, dtype, dtype_py, data_format, maxRoad, dict_cst = parser(self.file, self.conv_algorithm)
         elif(self.normalize):
-            l, dtype, dtype_py, listRoad, maxRoad, dict_cst, Normalizer = parser(self.file, self.conv_algorithm, self.normalize)
+            l, dtype, dtype_py, data_format, maxRoad, dict_cst, Normalizer = parser(self.file, self.conv_algorithm, self.normalize)
             self.Normalizer = Normalizer
         
         self.layers = l
         self.data_type = dtype
         self.data_type_py = dtype_py
         self.maxRoad = maxRoad
-        self.listRoad = listRoad
+        self.data_format = data_format
         self.dict_cst = dict_cst
 
         if test_dataset_file:
@@ -109,7 +109,7 @@ class CodeGenerator(ABC):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
 
-                if(self.layers[0].data_format == 'channels_last'): nn_input = np.transpose(np.reshape(nn_input, self.layers[0].input_shape[1:]), (2,0,1))
+                if(self.data_format == 'channels_last'): nn_input = np.transpose(np.reshape(nn_input, self.layers[0].input_shape[1:]), (2,0,1))
 
                 if (self.normalize): nn_input = self.Normalizer.pre_processing(nn_input)
 
@@ -165,7 +165,7 @@ class CodeGenerator(ABC):
                 # print(nn_output) # write to file instead
                 
                 # Write results in text files to compare prediction.
-                if(self.layers[0].data_format == 'channels_last'): nn_output = np.transpose(nn_output, (1,2,0))
+                if(self.data_format == 'channels_last'): nn_output = np.transpose(nn_output, (1,2,0))
 
                 nn_output = np.reshape(nn_output, -1)
 
@@ -299,9 +299,8 @@ class CodeGenerator(ABC):
         mustach_hash = {}
 
         mustach_hash['data_type'] = self.data_type
-        mustach_hash['output_size'] = self.layers[-1].size
         mustach_hash['input_size'] = self.layers[0].size
-        mustach_hash['road'] = self.layers[-1].road
+        mustach_hash['output_size'] = self.layers[-1].size
 
         if any((isinstance(layer, Gather)) for layer in self.layers):
             mustach_hash['is_gather'] = True
@@ -312,13 +311,6 @@ class CodeGenerator(ABC):
 
         self.l_size_max = 1
         for layer in (self.layers):
-            if(hasattr(layer, 'data_format') and layer.data_format=='channels_last'): 
-                self.layers[0].data_format = 'channels_last'
-                if(isinstance(self.layers[-1], Conv2D) or isinstance(self.layers[-1],MaxPooling2D) or isinstance(self.layers[-1],AveragePooling2D) or isinstance(self.layers[-1], Concatenate)):
-                    mustach_hash['channels_last'] = True
-                    mustach_hash['output_channels'] = self.layers[-1].output_channels
-                    mustach_hash['output_height'] = self.layers[-1].output_height
-                    mustach_hash['output_width'] = self.layers[-1].output_width
             if layer.size > self.l_size_max : self.l_size_max = layer.size
         
         if any((isinstance(layer, Dense) or isinstance(layer,MatMul)) for layer in self.layers):
@@ -351,6 +343,28 @@ class CodeGenerator(ABC):
                 layer_hash['cst_name'] = self.dict_cst[layer]
 
             mustach_hash['layers'].append(layer_hash)
+        
+        output_hash = {}
+        output_hash['road'] = self.layers[-1].road
+        if (self.data_format == 'channels_last'):
+            output_hash['output_channels'] = self.layers[-1].output_channels
+            output_hash['output_height'] = self.layers[-1].output_height
+            output_hash['output_width'] = self.layers[-1].output_width
+            
+            with open('./src/templates/memory_layout/template_channels_last_output.c.tpl','r') as template_file:
+                template = template_file.read()
+            template_file.close()
+            mustach_hash['ouput_str'] = pystache.render(template, output_hash)
+
+        elif(self.data_format == 'channels_first'):
+            output_hash['output_size'] = self.layer[-1].size
+
+            with open('./src/templates/memory_layout/template_channels_first_output.c.tpl','r') as template_file:
+                template = template_file.read()
+            template_file.close()
+            mustach_hash['ouput_str'] = pystache.render(template, output_hash)
+            
+
 
         with open('src/templates/template_source_file.c.tpl', 'r') as template_file:
             template = template_file.read()

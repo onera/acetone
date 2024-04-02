@@ -154,13 +154,12 @@ def load_nnet(file_to_parse, normalize):
         layers[-1].next_layer.append(layer)
         layers.append(layer)
 
-    print("Finished model initialization.")
+    data_format = 'channels_first'
 
-    
-
+    print("Finished model initialization.")    
 
     if(normalize):
         Normalizer = nnet_normalize.Normalizer(input_size = layerSizes[0], output_size = layerSizes[-1], mins = inputMinimums, maxes = inputMaximums, means = means, ranges = ranges)
-        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst, Normalizer
+        return layers, data_type, data_type_py, data_format, maxRoad, dict_cst, Normalizer
     else:
-        return layers, data_type, data_type_py, listRoad, maxRoad, dict_cst
+        return layers, data_type, data_type_py, data_format, maxRoad, dict_cst

@@ -24,31 +24,22 @@ import pystache
 from abc import abstractmethod
 
 class Pooling2D(Layers.Layers):
-    def __init__(self, idx, data_format, size, padding, strides, pool_size, input_shape, output_shape, activation_function,**kwargs):
+    def __init__(self, idx, size, padding, strides, pool_size, input_shape, output_shape, activation_function,**kwargs):
         
         super().__init__()
         self.idx = idx
-        self.data_format = data_format
         self.size = size
         self.name = ''
         self.padding = padding
         self.strides = strides
         self.pool_size = pool_size
 
-        if self.data_format == 'channels_first':
-            self.input_channels = input_shape[1]
-            self.input_height = input_shape[2]
-            self.input_width = input_shape[3]
-            self.output_height = output_shape[2]
-            self.output_width = output_shape[3]
+        self.input_channels = input_shape[1]
+        self.input_height = input_shape[2]
+        self.input_width = input_shape[3]
+        self.output_height = output_shape[2]
+        self.output_width = output_shape[3]
 
-        elif self.data_format == 'channels_last':
-            self.input_height = input_shape[1]
-            self.input_width = input_shape[2]
-            self.input_channels = input_shape[3]
-            self.output_height = output_shape[1]
-            self.output_width = output_shape[2]
-        
         self.output_channels = self.input_channels
 
         self.pooling_funtion = ''
@@ -71,6 +62,7 @@ class Pooling2D(Layers.Layers):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['road'] = self.road
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.output_var)

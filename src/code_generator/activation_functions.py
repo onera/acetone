@@ -24,6 +24,7 @@ from abc import ABC, abstractmethod
 class ActivationFunctions():
     def __init__(self):
         self.name = ''
+        self.comment = ''
 
     @abstractmethod
     def compute():
@@ -38,7 +39,9 @@ class Sigmoid(ActivationFunctions):
     def __init__(self):
         super().__init__()
         self.name = 'sigmoid'
-        #self.layer_type     
+        self.comment = ' and apply sigmoid function'
+        #self.layer_type
+
     def compute(self, z):
         return 1/(1+np.exp(-z))
 
@@ -53,6 +56,7 @@ class ReLu(ActivationFunctions):
     def __init__(self):
         super().__init__()
         self.name = 'relu'
+        self.comment = ' and apply rectifier'
     
     def compute(self, z):
         return np.maximum(0,z)
@@ -67,6 +71,7 @@ class TanH(ActivationFunctions):
     def __init__(self):
         super().__init__()
         self.name = 'hyperb_tan'
+        self.comment = ' and apply hyperbolic tangent function'
         
     
     def compute(self, z):
@@ -82,6 +87,7 @@ class Linear(ActivationFunctions):
     def __init__(self):
         super().__init__()
         self.name = 'linear'
+        self.comment = ''
     
     def compute(self, z):
         return z
@@ -96,6 +102,7 @@ class Exponential(ActivationFunctions):
     def __init__(self):
         super().__init__()
         self.name = 'Exponential'
+        self.comment = ' and apply exponential function'
     
     def compute(self, z):
         return np.exp(z)
@@ -110,6 +117,7 @@ class Logarithm(ActivationFunctions):
     def __init__(self):
         super().__init__()
         self.name = 'Logarithm'
+        self.comment = ' and apply logarithm function'
     
     def compute(self, z):
         return np.log(z)
@@ -124,6 +132,7 @@ class Clip(ActivationFunctions):
     def __init__(self,max,min):
         super().__init__()
         self.name = 'Clip'
+        self.comment = ' and apply rectifier'
         self.max = max
         self.min = min
     
