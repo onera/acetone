@@ -1,8 +1,11 @@
     // gemm_nt
-    for (int i=0; i<{{m}}; i++){
-        for (int j=0; j<{{n}}; ++j){
+    for (i = 0; i < {{m}}; i++)
+    {
+        for (j = 0; j < {{n}}; ++j)
+        {
             register float output =0;
-            for (int p=0; p<{{k}}; ++p){
+            for (p = 0; p < {{k}}; ++p)
+            {
                 output += {{A}}[i*{{ldA}}+p]* {{#direct}}*{{/direct}}({{B}}[j*{{ldB}}+p]);
             }
             output += biases_{{name}}_{{idx}}[i];

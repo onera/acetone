@@ -77,10 +77,10 @@ class Pooling2D(Layers.Layers):
         mustach_hash['pad_top'] = self.pad_top
         mustach_hash['input_height'] = self.input_height
         mustach_hash['input_width'] = self.input_width
-        mustach_hash['specific_function'] = self.specific_function('jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*c)', output_str)
+        mustach_hash['specific_function'] = self.specific_function('jj + '+str(self.input_width)+'*(ii + '+str(self.input_height)+'*f)', output_str)
 
         if (self.fused_layer):
-            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str(self.output_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*c)')
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str(self.output_var,self.idx,'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)')
 
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True

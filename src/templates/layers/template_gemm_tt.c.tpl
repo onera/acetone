@@ -1,8 +1,11 @@
     // gemm_tt
-    for (int i=0; i<{{m}}; i++){
-        for (int j=0; j<{{n}}; ++j){
+    for (i = 0; i < {{m}}; i++)
+    {
+        for (j = 0; j < {{n}}; ++j)
+        {
             float register sum = 0;
-            for (int p=0; p<{{k}}; ++p){
+            for (p = 0; p < {{k}}; ++p)
+            {
                 sum += {{#alpha}}{{.}}{{/alpha}} * {{A}}[p*{{m}} +i]* {{#direct}}*{{/direct}}({{B}}[p*{{n}}+j]);
             }
             sum += {{#beta}}{{.}}{{/beta}} * biases_{{name}}_{{idx}}[i];

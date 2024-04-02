@@ -1,8 +1,11 @@
     // gemm_nt
-    for (int i=0; i<{{m}}; i++){
-        for (int j=0; j<{{n}}; ++j){
+    for (i = 0; i < {{m}}; i++)
+    {
+        for (j = 0; j < {{n}}; ++j)
+        {
             register float output =0;
-            for (int p=0; p<{{k}}; ++p){
+            for (p = 0; p < {{k}}; ++p)
+            {
                 output += {{#alpha}}{{.}}{{/alpha}} * {{A}}[p*{{m}}+i] * ({{B}}[j*{{k}}+p]);
             }
             output += {{#beta}}{{.}}{{/beta}} * biases_{{name}}_{{idx}}[i];

@@ -1,5 +1,5 @@
     // {{name}}_{{idx}}{{comment}}
-    for (int i = 0; i < {{size}}; ++i)
+    for (i = 0; i < {{size}}; ++i)
     {
         output_{{road}}[i] = {{output_str}}[i] + biases_{{name}}_{{idx}}[i];
         {{^linear}}

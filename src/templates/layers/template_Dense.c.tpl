@@ -1,8 +1,8 @@
     // {{name}}_{{idx}}{{comment}}
-    for (int i = 0; i < {{size}}; ++i)
+    for (i = 0; i < {{size}}; ++i)
     {
         dotproduct = 0;
-        for (int j = 0; j < {{prev_size}}; ++j)
+        for (j = 0; j < {{prev_size}}; ++j)
         {
             dotproduct += {{output_str}}[j] * weights_{{name}}_{{idx}}[(j + {{prev_size}}*i)];
         }
@@ -18,7 +18,7 @@
         {{/fused_layer}}
 
     }
-    for (int k = 0; k < {{size}}; ++k)
+    for (k = 0; k < {{size}}; ++k)
     {
         output_{{road}}[k] = tensor_temp[k];
     }

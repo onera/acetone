@@ -1,9 +1,9 @@
     // {{name}}_{{idx}}{{comment}}
-    for (int f = 0; f < {{output_channels}}; f++)
+    for (f = 0; f < {{output_channels}}; f++)
     {
-        for (int i = 0; i < {{output_height}}; i++)
+        for (i = 0; i < {{output_height}}; i++)
         {
-            for (int j = 0; j < {{output_width}}; j++)
+            for (j = 0; j < {{output_width}}; j++)
             {
                 {{#concat}}
                     {{#channels}}
@@ -22,7 +22,7 @@
             }
         }
     }
-    for (int k = 0; k < {{size}}; ++k)
+    for (k = 0; k < {{size}}; ++k)
     {
         output_{{road}}[k] = {{{activation_function}}};
     }

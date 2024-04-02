@@ -1,13 +1,13 @@
     // im2col
-    for (int i = 0; i < {{patches_height}}; ++i)
+    for (i = 0; i < {{patches_height}}; ++i)
     {
         int i_offset = (i / {{kernel_w}}) % {{kernel_h}};
         int j_offset = i % {{kernel_w}};
         int c_offset = i / {{kernel_h}} / {{kernel_w}};
         
-        for (int h = 0; h < {{output_height}}; ++h)
+        for (h = 0; h < {{output_height}}; ++h)
         {
-            for (int w = 0; w < {{output_width}}; ++w)
+            for (w = 0; w < {{output_width}}; ++w)
             {
                 int ii = h * {{strides}} - {{pad_top}} + i_offset;
                 int jj = w * {{strides}} - {{pad_left}} + j_offset;

@@ -43,28 +43,7 @@ class Dot(Layers.Layers):
         self.output_height = output_shape[3]
         self.output_width = output_shape[4]
         self.output_channels = output_shape[2]
-        self.activation_function = activation_function
-    
-    def write_dot(self,source_file, i):
-        #depend if it's the first or the second tensor on the dot 
-        if (i == 0):
-            var = ['f','g']
-            size = [self.output_channels,self.output_fourth_dim]
-        else:
-            var = ['j','i']
-            size = [self.output_width,self.output_height]
-        
-        output_str = self.previous_layer[i].output_str
-        source_file.write(output_str + '[')
-        #the k indice correspond to the interation in the dot product, and it's position depend of the axis of the product.
-        if (self.axis[i] == 2):#width
-            source_file.write('k + '+ str(self.input_shapes[i][self.axis[i]]) + ' * ('+ var[0] +' + ' + str(size[0]) + ' * ' + var[1] + ')]')
-        elif(self.axis[i] == 1):#height
-            source_file.write(var[0] + ' + '+ str(size[0]) + ' * (k + ' + str(self.input_shapes[i][self.axis[i]]) + ' * ' + var[1] + ')]')
-        elif(self.axis[i] == 0): #channels
-            source_file.write(var[0] + ' + '+ str(size[0]) + ' * ('+ var[1] +' + ' + str(size[1]) + ' * k)]')
-
-            
+        self.activation_function = activation_function            
 
     def write_to_function_source_file(self):
 
@@ -87,11 +66,11 @@ class Dot(Layers.Layers):
         mustach_hash['output_str_right'] = self.previous_layer[1].output_str
 
         if(self.axis[0] == 2):
-            mustach_hash['indice_left'] = 'k + '+ str(self.input_shapes[0][self.axis[0]]) + ' * (f + ' + str(self.output_channels) + ' * g)'
+            mustach_hash['indice_left'] = 'k + '+ str(self.input_shapes[0][self.axis[0]]) + ' * (f + ' + str(self.output_channels) + ' * p)'
         elif(self.axis[0] == 1):
-            mustach_hash['indice_left'] = 'f + '+ str(self.output_channels) + ' * (k + ' + str(self.input_shapes[0][self.axis[0]]) + ' * g)'
+            mustach_hash['indice_left'] = 'f + '+ str(self.output_channels) + ' * (k + ' + str(self.input_shapes[0][self.axis[0]]) + ' * p)'
         elif(self.axis[0] == 0):
-            mustach_hash['indice_left'] = 'f + '+ str(self.output_channels) + ' * (g + ' + str(self.output_fourth_dim) + ' * k)'
+            mustach_hash['indice_left'] = 'f + '+ str(self.output_channels) + ' * (p + ' + str(self.output_fourth_dim) + ' * k)'
         
         if(self.axis[1] == 2):
             mustach_hash['indice_right'] = 'k + '+ str(self.input_shapes[1][self.axis[1]]) + ' * (j + ' + str(self.output_width) + ' * i)'

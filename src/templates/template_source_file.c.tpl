@@ -3,6 +3,11 @@
 #include "inference.h"
 
 int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[{{input_size}}]){
+    int i;
+    int j;
+    int f;
+    int k;
+    int g;
     
 {{#is_dense}}
     {{data_type}} dotproduct;
@@ -51,7 +56,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 {{{inference_function}}}
 
     {{#cst}}
-    for (int k; k < {{size}}; k++)
+    for (k; k < {{size}}; k++)
     {
         cst_{{cst_name}}[k] = output_{{road}}[k];
     }

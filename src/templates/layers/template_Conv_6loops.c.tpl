@@ -1,22 +1,22 @@
     // {{name}}_{{idx}}{{comment}}
-    for (int f = 0; f < {{nb_filters}}; ++f)
+    for (f = 0; f < {{nb_filters}}; ++f)
     {
-        for (int i = 0; i < {{output_height}}; ++i)
+        for (i = 0; i < {{output_height}}; ++i)
         {
-            for (int j = 0; j < {{output_width}}; ++j)
+            for (j = 0; j < {{output_width}}; ++j)
             {
                 sum = 0;
-                for (int c = 0; c < {{input_channels}}; ++c)
+                for (p = 0; p < {{input_channels}}; ++p)
                 {
-                    for (int m = 0; m < {{kernel_h}}; ++m)
+                    for (h = 0; h < {{kernel_h}}; ++h)
                     {
-                        for (int n = 0; n < {{kernel_w}}; ++n)
+                        for (w = 0; w < {{kernel_w}}; ++w)
                         {
-                            int ii = i*{{strides}} + m*{{dilation_rate}} - {{pad_left}};
-                            int jj = j*{{strides}} + n*{{dilation_rate}} - {{pad_top}};
+                            int ii = i*{{strides}} + h*{{dilation_rate}} - {{pad_left}};
+                            int jj = j*{{strides}} + w*{{dilation_rate}} - {{pad_top}};
 
                             if (ii >= 0 && ii < {{input_height}} && jj >= 0 && jj < {{input_width}})
-                                sum += {{output_str}}[jj + {{input_width}}*(ii + {{input_height}}*c)] * weights_{{name}}_{{idx}}[n + {{kernel_w}}*(m + {{kernel_h}}*(c + {{input_channels}}*f))];
+                                sum += {{output_str}}[jj + {{input_width}}*(ii + {{input_height}}*p)] * weights_{{name}}_{{idx}}[w + {{kernel_w}}*(h + {{kernel_h}}*(p + {{input_channels}}*f))];
                         }
                     }
                 }
@@ -33,7 +33,7 @@
             }
         }
     }
-    for (int k = 0; k < {{size}}; ++k)
+    for (k = 0; k < {{size}}; ++k)
     {
         output_{{road}}[k] = tensor_temp[k];
     }
