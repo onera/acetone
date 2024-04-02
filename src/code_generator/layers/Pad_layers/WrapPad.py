@@ -19,6 +19,7 @@
 """
 
 import code_generator.layers.Pad_layers.Pad as Pad
+import pystache
 
 #The Wrap mode of the Pad layers
 #Pads with the wrap of the vector along the axis. 
@@ -29,27 +30,60 @@ class Wrap_pad(Pad.Pad):
         super().__init__(idx, size, mode, pads, constant_value, axes, input_shape)
         self.mode = 'wrap'
     
-    #Translate to the value used to wrap the input tensor
-    def write_change_indice(self,old_indice,pad,dim,new_indice):
-        s = '                if(('+old_indice+' < '+str(pad)+')\n'
-        s+= '                {\n'
-        s+= '                    '+new_indice+' = ('+new_indice+') % ('+str(dim)+');\n'
-        s+= '                }\n'
-        s+= '                if(('+old_indice+' >= '+str(pad + dim)+')\n'
-        s+= '                {\n'
-        s+= '                    '+new_indice+' = ('+new_indice+') % ('+str(dim)+');\n'
-        s+= '                }\n'
-        return s
-        
-    def write_padding(self,source_file):
-        output_str = self.previous_layer[0].output_str
-        a = self.activation_function.write_activation_str(output_str+'[new_j + ' + str(self.input_shape[3]) + ' * (new_i + ' + str(self.input_shape[2]) + ' * new_f)]')
+    def write_padding(self):
+        mustach_hash = {}
 
-        source_file.write('                new_f =  f - '+self.pads[1]+';\n')#take the indice in the input tensor
-        source_file.write('                new_i =  i - '+self.pads[2]+';\n')
-        source_file.write('                new_j =  f - '+self.pads[3]+';\n')
-        source_file.write(self.write_change_indice('f',self.pads[1],self.input_shape[1],'new_f'))#If necessary, taking the wrapping value
-        source_file.write(self.write_change_indice('i',self.pads[2],self.input_shape[2],'new_i'))
-        source_file.write(self.write_change_indice('j',self.pads[3],self.input_shape[3],'new_j'))
-        #Giving the value to the output tensor
-        source_file.write('                output_cur_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+a+';\n')
+        mustach_hash['pads_front'] = self.pads[1]
+        mustach_hash['pads_top'] = self.pads[2]
+        mustach_hash['pads_left'] = self.pads[3]
+        mustach_hash['channels_and_pad_front'] = self.input_shape[1] + self.pads[1]
+        mustach_hash['height_and_pad_top'] = self.input_shape[2] + self.pads[2]
+        mustach_hash['width_and_pad_left'] = self.input_shape[3] + self.pads[3]
+        mustach_hash['input_channels'] = self.input_shape[1]
+        mustach_hash['input_width'] = self.input_shape[3]
+        mustach_hash['input_height'] = self.input_shape[2]
+        
+        with open('./src/templates/layers/template_Wrap_Pad.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+    
+
+    def write_to_function_source_file(self):
+        
+        output_str = self.previous_layer[0].output_str
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
+        mustach_hash['size'] = self.size
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
+
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['pads_front'] = self.pads[1]
+        mustach_hash['pads_top'] = self.pads[2]
+        mustach_hash['pads_left'] = self.pads[3]
+        mustach_hash['input_width'] = self.input_shape[3]
+        mustach_hash['input_height'] = self.input_shape[2]
+
+        mustach_hash['change_indice'] = self.write_padding()
+
+        if(self.activation_function.name == 'linear'):
+            mustach_hash['linear'] = True
+        
+        if(self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tenser_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
+
+        with open('./src/templates/layers/template_Pad_Non_Constant.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)

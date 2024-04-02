@@ -19,6 +19,7 @@
 """
 
 import code_generator.layers.Pad_layers.Pad as Pad
+import pystache
 
 #The Reflect mode of the Pad layers
 #Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
@@ -28,21 +29,57 @@ class Reflect_pad(Pad.Pad):
         super().__init__(idx, size, pads, constant_value, axes, input_shape,activation_function)
         self.mode = 'reflect'
     
-    #A function to find the correponding coordinates in the input tensor
-    def write_reflect(self,new_indice,indice_max,old_indice,pad):
-        s = '                '+new_indice+' = ('+str(pad)+' - '+old_indice+') % (2 * '+str(indice_max)+');\n'
-        s+= '                if('+new_indice+' > '+str(indice_max)+')\n'
-        s+= '                {\n'
-        s+= '                    '+new_indice+' = 2 * '+str(indice_max)+' - '+new_indice+';\n'
-        s+= '                }\n'
-        return s
-        
-    def write_padding(self,source_file):
-        output_str = self.previous_layer[0].output_str
-        a = self.activation_function.write_activation_str(output_str+'[new_j + ' + str(self.input_shape[3]) + ' * (new_i + ' + str(self.input_shape[2]) + ' * new_f)]')
+    def write_padding(self):
+        mustach_hash = {}
 
-        source_file.write(self.write_reflect('new_f',self.input_shape[1]-1,'f',self.pads[1]))#Finding the correponding coordinates
-        source_file.write(self.write_reflect('new_i',self.input_shape[2]-1,'i',self.pads[2]))
-        source_file.write(self.write_reflect('new_j',self.input_shape[3]-1,'j',self.pads[3]))
-        #Giving the value to the output tensor
-        source_file.write('                output_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+a+';\n')
+        mustach_hash['pads_front'] = self.pads[1]
+        mustach_hash['pads_top'] = self.pads[2]
+        mustach_hash['pads_left'] = self.pads[3]
+        mustach_hash['channels_max'] = self.input_shape[1] - 1
+        mustach_hash['height_max'] = self.input_shape[2] - 1
+        mustach_hash['width_max'] = self.input_shape[3] - 1
+        
+        with open('./src/templates/layers/template_Reflect_Pad.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+    
+
+    def write_to_function_source_file(self):
+        
+        output_str = self.previous_layer[0].output_str
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
+        mustach_hash['size'] = self.size
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
+
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['pads_front'] = self.pads[1]
+        mustach_hash['pads_top'] = self.pads[2]
+        mustach_hash['pads_left'] = self.pads[3]
+        mustach_hash['input_width'] = self.input_shape[3]
+        mustach_hash['input_height'] = self.input_shape[2]
+
+        mustach_hash['change_indice'] = self.write_padding()
+
+        if(self.activation_function.name == 'linear'):
+            mustach_hash['linear'] = True
+        
+        if(self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tenser_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
+
+        with open('./src/templates/layers/template_Pad_Non_Constant.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
