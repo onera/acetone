@@ -39,9 +39,9 @@ class Pad(Layers.Layers):
         self.axes = axes
         self.name = 'Pad'
         self.input_shape = input_shape
-        self.output_channels = input_shape[1] + pads[1] + pads[5]
-        self.output_height = input_shape[2] + pads[2] + pads[6]
-        self.output_width = input_shape[3] + pads[3] + pads[7]
+        self.output_channels = input_shape[1] + pads[1] + pads[5] #pads_front, pads_back 
+        self.output_height = input_shape[2] + pads[2] + pads[6] #pads_top, pads_bottom 
+        self.output_width = input_shape[3] + pads[3] + pads[7] #pads_left, pads_right
         self.mode = ''
         self.activation_function = activation_function
     
@@ -52,13 +52,5 @@ class Pad(Layers.Layers):
         return self.activation_function.compute(np.pad(input,pad_width=pad_width,mode=self.mode,constant_values=self.constant_value,))
     
     @abstractmethod
-    def write_padding(self,source_file):
+    def write_to_function_source_file(self,source_file):
         pass
-    
-    def write_to_function_source_file(self, source_file,):
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')#going through all the elements of the resized tensor
-        source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
-        source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
-        self.write_padding(source_file) #Depend on how the padding is done
-        source_file.write('            }\n        }\n    }\n\n')

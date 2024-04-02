@@ -30,6 +30,7 @@ from code_generator.layers.Dense import Dense
 from code_generator.layers.Softmax import Softmax
 from code_generator.layers.Gather import Gather
 from code_generator.layers.MatMul import MatMul
+from code_generator.layers.Pad_layers.Pad import Pad
 from code_generator.layers.Resize_layers.ResizeLinear import ResizeLinear
 from code_generator.layers.Resize_layers.ResizeNearest import ResizeNearest
 from code_generator.layers.Resize_layers.ResizeCubic import ResizeCubic
@@ -409,7 +410,12 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
             
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add)) or any(isinstance(layer, Gather))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) 
+                or any(isinstance(layer, Conv2D)) 
+                or any(isinstance(layer, Dense))
+                or any(isinstance(layer, Add)) 
+                or any(isinstance(layer, Gather)) 
+                or any(isinstance(layer, Pad))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
  
@@ -467,7 +473,12 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash['cst'].append({'name':cst, 'size':written[cst]})
         
-        if (any(isinstance(layer, Concatenate) or any(isinstance(layer, Conv2D)) or any(isinstance(layer, Dense)) or any(isinstance(layer, Add))  or any(isinstance(layer, Gather))) for layer in self.layers):
+        if (any(isinstance(layer, Concatenate) 
+                or any(isinstance(layer, Conv2D)) 
+                or any(isinstance(layer, Dense))
+                or any(isinstance(layer, Add)) 
+                or any(isinstance(layer, Gather)) 
+                or any(isinstance(layer, Pad))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
              

@@ -3,7 +3,7 @@
 #include "inference.h"
 
 int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[{{input_size}}]){
-
+    
 {{#is_dense}}
     {{data_type}} dotproduct;
 {{/is_dense}}

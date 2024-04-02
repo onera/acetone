@@ -250,14 +250,42 @@ def load_json(file_to_parse, conv_algorithm):
                                                   nearest_mode = 'round_prefer_floor',
                                                   activation_function= Linear())
             
-            elif layer['class_name'] == 'ZeroPadding2D':
+            elif layer['class_name'] == 'ZeroPadding1D':
+                pads = layer['config']['padding']
+                if(type(pads) == int):
+                    pads = [pads for i in range(8)]
+                else:
+                    pads = [0,0,pads[0],0,0,0,pads[1],0]
+
                 current_layer = ConstantPad.Constant_Pad(idx = layer['config']['idx'],
                                              size = layer['config']['size'],
-                                             pads = layer['config']['padding'],
+                                             pads = pads,
                                              constant_value = 0,
                                              axes = [],
                                              input_shape = layer['config']['input_shape'],
                                              activation_function = Linear())
+
+            elif layer['class_name'] == 'ZeroPadding2D':
+                pads = layer['config']['padding']
+                if(type(pads) == int):
+                    pads = [pads for i in range(8)]
+                else:
+                    if(type(pads[0]) == int):
+                        pad_top, pad_bottom = pads[0], pads[0]
+                        pad_left, pad_right = pads[1], pads[1]
+                    else:
+                        pad_top, pad_bottom = pads[0][0], pads[0][1]
+                        pad_left, pad_right = pads[1][0], pads[1][1]
+                    pads = [0,0,pad_top,pad_left,0,0,pad_bottom,pad_right]
+
+                current_layer = ConstantPad.Constant_Pad(idx = layer['config']['idx'],
+                                             size = layer['config']['size'],
+                                             pads = pads,
+                                             constant_value = 0,
+                                             axes = [],
+                                             input_shape = layer['config']['input_shape'],
+                                             activation_function = Linear())
+            
             
             elif  'Normalization' in layer['class_name']:
                 continue

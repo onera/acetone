@@ -58,6 +58,7 @@ def JSON_from_keras_model(keras_model, output_dir_json):
         
         if (model_dict['config']['data_format'] == 'channels_last'):
             output_shape = (output_shape[0], output_shape[3], output_shape[1], output_shape[2])
+
             if type(input_shape) is list:
                 input_shape = [(shape[0], shape[3], shape[1], shape[2]) for shape in input_shape]
             else:

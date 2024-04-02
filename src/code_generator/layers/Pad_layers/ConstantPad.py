@@ -19,6 +19,7 @@
 """
 
 import code_generator.layers.Pad_layers.Pad as Pad
+import pystache
 
 #The Constant mode of the Pad layers
 #Use a constant to fill paddings
@@ -28,16 +29,43 @@ class Constant_Pad(Pad.Pad):
         super().__init__(idx, size, pads, constant_value, axes,input_shape,activation_function)
         self.mode = 'constant'
     
-    def write_padding(self,source_file):
-        output_str = self.previous_layer[0].output_str
-        a = self.activation_function.write_activation_str(output_str+'[(j -'+str(self.pads[3])+') + ' + str(self.input_shape[3]) + ' * ((i -'+str(self.pads[2])+') + ' + str(self.input_shape[2]) + ' * f)]')
-        b = self.activation_function.write_activation_str(str(self.constant_value))
-        #if the new indice is in the the old tensor, we take the value from the tensor
+    def write_to_function_source_file(self):
 
-        source_file.write('                if((f >= '+str(self.pads[1])+') && (f <'+str(self.output_channels - self.pads[5])+') && (i >= '+str(self.pads[2])+') && (i <'+str(self.output_height - self.pads[6])+') && (j >= '+str(self.pads[3])+') && (j <'+str(self.output_width - self.pads[7])+'))\n')
-        source_file.write('                {\n')
-        source_file.write('                    output_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+a+';\n')
-        source_file.write('                }\n                else\n')#else, we take the constant value
-        source_file.write('                {\n')
-        source_file.write('                    output_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+b+';\n')
-        source_file.write('                }\n')
+        output_str = self.previous_layer[0].output_str
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
+        mustach_hash['size'] = self.size
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
+
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['pads_front'] = self.pads[1]
+        mustach_hash['channels_without_pads_back'] = self.output_channels - self.pads[5]
+        mustach_hash['pads_top'] = self.pads[2]
+        mustach_hash['height_without_pads_bottom'] = self.output_height - self.pads[6]
+        mustach_hash['pads_left'] = self.pads[3]
+        mustach_hash['width_without_pads_right'] = self.output_width - self.pads[7]
+        mustach_hash['constant'] = self.constant_value
+        mustach_hash['input_width'] = self.input_shape[3]
+        mustach_hash['input_height'] = self.input_shape[2]
+
+        if(self.activation_function.name == 'linear'):
+            mustach_hash['linear'] = True
+        
+        if(self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tenser_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
+
+        with open('./src/templates/layers/template_Constant_Pad.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+

@@ -43,7 +43,7 @@ In the *acetone* directory
 
 * Run the *initial_setup.py* code
 ```
-python3 tests/models/initial_setup.py
+python3 tests/models/lenet5/lenet5_example/initial_setup.py
 ```
 
 This script defines a neural network with a Lenet-5 architecture using the framework Keras. It then save the model in *.h5* and *.json* files. The later one is created using a specific function, developped by us, to write the keras model in ACETONE's format. The scripts also creates a random input to test the neural network. Finally, the scripts saves and prints, as a reference, the output of the inference done by the Keras framework.
@@ -61,22 +61,22 @@ Then, generate the C code with ACETONE.
   * The input file with the test data
 
 ```
-python3 src/cli_acetone.py tests/models/lenet5_example/lenet5.h5  lenet5 1 std_gemm_nn tests/models/lenet5_example/lenet5_generated .tests/models/lenet5_example/test_input_lenet5.txt
+python3 src/cli_acetone.py tests/models/lenet5/lenet5_example/lenet5.h5  lenet5 1 std_gemm_nn tests/models/lenet5/lenet5_example/lenet5_generated .tests/models/lenet5/lenet5_example/test_input_lenet5.txt
 ```
 
 * Compile the code
 ```
-make -C tests/models/lenet5_example all
+make -C tests/models/lenet5/lenet5_example all
 ```
 
 * Execute the file with the path to the directory of the output file as argument
 ```
-./tests/models/lenet5_example/lenet5 ./tests/models/lenet5_example/output_acetone.txt
+./tests/models/lenet5/lenet5_example/lenet5 ./tests/models/lenet5/lenet5_example/output_acetone.txt
 ```
 
 * Compare the output given by Keras and ACETONE
 ```
-python3 src/cli_compare.py ./tests/models/lenet5_example/output_keras.txt ./tests/models/lenet5_example/output_acetone.txt 1
+python3 src/cli_compare.py ./tests/models/lenet5/lenet5_example/output_keras.txt ./tests/models/lenet5/lenet5_example/output_acetone.txt 1
 ```
 
 ## Tests
@@ -109,10 +109,10 @@ python3 src/cli_compare.py tests/models/acas_decr128/output_keras.txt tests/mode
 * For the lent5 model
 
 ```
-pyhton3 src/cli_acteone.py tests/models/lenet5_trained/lenet5_trained.json lenet5_trained 1000 std_gemm_nn tests/models/lenet5_trained/output_acetone tests/models/lenet5_trained/test_input_lenet5.txt
-make -C tests/models/lenet5_trained/output_acetone all
-./tests/models/lenet5_trained/output_acetone/lenet5_trained tests/models/lenet5_trained/output_acetone/output_acetone.txt
-python3 src/cli_compare.py tests/models/lenet5_trained/output_keras.txt tests/models/lenet5_trained/output_acetone/output_acetone.txt
+pyhton3 src/cli_acteone.py tests/models/lenet5/lenet5_trained/lenet5_trained.json lenet5_trained 1000 std_gemm_nn tests/models/lenet5/lenet5_trained/output_acetone tests/models/lenet5_trained/test_input_lenet5.txt
+make -C tests/models/lenet5/lenet5_trained/output_acetone all
+./tests/models/lenet5/lenet5_trained/output_acetone/lenet5_trained tests/models/lenet5/lenet5_trained/output_acetone/output_acetone.txt
+python3 src/cli_compare.py tests/models/lenet5/lenet5_trained/output_keras.txt tests/models/lenet5/lenet5_trained/output_acetone/output_acetone.txt
 ```
 
 ## Capability
