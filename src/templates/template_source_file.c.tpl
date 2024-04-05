@@ -3,12 +3,18 @@
 #include "inference.h"
 
 int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[{{input_size}}]){
+    int f;
     int i;
     int j;
-    int f;
     int k;
-    int g;
-    
+    {{#p}}
+    int p;
+    {{/p}}
+    {{#hw}}
+    int h;
+    int w;
+    {{/hw}}
+
 {{#is_dense}}
     {{data_type}} dotproduct;
 {{/is_dense}}

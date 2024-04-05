@@ -27,6 +27,7 @@ import pystache
 from format_importer.parser import parser
 
 from code_generator.layers.Dense import Dense
+from code_generator.layers.Dot import Dot
 from code_generator.layers.Softmax import Softmax
 from code_generator.layers.Gather import Gather
 from code_generator.layers.MatMul import MatMul
@@ -39,6 +40,7 @@ from code_generator.layers.Conv_layers.Conv2D_indirect_gemm import Conv2D_indire
 from code_generator.layers.Conv_layers.Conv2D_std_gemm import Conv2D_std_gemm
 from code_generator.layers.Conv_layers.Conv2D import Conv2D
 from code_generator.layers.Concatenate import Concatenate
+from code_generator.layers.Pooling_layers.Pooling2D import Pooling2D
 from code_generator.layers.Pooling_layers.AveragePooling2D import AveragePooling2D
 from code_generator.layers.Pooling_layers.MaxPooling2D import MaxPooling2D
 from code_generator.layers.Broadcast_layers.Add import Add
@@ -314,6 +316,12 @@ class CodeGenerator(ABC):
         for layer in (self.layers):
             if layer.size > self.l_size_max : self.l_size_max = layer.size
         
+        if any((isinstance(layer, Dot) or isinstance(layer,Pooling2D) or isinstance(layer,Conv2D)) for layer in self.layers):
+            mustach_hash['p'] = True
+
+        if any((isinstance(layer, Conv2D_6loops) or isinstance(layer,Conv2D_std_gemm) or isinstance(layer,Pooling2D)) for layer in self.layers):
+            mustach_hash['hw'] = True
+
         if any((isinstance(layer, Dense) or isinstance(layer,MatMul)) for layer in self.layers):
             mustach_hash['is_dense'] = True
         

@@ -9,7 +9,7 @@ struct timeval GetTimeStamp();
 int main(int argc, char** argv)
 {
     int i;
-    intj;
+    int j;
 
     char *path = argv[1];
 

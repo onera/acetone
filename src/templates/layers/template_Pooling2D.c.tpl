@@ -6,12 +6,12 @@
             for (j = 0; j < {{output_width}}; ++j)
             {
                 {{{update_local_vars}}}
-                for (m = 0; m < {{pool_size}}; ++m)
+                for (h = 0; h < {{pool_size}}; ++h)
                 {
-                    for (n = 0; n < {{pool_size}}; ++n)
+                    for (w = 0; w < {{pool_size}}; ++w)
                     {
-                        int ii = i*{{strides}} + m - {{pad_left}};
-                        int jj = j*{{strides}} + n - {{pad_top}};
+                        int ii = i*{{strides}} + h - {{pad_left}};
+                        int jj = j*{{strides}} + w - {{pad_top}};
                         if (ii >= 0 && ii < {{input_height}} && jj >= 0 && jj < {{input_width}})
                         {
                             {{{specific_function}}}
