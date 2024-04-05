@@ -175,20 +175,6 @@ class ResizeLinear(Resize.Resize):
 
         return pystache.render(template,mustach_hash)
 
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write(self.write_cst_interpolation()) #The point used in the interpolation
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')#going through all the elements of the resized tensor
-        source_file.write(self.write_function_values_interpolation()) #f in the value of the element f_i_i
-        source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
-        source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
-        self.transforme_coordinate(source_file) #Finding the coordinate in the original tensor
-        source_file.write('                output_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = ')
-        source_file.write(self.interpolation()) #Doing the interpolation to find the output value
-        if(self.activation_function.name != 'linear'):
-            a = self.activation_function.write_activation_str('output_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
-            source_file.write('                output_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+ a)
-        source_file.write('            }\n        }\n    }\n\n')
-
     def feedforward(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last

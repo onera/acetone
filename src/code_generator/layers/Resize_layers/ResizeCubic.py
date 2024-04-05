@@ -21,24 +21,23 @@
 import code_generator.layers.Resize_layers.Resize as Resize
 import numpy as np
 import tensorflow as tf
+import pystache
 
 #The Cubic mode of the Resize layers
 #Use a (bi)cubic interpolation to find the new value
 class ResizeCubic(Resize.Resize):
     
-    def __init__(self, idx, size, input_shape, axes=[], coordinate_transformation_mode='half_pixel', exclude_outside=0, 
-                 keep_aspect_ratio_policy='stretch', scale=[], target_size=[], roi=[], extrapolation_value=0,
-                 cubic_coeff_a = -0.75,nearest_mode = 'round_prefer_floor'):
-        super().__init__(idx, size, input_shape, axes, coordinate_transformation_mode, exclude_outside, keep_aspect_ratio_policy, 
-                         scale, target_size, roi, extrapolation_value,nearest_mode)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mode = 'cubic'
-        self.cubic_coeff_a = cubic_coeff_a
+        self.template_dict = {'1D':'./src/templates/layers/Resize/template_ResizeCubic1D.c.tpl',
+                              '2D':'./src/templates/layers/Resize/template_ResizeCubic2D.c.tpl'}
     
     def feedforward(self, input):
-        input = input.reshape(self.input_height, self.input_width, self.input_channels)
-        input= np.transpose(input,(2,0,1))#Function resize in tensorflow take a format channel last
+        input = input.reshape(self.input_channels, self.input_height, self.input_width)
+        input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
         output = tf.image.resize(input, [self.output_height,self.output_width], method='bicubic') #No numpy method for this layer
-        output= np.transpose(output,(1,2,0))
+        output= np.transpose(output,(2,0,1))
         return self.activation_function.compute(output)
     
     #Compute the simple cubic convolution as describe in https://ieeexplore.ieee.org/document/1163711 (cf doc ONNX)
@@ -113,16 +112,50 @@ class ResizeCubic(Resize.Resize):
             f2 = output_str+'[x0+2 + ' + str(self.input_width) + ' * f];\n'
             return self.cubic_convolution_interpolation(f_1,f0,f1,f2,'x','result_interpolation')
             
-    def write_to_function_source_file(self, source_file):
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    a = '+str(self.cubic_coeff_a)+';\n')
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')#going through all the elements of the resized tensor
-        source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
-        source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
-        self.transforme_coordinate(source_file) #Finding the coordinate in the original tensor
-        source_file.write('                x0 = floor(x);\n                y0 = floor(y);\n')
-        source_file.write(self.interpolation())#getting the output
-        a = self.activation_function.write_activation_str('result_interpolation')
-        source_file.write('                output_cur_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+a+';\n')
-        source_file.write('            }\n        }\n    }\n\n')
+    def write_to_function_source_file(self):
+
+        output_str = self.previous_layer[0].output_str
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        if(self.activation_function.name != 'linear'):
+            mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)]')
+
+        mustach_hash['cubic_coeff_a'] = self.cubic_coeff_a
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
         
+        if ((self.input_height == 1) and (self.input_width > 1)):
+            mustach_hash['dimension'] = self.input_width
+            mustach_hash['coordinate_transformation_mode'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'x')
+            dimension = '1D'
+            #return self.write_cst_interpolation_1D_width()
+        elif((self.input_height > 1) and (self.input_width == 1)):
+            mustach_hash['dimension'] = self.input_height
+            mustach_hash['coordinate_transformation_mode'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x')
+            dimension = '1D'
+            #return self.write_cst_interpolation_1D_height()
+        elif((self.input_height > 1) and (self.input_width > 1)):
+            mustach_hash['input_width'] = self.input_width
+            mustach_hash['input_height'] = self.input_height
+            mustach_hash['coordinate_transformation_mode_x'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x')
+            mustach_hash['coordinate_transformation_mode_y'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'y')
+            dimension = '2D'
+            #return self.write_cst_interpolation_2D()
+
+        if(self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tensor_temp[j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)]',self.idx,'j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)')
+
+        with open(self.template_dict[dimension],'r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)

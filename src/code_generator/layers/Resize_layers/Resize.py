@@ -33,7 +33,7 @@ class Resize(Layers.Layers):
     
     def __init__(self,idx,size,input_shape,activation_function,axes=[],coordinate_transformation_mode='half_pixel',exclude_outside=0,
                  keep_aspect_ratio_policy='stretch',boolean_resize = None,target_size=[],roi=[],extrapolation_value=0, 
-                 nearest_mode = 'round_prefer_floor'):
+                 nearest_mode = 'round_prefer_floor',cubic_coeff_a = -0.75):
         super().__init__()
         self.idx = idx
         if(type(nearest_mode) == bytes):
@@ -42,6 +42,7 @@ class Resize(Layers.Layers):
             self.nearest_mode = nearest_mode
         
         self.activation_function = activation_function
+        self.cubic_coeff_a = cubic_coeff_a
         self.size = size
         self.axes = axes
         self.exclude_outside = exclude_outside

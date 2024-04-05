@@ -35,7 +35,6 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 {{/is_resize}}
 {{#is_cubic_interpolation}}
     float a;
-    float result_interpolation;
     float f_1;
     float f0;
     float f1;

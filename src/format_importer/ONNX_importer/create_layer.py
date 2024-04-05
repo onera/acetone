@@ -210,6 +210,8 @@ def create_Resize(node,idx,dict_input,dict_output,model):
         attributs['extrapolation_value'] = 0.0
     if('nearest_mode' not in attributs):
         attributs['nearest_mode'] = 'round_prefer_floor'
+    if('cubic_coeff_a' not in attributs):
+        attributs['cubic_coeff_a'] = -0.75
         
     if(initializers[2]):
         #target size
@@ -238,6 +240,7 @@ def create_Resize(node,idx,dict_input,dict_output,model):
                              roi = roi,
                              extrapolation_value = attributs['extrapolation_value'],
                              nearest_mode = attributs['nearest_mode'],
+                             cubic_coeff_a=attributs['cubic_coeff_a'],
                              activation_function = activation_functions.Linear())
     
 #create a layer Pad

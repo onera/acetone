@@ -252,6 +252,7 @@ def load_json(file_to_parse, conv_algorithm):
                                                   roi = [],
                                                   extrapolation_value = 0,
                                                   nearest_mode = 'round_prefer_floor',
+                                                  cubic_coeff_a = -0.75,
                                                   activation_function= Linear())
             
             elif layer['class_name'] == 'ZeroPadding1D':
