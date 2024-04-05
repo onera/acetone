@@ -42,14 +42,14 @@ class ResizeCubic(Resize.Resize):
         return self.activation_function.compute(output)
     
     #Compute the simple cubic convolution as describe in https://ieeexplore.ieee.org/document/1163711 (cf doc ONNX)
-    def cubic_convolution_interpolation(self,f_1,f0,f1,f2,x):
+    def cubic_convolution_interpolation(self,f_1,f0,f1,f2,x,output):
         #give the values to the constants of the interpolation
         s = '                f_1 = ' + f_1 + ';\n'
         s+= '                f0 = ' + f0 + ';\n'
         s+= '                f1 = ' + f1 + ';\n'
         s+= '                f2 = ' + f2 + ';\n'
         s+= '                s = ' + x + '-floor('+x+');\n'
-        s+= '                result_interpolation = '
+        s+= '                '+output+' = '
         #the value of the variable of interest: the result of the interpolation
         s+= 'f_1 * a * s * (1 + s * (s - 2)) + '
         s+= 'f0 * (s * s *(a * (s - 1) + 2 * s - 3) + 1) + '
@@ -120,7 +120,7 @@ class ResizeCubic(Resize.Resize):
         source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
         source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
         self.transforme_coordinate(source_file) #Finding the coordinate in the original tensor
-        source_file.write('                int x0 = floor(x);\n                int y0 = floor(y);\n')
+        source_file.write('                x0 = floor(x);\n                y0 = floor(y);\n')
         source_file.write(self.interpolation())#getting the output
         a = self.activation_function.write_activation_str('result_interpolation')
         source_file.write('                output_cur_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+a+';\n')

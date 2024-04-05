@@ -21,16 +21,17 @@
 import code_generator.layers.Resize_layers.Resize as Resize
 import numpy as np
 import tensorflow as tf
+import pystache
 
 #The mode Linear of the Resize layers
 #The value in the output tensor are found thanks to a (bi)linear interpolation
 class ResizeLinear(Resize.Resize):
     
-    def __init__(self, idx, size, input_shape, axes=[], coordinate_transformation_mode='half_pixel', exclude_outside=0, 
-                 keep_aspect_ratio_policy='stretch', scale=[], target_size=[], roi=[], extrapolation_value=0,nearest_mode = 'round_prefer_floor'):
-        super().__init__(idx, size, input_shape, axes, coordinate_transformation_mode, exclude_outside, keep_aspect_ratio_policy, 
-                         scale, target_size, roi, extrapolation_value,nearest_mode)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mode = 'linear'
+        self.template_dict = {'1D':'./src/templates/layers/Resize/template_ResizeLinear1D.c.tpl',
+                              '2D':'./src/templates/layers/Resize/template_ResizeLinear2D.c.tpl'}
         
     def bilinear_interpolation(self):
         #the equation for the bilinear interpolation
@@ -79,7 +80,7 @@ class ResizeLinear(Resize.Resize):
 
     def write_function_values_interpolation_1D_height(self):
         output_str = self.previous_layer[0].output_str
-        s = '    f11 = '+output_str+'[x0 + ' + str(self.inGemmput_height) + ' * f];\n'
+        s = '    f11 = '+output_str+'[x0 + ' + str(self.input_height) + ' * f];\n'
         s+= '    f22 = '+output_str+'[x1 + ' + str(self.input_height) + ' * f];\n'
         return s
     
@@ -122,11 +123,62 @@ class ResizeLinear(Resize.Resize):
             source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x'))#Finding the coordinate in the original tensor
             source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'y'))
     
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
+
+        output_str = self.previous_layer[0].output_str
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
+        mustach_hash['output_str'] = output_str
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        if(self.activation_function.name != 'linear'):
+            mustach_hash['linear'] = True
+            mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)]')
+
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        
+        if ((self.input_height == 1) and (self.input_width > 1)):
+            mustach_hash['len_dimension'] = self.input_width-1
+            mustach_hash['dimension'] = self.input_width
+            mustach_hash['coordinate_transformation_mode'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'x')
+            dimension = '1D'
+            #return self.write_cst_interpolation_1D_width()
+        elif((self.input_height > 1) and (self.input_width == 1)):
+            mustach_hash['len_dimension'] = self.input_height-1
+            mustach_hash['dimension'] = self.input_height
+            mustach_hash['coordinate_transformation_mode'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x')
+            dimension = '1D'
+            #return self.write_cst_interpolation_1D_height()
+        elif((self.input_height > 1) and (self.input_width > 1)):
+            mustach_hash['len_height'] = self.input_height-1
+            mustach_hash['len_width'] = self.input_width-1
+            mustach_hash['input_width'] = self.input_width
+            mustach_hash['input_height'] = self.input_height
+            mustach_hash['coordinate_transformation_mode_x'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x')
+            mustach_hash['coordinate_transformation_mode_y'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'y')
+            dimension = '2D'
+            #return self.write_cst_interpolation_2D()
+
+        if(self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tensor_temp[j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)]',self.idx,'j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)')
+
+        with open(self.template_dict[dimension],'r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template,mustach_hash)
+
         source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
         source_file.write(self.write_cst_interpolation()) #The point used in the interpolation
         source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')#going through all the elements of the resized tensor
-        source_file.write(self.write_function_values_inteGemmrpolation()) #f in the value of the allement f_i_i
+        source_file.write(self.write_function_values_interpolation()) #f in the value of the element f_i_i
         source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
         source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
         self.transforme_coordinate(source_file) #Finding the coordinate in the original tensor
@@ -138,8 +190,8 @@ class ResizeLinear(Resize.Resize):
         source_file.write('            }\n        }\n    }\n\n')
 
     def feedforward(self, input):
-        input = input.reshape(self.input_height, self.input_width, self.input_channels)
-        input= np.transpose(input,(2,0,1))#Function resize in tensorflow take a format channel last
+        input = input.reshape(self.input_channels, self.input_height, self.input_width)
+        input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
         output = tf.image.resize(input, [self.output_height,self.output_width], method='bilinear').numpy() #No numpy method for this layer
-        output= np.transpose(output,(1,2,0))
+        output= np.transpose(output,(2,0,1))
         return self.activation_function.compute(output)

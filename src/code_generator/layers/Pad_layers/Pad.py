@@ -52,9 +52,5 @@ class Pad(Layers.Layers):
         return self.activation_function.compute(np.pad(input,pad_width=pad_width,mode=self.mode,constant_values=self.constant_value,))
     
     @abstractmethod
-    def write_padding(self):
-        pass
-    
-    @abstractmethod
     def write_to_function_source_file(self):
         pass

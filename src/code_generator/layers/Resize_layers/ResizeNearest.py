@@ -69,7 +69,10 @@ class ResizeNearest(Resize.Resize):
         mustach_hash['nearest_mode_x'] = self.nearest_mode_mapping[self.nearest_mode]('x0','x')
         mustach_hash['nearest_mode_y'] = self.nearest_mode_mapping[self.nearest_mode]('y0','y')
 
-        with open('./src/templates/layers/template_ResizeNearest.c.tpl') as template_file:
+        if(self.fused_layer):
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tensor_temp[j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)]',self.idx,'j + ' + str(self.output_width) + '*(i + ' + str(self.output_height) + '*f)')
+
+        with open('./src/templates/layers/Resize/template_ResizeNearest.c.tpl') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -78,7 +81,6 @@ class ResizeNearest(Resize.Resize):
     def feedforward(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
-        print(input.shape)
         output = (tf.image.resize(input, [self.output_height,self.output_width], method='nearest')).numpy() #No numpy method for this layer
         output= np.transpose(output,(2,0,1))
         return self.activation_function.compute(output)

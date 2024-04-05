@@ -83,7 +83,7 @@ class Gemm(Layers.Layers):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/layers/template_gemm_nn.c.tpl','r') as template_file:
+        with open('src/templates/layers/Gemm/template_gemm_nn.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -109,7 +109,7 @@ class Gemm(Layers.Layers):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/layers/template_gemm_nt.c.tpl','r') as template_file:
+        with open('src/templates/layers/Gemm/template_gemm_nt.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -135,7 +135,7 @@ class Gemm(Layers.Layers):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/layers/template_gemm_tn.c.tpl','r') as template_file:
+        with open('src/templates/layers/Gemm/template_gemm_tn.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -161,7 +161,7 @@ class Gemm(Layers.Layers):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
-        with open('src/templates/layers/template_gemm_tt.c.tpl','r') as template_file:
+        with open('src/templates/layers/Gemm/template_gemm_tt.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -187,7 +187,7 @@ class Gemm(Layers.Layers):
         mustach_hash['patches_size'] = self.output_width*self.output_height
         mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.transpo](self.output_height, self.output_width, self.input_width, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), self.previous_layer[0].output_str)
 
-        with open('./src/templates/layers/template_Gemm.c.tpl','r') as template_file:
+        with open('./src/templates/layers/Gemm/template_Gemm.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

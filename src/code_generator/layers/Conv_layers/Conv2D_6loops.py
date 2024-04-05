@@ -59,7 +59,7 @@ class Conv2D_6loops(Conv2D.Conv2D):
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
         
-        with open('src/templates/layers/template_Conv_6loops.c.tpl','r') as template_file:
+        with open('src/templates/layers/Conv/template_Conv_6loops.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

@@ -39,7 +39,7 @@ class Reflect_pad(Pad.Pad):
         mustach_hash['height_max'] = self.input_shape[2] - 1
         mustach_hash['width_max'] = self.input_shape[3] - 1
         
-        with open('./src/templates/layers/template_Reflect_Pad.c.tpl','r') as template_file:
+        with open('./src/templates/layers/Pad/template_Reflect_Pad.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -78,7 +78,7 @@ class Reflect_pad(Pad.Pad):
         if(self.fused_layer):
             mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tenser_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
 
-        with open('./src/templates/layers/template_Pad_Non_Constant.c.tpl','r') as template_file:
+        with open('./src/templates/layers/Pad/template_Pad_Non_Constant.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

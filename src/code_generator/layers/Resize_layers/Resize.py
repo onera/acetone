@@ -87,14 +87,14 @@ class Resize(Layers.Layers):
 
     #Defining the several coordinate transformations. cf documentation 
     def half_pixel(self,coord_resized,coord_dim,coord_original):
-        s = coord_original + ' = ('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;'
+        s = coord_original + ' = ('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         return s
     
     def half_pixel_symmetric(self,coord_resized,coord_dim,coord_original):
-        s = 'float adjustment = ' + str(int(self.output_width)) + ' / ' + str(self.output_width)  +';\n'
-        s += '                float center = ' + str(self.input_width) + ' / 2;\n'
-        s += '                float offset = center * (1 - adjustment);\n'
-        s +='                '+ coord_original + ' = offset + ('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;'
+        s = 'float adjustment = ' + str(int(self.output_width)) + '/' + str(self.output_width)  +';\n'
+        s += '                float center = ' + str(self.input_width) + '/2;\n'
+        s += '                float offset = center*(1 - adjustment);\n'
+        s +='                '+ coord_original + ' = offset + ('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         return s
     
     def pytorch_half_pixel(self,coord_resized,coord_dim,coord_original):
@@ -103,7 +103,7 @@ class Resize(Layers.Layers):
         else: length = self.output_width
         s = coord_original + ' = '
         if (length > 1):
-            s += '('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;'
+            s += '('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         else:
             s += '0;' 
         return s
@@ -116,11 +116,11 @@ class Resize(Layers.Layers):
             length_original = self.input_width
             length_resized = self.output_width
             
-        s = coord_original + ' = ' +coord_resized+' * (' + str(length_original)+' - 1) / (' + str(length_resized)+' - 1);'
+        s = coord_original + ' = ' +coord_resized+'*(' + str(length_original)+' - 1)/(' + str(length_resized)+' - 1);'
         return s
     
     def asymmetric(self,coord_resized,coord_dim,coord_original):
-        s = coord_original + ' = '+ coord_resized+' / '+ str(self.scale[coord_dim]) +';'
+        s = coord_original + ' = '+ coord_resized+'/'+ str(self.scale[coord_dim]) +';'
         return s
     
     def tf_crop_and_resize(self,coord_resized,coord_dim,coord_original):
@@ -137,8 +137,8 @@ class Resize(Layers.Layers):
         
         s = coord_original + ' = ' 
         if(length_resized > 1):
-            s+= str(start) + ' * ('+ str(length_original)+' - 1) + '+ coord_resized+' * (' +str(end)+' - '+str(start)+') * ('+str(length_original)+' - 1) / (' + str(length_resized)+' - 1);'
+            s+= str(start) + '*('+ str(length_original)+' - 1) + '+ coord_resized+'*(' +str(end)+' - '+str(start)+')*('+str(length_original)+' - 1)/(' + str(length_resized)+' - 1);'
         else:
-            s+= '0.5 * (' +str(end)+' - '+str(start)+') * ('+str(length_original)+' - 1);\n'
+            s+= '0.5*(' +str(end)+' - '+str(start)+')*('+str(length_original)+' - 1);\n'
         s+= '                if(('+coord_original+' < 0) || ('+coord_original+' > '+str(length_original)+'){'+coord_original+' = '+ str(self.extrapolation_value)+'}'
         return s

@@ -91,6 +91,65 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.onnx', './tmp_dir/dataset.txt').flatten()
         
         self.assertListAlmostEqual(list(acetone_result), list(onnx_result))
+
+    def test_Resize_Linear(self):
+        testshape = (1,2,2)
+        # IO tensors (ValueInfoProto).
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [None,1,2,2])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [None,1,4,4])
+
+        size_name = 'size'
+        size = np.array((1,1,4,4))
+        size_initializer = acetoneTestCase.create_initializer_tensor(name=size_name,
+                                                                      tensor_array=size,
+                                                                      data_type=onnx.TensorProto.INT64)
+        
+        matmul_node_name="Resize"
+        matmul_node = onnx.helper.make_node(
+            name=matmul_node_name,
+            op_type="Resize",
+            inputs=[model_input_name,"","",size_name],
+            outputs=[model_output_name],
+            mode = 'linear',
+            nearest_mode = 'round_prefer_floor',
+            coordinate_transformation_mode = 'half_pixel',
+        )
+
+        # Create the graph (GraphProto)
+        graph_def = onnx.helper.make_graph(
+            nodes=[matmul_node],
+            name="ONNX_resize",
+            inputs=[X],  # Graph input
+            outputs=[Y],  # Graph output
+            initializer=[
+                size_initializer
+            ],
+        )
+
+        # Create the model (ModelProto)
+        model_def = onnx.helper.make_model(graph_def, producer_name="onnx-example")
+        model_def.opset_import[0].version = 13
+
+        onnx.checker.check_model(model_def)
+        dataset = acetoneTestCase.create_dataset(testshape)
+        onnx.save(model_def, "./tmp_dir/model.onnx")
+        with open('./tmp_dir/model.txt',"w+") as f:
+            print(model_def, file = f)
+        f.close()
+
+        sess = rt.InferenceSession('./tmp_dir/model.onnx')
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None,{input_name: dataset})
+        onnx_result = result[0].flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.onnx', './tmp_dir/dataset.txt').flatten()
+        
+        self.assertListAlmostEqual(list(acetone_result), list(onnx_result))
     
 
     
