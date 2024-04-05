@@ -31,9 +31,9 @@ from abc import abstractmethod
 # and apply a transformation to the value in the original tensor to find the value to enter in the new tensor
 class Resize(Layers.Layers):
     
-    def __init__(self,idx,size,input_shape,axes,coordinate_transformation_mode,exclude_outside,
-                 keep_aspect_ratio_policy,boolean_resize,target_size,roi,extrapolation_value, 
-                 nearest_mode,activation_function):
+    def __init__(self,idx,size,input_shape,activation_function,axes=[],coordinate_transformation_mode='half_pixel',exclude_outside=0,
+                 keep_aspect_ratio_policy='stretch',boolean_resize = None,target_size=[],roi=[],extrapolation_value=0, 
+                 nearest_mode = 'round_prefer_floor'):
         super().__init__()
         self.idx = idx
         if(type(nearest_mode) == bytes):
@@ -63,16 +63,17 @@ class Resize(Layers.Layers):
         self.input_channels = input_shape[1]
         self.input_height = input_shape[2]
         self.input_width = input_shape[3]
+        self.scale = [1,0,0,0]
         if (boolean_resize):
             self.scale = target_size
-            self.output_channels = int(self.input_channels*target_size[1])
+            self.output_channels = int(self.input_channels*target_size[1]) #should be equal to input_channels
             self.output_height = int(self.input_height*target_size[2])
             self.output_width = int(self.input_width*target_size[3])
         else:
-            self.output_channels = target_size[1]
+            self.output_channels = target_size[1] #should be equal to input_channels
             self.output_height = target_size[2]
             self.output_width = target_size[3]
-            self.scale[1] = self.output_channels / self.input_channels
+            self.scale[1] = self.output_channels / self.input_channels #should be 1
             self.scale[2] = self.output_height / self.input_height
             self.scale[3] = self.output_width / self.input_width
             
@@ -86,32 +87,28 @@ class Resize(Layers.Layers):
 
     #Defining the several coordinate transformations. cf documentation 
     def half_pixel(self,coord_resized,coord_dim,coord_original):
-        s = '                '
-        s += coord_original + ' = ('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;\n'
+        s = coord_original + ' = ('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;'
         return s
     
     def half_pixel_symmetric(self,coord_resized,coord_dim,coord_original):
-        s = '                '
-        s += 'float adjustment = ' + str(int(self.output_width)) + ' / ' + str(self.output_width)  +';\n'
+        s = 'float adjustment = ' + str(int(self.output_width)) + ' / ' + str(self.output_width)  +';\n'
         s += '                float center = ' + str(self.input_width) + ' / 2;\n'
         s += '                float offset = center * (1 - adjustment);\n'
-        s +='                '+ coord_original + ' = offset + ('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;\n'
+        s +='                '+ coord_original + ' = offset + ('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;'
         return s
     
     def pytorch_half_pixel(self,coord_resized,coord_dim,coord_original):
-        s = '                '
         if(coord_dim==2):
             length = self.output_height
         else: length = self.output_width
-        s += coord_original + ' = '
+        s = coord_original + ' = '
         if (length > 1):
-            s += '('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;\n'
+            s += '('+ coord_resized+' + 0.5) / '+ str(self.scale[coord_dim])+' - 0.5;'
         else:
-            s += '0;\n' 
+            s += '0;' 
         return s
     
     def align_corners(self,coord_resized,coord_dim,coord_original):
-        s = '                '
         if(coord_dim==2):
             length_original = self.input_height
             length_resized = self.output_height
@@ -119,12 +116,11 @@ class Resize(Layers.Layers):
             length_original = self.input_width
             length_resized = self.output_width
             
-        s += coord_original + ' = ' +coord_resized+' * (' + str(length_original)+' - 1) / (' + str(length_resized)+' - 1);\n'
+        s = coord_original + ' = ' +coord_resized+' * (' + str(length_original)+' - 1) / (' + str(length_resized)+' - 1);'
         return s
     
     def asymmetric(self,coord_resized,coord_dim,coord_original):
-        s = '                '
-        s += coord_original + ' = '+ coord_resized+' / '+ str(self.scale[coord_dim]) +';\n'
+        s = coord_original + ' = '+ coord_resized+' / '+ str(self.scale[coord_dim]) +';'
         return s
     
     def tf_crop_and_resize(self,coord_resized,coord_dim,coord_original):
@@ -139,11 +135,10 @@ class Resize(Layers.Layers):
             start = self.roi[3]
             end = self.roi[7]
         
-        s = '                '
-        s += coord_original + ' = ' 
+        s = coord_original + ' = ' 
         if(length_resized > 1):
-            s+= str(start) + ' * ('+ str(length_original)+' - 1) + '+ coord_resized+' * (' +str(end)+' - '+str(start)+') * ('+str(length_original)+' - 1) / (' + str(length_resized)+' - 1);\n'
+            s+= str(start) + ' * ('+ str(length_original)+' - 1) + '+ coord_resized+' * (' +str(end)+' - '+str(start)+') * ('+str(length_original)+' - 1) / (' + str(length_resized)+' - 1);'
         else:
             s+= '0.5 * (' +str(end)+' - '+str(start)+') * ('+str(length_original)+' - 1);\n'
-        s+= '                if(('+coord_original+' < 0) || ('+coord_original+' > '+str(length_original)+'){'+coord_original+' = '+ str(self.extrapolation_value)+'}\n'
+        s+= '                if(('+coord_original+' < 0) || ('+coord_original+' > '+str(length_original)+'){'+coord_original+' = '+ str(self.extrapolation_value)+'}'
         return s

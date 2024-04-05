@@ -70,6 +70,9 @@ def JSON_from_keras_model(keras_model, output_dir_json):
 
             layer_size = layer_size * output_shape[j]
         
+        if(layer_json['class_name'] == 'UpSampling2D'):
+            layer_json['config']['scale'] = layer_json['config']['size']
+        
         layer_json['config']['idx'] = idx
         layer_json['config']['size'] = layer_size
         layer_json['config']['input_shape'] = input_shape

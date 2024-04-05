@@ -235,6 +235,10 @@ def load_json(file_to_parse, conv_algorithm):
                                     activation_function = Linear())
             
             elif layer['class_name'] == 'UpSampling2D': # Need to make sure that the 'size' attribut of the Layer is renamed
+                target_size = layer['config']['scale']
+                if(type(target_size) == int):
+                    target_size = [target_size,target_size]
+                target_size = [1,1]+target_size
                 current_layer = create_resize_obj(mode = layer['config']['interpolation'],
                                                   idx = layer['config']['idx'],
                                                   size = layer['config']['size'],
@@ -243,8 +247,8 @@ def load_json(file_to_parse, conv_algorithm):
                                                   coordinate_transformation_mode = 'half_pixel',
                                                   exclude_outside = 0,
                                                   keep_aspect_ratio_policy = 'stretch',
-                                                  boolean_resize = 1,
-                                                  target_size = layer['config']['scale'],
+                                                  boolean_resize = True,
+                                                  target_size = target_size,
                                                   roi = [],
                                                   extrapolation_value = 0,
                                                   nearest_mode = 'round_prefer_floor',

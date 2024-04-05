@@ -30,6 +30,7 @@ from code_generator.layers.Dense import Dense
 from code_generator.layers.Dot import Dot
 from code_generator.layers.Softmax import Softmax
 from code_generator.layers.Gather import Gather
+from code_generator.layers.Gemm import Gemm
 from code_generator.layers.MatMul import MatMul
 from code_generator.layers.Pad_layers.Pad import Pad
 from code_generator.layers.Resize_layers.ResizeLinear import ResizeLinear
@@ -316,10 +317,10 @@ class CodeGenerator(ABC):
         for layer in (self.layers):
             if layer.size > self.l_size_max : self.l_size_max = layer.size
         
-        if any((isinstance(layer, Dot) or isinstance(layer,Pooling2D) or isinstance(layer,Conv2D)) for layer in self.layers):
+        if any((isinstance(layer, Dot) or isinstance(layer,Pooling2D) or isinstance(layer,Conv2D) or isinstance(layer,Gemm)) for layer in self.layers):
             mustach_hash['p'] = True
 
-        if any((isinstance(layer, Conv2D_6loops) or isinstance(layer,Conv2D_std_gemm) or isinstance(layer,Pooling2D)) for layer in self.layers):
+        if any((isinstance(layer, Conv2D_6loops) or isinstance(layer,Conv2D_std_gemm) or isinstance(layer,Pooling2D) or isinstance(layer,Gemm)) for layer in self.layers):
             mustach_hash['hw'] = True
 
         if any((isinstance(layer, Dense) or isinstance(layer,MatMul)) for layer in self.layers):
@@ -366,7 +367,7 @@ class CodeGenerator(ABC):
             mustach_hash['ouput_str'] = pystache.render(template, output_hash)
 
         elif(self.data_format == 'channels_first'):
-            output_hash['output_size'] = self.layer[-1].size
+            output_hash['output_size'] = self.layers[-1].size
 
             with open('./src/templates/memory_layout/template_channels_first_output.c.tpl','r') as template_file:
                 template = template_file.read()

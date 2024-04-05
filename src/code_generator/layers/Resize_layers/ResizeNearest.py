@@ -21,15 +21,14 @@
 import code_generator.layers.Resize_layers.Resize as Resize
 import tensorflow as tf
 import numpy as np
+import pystache
 
 #The mode Nearest of the Resize layers.
 #The value in the new tensor is found by applying an rounding operation
 class ResizeNearest(Resize.Resize):
     
-    def __init__(self, idx, size,input_shape, axes=[], coordinate_transformation_mode='half_pixel', exclude_outside=0, 
-                 keep_aspect_ratio_policy='stretch', scale=[], target_size=[], roi=[], extrapolation_value=0,nearest_mode = 'round_prefer_floor'):
-        super().__init__(idx, size,input_shape, axes, coordinate_transformation_mode, exclude_outside, keep_aspect_ratio_policy, 
-                        scale, target_size, roi, extrapolation_value,nearest_mode)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mode='nearest'
         self.nearest_mode_mapping = {"round_prefer_floor":self.round_prefer_floor,
                                      "round_prefer_ceil":self.round_prefer_ceil,
@@ -37,37 +36,49 @@ class ResizeNearest(Resize.Resize):
                                      "ceil":self.ceil}
     
     #Defining the several method to chose the nearest
-    def floor(self,x):
-        return '                '+str(x)+' = floor('+str(x)+');\n'
+    def floor(self,x,y):
+        return str(x)+' = floor('+str(y)+');'
     
     def ceil(self,x,y):
-        return '                '+str(x)+' = ceil('+str(y)+');\n'
+        return str(x)+' = ceil('+str(y)+');'
     
     def round_prefer_floor(self,x,y):
-        return '                '+str(x)+' = floor(ceil(2 * ' + str(y) + ') / 2);\n'
+        return str(x)+' = floor(ceil(2 * ' + str(y) + ') / 2);'
     
     def round_prefer_ceil(self,x,y):
-        return '                '+str(x)+' = ceil(floor(2 * ' + str(y) + ') / 2);\n'
+        return str(x)+' = ceil(floor(2 * ' + str(y) + ') / 2);'
     
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
         output_str = self.previous_layer[0].output_str
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')#going through all the elements of the resized tensor
-        source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
-        source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n            {\n')
-        source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x'))#Finding the coordinate in the original tensor
-        source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'y'))
-        source_file.write(self.nearest_mode_mapping[self.nearest_mode]('x'))#Choosing the closest coordinate in the original tensor
-        source_file.write(self.nearest_mode_mapping[self.nearest_mode]('y'))
-        a = self.activation_function.write_activation_str(output_str+'[ y + ' + str(self.input_width) + ' * (x + ' + str(self.input_height) + ' * f)]')
-        source_file.write('                output_cur_'+str(self.road)+'[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = '+a+';\n')
-        
-        source_file.write('            }\n        }\n    }\n\n')
-    
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str(output_str+'[y0 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)]')
+
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+        mustach_hash['coordinate_transformation_mode_x'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x')
+        mustach_hash['coordinate_transformation_mode_y'] = self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'y')
+        mustach_hash['nearest_mode_x'] = self.nearest_mode_mapping[self.nearest_mode]('x0','x')
+        mustach_hash['nearest_mode_y'] = self.nearest_mode_mapping[self.nearest_mode]('y0','y')
+
+        with open('./src/templates/layers/template_ResizeNearest.c.tpl') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)    
     
     def feedforward(self, input):
-        input = input.reshape(self.input_height, self.input_width, self.input_channels)
-        input= np.transpose(input,(2,0,1))#Function resize in tensorflow take a format channel last
+        input = input.reshape(self.input_channels, self.input_height, self.input_width)
+        input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
+        print(input.shape)
         output = (tf.image.resize(input, [self.output_height,self.output_width], method='nearest')).numpy() #No numpy method for this layer
-        output= np.transpose(output,(1,2,0))
+        output= np.transpose(output,(2,0,1))
         return self.activation_function.compute(output)

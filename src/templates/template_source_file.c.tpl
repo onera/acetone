@@ -30,6 +30,8 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 {{#is_resize}}
     float x;
     float y;
+    int x0;
+    int y0;
 {{/is_resize}}
 {{#is_cubic_interpolation}}
     float a;
@@ -41,9 +43,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     float s;
 {{/is_cubic_interpolation}}
 {{#is_linear_interpolation}}
-    int y2;
     int y1;
-    int x2;
     int x1;
     float f11;
     float f12;

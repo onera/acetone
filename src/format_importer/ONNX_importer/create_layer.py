@@ -208,6 +208,8 @@ def create_Resize(node,idx,dict_input,dict_output,model):
         attributs['keep_aspect_ratio_policy'] = 'stretch'
     if('extrapolation_value' not in attributs):
         attributs['extrapolation_value'] = 0.0
+    if('nearest_mode' not in attributs):
+        attributs['nearest_mode'] = 'round_prefer_floor'
         
     if(initializers[2]):
         #target size
@@ -231,7 +233,7 @@ def create_Resize(node,idx,dict_input,dict_output,model):
                              coordinate_transformation_mode = attributs['coordinate_transformation_mode'],
                              exclude_outside = attributs['exclude_outside'],
                              keep_aspect_ratio_policy = attributs['keep_aspect_ratio_policy'],
-                             targ_size = targ_size,
+                             target_size = targ_size,
                              boolean_resize = bool_resize,
                              roi = roi,
                              extrapolation_value = attributs['extrapolation_value'],

@@ -34,60 +34,60 @@ class ResizeLinear(Resize.Resize):
         
     def bilinear_interpolation(self):
         #the equation for the bilinear interpolation
-        s = '(f11 * (x2 - x) * (y2 - y) +'
-        s+= ' f21 * (x - x1) * (y2 - y) +'
-        s+= ' f12 * (x2 - x) * (y - y1) +'
-        s+= ' f22 * (x - x1) * (y - y1))' 
-        s+= ' / ((x2 - x1) * (y2 - y1));\n'
+        s = '(f11 * (x1 - x) * (y1 - y) +'
+        s+= ' f21 * (x - x0) * (y1 - y) +'
+        s+= ' f12 * (x1 - x) * (y - y0) +'
+        s+= ' f22 * (x - x0) * (y - y0))' 
+        s+= ' / ((x1 - x0) * (y1 - y0));\n'
         return s
     
     def write_cst_interpolation_2D(self):
         #the four points for a 2D interpolation and their values
-        s = '    y2 = 0;\n'
-        s+= '    y1 = '+str(self.input_height-1)+';\n'
-        s+= '    x2 = '+str(self.input_width-1)+';\n'
-        s+= '    x1 = 0;\n'
+        s = '    y1 = 0;\n'
+        s+= '    y0 = '+str(self.input_height-1)+';\n'
+        s+= '    x1 = '+str(self.input_width-1)+';\n'
+        s+= '    x0 = 0;\n'
         return s
     
     #a function to write the point used in the interpolation
     def write_function_values_interpolation_2D(self):
         output_str = self.previous_layer[0].output_str
-        s = '    f11 = '+output_str+'[y1 + ' + str(self.input_width) + ' * (x1 + ' + str(self.input_height) + ' * f)];\n'
-        s+= '    f12 = '+output_str+'[y1 + ' + str(self.input_width) + ' * (x2 + ' + str(self.input_height) + ' * f)];\n'
-        s+= '    f22 = '+output_str+'[y2 + ' + str(self.input_width) + ' * (x2 + ' + str(self.input_height) + ' * f)];\n'
-        s+= '    f21 = '+output_str+'[y2 + ' + str(self.input_width) + ' * (x1 + ' + str(self.input_height) + ' * f)];\n'
+        s = '    f11 = '+output_str+'[y0 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
+        s+= '    f12 = '+output_str+'[y0 + ' + str(self.input_width) + ' * (x1 + ' + str(self.input_height) + ' * f)];\n'
+        s+= '    f22 = '+output_str+'[y1 + ' + str(self.input_width) + ' * (x1 + ' + str(self.input_height) + ' * f)];\n'
+        s+= '    f21 = '+output_str+'[y1 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
         return s        
     
     #The function to do the interpolation but in 1D
     def write_cst_interpolation_1D_width(self):
         #the two points for a 1D interpolation and their values if the non void dimension is the width of the tensor
-        s = '    x2 = '+str(self.input_width-1)+';\n'
-        s+= '    x1 = 0;\n'
+        s = '    x1 = '+str(self.input_width-1)+';\n'
+        s+= '    x0 = 0;\n'
         return s
     
     def write_function_values_interpolation_1D_width(self):
         output_str = self.previous_layer[0].output_str
-        s = '    f11 = '+output_str+'[x1 + ' + str(self.input_width) + ' * f];\n'
-        s+= '    f22 = '+output_str+'[x2 + ' + str(self.input_width) + ' * f];\n'
+        s = '    f11 = '+output_str+'[x0 + ' + str(self.input_width) + ' * f];\n'
+        s+= '    f22 = '+output_str+'[x1 + ' + str(self.input_width) + ' * f];\n'
         return s
     
     def write_cst_interpolation_1D_height(self):
         #the two points for a 1D interpolation and their values if the non void dimension is the height of the tensor
-        s = '    x2 = '+str(self.input_height-1)+';\n'
-        s+= '    x1 = 0;\n'
+        s = '    x1 = '+str(self.input_height-1)+';\n'
+        s+= '    x0 = 0;\n'
         return s
 
     def write_function_values_interpolation_1D_height(self):
         output_str = self.previous_layer[0].output_str
-        s = '    f11 = '+output_str+'[x1 + ' + str(self.inGemmput_height) + ' * f];\n'
-        s+= '    f22 = '+output_str+'[x2 + ' + str(self.input_height) + ' * f];\n'
+        s = '    f11 = '+output_str+'[x0 + ' + str(self.inGemmput_height) + ' * f];\n'
+        s+= '    f22 = '+output_str+'[x1 + ' + str(self.input_height) + ' * f];\n'
         return s
     
     def linear_interpolation(self):
         #the equation for the interpolation
-        s = '(f11 * (x2 - x) +'
-        s+= ' f22 * (x - x1))' 
-        s+= ' / (x2 - x1);\n'
+        s = '(f11 * (x1 - x) +'
+        s+= ' f22 * (x - x0))' 
+        s+= ' / (x1 - x0);\n'
         return s
     
     #To differentiate the interpolation needed: prevent division by 0
