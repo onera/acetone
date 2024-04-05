@@ -25,9 +25,7 @@ class Average(Broadcast.Broadcast):
     def __init__(self, idx, size):
         super().__init__(idx, size)
         self.name = 'Average'
-
-    def specific_operator(self, source_file):
-        source_file.write(' + ')
+        self.specific_operator = ' + '
 
     def feedforward(self, inputs):
         output = inputs[0]

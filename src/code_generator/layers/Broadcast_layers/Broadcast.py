@@ -20,7 +20,7 @@
 
 import code_generator.Layers as Layers
 from abc import abstractmethod
-
+import pystache
 
 #The class of the Layers which compute operation with broadcast numpy style
 #attribut: none
@@ -37,12 +37,8 @@ class Broadcast(Layers.Layers):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.output_channels = output_shape[1]
-
+        self.specific_operator = ''
         self.activation_function = activation_function
-    
-    @abstractmethod
-    def specific_operator(self,source_file):
-        pass
 
     def write_add_a_tensor(self,source_file): #a function to do the broadcast numpy style
         #Min, Max and Avg follow the rule of broadcasting but need a operator before the iteration of previous layer 
@@ -70,7 +66,52 @@ class Broadcast(Layers.Layers):
         source_file.write(';\n')
     
     #Go through all the indices and do the operation
-    def write_to_function_source_file(self, source_file):
+    def write_to_function_source_file(self):
+
+        mustach_hash = {}
+
+        mustach_hash = {}
+
+        mustach_hash['name'] = self.name
+        mustach_hash['idx'] = "{:02d}".format(self.idx)
+        mustach_hash['comment'] = self.activation_function.comment
+        mustach_hash['road'] = self.road
+        mustach_hash['size'] = self.size
+
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[k]')
+
+        mustach_hash['output_channels'] = self.output_channels
+        mustach_hash['output_height'] = self.output_height
+        mustach_hash['output_width'] = self.output_width
+
+        if(self.name == 'Maximum'):
+            mustach_hash['max'] = True
+        elif(self.name == 'Minimum'):
+            mustach_hash['min'] = True
+        elif(self.name == 'Average'):
+            mustach_hash['Average'] = True
+            mustach_hash['prev_size'] = len(self.previous_layer)
+        else:
+            mustach_hash['other'] = True
+        
+        mustach_hash['broadcast'] = []
+        for k in range(len(self.previous_layer)):
+            previous_dict = {}
+            previous_dict['output_str'] = self.previous_layer[k].output_str
+            previous_dict['input_width'] = self.input_shapes[k][3]
+            previous_dict['input_height'] = self.input_shapes[k][2]
+            previous_dict['input_channels'] = self.input_shapes[k][1]
+            if(k != len(self.previous_layer) -1):
+                previous_dict['operator'] = self.specific_operator
+            mustach_hash['broadcast'].append(previous_dict)
+        
+        with open('./src/templates/layers/template_Broadcast.c.tpl','r') as template_file:
+            template = template_file.read()
+        template_file.close()
+
+        return pystache.render(template, mustach_hash)
+
+
         source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
         source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')
         source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')

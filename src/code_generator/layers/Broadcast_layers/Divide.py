@@ -26,9 +26,7 @@ class Divide(Broadcast.Broadcast):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.name = 'Divide'
-    
-    def specific_operator(self,source_file):
-        return source_file.write(' / ')
+        self.specific_operator = '/'
     
     def feedforward(self, inputs):
         output = inputs[0]
