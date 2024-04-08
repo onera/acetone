@@ -22,8 +22,8 @@ import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
 
 #Return a tensor with where each position (f,i,j) contains the average of all the values at position (f,i,j) in each tensor
 class Average(Broadcast.Broadcast):
-    def __init__(self, idx, size):
-        super().__init__(idx, size)
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
         self.name = 'Average'
         self.specific_operator = ' + '
 

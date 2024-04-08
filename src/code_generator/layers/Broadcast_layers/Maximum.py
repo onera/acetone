@@ -23,8 +23,8 @@ import numpy as np
 
 #Return a tensor with where each position (f,i,j) contains the max of all the values at position (f,i,j) in each tensor
 class Maximum(Broadcast.Broadcast):
-    def __init__(self, idx, size):
-        super().__init__(idx, size)
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
         self.name = 'Maximum'
         self.specific_operator = ', '
 

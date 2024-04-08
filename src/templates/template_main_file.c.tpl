@@ -3,6 +3,14 @@
 #include <time.h> 
 #include "test_dataset.h" 
 #include "inference.h"
+{{#max}}
+
+#define fmax( x, y );
+{{/max}}
+{{#min}}
+
+#define fmin( x, y );
+{{/min}}
 
 struct timeval GetTimeStamp();
 

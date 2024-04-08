@@ -24,7 +24,7 @@ import acetoneTestCase as acetoneTestCase
 import tensorflow as tf
 import keras
 import numpy as np
-from keras.layers import Input, Conv2D, Add
+from keras.layers import Input, Conv2D, Add, Multiply, Subtract, Average, Maximum, Minimum
 
 tf.keras.backend.set_floatx('float32')
 
@@ -49,6 +49,98 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
+
+    def testMul(self):
+        testshape = (10,10,3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        out = Multiply()([x1, x2])
+        model = keras.Model(inputs=[input], outputs=out)
+
+        dataset = acetoneTestCase.create_dataset(testshape)
+        model.save('./tmp_dir/model.h5')
+
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
+        keras_result = np.array(model.predict(dataset)).flatten()
+        self.assertListAlmostEqual(acetone_result,keras_result)
     
+    def testSub(self):
+        testshape = (10,10,3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        out = Subtract()([x1, x2])
+        model = keras.Model(inputs=[input], outputs=out)
+
+        dataset = acetoneTestCase.create_dataset(testshape)
+        model.save('./tmp_dir/model.h5')
+
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
+        keras_result = np.array(model.predict(dataset)).flatten()
+        self.assertListAlmostEqual(acetone_result,keras_result)
+    
+    def testAvg(self):
+        testshape = (10,10,3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        out = Average()([x1, x2])
+        model = keras.Model(inputs=[input], outputs=out)
+
+        dataset = acetoneTestCase.create_dataset(testshape)
+        model.save('./tmp_dir/model.h5')
+
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
+        keras_result = np.array(model.predict(dataset)).flatten()
+        self.assertListAlmostEqual(acetone_result,keras_result)
+    
+    def testMax(self):
+        testshape = (10,10,3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        out = Maximum()([x1, x2])
+        model = keras.Model(inputs=[input], outputs=out)
+
+        dataset = acetoneTestCase.create_dataset(testshape)
+        model.save('./tmp_dir/model.h5')
+
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
+        keras_result = np.array(model.predict(dataset)).flatten()
+        self.assertListAlmostEqual(acetone_result,keras_result)
+
+    def testMin(self):
+        testshape = (10,10,3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        out = Minimum()([x1, x2])
+        model = keras.Model(inputs=[input], outputs=out)
+
+        dataset = acetoneTestCase.create_dataset(testshape)
+        model.save('./tmp_dir/model.h5')
+
+        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
+        keras_result = np.array(model.predict(dataset)).flatten()
+        self.assertListAlmostEqual(acetone_result,keras_result)
+    
+    
+
 if __name__ == '__main__':
     acetoneTestCase.main()

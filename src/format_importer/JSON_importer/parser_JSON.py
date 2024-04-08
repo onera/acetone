@@ -190,13 +190,6 @@ def load_json(file_to_parse, conv_algorithm):
                                          output_shape = layer['config']['output_shape'],
                                          activation_function= Linear())
             
-            elif layer['class_name'] == 'Divide':
-                current_layer = Divide.Divide(idx = layer['config']['idx'], 
-                                       size = layer['config']['size'], 
-                                       input_shapes = layer['config']['input_shape'], 
-                                       output_shape = layer['config']['output_shape'],
-                                       activation_function= Linear())
-            
             elif layer['class_name'] == 'Concatenate':
                 axis = layer['config']['axis']
                 if(data_format == 'channels_last'):
@@ -212,19 +205,25 @@ def load_json(file_to_parse, conv_algorithm):
                                             activation_function=Linear())
             
             elif layer['class_name'] == 'Maximum':
-                current_layer = Maximum.Maximum(idx = layer['config']['idx'],
-                                        size = layer['config']['size'],
-                                        activation_function= Linear())
+                current_layer = Maximum.Maximum(idx = layer['config']['idx'], 
+                                         size = layer['config']['size'], 
+                                         input_shapes = layer['config']['input_shape'], 
+                                         output_shape = layer['config']['output_shape'],
+                                         activation_function= Linear())
                 
             elif layer['class_name'] == 'Minimum':
-                current_layer = Minimum.Minimum(idx = layer['config']['idx'],
-                                        size = layer['config']['size'],
-                                        activation_function= Linear())
+                current_layer = Minimum.Minimum(idx = layer['config']['idx'], 
+                                         size = layer['config']['size'], 
+                                         input_shapes = layer['config']['input_shape'], 
+                                         output_shape = layer['config']['output_shape'],
+                                         activation_function= Linear())
             
             elif layer['class_name'] == 'Average':
-                current_layer = Average.Average(idx = layer['config']['idx'],
-                                        size = layer['config']['size'],
-                                        activation_function= Linear())
+                current_layer = Average.Average(idx = layer['config']['idx'], 
+                                         size = layer['config']['size'], 
+                                         input_shapes = layer['config']['input_shape'], 
+                                         output_shape = layer['config']['output_shape'],
+                                         activation_function= Linear())
             
             elif layer['class_name'] == 'Dot':
                 current_layer = Dot.Dot(idx = layer['config']['idx'],

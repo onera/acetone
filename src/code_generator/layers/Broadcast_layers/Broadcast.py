@@ -40,31 +40,6 @@ class Broadcast(Layers.Layers):
         self.specific_operator = ''
         self.activation_function = activation_function
 
-    def write_add_a_tensor(self,source_file): #a function to do the broadcast numpy style
-        #Min, Max and Avg follow the rule of broadcasting but need a operator before the iteration of previous layer 
-        if(self.name == 'Maximum'):
-            source_file.write('max(')
-        elif(self.name == 'Minimum'):
-            source_file.write('min(')
-        elif(self.name == 'Average'):
-            source_file.write('(')
-        #Going through all the ancestors 
-        for k in range(len(self.previous_layer)):
-            if(k!=0):
-                self.specific_operator(source_file) #the operator to broadcats
-            input_shape = self.input_shapes[k]
-            output_str = self.previous_layer[k].output_str #if the value is in a road or saved eslewhere
-            #The % operator allow to always saty in teh range of the tensor's indices 
-            source_file.write(output_str+'[(j % '+ str(input_shape[3]) + ') + ' + str(input_shape[3]) + ' * ((i % ' + str(input_shape[2]) + ') + ' + str(input_shape[2]) + ' * (f % '+str(input_shape[1])+'))]' )
-        
-        #Closing the operator of Max,Min and Avg
-        if(self.name == 'Maximum' or self.name=='Minimum'):
-            source_file.write(')')
-        elif(self.name=='Average'):
-            source_file.write(')/('+ str(len(self.previous_layer)) +')\n')
-        
-        source_file.write(';\n')
-    
     #Go through all the indices and do the operation
     def write_to_function_source_file(self):
 
@@ -84,9 +59,20 @@ class Broadcast(Layers.Layers):
         mustach_hash['output_height'] = self.output_height
         mustach_hash['output_width'] = self.output_width
 
+        start = 0
         if(self.name == 'Maximum'):
+            start = 1
+            mustach_hash['output_str0'] = self.previous_layer[0].output_str
+            mustach_hash['input_width0'] = self.input_shapes[0][3]
+            mustach_hash['input_height0'] = self.input_shapes[0][2]
+            mustach_hash['input_channels0'] = self.input_shapes[0][1]
             mustach_hash['max'] = True
         elif(self.name == 'Minimum'):
+            start = 1
+            mustach_hash['output_str0'] = self.previous_layer[0].output_str
+            mustach_hash['input_width0'] = self.input_shapes[0][3]
+            mustach_hash['input_height0'] = self.input_shapes[0][2]
+            mustach_hash['input_channels0'] = self.input_shapes[0][1]
             mustach_hash['min'] = True
         elif(self.name == 'Average'):
             mustach_hash['Average'] = True
@@ -95,7 +81,7 @@ class Broadcast(Layers.Layers):
             mustach_hash['other'] = True
         
         mustach_hash['broadcast'] = []
-        for k in range(len(self.previous_layer)):
+        for k in range(start, len(self.previous_layer)):
             previous_dict = {}
             previous_dict['output_str'] = self.previous_layer[k].output_str
             previous_dict['input_width'] = self.input_shapes[k][3]
@@ -111,17 +97,6 @@ class Broadcast(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
 
-
-        source_file.write('    // ' + self.name + '_' + str(self.idx) + '\n')
-        source_file.write('    for (int f = 0; f < ' + str(self.output_channels) + '; f++)\n    {\n')
-        source_file.write('        for (int i = 0; i < ' + str(self.output_height) + '; i++)\n        {\n')
-        source_file.write('            for (int j = 0; j < ' + str(self.output_width) + '; j++)\n             {\n')
-        source_file.write('                tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)] = ')
-        self.write_add_a_tensor(source_file)
-        source_file.write('            }\n        }\n    }\n')
-        a = self.activation_function.write_activation_str('tensor_temp[k]')
-        source_file.write('    for (int k = 0; k < ' + str(self.size) + '; k++){\n        output_'+str(self.road)+'[k] = '+a+';\n    }\n\n')
-    
     @abstractmethod
     def feedforward(self, inputs):
         pass

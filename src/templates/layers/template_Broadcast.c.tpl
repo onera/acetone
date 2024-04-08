@@ -6,10 +6,16 @@
             for (j = 0; j < {{output_width}}; ++j)
             {
                 {{#max}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = max({{#broadcast}}{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]{{operator}}{{/broadcast}});
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{output_str0}}[(j%{{input_width0}}) + {{input_width0}}*((i%{{input_height0}}) + {{input_height0}}*(f % {{input_channels0}}))];
+                {{#broadcast}}
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = fmax(tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)],{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]);
+                {{/broadcast}}
                 {{/max}}
                 {{#min}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = min({{#broadcast}}{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]{{operator}}{{/broadcast}});
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{output_str0}}[(j%{{input_width0}}) + {{input_width0}}*((i%{{input_height0}}) + {{input_height0}}*(f % {{input_channels0}}))];
+                {{#broadcast}}
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = fmin(tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)],{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]);
+                {{/broadcast}}
                 {{/min}}
                 {{#Average}}
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = ({{#broadcast}}{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]{{operator}}{{/broadcast}})/{{prev_size}};
