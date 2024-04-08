@@ -93,13 +93,13 @@ def compare_files(file1, file2, nb_tests, precision):
     else: 
         return False, max_diff_file
 
-def main(reference_file, c_file, nb_tests, precision):
+def cli_compare(reference_file, c_file, nb_tests, precision):
     _, max_diff_file = compare_files(reference_file, c_file, nb_tests, precision)
     
     print("   Max absolute error for %s test(s): %s" % (nb_tests, max_diff_file))
 
 
-if __name__ == "__main__":
+if __name__ == "__cli_compare__":
 
     parser = argparse.ArgumentParser(description='Program to verify the semantic preservation of ')
 
@@ -115,4 +115,4 @@ if __name__ == "__main__":
     else:
         precision = 'float'
 
-    main(args.reference_file, args.c_file, args.nb_tests, precision)
+    cli_compare(args.reference_file, args.c_file, args.nb_tests, precision)

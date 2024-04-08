@@ -23,7 +23,7 @@ import pathlib
 
 from code_generator.neural_network import CodeGenerator
 
-def main(model_file, function_name, nb_tests, conv_algorithm, output_dir, test_dataset_file=None, normalize=False ):
+def cli_acetone(model_file, function_name, nb_tests, conv_algorithm, output_dir, test_dataset_file=None, normalize=False ):
     normalize = bool(normalize)
     print(normalize)
     print("C CODE GENERATOR FOR NEURAL NETWORKS")
@@ -35,7 +35,7 @@ def main(model_file, function_name, nb_tests, conv_algorithm, output_dir, test_d
     net.compute_inference(output_dir)
 
     
-if __name__ == "__main__":
+if __name__ == "__cli_acetone__":
 
     parser = argparse.ArgumentParser(description='C code generator for neural networks')
 
@@ -49,4 +49,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.model_file, args.function_name, args.nb_tests, args.conv_algorithm, args.output_dir, args.test_dataset_file, args.normalize)
+    cli_acetone(args.model_file, args.function_name, args.nb_tests, args.conv_algorithm, args.output_dir, args.test_dataset_file, args.normalize)

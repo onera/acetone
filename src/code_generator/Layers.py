@@ -98,19 +98,3 @@ class Layers(ABC):
             output_str = 'output_'+str(self.road)
         self.output_str = output_str
         return self
-
-    def write_activation_and_fusion(self, source_file, output_str, indice, temp_str, space):
-        #Allow to have both a fusion (ex: add) and an activation (ex: relu)
-        a = self.activation_function.write_activation_str(temp_str)
-        #if there is a fusion, we must deal with it
-        if(self.fused_layer):
-            #if the activation function is anything beside linear, we compute it before the fusion.
-            if(self.activation_function.name != 'linear'):
-                b=self.fused_layer.write_activation_str(temp_str,self.idx,indice)
-                source_file.write(space+temp_str+' = '+a+';\n')
-            else:
-                b=self.fused_layer.write_activation_str(output_str,self.idx,indice)
-            source_file.write(space+output_str+' = '+ b +';\n    }\n\n')
-        #if not, we compute the activation function
-        else:
-            source_file.write(space+output_str+' = '+ a +';\n    }\n\n')
