@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "acetone"
+name = "acetone-neuralnet"
 version = "0.0.1"
 requires-python = ">=3.10"
 
@@ -37,9 +37,6 @@ dependencies = [
     "tensorflow==2.12.0",
     "pystache==0.6.5",
 ]
-
-[project.optional-dependencies]
-tests = ["onnxruntime==1.15.0"]
 
 [project.scripts]
 cli-acetone = "acetone.src.cli_acetone:cli_acetone"
