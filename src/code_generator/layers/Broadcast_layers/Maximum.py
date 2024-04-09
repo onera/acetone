@@ -28,7 +28,7 @@ class Maximum(Broadcast.Broadcast):
         self.name = 'Maximum'
         self.specific_operator = ', '
 
-    def feedforward(self, inputs):
+    def forward_path_layer(self, inputs):
         maxi = inputs[0]
         for input in inputs[1:]:
             maxi = np.maximum(maxi, input)

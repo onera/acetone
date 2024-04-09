@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 from abc import abstractmethod
 
 #The resize Layers
@@ -29,7 +29,7 @@ from abc import abstractmethod
 ##############  https://onnx.ai/onnx/operators/onnx__Resize.html for more informations
 #The strategie is always to go throught the elements, find the coordinate in the original tensor 
 # and apply a transformation to the value in the original tensor to find the value to enter in the new tensor
-class Resize(Layers.Layers):
+class Resize(Layer.Layer):
     
     def __init__(self,idx,size,input_shape,activation_function,axes=[],coordinate_transformation_mode='half_pixel',exclude_outside=0,
                  keep_aspect_ratio_policy='stretch',boolean_resize = None,target_size=[],roi=[],extrapolation_value=0, 
@@ -79,11 +79,11 @@ class Resize(Layers.Layers):
             self.scale[3] = self.output_width / self.input_width
             
     @abstractmethod
-    def feedforward(self,input):
+    def forward_path_layer(self,input):
         pass
     
     @abstractmethod
-    def write_to_function_source_file(self, source_file):
+    def generate_inference_code_layer(self):
         pass
 
     #Defining the several coordinate transformations. cf documentation 

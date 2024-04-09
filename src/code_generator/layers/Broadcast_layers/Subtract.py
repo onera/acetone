@@ -28,7 +28,7 @@ class Subtract(Broadcast.Broadcast):
         self.name = 'Subtract'
         self.specific_operator = ' - '
     
-    def feedforward(self, inputs):
+    def forward_path_layer(self, inputs):
         output = inputs[0]
         for input in inputs[1:]:
             output -= input

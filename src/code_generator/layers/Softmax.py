@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
-class Softmax(Layers.Layers):
+class Softmax(Layer.Layer):
 
     def __init__(self, idx, size):
         
@@ -31,7 +31,7 @@ class Softmax(Layers.Layers):
         self.size = size
         self.name = 'Softmax'
 
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
@@ -39,11 +39,11 @@ class Softmax(Layers.Layers):
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['size'] = self.size
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['output_str'] = output_str
 
         if (self.fused_layer):
-            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road)+'[j]', self.idx, 'j')
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.path)+'[j]', self.idx, 'j')
 
         with open('src/templates/layers/template_Softmax.c.tpl','r') as template_file:
             template = template_file.read()
@@ -51,7 +51,7 @@ class Softmax(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
     
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         
         exp = np.exp(input, dtype=np.float)
         output = exp/np.sum(exp)

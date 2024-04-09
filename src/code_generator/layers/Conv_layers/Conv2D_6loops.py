@@ -26,7 +26,7 @@ class Conv2D_6loops(Conv2D.Conv2D):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
    
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
@@ -35,7 +35,7 @@ class Conv2D_6loops(Conv2D.Conv2D):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)

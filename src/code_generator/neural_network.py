@@ -58,15 +58,15 @@ class CodeGenerator(ABC):
         self.normalize = normalize
 
         if (not self.normalize):
-            l, dtype, dtype_py, data_format, maxRoad, dict_cst = parser(self.file, self.conv_algorithm)
+            l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(self.file, self.conv_algorithm)
         elif(self.normalize):
-            l, dtype, dtype_py, data_format, maxRoad, dict_cst, Normalizer = parser(self.file, self.conv_algorithm, self.normalize)
+            l, dtype, dtype_py, data_format, maxpath, dict_cst, Normalizer = parser(self.file, self.conv_algorithm, self.normalize)
             self.Normalizer = Normalizer
         
         self.layers = l
         self.data_type = dtype
         self.data_type_py = dtype_py
-        self.maxRoad = maxRoad
+        self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
 
@@ -118,27 +118,27 @@ class CodeGenerator(ABC):
                 if (self.normalize): nn_input = self.Normalizer.pre_processing(nn_input)
 
 
-                previous_layer_result = [nn_input for i in range(self.maxRoad)]  # for the very first layer, it is the neural network input
+                previous_layer_result = [nn_input for i in range(self.maxpath)]  # for the very first layer, it is the neural network input
                 
                 to_store = {} #a dictionnary containing the values to store
                 for layer in self.layers:
                     if(not layer.previous_layer):
-                        previous_layer_result[layer.road] = layer.feedforward(previous_layer_result[layer.road]) #if the layer is an input layer, it directly take the vaue from it's road
+                        previous_layer_result[layer.path] = layer.forward_path_layer(previous_layer_result[layer.path]) #if the layer is an input layer, it directly take the vaue from it's path
                     elif(len(layer.previous_layer)==1):
                         if(len(layer.previous_layer[0].next_layer) == 1):
-                            previous_layer_result[layer.road] = layer.feedforward(previous_layer_result[layer.previous_layer[0].road]) #if the layer has exactly one previous_layer, it takes the value from it's father's road
+                            previous_layer_result[layer.path] = layer.forward_path_layer(previous_layer_result[layer.previous_layer[0].path]) #if the layer has exactly one previous_layer, it takes the value from it's father's path
                         else:
-                            previous_layer_result[layer.road] = layer.feedforward(to_store[layer.previous_layer[0].idx]) #if the father is stored, we take it from the storage
+                            previous_layer_result[layer.path] = layer.forward_path_layer(to_store[layer.previous_layer[0].idx]) #if the father is stored, we take it from the storage
                             layer.previous_layer[0].sorted +=1 #the number of children already "taken care of"
                     else:#if the layer has multiple ancestors, we take all of their value
                         prev_layer = []
                         for prev in layer.previous_layer:
                             if(len(prev.next_layer) == 1):
-                                prev_layer.append(previous_layer_result[prev.road])
+                                prev_layer.append(previous_layer_result[prev.path])
                             else:
                                 prev_layer.append(to_store[prev.idx])
                                 prev.sorted +=1
-                        previous_layer_result[layer.road] = layer.feedforward(prev_layer)
+                        previous_layer_result[layer.path] = layer.forward_path_layer(prev_layer)
                     
                     #After having computed the value of the layer, we check if there is a fused layer.
                     if(layer.fused_layer):
@@ -149,27 +149,27 @@ class CodeGenerator(ABC):
                             prev_layer = []
                             for prev in fused.prior_layers:
                                 if(prev.idx not in to_store):# Taking the value where it is stored
-                                    prev_layer.append(previous_layer_result[prev.road])
+                                    prev_layer.append(previous_layer_result[prev.path])
                                 else:
                                     prev_layer.append(to_store[prev.idx])
                                     prev.sorted +=1
-                            previous_layer_result[layer.road] = fused.feedforward(prev_layer)
+                            previous_layer_result[layer.path] = fused.forward_path_layer(prev_layer)
                         #Else, we notify the fused layer that another one of its ancestors have been computed
                         else:
                             layer.fused_layer.count_updated_prior_layers+=1
                     
                     if (len(layer.next_layer) > 1): #if the layer has more than one child, it needs to be stored
-                        to_store[layer.idx] = previous_layer_result[layer.road]
+                        to_store[layer.idx] = previous_layer_result[layer.path]
                         
                     for prev in layer.previous_layer:
                         if ((prev.sorted == len(prev.next_layer)) and (prev in to_store)):#if all the children of the parent layer are "taken care of", we "forget" the parent's value ( *2 because of the creation of the dict in graph.to_save)
                             to_store.pop(prev.idx)
                             
-                nn_output = previous_layer_result[layer.road]
+                nn_output = previous_layer_result[layer.path]
                 # print(nn_output) # write to file instead
                 
                 # Write results in text files to compare prediction.
-                if(self.data_format == 'channels_last'): nn_output = np.transpose(nn_output, (1,2,0))
+                if((self.data_format == 'channels_last') and hasattr(layer, 'output_channels')): nn_output = np.transpose(nn_output, (1,2,0))
 
                 nn_output = np.reshape(nn_output, -1)
 
@@ -346,7 +346,7 @@ class CodeGenerator(ABC):
         
         mustach_hash['layers'] = []
         for layer in self.layers:
-            layer_hash = {'inference_function':layer.write_to_function_source_file(), 'road':layer.road, 'size':layer.size}
+            layer_hash = {'inference_function':layer.generate_inference_code_layer(), 'path':layer.path, 'size':layer.size}
             
             if(layer in self.dict_cst):
                 layer_hash['cst'] = True
@@ -355,8 +355,8 @@ class CodeGenerator(ABC):
             mustach_hash['layers'].append(layer_hash)
         
         output_hash = {}
-        output_hash['road'] = self.layers[-1].road
-        if (self.data_format == 'channels_last'):
+        output_hash['path'] = self.layers[-1].path
+        if ((self.data_format == 'channels_last') and (hasattr(self.layers[-1],'output_channels'))):
             output_hash['output_channels'] = self.layers[-1].output_channels
             output_hash['output_height'] = self.layers[-1].output_height
             output_hash['output_width'] = self.layers[-1].output_width
@@ -366,7 +366,7 @@ class CodeGenerator(ABC):
             template_file.close()
             mustach_hash['ouput_str'] = pystache.render(template, output_hash)
 
-        elif(self.data_format == 'channels_first'):
+        else:
             output_hash['output_size'] = self.layers[-1].size
 
             with open('./src/templates/memory_layout/template_channels_first_output.c.tpl','r') as template_file:
@@ -390,7 +390,7 @@ class CodeGenerator(ABC):
 
         mustach_hash = {}
         mustach_hash['data_type'] = self.data_type
-        mustach_hash['road'] = [i for i in range(self.maxRoad)]
+        mustach_hash['path'] = [i for i in range(self.maxpath)]
 
         self.nb_weights_max = 1
         self.nb_biases_max = 1
@@ -404,9 +404,9 @@ class CodeGenerator(ABC):
                 self.patches_size_max = max(self.patches_size_max,layer.size)
                 
         if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
-            mustach_hash['road_size'] = max(self.l_size_max,self.patches_size_max)          
+            mustach_hash['path_size'] = max(self.l_size_max,self.patches_size_max)          
         else:
-            mustach_hash['road_size'] = self.l_size_max
+            mustach_hash['path_size'] = self.l_size_max
             
         mustach_hash['cst'] = []
         written = {}
@@ -464,12 +464,12 @@ class CodeGenerator(ABC):
         mustach_hash = {}
 
         mustach_hash['data_type'] = self.data_type
-        mustach_hash['road'] = [i for i in range(self.maxRoad)]
+        mustach_hash['path'] = [i for i in range(self.maxpath)]
 
         if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
-            mustach_hash['road_size'] = max(self.l_size_max,self.patches_size_max)          
+            mustach_hash['path_size'] = max(self.l_size_max,self.patches_size_max)          
         else:
-            mustach_hash['road_size'] = self.l_size_max
+            mustach_hash['path_size'] = self.l_size_max
         
         mustach_hash['cst'] = []
         written = {}

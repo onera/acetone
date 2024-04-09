@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
@@ -26,7 +26,7 @@ import pystache
 #attribut: axis alongside of which the concatenation will be done
 #input: a list of tensor to concatenate
 #output: the concatenated tensor 
-class Concatenate(Layers.Layers):
+class Concatenate(Layer.Layer):
     def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
         super().__init__()
         self.idx = idx
@@ -39,7 +39,7 @@ class Concatenate(Layers.Layers):
         self.output_channels = output_shape[1]
         self.activation_function = activation_function            
     
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         borne_sup = 0
         borne_inf = 0
 
@@ -48,7 +48,7 @@ class Concatenate(Layers.Layers):
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[k]')
@@ -85,7 +85,7 @@ class Concatenate(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
     
-    def feedforward(self, inputs):
+    def forward_path_layer(self, inputs):
         output = inputs[0]
         output = output.reshape(self.input_shapes[0][1],self.input_shapes[0][2],self.input_shapes[0][3])
         for i in range(1,len(inputs)):

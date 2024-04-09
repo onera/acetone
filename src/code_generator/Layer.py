@@ -22,7 +22,7 @@ import numpy as np
 import tensorflow as tf
 from abc import ABC, abstractmethod
 
-class Layers(ABC):
+class Layer(ABC):
     
     def __init__(self):
 
@@ -31,7 +31,7 @@ class Layers(ABC):
         self.name = ''
         self.next_layer = [] 
         self.previous_layer = []
-        self.road = None
+        self.path = None
         self.sorted = None
         self.output_str = ''
         self.fused_layer = None
@@ -39,11 +39,11 @@ class Layers(ABC):
         super().__init__()
 
     @abstractmethod
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         pass
 
     @abstractmethod
-    def feedforward(self):
+    def forward_path_layer(self):
         pass
 
     def count_elements_array(self, array):
@@ -95,6 +95,6 @@ class Layers(ABC):
             output_str = 'cst_'+str(dict_cst[self])
         #Or it can directly go to the next layer
         else:
-            output_str = 'output_'+str(self.road)
+            output_str = 'output_'+str(self.path)
         self.output_str = output_str
         return self

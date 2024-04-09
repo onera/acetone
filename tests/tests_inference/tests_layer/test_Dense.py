@@ -20,6 +20,7 @@
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
+import tempfile
 
 import tensorflow as tf
 import keras
@@ -32,7 +33,9 @@ tf.keras.backend.set_floatx('float32')
 class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Dense Layer"""
 
-    
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+
     def test_Dense1(self):
         testshape = (1,1,16)
         units = 8
@@ -64,7 +67,6 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
-    
     
 if __name__ == '__main__':
     acetoneTestCase.main()

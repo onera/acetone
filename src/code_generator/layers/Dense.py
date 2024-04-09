@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
-class Dense(Layers.Layers):
+class Dense(Layer.Layer):
 
     def __init__(self, idx, size, weights, biases, activation_function):
         
@@ -39,7 +39,7 @@ class Dense(Layers.Layers):
         self.nb_biases = self.count_elements_array(self.biases)
 
         
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         #Variable indicating under which name the input tensor is
         output_str = self.previous_layer[0].output_str
 
@@ -49,7 +49,7 @@ class Dense(Layers.Layers):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
@@ -68,6 +68,6 @@ class Dense(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
 
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         input = input.reshape(self.previous_layer[0].size)
         return self.activation_function.compute(np.dot(input, self.weights) + self.biases)

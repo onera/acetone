@@ -18,10 +18,10 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import pystache
 
-class InputLayer(Layers.Layers):
+class InputLayer(Layer.Layer):
 
     def __init__(self, idx, size, input_shape, data_format):
        
@@ -32,13 +32,13 @@ class InputLayer(Layers.Layers):
         self.data_format = data_format
         self.name = 'Input_layer'
 
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         mustach_hash = {}
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
 
         if(self.data_format == 'channels_last'):
             mustach_hash['channels_last'] = True
@@ -57,6 +57,6 @@ class InputLayer(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
 
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         
         return input 

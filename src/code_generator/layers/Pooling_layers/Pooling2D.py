@@ -18,12 +18,12 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 from abc import abstractmethod
 
-class Pooling2D(Layers.Layers):
+class Pooling2D(Layer.Layer):
     def __init__(self, idx, size, padding, strides, pool_size, input_shape, output_shape, activation_function,**kwargs):
         
         super().__init__()
@@ -55,7 +55,7 @@ class Pooling2D(Layers.Layers):
     def specific_function(self, index, input_of_layer):
         pass
 
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
@@ -63,7 +63,7 @@ class Pooling2D(Layers.Layers):
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.output_var)
 
@@ -91,7 +91,7 @@ class Pooling2D(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
 
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         
         output = np.zeros((self.input_channels, self.output_height, self.output_width))

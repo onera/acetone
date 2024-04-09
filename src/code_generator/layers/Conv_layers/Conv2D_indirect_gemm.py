@@ -77,19 +77,19 @@ class Conv2D_indirect_gemm(Conv2D_gemm.Conv2D_gemm):
 
         return s
 
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         mustach_hash = {}
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
 
-        gemm_code = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), 'ppatches_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.road), True)
+        gemm_code = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), 'ppatches_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.path), True)
         mustach_hash['gemm_code'] = gemm_code
 
         if('cst' not in self.previous_layer[0].output_str):

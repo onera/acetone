@@ -53,41 +53,35 @@ def read_output(output_path:str):
     f.close()
     return line
 
-def create_dataset(shape):
-    subprocess.run(['mkdir','tmp_dir/'])
+def create_dataset(tmpdir:str, shape:tuple):
     dataset = np.float32(np.random.default_rng(seed=10).random((1,)+ shape))
-    with open('./tmp_dir/dataset.txt', 'w') as filehandle:
+    with open(tmpdir+'/dataset.txt', 'w') as filehandle:
         row = (dataset[0]).flatten(order='C')
         json.dump(row.tolist(), filehandle)
         filehandle.write('\n')
     filehandle.close()
     return dataset
 
-def run_acetone_for_test(model:str, datatest_path:str='',conv_algo:str='std_gemm_nn'):
+def run_acetone_for_test(tmpdir: str, model:str, datatest_path:str='',conv_algo:str='std_gemm_nn'):
  
-    cmd = 'python3'+' src/cli_acetone.py '+model+' inference'+' 1 '+conv_algo+' ./tmp_dir/acetone '+datatest_path
+    cmd = ['python3','src/cli_acetone.py',model,'inference','1',conv_algo,tmpdir+'/acetone ',datatest_path]
     result = subprocess.run(cmd.split(" ")).returncode
     if result != 0:
         print("\nC code generation failed")
-        subprocess.run(['rm','-r','tmp_dir/'])
         return np.array([])
     
-    cmd = 'make '+'-C'+' ./tmp_dir/acetone'+' all'
+    cmd = ['make','-C',tmpdir+'/acetone','all']
     print(cmd)
-    result = subprocess.run(cmd.split(" ")).returncode
+    result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code compilation failed")
-        subprocess.run(['rm','-r','tmp_dir/'])
         return np.array([])
     
-    cmd = './tmp_dir/acetone/inference'+' ./tmp_dir/acetone/output_c.txt'
-    result = subprocess.run(cmd.split(" ")).returncode
+    cmd = [tmpdir+'/acetone/inference', tmpdir+'/acetone/output_c.txt']
+    result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code inference failed")
-        subprocess.run(['rm','-r','tmp_dir/'])
         return np.array([])
     
-    output = read_output('./tmp_dir/acetone/output_c.txt')
-    subprocess.run(['rm','-r','tmp_dir/'])
-
+    output = read_output(tmpdir+'/acetone/output_c.txt')
     return output

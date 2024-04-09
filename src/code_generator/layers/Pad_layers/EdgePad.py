@@ -47,7 +47,7 @@ class Edge_pad(Pad.Pad):
         return pystache.render(template, mustach_hash)
     
 
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         
         output_str = self.previous_layer[0].output_str
 
@@ -58,7 +58,7 @@ class Edge_pad(Pad.Pad):
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['size'] = self.size
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[j + ' + str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * f)]')
 

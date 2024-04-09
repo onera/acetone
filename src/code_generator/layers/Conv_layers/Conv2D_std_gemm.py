@@ -59,7 +59,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
         mustach_hash['pad_left'] = self.pad_left
         mustach_hash['input_height'] = self.input_height
         mustach_hash['input_width'] = self.input_width
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['patches_width'] = self.patches_width
         mustach_hash['output_str'] = output_str
 
@@ -87,7 +87,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
         mustach_hash['pad_left'] = self.pad_left
         mustach_hash['input_height'] = self.input_height
         mustach_hash['input_width'] = self.input_width
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['patches_width'] = self.patches_width
         mustach_hash['output_str'] = output_str
 
@@ -97,7 +97,7 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
 
         return pystache.render(template, mustach_hash)
     
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         mustach_hash = {}
 
@@ -105,11 +105,11 @@ class Conv2D_std_gemm(Conv2D_gemm.Conv2D_gemm):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['size'] = self.size
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
 
         mustach_hash['patch_building_code'] = self.algo_patch_building_mapping[self.conv_algorithm]()
         mustach_hash['patches_size'] = self.nb_filters*self.patches_width
-        mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.road),'tensor_temp',False)
+        mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.path),'tensor_temp',False)
 
         if('cst' not in self.previous_layer[0].output_str):
             mustach_hash['cst'] = True

@@ -5,7 +5,7 @@
         {
             for (j = 0; j < {{output_width}};  ++j)
             {
-                prediction[(i*{{output_width}} + j)*{{output_channels}} + f] = output_{{road}}[(f*{{output_height}} + i)*{{output_width}} + j];
+                prediction[(i*{{output_width}} + j)*{{output_channels}} + f] = output_{{path}}[(f*{{output_height}} + i)*{{output_width}} + j];
             }
         }
     }

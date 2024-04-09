@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
-class Add_Biass(Layers.Layers):
+class Add_Biass(Layer.Layer):
 
     def __init__(self, idx, size, biases,activation_function):
         
@@ -35,7 +35,7 @@ class Add_Biass(Layers.Layers):
         self.activation_function = activation_function
     
     #Go through all the indices and do the operation
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str#if the value is in a road or saved eslewhere
 
         mustach_hash = {}
@@ -44,16 +44,16 @@ class Add_Biass(Layers.Layers):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
-        mustach_hash['activation_function'] = self.activation_function.write_activation_str('output_'+str(self.road)+'[i]')
+        mustach_hash['activation_function'] = self.activation_function.write_activation_str('output_'+str(self.path)+'[i]')
 
         if(self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
 
         if(self.fused_layer):
-            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road)+'[i]',self.idx,'i')
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.path)+'[i]',self.idx,'i')
 
         with open('src/templates/layers/template_AddBiase.c.tpl','r') as template_file:
             template = template_file.read()
@@ -61,7 +61,7 @@ class Add_Biass(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
 
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         input = input.reshape(self.previous_layer[0].size)
 
         return self.activation_function.compute(input + self.biases)

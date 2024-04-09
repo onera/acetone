@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 from abc import abstractmethod
 import pystache
 
@@ -26,7 +26,7 @@ import pystache
 #attribut: none
 #input: a list of tensor
 #output: the resultant tensor
-class Broadcast(Layers.Layers):
+class Broadcast(Layer.Layer):
     def __init__(self, idx, size, input_shapes, output_shape,activation_function):
         super().__init__()
         self.idx = idx
@@ -41,7 +41,7 @@ class Broadcast(Layers.Layers):
         self.activation_function = activation_function
 
     #Go through all the indices and do the operation
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         mustach_hash = {}
 
@@ -50,7 +50,7 @@ class Broadcast(Layers.Layers):
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[k]')
@@ -98,5 +98,5 @@ class Broadcast(Layers.Layers):
         return pystache.render(template, mustach_hash)
 
     @abstractmethod
-    def feedforward(self, inputs):
+    def forward_path_layer(self, inputs):
         pass

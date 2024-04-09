@@ -28,7 +28,7 @@ class Minimum(Broadcast.Broadcast):
         self.name = 'Minimum'
         self.specific_operator = ', '
 
-    def feedforward(self, inputs):
+    def forward_path_layer(self, inputs):
         mini = inputs[0]
         for input in inputs[1:]:
             mini = np.minimum(mini, input)

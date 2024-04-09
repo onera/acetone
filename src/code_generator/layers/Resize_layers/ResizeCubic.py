@@ -33,7 +33,7 @@ class ResizeCubic(Resize.Resize):
         self.template_dict = {'1D':'./src/templates/layers/Resize/template_ResizeCubic1D.c.tpl',
                               '2D':'./src/templates/layers/Resize/template_ResizeCubic2D.c.tpl'}
     
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
         output = tf.image.resize(input, [self.output_height,self.output_width], method='bicubic') #No numpy method for this layer
@@ -112,7 +112,7 @@ class ResizeCubic(Resize.Resize):
             f2 = output_str+'[x0+2 + ' + str(self.input_width) + ' * f];\n'
             return self.cubic_convolution_interpolation(f_1,f0,f1,f2,'x','result_interpolation')
             
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         output_str = self.previous_layer[0].output_str
 
@@ -122,7 +122,7 @@ class ResizeCubic(Resize.Resize):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         if(self.activation_function.name != 'linear'):

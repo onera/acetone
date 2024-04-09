@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
@@ -26,7 +26,7 @@ import pystache
 #attribut: axis alongside of which the submatrix will be extracted (if the desired submatrix must have the height, width or channels of the parent tensor)
 #input: a tensor
 #output: a list of tensor
-class Gather(Layers.Layers):
+class Gather(Layer.Layer):
     
     def __init__(self, idx, size, axis,  indices, input_shape, output_shape,activation_function):
         
@@ -43,7 +43,7 @@ class Gather(Layers.Layers):
         self.output_width = output_shape[3]
         self.activation_function = activation_function
         
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
@@ -52,7 +52,7 @@ class Gather(Layers.Layers):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('tensor_temp[position]')
@@ -86,6 +86,6 @@ class Gather(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
         
-    def feedforward(self,input):
+    def forward_path_layer(self,input):
         input = input.reshape(self.input_channels,self.input_height,self.input_width)
         return np.take(input, indices=self.indices, axis=self.axis-1)

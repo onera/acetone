@@ -1,10 +1,10 @@
 #ifndef INFERENCE_H_ 
 #define INFERENCE_H_ 
 
-{{#road}}
-// output list for road {{.}}
-{{data_type}} output_{{.}}[{{road_size}}];
-{{/road}}
+{{#path}}
+// output list for path {{.}}
+{{data_type}} output_{{.}}[{{path_size}}];
+{{/path}}
 
 {{#cst}}
     {{#name}}

@@ -148,7 +148,7 @@ def load_nnet(file_to_parse, normalize):
                         biases=biases[i],
                         activation_function=ReLu())
         
-        layer.road = 0
+        layer.path = 0
         layer.find_output_str(dict_cst)
         layer.previous_layer.append(layers[-1])
         layers[-1].next_layer.append(layer)

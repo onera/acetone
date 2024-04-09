@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
@@ -26,7 +26,7 @@ import pystache
 #input: weight tesnsor W and bias tensor B, input tensor T. The tensor must be of 2D
 #data: alpha and beta constante used in the operation, transpo un tuple saying if the tensor T or W must be transposed before the operation
 #output: The result of the operation """alpha*T*W + beta*B"""
-class Gemm(Layers.Layers):
+class Gemm(Layer.Layer):
     def __init__(self, idx, size, alpha, beta, transA, transB, weights, bias, input_shape, output_shape,activation_function):
         super().__init__() 
         self.name = 'Gemm'
@@ -156,7 +156,7 @@ class Gemm(Layers.Layers):
         mustach_hash['alpha'] = self.alpha
         mustach_hash['beta'] = self.beta
         if (self.fused_layer):
-            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.road),self.idx,'i*'+str(self.ldC)+' + j')
+            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.path),self.idx,'i*'+str(self.ldC)+' + j')
 
             if (self.activation_function.name == 'linear'):
                 mustach_hash['linear'] = True
@@ -167,14 +167,14 @@ class Gemm(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
     
-    def feedforward(self,input):
+    def forward_path_layer(self,input):
         input = input.reshape(self.input_height,self.input_width)
         if(self.transpo[1]):
             self.weights = self.weights.transpose()
         
         return self.activation_function.compute(self.alpha * np.dot(input,self.weights) + self.beta * self.biases)
     
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         mustach_hash = {}
 
@@ -182,7 +182,7 @@ class Gemm(Layers.Layers):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['size'] = self.size
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
 
         mustach_hash['patches_size'] = self.output_width*self.output_height
         mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.transpo](self.output_height, self.output_width, self.input_width, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), self.previous_layer[0].output_str)

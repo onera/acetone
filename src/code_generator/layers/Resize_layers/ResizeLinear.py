@@ -33,97 +33,7 @@ class ResizeLinear(Resize.Resize):
         self.template_dict = {'1D':'./src/templates/layers/Resize/template_ResizeLinear1D.c.tpl',
                               '2D':'./src/templates/layers/Resize/template_ResizeLinear2D.c.tpl'}
         
-    def bilinear_interpolation(self):
-        #the equation for the bilinear interpolation
-        s = '(f11 * (x1 - x) * (y1 - y) +'
-        s+= ' f21 * (x - x0) * (y1 - y) +'
-        s+= ' f12 * (x1 - x) * (y - y0) +'
-        s+= ' f22 * (x - x0) * (y - y0))' 
-        s+= ' / ((x1 - x0) * (y1 - y0));\n'
-        return s
-    
-    def write_cst_interpolation_2D(self):
-        #the four points for a 2D interpolation and their values
-        s = '    y1 = 0;\n'
-        s+= '    y0 = '+str(self.input_height-1)+';\n'
-        s+= '    x1 = '+str(self.input_width-1)+';\n'
-        s+= '    x0 = 0;\n'
-        return s
-    
-    #a function to write the point used in the interpolation
-    def write_function_values_interpolation_2D(self):
-        output_str = self.previous_layer[0].output_str
-        s = '    f11 = '+output_str+'[y0 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
-        s+= '    f12 = '+output_str+'[y0 + ' + str(self.input_width) + ' * (x1 + ' + str(self.input_height) + ' * f)];\n'
-        s+= '    f22 = '+output_str+'[y1 + ' + str(self.input_width) + ' * (x1 + ' + str(self.input_height) + ' * f)];\n'
-        s+= '    f21 = '+output_str+'[y1 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
-        return s        
-    
-    #The function to do the interpolation but in 1D
-    def write_cst_interpolation_1D_width(self):
-        #the two points for a 1D interpolation and their values if the non void dimension is the width of the tensor
-        s = '    x1 = '+str(self.input_width-1)+';\n'
-        s+= '    x0 = 0;\n'
-        return s
-    
-    def write_function_values_interpolation_1D_width(self):
-        output_str = self.previous_layer[0].output_str
-        s = '    f11 = '+output_str+'[x0 + ' + str(self.input_width) + ' * f];\n'
-        s+= '    f22 = '+output_str+'[x1 + ' + str(self.input_width) + ' * f];\n'
-        return s
-    
-    def write_cst_interpolation_1D_height(self):
-        #the two points for a 1D interpolation and their values if the non void dimension is the height of the tensor
-        s = '    x1 = '+str(self.input_height-1)+';\n'
-        s+= '    x0 = 0;\n'
-        return s
-
-    def write_function_values_interpolation_1D_height(self):
-        output_str = self.previous_layer[0].output_str
-        s = '    f11 = '+output_str+'[x0 + ' + str(self.input_height) + ' * f];\n'
-        s+= '    f22 = '+output_str+'[x1 + ' + str(self.input_height) + ' * f];\n'
-        return s
-    
-    def linear_interpolation(self):
-        #the equation for the interpolation
-        s = '(f11 * (x1 - x) +'
-        s+= ' f22 * (x - x0))' 
-        s+= ' / (x1 - x0);\n'
-        return s
-    
-    #To differentiate the interpolation needed: prevent division by 0
-    def write_cst_interpolation(self):
-        if ((self.input_height == 1) and (self.input_width > 1)):
-            return self.write_cst_interpolation_1D_width()
-        elif((self.input_height > 1) and (self.input_width == 1)):
-            return self.write_cst_interpolation_1D_height()
-        elif((self.input_height > 1) and (self.input_width > 1)):
-            return self.write_cst_interpolation_2D()
-        
-    def write_function_values_interpolation(self):
-        if ((self.input_height == 1) and (self.input_width > 1)):
-            return self.write_function_values_interpolation_1D_width()
-        elif((self.input_height > 1) and (self.input_width == 1)):
-            return self.write_function_values_interpolation_1D_height()
-        elif((self.input_height > 1) and (self.input_width > 1)):
-            return self.write_function_values_interpolation_2D()
-
-    def interpolation(self):
-        if ((self.input_height > 1) and (self.input_width >1)):
-            return self.bilinear_interpolation()
-        else:
-            return self.linear_interpolation()
-    
-    def transforme_coordinate(self,source_file):
-        if ((self.input_height == 1) and (self.input_width > 1)):
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'x'))
-        elif((self.input_height > 1) and (self.input_width == 1)):
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x'))
-        elif((self.input_height > 1) and (self.input_width > 1)):
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x'))#Finding the coordinate in the original tensor
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'y'))
-    
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         output_str = self.previous_layer[0].output_str
 
@@ -133,7 +43,7 @@ class ResizeLinear(Resize.Resize):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         if(self.activation_function.name != 'linear'):
@@ -175,7 +85,7 @@ class ResizeLinear(Resize.Resize):
 
         return pystache.render(template,mustach_hash)
 
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
         output = tf.image.resize(input, [self.output_height,self.output_width], method='bilinear').numpy() #No numpy method for this layer

@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 from abc import abstractmethod
 
@@ -28,7 +28,7 @@ from abc import abstractmethod
 #input: a tensor to be padded, the desired pads, the value of teh constant if mode == constant
 #output:the resized tensor
 ######################### cf https://onnx.ai/onnx/operators/onnx__Pad.html for the doc
-class Pad(Layers.Layers):
+class Pad(Layer.Layer):
     
     def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
         super().__init__()
@@ -45,12 +45,12 @@ class Pad(Layers.Layers):
         self.mode = ''
         self.activation_function = activation_function
     
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         input = input.reshape(self.input_shape[1], self.input_shape[2], self.input_shape[3])
         nb_dim = len(self.pads)//2
         pad_width = [(self.pads[i],self.pads[i+nb_dim]) for i in range(1,nb_dim)] #Constructing the pads accordingly to the numpy nomenclature
         return self.activation_function.compute(np.pad(input,pad_width=pad_width,mode=self.mode,constant_values=self.constant_value,))
     
     @abstractmethod
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         pass

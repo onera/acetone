@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
@@ -27,7 +27,7 @@ import pystache
 #atribut: the axis alongside of which the dot product will be done. if type(axis) == int, same axis for the two tensor. can be tuples of axis (element i of axis represent axis of tensor i)
 #input: two tensor
 #output: the resultant tensor 
-class Dot(Layers.Layers):
+class Dot(Layer.Layer):
     def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
         super().__init__()
         self.idx = idx
@@ -45,7 +45,7 @@ class Dot(Layers.Layers):
         self.output_channels = output_shape[2]
         self.activation_function = activation_function            
 
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
 
         mustach_hash = {}
 
@@ -53,7 +53,7 @@ class Dot(Layers.Layers):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['size'] = self.size
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str('output')
 
@@ -85,7 +85,7 @@ class Dot(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
     
-    def feedforward(self, inputs):
+    def forward_path_layer(self, inputs):
         inputs[0] = inputs[0].reshape(self.input_shapes[0][1],self.input_shapes[0][2],self.input_shapes[0][3])
         inputs[1] = inputs[1].reshape(self.input_shapes[1][1],self.input_shapes[1][2],self.input_shapes[1][3])
         output = np.tensordot(inputs[0],inputs[1],axes=[self.axis[0]-1,self.axis[1]-1])

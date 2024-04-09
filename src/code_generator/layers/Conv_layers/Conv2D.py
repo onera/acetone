@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 from abc import abstractmethod
 
-class Conv2D(Layers.Layers):
+class Conv2D(Layer.Layer):
     
     def __init__(self, idx, conv_algorithm, size, padding, strides, kernel_h, kernel_w, dilation_rate, nb_filters, input_shape, output_shape, weights, biases, activation_function):
         super().__init__()
@@ -56,10 +56,10 @@ class Conv2D(Layers.Layers):
         self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(self.padding,self.input_height, self.input_width, self.kernel_h, self.kernel_w, self.strides, self.dilation_rate)
     
     @abstractmethod
-    def write_to_function_source_file(self, source_file):
+    def generate_inference_code_layer(self):
         pass
 
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         # Conv for chw
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         

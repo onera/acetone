@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layers as Layers
+import code_generator.Layer as Layer
 import numpy as np
 import pystache
 
-class MatMul(Layers.Layers):
+class MatMul(Layer.Layer):
 
     def __init__(self, idx, size, input_shape, weights, side, activation_function):
         
@@ -39,7 +39,7 @@ class MatMul(Layers.Layers):
         
         self.nb_weights = self.count_elements_array(self.weights)
 
-    def write_to_function_source_file(self):
+    def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
@@ -48,7 +48,7 @@ class MatMul(Layers.Layers):
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['comment'] = self.activation_function.comment
         mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.road
+        mustach_hash['road'] = self.path
         mustach_hash['size'] = self.size
 
         mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
@@ -68,7 +68,7 @@ class MatMul(Layers.Layers):
 
         return pystache.render(template, mustach_hash)
         
-    def feedforward(self, input):
+    def forward_path_layer(self, input):
         
         input = input.reshape(self.previous_layer[0].size)
         if (self.side):

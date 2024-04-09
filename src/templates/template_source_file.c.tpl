@@ -63,7 +63,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     {{#cst}}
     for (k; k < {{size}}; k++)
     {
-        cst_{{cst_name}}[k] = output_{{road}}[k];
+        cst_{{cst_name}}[k] = output_{{path}}[k];
     }
     {{/cst}}
 {{/layers}}

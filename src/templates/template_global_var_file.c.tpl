@@ -1,9 +1,9 @@
 #include "inference.h"
 
-{{#road}}
-// output list for road {{.}}
-{{data_type}} output_{{.}}[{{road_size}}];
-{{/road}}
+{{#path}}
+// output list for path {{.}}
+{{data_type}} output_{{.}}[{{path_size}}];
+{{/path}}
 
 {{#cst}}
     {{#name}}

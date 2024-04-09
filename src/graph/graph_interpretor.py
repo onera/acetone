@@ -20,7 +20,7 @@
 
 #Sort the graph (list of nodes) based on the topological sort
 def tri_topo(dnn):
-    list_road = []
+    list_path = []
     #The sorted list to be returned
     list_layers = []
     #the dict stating which layers need to go in a constant
@@ -30,10 +30,10 @@ def tri_topo(dnn):
         if layer.sorted == None:
             parcours_prof_topo(list_layers, layer)
     for layer in list_layers:
-        updateRoad(layer,list_road)
+        updatepath(layer,list_path)
         to_save(layer,dict_cst)
-    max_road = list_road[-2] + 1
-    return list_layers, list_road, max_road, dict_cst
+    max_path = list_path[-2] + 1
+    return list_layers, list_path, max_path, dict_cst
 
 #Compute the sorting of a node
 def parcours_prof_topo(list_layers,layer):
@@ -49,59 +49,59 @@ def parcours_prof_topo(list_layers,layer):
     list_layers.insert(0,layer)
 
 
-#The function to open a new road
-def setNewRoad(layer,listCurrentRoads):
+#The function to open a new path
+def setNewpath(layer,listCurrentpaths):
     #if the list isn't in the right format, it return -1
-    if(len(listCurrentRoads)%2!=0):
-        print("Error: listCurrentRoads must be in format:[name_road, is_road_closed, ...]")
+    if(len(listCurrentpaths)%2!=0):
+        print("Error: listCurrentpaths must be in format:[name_path, is_path_closed, ...]")
         return -1
     else:
-        N = len(listCurrentRoads)//2
-        #check if there is a previously closed road avialable 
+        N = len(listCurrentpaths)//2
+        #check if there is a previously closed path avialable 
         for i in range(N):
-            #is the road is closed, we open it 
-            if (listCurrentRoads[2*i+1]==1):
-                layer.road = listCurrentRoads[2*i]
-                listCurrentRoads[2*i+1] = 0
+            #is the path is closed, we open it 
+            if (listCurrentpaths[2*i+1]==1):
+                layer.path = listCurrentpaths[2*i]
+                listCurrentpaths[2*i+1] = 0
                 break
-        #if there is no road at all, we create the first one
+        #if there is no path at all, we create the first one
         if(N == 0):
-            listCurrentRoads.append(0)
-            listCurrentRoads.append(0)
-            layer.road = 0
-        #if no previously closed road can fit are avialable, we create a new one
-        elif(layer.road == None):
-            listCurrentRoads.append(listCurrentRoads[-2]+1)
-            listCurrentRoads.append(0)
-            layer.road = listCurrentRoads[-2]
+            listCurrentpaths.append(0)
+            listCurrentpaths.append(0)
+            layer.path = 0
+        #if no previously closed path can fit are avialable, we create a new one
+        elif(layer.path == None):
+            listCurrentpaths.append(listCurrentpaths[-2]+1)
+            listCurrentpaths.append(0)
+            layer.path = listCurrentpaths[-2]
         
-#give a layer the right road    
-def updateRoad(layer,listCurrentRoads):
+#give a layer the right path    
+def updatepath(layer,listCurrentpaths):
     if(layer.previous_layer == []):
-        #if the layer has no previous one, we creat a new road
-        setNewRoad(layer,listCurrentRoads)
+        #if the layer has no previous one, we creat a new path
+        setNewpath(layer,listCurrentpaths)
 
     given = False
-    #every next_layer need to have a road 
+    #every next_layer need to have a path 
     for nxt_layer in layer.next_layer:
         if ((len(nxt_layer.previous_layer)==1) and (not given)):
-            #if the next layer only have one prev_layer, and the road hadn't already be given, it receive the same road
-            nxt_layer.road = layer.road
+            #if the next layer only have one prev_layer, and the path hadn't already be given, it receive the same path
+            nxt_layer.path = layer.path
             given = True
-        elif(nxt_layer.road != None):
-            #if the layer already has a road, we do nothing
+        elif(nxt_layer.path != None):
+            #if the layer already has a path, we do nothing
             pass
         elif(nxt_layer == layer.next_layer[0]):
-            #by convention, if it's the first child amongst other, it receive the same road as the father
-            nxt_layer.road = layer.road
+            #by convention, if it's the first child amongst other, it receive the same path as the father
+            nxt_layer.path = layer.path
             given = True
         else:
-            #in any other case, the next layer receive a new road
-            setNewRoad(nxt_layer,listCurrentRoads)
+            #in any other case, the next layer receive a new path
+            setNewpath(nxt_layer,listCurrentpaths)
     
-    #if the road isn't given, it is closed
+    #if the path isn't given, it is closed
     if (given == False):
-        listCurrentRoads[layer.road*2 + 1] = 1
+        listCurrentpaths[layer.path*2 + 1] = 1
 
 #Function creating the dict {idx_layer:idx_cst} saying if a layer must be stored
 def to_save(layer,dict_cst):
