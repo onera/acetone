@@ -157,7 +157,6 @@ def create_Conv(node,idx,dict_input,dict_output,model,conv_algorithm):
     return create_conv2d_obj(algorithm=conv_algorithm,
                                 conv_algorithm=conv_algorithm,
                                 idx= idx,
-                                data_format= 'channels_first',
                                 size= size,
                                 padding= attributs['auto_pad'],
                                 strides= attributs['strides'][0],
@@ -375,7 +374,6 @@ def create_MaxPool(node,idx,dict_input,dict_output,model):
     if ('strides' not in attributs):
         attributs['strides'] = [1,1]
     return MaxPooling2D.MaxPooling2D(idx = idx,
-                                data_format = 'channels_first',
                                 size = size,
                                 padding =attributs['auto_pad'],
                                 strides = attributs['strides'][0],
@@ -399,7 +397,6 @@ def create_AveragePool(node,idx,dict_input,dict_output,model):
     if ('strides' not in attributs):
         attributs['strides'] = [1,1]
     return AveragePooling2D.AveragePooling2D(idx=idx,
-                                   data_format='channels_first',
                                    size=size, 
                                    padding=attributs['auto_pad'],
                                    strides=attributs['strides'][0], 
@@ -416,7 +413,6 @@ def create_GlobalAveragePool(node,idx,dict_input,dict_output,model):
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
     return AveragePooling2D.AveragePooling2D(idx = idx,
-                                    data_format = 'channels_first',
                                     size = size,
                                     padding = [0,0,0,0],
                                     strides = 0,

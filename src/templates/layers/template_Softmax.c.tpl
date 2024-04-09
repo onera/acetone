@@ -6,6 +6,6 @@
     {
         output_{{road}}[j] = exp({{output_str}}[j])/sum;
         {{#fused_layer}}
-        output_{{road}}[j] = {{fused_layer}};
+        output_{{road}}[j] = {{{fused_layer}}};
         {{/fused_layer}}
     }
