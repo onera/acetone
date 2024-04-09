@@ -62,26 +62,27 @@ def create_dataset(tmpdir:str, shape:tuple):
     filehandle.close()
     return dataset
 
-def run_acetone_for_test(tmpdir: str, model:str, datatest_path:str='',conv_algo:str='std_gemm_nn'):
+def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='',conv_algo:str='std_gemm_nn'):
  
-    cmd = ['python3','src/cli_acetone.py',model,'inference','1',conv_algo,tmpdir+'/acetone ',datatest_path]
-    result = subprocess.run(cmd.split(" ")).returncode
+    cmd = ['python3', 'src/cli_acetone.py', model, 'inference', '1', conv_algo, tmpdir_name, datatest_path]
+    result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code generation failed")
         return np.array([])
     
-    cmd = ['make','-C',tmpdir+'/acetone','all']
-    print(cmd)
+    result = subprocess.run(["ls","--color=auto", tmpdir_name]).returncode
+    
+    cmd = ['make', '-C', tmpdir_name, 'all']
     result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code compilation failed")
         return np.array([])
     
-    cmd = [tmpdir+'/acetone/inference', tmpdir+'/acetone/output_c.txt']
+    cmd = [tmpdir_name+'/inference', tmpdir_name+'/output_c.txt']
     result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code inference failed")
         return np.array([])
     
-    output = read_output(tmpdir+'/acetone/output_c.txt')
+    output = read_output(tmpdir_name+'/output_c.txt')
     return output

@@ -21,6 +21,7 @@ import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
 import tempfile
+import subprocess
 
 import tensorflow as tf
 import keras
@@ -34,7 +35,8 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Dense Layer"""
 
     def setUp(self):
-        self.tmpdir = tempfile.mkdtemp()
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdir_name = self.tmpdir.name
 
     def test_Dense1(self):
         testshape = (1,1,16)
@@ -44,10 +46,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         out = Dense(units, activation=None, bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(testshape)
-        model.save('./tmp_dir/model.h5')
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
 
         self.assertListAlmostEqual(list(acetone_result), list(keras_result))
@@ -61,12 +63,15 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         out = Dense(units, activation=None, bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(testshape)
-        model.save('./tmp_dir/model.h5')
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result,keras_result)
+    
+    def tearDown(self):
+        self.tmpdir.cleanup()
     
 if __name__ == '__main__':
     acetoneTestCase.main()

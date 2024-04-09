@@ -20,7 +20,7 @@
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
-from unittest import expectedFailure
+import tempfile
 
 import tensorflow as tf
 import keras
@@ -31,53 +31,62 @@ tf.keras.backend.set_floatx('float32')
 
 class TestConv(acetoneTestCase.AcetoneTestCase):
     """Test for Conv Layer"""
+
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdir_name = self.tmpdir.name
+
     def testConv_6loops(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
 
-        dataset = acetoneTestCase.create_dataset(testshape)
-
         input = layers.Input(testshape)
         out = layers.Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        
         model = keras.Model(input,out)
-        model.save('./tmp_dir/model.h5')
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt', '6loops').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result, atol=1e-6)
+        self.assertListAlmostEqual(acetone_result,keras_result)
     
     def testConv_indirect_gemm_nn(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
 
-        dataset = acetoneTestCase.create_dataset(testshape)
-
         input = layers.Input(testshape)
         out = layers.Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        
         model = keras.Model(input,out)
-        model.save('./tmp_dir/model.h5')
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt', 'indirect_gemm_nn').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result, atol=1e-6)
+        self.assertListAlmostEqual(acetone_result,keras_result)
     
     def testConv_std_gemm_nn(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
 
-        dataset = acetoneTestCase.create_dataset(testshape)
-
         input = layers.Input(testshape)
         out = layers.Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        
         model = keras.Model(input,out)
-        model.save('./tmp_dir/model.h5')
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test('./tmp_dir/model.h5', './tmp_dir/dataset.txt', 'std_gemm_nn').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result, atol=1e-6)
+        self.assertListAlmostEqual(acetone_result,keras_result)
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+    
     
 
 if __name__ == '__main__':
