@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acetone"
+version = "0.0.1"
+requires-python = ">=3.10"
+
+authors = [
+    { name="Iryna DE ALBUQUERQUE SILVA", email="Iryna.De_Albuquerque_Silva@onera.fr" },
+    { name="Thomas CARLE", email="Thomas.Carle@irit.fr" },
+    { name="Adrien GAUFFRIAU", email="Adrien.Gauffriau@airbus.com" },
+    { name="Claire PAGETTI", email="Claire.Pagetti@onera.fr" },
+]
+
+description = "Predictable programming framework for ML applications in safety-critical systems."
+readme = "README.md"
+license = {file = "LICENSE.txt"}
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: C",
+    "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Embedded Systems",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "numpy==1.23.5",
+    "numpyencoder==0.3.0",
+    "onnx==1.14.0",
+    "tensorflow==2.12.0",
+    "pystache==0.6.5",
+]
+
+[project.optional-dependencies]
+tests = ["onnxruntime==1.15.0"]
+
+[project.scripts]
+cli-acetone = "acetone.src.cli_acetone:cli_acetone"
+cli_compare = "acetone.src.cli_compare:cli_compare"
+
+[project.urls]
+Repository = "https://github.com/onera/acetone/"
+"Bug Tracker" = "https://github.com/onera/acetone/issues"
