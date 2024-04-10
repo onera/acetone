@@ -29,10 +29,6 @@ import onnxruntime as rt
 class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmpdir_name = self.tmpdir.name
-
     def testGather1(self):
         testshape = (1,3,10,10)
 
@@ -75,8 +71,8 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset[0]})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt').flatten()
-        self.assertListAlmostEqual(acetone_result,onnx_result)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
+        self.assertListAlmostEqual(acetone_result[0],onnx_result)
     
 
     def testGather2(self):
@@ -121,11 +117,8 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset[0]})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt').flatten()
-        self.assertListAlmostEqual(acetone_result,onnx_result)
-    
-    def tearDown(self):
-        self.tmpdir.cleanup()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
+        self.assertListAlmostEqual(acetone_result[0],onnx_result)
 
 if __name__ == '__main__':
     acetoneTestCase.main()

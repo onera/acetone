@@ -29,10 +29,6 @@ from keras.layers import Input, ZeroPadding2D
 class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmpdir_name = self.tmpdir.name
-
     def test_Pads(self):
         testshape = (10,10,3)
 
@@ -43,13 +39,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
 
-    def tearDown(self):
-        self.tmpdir.cleanup()
-    
 if __name__ == '__main__':
     acetoneTestCase.main()

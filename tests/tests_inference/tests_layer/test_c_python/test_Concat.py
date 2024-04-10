@@ -25,37 +25,31 @@ import tempfile
 import tensorflow as tf
 import keras
 import numpy as np
-from keras.layers import Input, Dense
+from keras.layers import Input, Conv2D, Concatenate
 
 tf.keras.backend.set_floatx('float32')
 
 
 class TestLayers(acetoneTestCase.AcetoneTestCase):
-    """Test for Dense Layer"""
+    """Test for Concatenate Layer"""
 
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmpdir_name = self.tmpdir.name
-
-    
-    def test_Dense1(self):
-        testshape = (1,1,16)
-        units = 8
+    def testConcatenate(self):
+        testshape = (10,10,3)
+        filters = 3
+        kernel_size = (3, 3)
 
         input = Input(testshape)
-        out = Dense(units, activation='softmax', bias_initializer='he_normal')(input)
-
+        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        out = Concatenate(axis=3)([x1, x2])
+        
         model = keras.Model(input,out)
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
-        keras_result = np.array(model.predict(dataset)).flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt', conv_algo= 'std_gemm_nn')
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
-    
-    def tearDown(self):
-        self.tmpdir.cleanup()
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1])) 
     
 if __name__ == '__main__':
     acetoneTestCase.main()

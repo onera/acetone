@@ -32,11 +32,6 @@ tf.keras.backend.set_floatx('float32')
 
 class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Dense Layer"""
-
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmpdir_name = self.tmpdir.name
-
     
     def test_Resize_Nearest(self):
         testshape = (1,2,2)
@@ -90,8 +85,8 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt').flatten()
-        self.assertListAlmostEqual(acetone_result,onnx_result)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
+        self.assertListAlmostEqual(acetone_result[0],onnx_result)
 
     def test_Resize_Linear(self):
         testshape = (1,2,2)
@@ -145,8 +140,8 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt').flatten()
-        self.assertListAlmostEqual(acetone_result,onnx_result)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
+        self.assertListAlmostEqual(acetone_result[0],onnx_result)
     
     def test_Resize_Cubic(self):
         testshape = (1,4,4)
@@ -200,11 +195,8 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt').flatten()
-        self.assertListAlmostEqual(acetone_result,onnx_result)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
+        self.assertListAlmostEqual(acetone_result[0],onnx_result)
 
-    def tearDown(self):
-        self.tmpdir.cleanup()    
-    
 if __name__ == '__main__':
     acetoneTestCase.main()

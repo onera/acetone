@@ -32,10 +32,6 @@ tf.keras.backend.set_floatx('float32')
 class TestConv(acetoneTestCase.AcetoneTestCase):
     """Test for Conv Layer"""
 
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmpdir_name = self.tmpdir.name
-
     def testConv_6loops(self):
         testshape = (10,10,3)
         filters = 3
@@ -48,9 +44,9 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result)
+        self.assertListAlmostEqual(acetone_result[0],keras_result)
     
     def testConv_indirect_gemm_nn(self):
         testshape = (10,10,3)
@@ -64,9 +60,9 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result)
+        self.assertListAlmostEqual(acetone_result[0],keras_result)
     
     def testConv_std_gemm_nn(self):
         testshape = (10,10,3)
@@ -80,14 +76,9 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(acetone_result,keras_result)
-
-    def tearDown(self):
-        self.tmpdir.cleanup()
-    
-    
+        self.assertListAlmostEqual(acetone_result[0],keras_result)
 
 if __name__ == '__main__':
     acetoneTestCase.main()

@@ -113,7 +113,9 @@ class CodeGenerator(ABC):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
 
-                if(self.data_format == 'channels_last'): nn_input = np.transpose(np.reshape(nn_input, self.layers[0].input_shape[1:]), (2,0,1))
+                if(self.data_format == 'channels_last'): 
+                    shape = (self.layers[0].input_shape[2],self.layers[0].input_shape[3],self.layers[0].input_shape[1])
+                    nn_input = np.transpose(np.reshape(nn_input, shape), (2,0,1))
 
                 if (self.normalize): nn_input = self.Normalizer.pre_processing(nn_input)
 

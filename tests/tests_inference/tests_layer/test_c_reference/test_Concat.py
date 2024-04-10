@@ -25,55 +25,32 @@ import tempfile
 import tensorflow as tf
 import keras
 import numpy as np
-from keras.layers import Input, MaxPooling2D, AveragePooling2D
+from keras.layers import Input, Conv2D, Concatenate
 
 tf.keras.backend.set_floatx('float32')
 
 
-class TestPooling(acetoneTestCase.AcetoneTestCase):
-    """Test for Pooling Layer"""
+class TestLayers(acetoneTestCase.AcetoneTestCase):
+    """Test for Concatenate Layer"""
 
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmpdir_name = self.tmpdir.name
-
-    def testMaxPooling(self):
+    def testConcatenate(self):
         testshape = (10,10,3)
-        pool_size = (3, 3)
-        strides = (1,1)
+        filters = 3
+        kernel_size = (3, 3)
 
         input = Input(testshape)
-        out = MaxPooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
+        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
+        out = Concatenate(axis=3)([x1, x2])
         
         model = keras.Model(input,out)
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
-   
-    def testAveragePooling2D(self):
-        testshape = (10,10,3)
-        pool_size = (3, 3)
-        strides = (1,1)
-
-        input = Input(testshape)
-        out = AveragePooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
-
-        model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
-
-    def tearDown(self):
-        self.tmpdir.cleanup()
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
     
-
 if __name__ == '__main__':
     acetoneTestCase.main()

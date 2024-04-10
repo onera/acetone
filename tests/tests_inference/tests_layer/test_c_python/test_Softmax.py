@@ -17,20 +17,37 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+import sys
+sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
+import acetoneTestCase as acetoneTestCase
+import tempfile
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+import tensorflow as tf
+import keras
+import numpy as np
+from keras.layers import Input, Dense
 
-#Addition of several tensor
-class Add(Broadcast.Broadcast):
+tf.keras.backend.set_floatx('float32')
+
+
+class TestLayers(acetoneTestCase.AcetoneTestCase):
+    """Test for Softmax Layer"""
+
     
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.name = 'Add'
-        self.specific_operator = ' + '
+    def test_Softmax(self):
+        testshape = (1,1,16)
+        units = 8
+
+        input = Input(testshape)
+        out = Dense(units, activation='softmax', bias_initializer='he_normal')(input)
+
+        model = keras.Model(input,out)
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        model.save(self.tmpdir_name+'/model.h5')
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     
-    def forward_path_layer(self, inputs):
-        output = inputs[0]
-        print(inputs)
-        for input in inputs[1:]:
-            output += input
-        return self.activation_function.compute(output)
+if __name__ == '__main__':
+    acetoneTestCase.main()

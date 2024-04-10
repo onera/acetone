@@ -23,11 +23,19 @@ import unittest
 import subprocess
 import json
 import onnx
+import tempfile
 
 class AcetoneTestCase(unittest.TestCase):
 
-    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-07):
-        return np.testing.assert_allclose(first, second, rtol=rtol, atol=atol)
+    def setUp(self):
+        self.tmpdir = tempfile.TemporaryDirectory()
+        self.tmpdir_name = self.tmpdir.name
+
+    def tearDown(self):
+        self.tmpdir.cleanup()
+
+    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-07, err_msg = ''):
+        return np.testing.assert_allclose(first, second, rtol=rtol, atol=atol, err_msg=err_msg)
 
 def create_initializer_tensor(
         name: str,
@@ -44,7 +52,7 @@ def create_initializer_tensor(
 
     return initializer_tensor
 
-def read_output(output_path:str):
+def read_output_c(output_path:str):
     with open(output_path,'r') as f:
         line = f.readline()
         line = line[:-2].split(' ')
@@ -52,6 +60,16 @@ def read_output(output_path:str):
         line=np.array(line)
     f.close()
     return line
+
+def read_output_python(output_path:str):
+    with open(output_path,'r') as f:
+        line = f.readline()
+        line = line[:-3].split(' ')
+        line = list(map(float,line))
+        line=np.array(line)
+    f.close()
+    return line
+
 
 def create_dataset(tmpdir:str, shape:tuple):
     dataset = np.float32(np.random.default_rng(seed=10).random((1,)+ shape))
@@ -63,12 +81,12 @@ def create_dataset(tmpdir:str, shape:tuple):
     return dataset
 
 def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='',conv_algo:str='std_gemm_nn'):
- 
+
     cmd = ['python3', 'src/cli_acetone.py', model, 'inference', '1', conv_algo, tmpdir_name, datatest_path]
     result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code generation failed")
-        return np.array([])
+        return np.array([]), np.array([])
     
     result = subprocess.run(["ls","--color=auto", tmpdir_name]).returncode
     
@@ -76,13 +94,15 @@ def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='',conv_
     result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code compilation failed")
-        return np.array([])
+        return np.array([]), np.array([])
     
     cmd = [tmpdir_name+'/inference', tmpdir_name+'/output_c.txt']
     result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code inference failed")
-        return np.array([])
+        return np.array([]), np.array([])
     
-    output = read_output(tmpdir_name+'/output_c.txt')
-    return output
+    output_c = read_output_c(tmpdir_name+'/output_c.txt')
+    output_python = read_output_python(tmpdir_name+'/output_python.txt')
+    
+    return output_c.flatten(), output_python.flatten()

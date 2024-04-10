@@ -33,13 +33,6 @@ tf.keras.backend.set_floatx('float32')
 class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def setUp(self):
-        self.tmpdir = tempfile.TemporaryDirectory()
-        self.tmpdir_name = self.tmpdir.name
-    
-    def tearDown(self):
-        self.tmpdir.cleanup()
-
     def testAdd(self):
         testshape = (10,10,3)
         filters = 3
@@ -54,10 +47,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
 
     def testMul(self):
         testshape = (10,10,3)
@@ -73,10 +66,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
     
     def testSub(self):
         testshape = (10,10,3)
@@ -92,10 +85,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
     
     def testAvg(self):
         testshape = (10,10,3)
@@ -111,10 +104,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
     
     def testMax(self):
         testshape = (10,10,3)
@@ -130,10 +123,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
 
     def testMin(self):
         testshape = (10,10,3)
@@ -149,12 +142,10 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt').flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
         keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result), list(keras_result))
-    
-    
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
 
 if __name__ == '__main__':
     acetoneTestCase.main()

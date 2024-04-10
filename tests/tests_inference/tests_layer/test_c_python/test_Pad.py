@@ -17,20 +17,31 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+import sys
+sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
+import acetoneTestCase as acetoneTestCase
+import tempfile
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+import numpy as np
+import keras
+from keras.layers import Input, ZeroPadding2D
 
-#Addition of several tensor
-class Add(Broadcast.Broadcast):
+class TestLayers(acetoneTestCase.AcetoneTestCase):
+    """Test for Concatenate Layer"""
+
+    def test_Pads(self):
+        testshape = (10,10,3)
+
+        input = Input(testshape)
+        out = ZeroPadding2D(padding=(1,1))(input)
+
+        model = keras.Model(input,out)
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        model.save(self.tmpdir_name+'/model.h5')
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.name = 'Add'
-        self.specific_operator = ' + '
-    
-    def forward_path_layer(self, inputs):
-        output = inputs[0]
-        print(inputs)
-        for input in inputs[1:]:
-            output += input
-        return self.activation_function.compute(output)
+if __name__ == '__main__':
+    acetoneTestCase.main()
