@@ -20,11 +20,9 @@
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase 
-import tempfile
 
 import tensorflow as tf
 import keras
-import numpy as np
 from keras.layers import Input, Dense
 
 tf.keras.backend.set_floatx('float32')

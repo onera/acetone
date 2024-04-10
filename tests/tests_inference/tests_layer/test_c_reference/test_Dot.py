@@ -20,7 +20,6 @@
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
-import tempfile
 
 import tensorflow as tf
 import keras

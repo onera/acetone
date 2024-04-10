@@ -52,8 +52,8 @@ def create_initializer_tensor(
 
     return initializer_tensor
 
-def read_output_c(output_path:str):
-    with open(output_path,'r') as f:
+def read_output_c(path_to_output:str):
+    with open(path_to_output,'r') as f:
         line = f.readline()
         line = line[:-2].split(' ')
         line = list(map(float,line))
@@ -61,8 +61,8 @@ def read_output_c(output_path:str):
     f.close()
     return line
 
-def read_output_python(output_path:str):
-    with open(output_path,'r') as f:
+def read_output_python(path_to_output:str):
+    with open(path_to_output,'r') as f:
         line = f.readline()
         line = line[:-3].split(' ')
         line = list(map(float,line))
@@ -87,8 +87,6 @@ def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='',conv_
     if result != 0:
         print("\nC code generation failed")
         return np.array([]), np.array([])
-    
-    result = subprocess.run(["ls","--color=auto", tmpdir_name]).returncode
     
     cmd = ['make', '-C', tmpdir_name, 'all']
     result = subprocess.run(cmd).returncode

@@ -44,7 +44,7 @@ from code_generator.layers.Concatenate import Concatenate
 from code_generator.layers.Pooling_layers.Pooling2D import Pooling2D
 from code_generator.layers.Pooling_layers.AveragePooling2D import AveragePooling2D
 from code_generator.layers.Pooling_layers.MaxPooling2D import MaxPooling2D
-from code_generator.layers.Broadcast_layers.Add import Add
+from code_generator.layers.Broadcast_layers.Broadcast import Broadcast
 
 class CodeGenerator(ABC):
 
@@ -424,7 +424,7 @@ class CodeGenerator(ABC):
         if (any(isinstance(layer, Concatenate) 
                 or any(isinstance(layer, Conv2D)) 
                 or any(isinstance(layer, Dense))
-                or any(isinstance(layer, Add)) 
+                or any(isinstance(layer, Broadcast)) 
                 or any(isinstance(layer, Gather)) 
                 or any(isinstance(layer, Pad))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
@@ -487,7 +487,7 @@ class CodeGenerator(ABC):
         if (any(isinstance(layer, Concatenate) 
                 or any(isinstance(layer, Conv2D)) 
                 or any(isinstance(layer, Dense))
-                or any(isinstance(layer, Add)) 
+                or any(isinstance(layer, Broadcast)) 
                 or any(isinstance(layer, Gather)) 
                 or any(isinstance(layer, Pad))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True

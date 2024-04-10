@@ -20,9 +20,7 @@
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
-import tempfile
 
-import numpy as np
 import keras
 from keras.layers import Input, ZeroPadding2D
 

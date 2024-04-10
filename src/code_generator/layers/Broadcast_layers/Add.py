@@ -30,7 +30,6 @@ class Add(Broadcast.Broadcast):
     
     def forward_path_layer(self, inputs):
         output = inputs[0]
-        print(inputs)
         for input in inputs[1:]:
             output += input
         return self.activation_function.compute(output)

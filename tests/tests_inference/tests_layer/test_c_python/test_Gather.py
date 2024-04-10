@@ -20,11 +20,9 @@
 import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
-import tempfile
 
 import numpy as np
 import onnx
-import onnxruntime as rt
 
 class TestLayers(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
