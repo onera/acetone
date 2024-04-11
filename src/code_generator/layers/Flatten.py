@@ -20,8 +20,9 @@
 
 import code_generator.Layer as Layer
 import pystache
+import numpy as np
 
-class InputLayer(Layer.Layer):
+class Flatten(Layer.Layer):
 
     def __init__(self, idx, size, input_shape, data_format):
        
@@ -36,27 +37,24 @@ class InputLayer(Layer.Layer):
 
         mustach_hash = {}
 
-        mustach_hash['name'] = self.name
-        mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['road'] = self.path
-
-        if(self.data_format == 'channels_last' and len(self.input_shape) == 4):
+        if(self.data_format == 'channels_last'):
             mustach_hash['channels_last'] = True
             mustach_hash['input_channels'] = self.input_shape[1]
             mustach_hash['input_height'] = self.input_shape[2]
             mustach_hash['input_width'] = self.input_shape[3]
-        else:
+            mustach_hash['name'] = self.name
+            mustach_hash['idx'] = "{:02d}".format(self.idx)
+            mustach_hash['path'] = self.path
             mustach_hash['size'] = self.size
 
-
-
-
-        with open('src/templates/layers/template_Input_Layer.c.tpl','r') as template_file:
+        with open('src/templates/layers/template_Flatten.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
     def forward_path_layer(self, input):
-        
-        return input 
+        if(self.data_format == 'channels_last'):
+            return np.transpose(np.reshape(input,self.input_shape[1:]),(1,2,0))
+        else:
+            return input

@@ -35,8 +35,6 @@ class MatMul(Layer.Layer):
         self.local_var = 'dotproduct'
         self.side = side
         self.input_shape = input_shape
-
-        
         self.nb_weights = self.count_elements_array(self.weights)
 
     def generate_inference_code_layer(self):

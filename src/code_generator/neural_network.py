@@ -113,13 +113,11 @@ class CodeGenerator(ABC):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
 
-                if(self.data_format == 'channels_last'): 
+                if((self.data_format == 'channels_last') and (len(self.layers[0].input_shape) == 4)): 
                     shape = (self.layers[0].input_shape[2],self.layers[0].input_shape[3],self.layers[0].input_shape[1])
                     nn_input = np.transpose(np.reshape(nn_input, shape), (2,0,1))
 
                 if (self.normalize): nn_input = self.Normalizer.pre_processing(nn_input)
-
-
                 previous_layer_result = [nn_input for i in range(self.maxpath)]  # for the very first layer, it is the neural network input
                 
                 to_store = {} #a dictionnary containing the values to store
@@ -172,7 +170,6 @@ class CodeGenerator(ABC):
                 
                 # Write results in text files to compare prediction.
                 if((self.data_format == 'channels_last') and hasattr(layer, 'output_channels')): nn_output = np.transpose(nn_output, (1,2,0))
-
                 nn_output = np.reshape(nn_output, -1)
 
                 if(self.normalize):
@@ -362,7 +359,7 @@ class CodeGenerator(ABC):
             output_hash['output_channels'] = self.layers[-1].output_channels
             output_hash['output_height'] = self.layers[-1].output_height
             output_hash['output_width'] = self.layers[-1].output_width
-            
+
             with open('./src/templates/memory_layout/template_channels_last_output.c.tpl','r') as template_file:
                 template = template_file.read()
             template_file.close()
@@ -370,7 +367,11 @@ class CodeGenerator(ABC):
 
         else:
             output_hash['output_size'] = self.layers[-1].size
-
+            if((self.data_format == 'channels_first')):
+                output_hash['comment'] = 'Returning the output in channels first (ACETONE compute the result in channels first)'
+            else:
+                output_hash['comment'] = 'Returning the output (output flatten)'
+            
             with open('./src/templates/memory_layout/template_channels_first_output.c.tpl','r') as template_file:
                 template = template_file.read()
             template_file.close()

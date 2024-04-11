@@ -29,7 +29,7 @@ from code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Co
 from code_generator.layers.Pad_layers import ConstantPad
 from code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
 from code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot
+from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Flatten
 from code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
 
 def create_actv_function_obj(activation_str):
@@ -94,13 +94,11 @@ def load_json(file_to_parse, conv_algorithm):
         layers.append(l_temp)
 
         nb_softmax_layers = 0
-        nb_flatten_layers = 0
 
         for idx, layer in list(islice(enumerate(model['config']['layers']), 1, None)):
             add_softmax_layer = False
             
             idx += nb_softmax_layers
-            idx -= nb_flatten_layers
 
             if 'activation' in layer['config']:
                 if layer['config']['activation'] == 'softmax':
@@ -166,8 +164,10 @@ def load_json(file_to_parse, conv_algorithm):
                                              activation_function = Linear())
             
             elif layer['class_name'] == 'Flatten':
-                nb_flatten_layers = 1
-                continue
+                current_layer = Flatten.Flatten(idx = idx,
+                                                size = layer['config']['size'],
+                                                input_shape = layer['config']['input_shape'],
+                                                data_format = data_format)
             
             elif layer['class_name'] == 'Add':
                 current_layer = Add.Add(idx = layer['config']['idx'],
@@ -307,8 +307,8 @@ def load_json(file_to_parse, conv_algorithm):
                 raise TypeError("Error: layer"+layer['class_name']+" not supported\n")
             
             for i in layer['config']['prev_layer_idx']:
-                current_layer.previous_layer.append(layers[i-nb_flatten_layers])
-                layers[i-nb_flatten_layers].next_layer.append(current_layer)
+                current_layer.previous_layer.append(layers[i])
+                layers[i].next_layer.append(current_layer)
 
             l_temp = current_layer
             layers.append(current_layer)

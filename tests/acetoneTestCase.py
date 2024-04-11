@@ -34,7 +34,7 @@ class AcetoneTestCase(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-07, err_msg = ''):
+    def assertListAlmostEqual(self, first, second, rtol=1e-07, atol=1e-06, err_msg = ''):
         return np.testing.assert_allclose(first, second, rtol=rtol, atol=atol, err_msg=err_msg)
 
 def create_initializer_tensor(

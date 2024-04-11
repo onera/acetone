@@ -14,7 +14,11 @@
                     "sparse": false,
                     "ragged": false,
                     "name": "input_1",
-                    "size": 5
+                    "size": 5,
+                    "input_shape": [
+                        null,
+                        5
+                    ]
                 }
             },
             {
@@ -41,6 +45,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 1,
                     "size": 128,
                     "input_shape": [
                         null,
@@ -49,6 +54,9 @@
                     "output_shape": [
                         null,
                         128
+                    ],
+                    "prev_layer_idx": [
+                        0
                     ]
                 },
                 "weights": [
@@ -858,6 +866,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 2,
                     "size": 128,
                     "input_shape": [
                         null,
@@ -866,6 +875,9 @@
                     "output_shape": [
                         null,
                         128
+                    ],
+                    "prev_layer_idx": [
+                        1
                     ]
                 },
                 "weights": [
@@ -17665,6 +17677,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 3,
                     "size": 64,
                     "input_shape": [
                         null,
@@ -17673,6 +17686,9 @@
                     "output_shape": [
                         null,
                         64
+                    ],
+                    "prev_layer_idx": [
+                        2
                     ]
                 },
                 "weights": [
@@ -26216,6 +26232,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 4,
                     "size": 32,
                     "input_shape": [
                         null,
@@ -26224,6 +26241,9 @@
                     "output_shape": [
                         null,
                         32
+                    ],
+                    "prev_layer_idx": [
+                        3
                     ]
                 },
                 "weights": [
@@ -28463,6 +28483,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 5,
                     "size": 16,
                     "input_shape": [
                         null,
@@ -28471,6 +28492,9 @@
                     "output_shape": [
                         null,
                         16
+                    ],
+                    "prev_layer_idx": [
+                        4
                     ]
                 },
                 "weights": [
@@ -29094,6 +29118,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 6,
                     "size": 5,
                     "input_shape": [
                         null,
@@ -29101,6 +29126,9 @@
                     ],
                     "output_shape": [
                         null,
+                        5
+                    ],
+                    "prev_layer_idx": [
                         5
                     ]
                 },
@@ -29226,8 +29254,9 @@
                     -0.15195433795452118
                 ]
             }
-        ]
+        ],
+        "data_format": "channels_last"
     },
-    "keras_version": "2.5.0",
+    "keras_version": "2.12.0",
     "backend": "tensorflow"
 }

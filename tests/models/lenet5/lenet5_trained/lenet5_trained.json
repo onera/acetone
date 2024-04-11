@@ -16,7 +16,13 @@
                     "sparse": false,
                     "ragged": false,
                     "name": "conv2d_input",
-                    "size": 784
+                    "size": 784,
+                    "input_shape": [
+                        null,
+                        1,
+                        28,
+                        28
+                    ]
                 }
             },
             {
@@ -24,13 +30,13 @@
                 "config": {
                     "name": "conv2d",
                     "trainable": true,
+                    "dtype": "float32",
                     "batch_input_shape": [
                         null,
                         28,
                         28,
                         1
                     ],
-                    "dtype": "float32",
                     "filters": 6,
                     "kernel_size": [
                         5,
@@ -64,18 +70,22 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 1,
                     "size": 3456,
                     "input_shape": [
                         null,
+                        1,
                         28,
-                        28,
-                        1
+                        28
                     ],
                     "output_shape": [
                         null,
+                        6,
                         24,
-                        24,
-                        6
+                        24
+                    ],
+                    "prev_layer_idx": [
+                        0
                     ]
                 },
                 "weights": [
@@ -365,18 +375,22 @@
                         2
                     ],
                     "data_format": "channels_last",
+                    "idx": 2,
                     "size": 864,
                     "input_shape": [
                         null,
+                        6,
                         24,
-                        24,
-                        6
+                        24
                     ],
                     "output_shape": [
                         null,
+                        6,
                         12,
-                        12,
-                        6
+                        12
+                    ],
+                    "prev_layer_idx": [
+                        1
                     ]
                 }
             },
@@ -419,18 +433,22 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 3,
                     "size": 1024,
                     "input_shape": [
                         null,
+                        6,
                         12,
-                        12,
-                        6
+                        12
                     ],
                     "output_shape": [
                         null,
+                        16,
                         8,
-                        8,
-                        16
+                        8
+                    ],
+                    "prev_layer_idx": [
+                        2
                     ]
                 },
                 "weights": [
@@ -3230,18 +3248,22 @@
                         2
                     ],
                     "data_format": "channels_last",
+                    "idx": 4,
                     "size": 256,
                     "input_shape": [
                         null,
+                        16,
                         8,
-                        8,
-                        16
+                        8
                     ],
                     "output_shape": [
                         null,
+                        16,
                         4,
-                        4,
-                        16
+                        4
+                    ],
+                    "prev_layer_idx": [
+                        3
                     ]
                 }
             },
@@ -3252,16 +3274,20 @@
                     "trainable": true,
                     "dtype": "float32",
                     "data_format": "channels_last",
+                    "idx": 5,
                     "size": 256,
                     "input_shape": [
                         null,
+                        16,
                         4,
-                        4,
-                        16
+                        4
                     ],
                     "output_shape": [
                         null,
                         256
+                    ],
+                    "prev_layer_idx": [
+                        4
                     ]
                 }
             },
@@ -3289,6 +3315,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 6,
                     "size": 120,
                     "input_shape": [
                         null,
@@ -3297,6 +3324,9 @@
                     "output_shape": [
                         null,
                         120
+                    ],
+                    "prev_layer_idx": [
+                        5
                     ]
                 },
                 "weights": [
@@ -34680,6 +34710,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 7,
                     "size": 84,
                     "input_shape": [
                         null,
@@ -34688,6 +34719,9 @@
                     "output_shape": [
                         null,
                         84
+                    ],
+                    "prev_layer_idx": [
+                        6
                     ]
                 },
                 "weights": [
@@ -45123,6 +45157,7 @@
                     "activity_regularizer": null,
                     "kernel_constraint": null,
                     "bias_constraint": null,
+                    "idx": 8,
                     "size": 10,
                     "input_shape": [
                         null,
@@ -45131,6 +45166,9 @@
                     "output_shape": [
                         null,
                         10
+                    ],
+                    "prev_layer_idx": [
+                        7
                     ]
                 },
                 "weights": [
@@ -46156,8 +46194,9 @@
                     0.04158846288919449
                 ]
             }
-        ]
+        ],
+        "data_format": "channels_last"
     },
-    "keras_version": "2.5.0",
+    "keras_version": "2.12.0",
     "backend": "tensorflow"
 }

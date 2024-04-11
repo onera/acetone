@@ -21,32 +21,27 @@ import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
 
-import onnx
-import onnxruntime as rt
+import keras
+import numpy as np
 
-class TestSqueezenet(acetoneTestCase.AcetoneTestCase):
+class TestLenet5(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def testSqueezenetONNX(self):
-        model = onnx.load('./tests/models/squeezenet1/squeezenet1.onnx')
-        testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
+    def testLenet5Keras(self):
+        model = keras.models.load_model('./tests/models/lenet5/lenet5_trained/lenet5_trained.h5')
+        testshape = (model.input.shape[1:])
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        
-        sess = rt.InferenceSession('./tests/models/squeezenet1/squeezenet1.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset})
-        onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/squeezenet1/squeezenet1.onnx', self.tmpdir_name+'/dataset.txt')
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-    
-    def testSqueezenetPython(self):
-        model = onnx.load('./tests/models/squeezenet1/squeezenet1.onnx')
-        testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
+        keras_result = np.array(model.predict(dataset)).flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/lenet5/lenet5_trained/lenet5_trained.h5', self.tmpdir_name+'/dataset.txt')
+        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
+
+    def testLenet5Python(self):
+        model = keras.models.load_model('./tests/models/lenet5/lenet5_trained/lenet5_trained.h5')
+        testshape = (model.input.shape[1:])
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-    
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/squeezenet1/squeezenet1.onnx', self.tmpdir_name+'/dataset.txt')
 
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/lenet5/lenet5_trained/lenet5_trained.h5', self.tmpdir_name+'/dataset.txt')
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
 if __name__ == '__main__':

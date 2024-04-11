@@ -41,7 +41,15 @@ def JSON_from_keras_model(keras_model, output_dir_json):
     else:
         start = 1
         model_dict['config']['layers'][0]['config']['size'] = input_layer_size
-        model_dict['config']['layers'][0]['config']['input_shape'] = keras_model.input_shape
+        if( model_dict['config']['data_format'] == 'channels_last'):
+            if(type(keras_model.input_shape) == list and len(keras_model.input_shape[0]) == 4):
+                model_dict['config']['layers'][0]['config']['input_shape'] = [(shape[0], shape[3], shape[1], shape[2]) for shape in keras_model.input_shape]
+            elif((type(keras_model.input_shape) is not list) and (len(keras_model.input_shape) == 4)):
+                model_dict['config']['layers'][0]['config']['input_shape'] = (keras_model.input_shape[0], keras_model.input_shape[3], keras_model.input_shape[1], keras_model.input_shape[2])
+            else:
+                model_dict['config']['layers'][0]['config']['input_shape'] = keras_model.input_shape
+        else:
+            model_dict['config']['layers'][0]['config']['input_shape'] = keras_model.input_shape
         # pretty_json['config']['layers'][0]['config']['dtype'] = "float32"
     i=0
     idx = start
@@ -56,12 +64,13 @@ def JSON_from_keras_model(keras_model, output_dir_json):
             output_shape = layer_keras.output_shape
             input_shape = layer_keras.input_shape
         
-        if (model_dict['config']['data_format'] == 'channels_last'):
-            output_shape = (output_shape[0], output_shape[3], output_shape[1], output_shape[2])
+        if ((model_dict['config']['data_format'] == 'channels_last')):
+            if(len(output_shape) == 4):
+                output_shape = (output_shape[0], output_shape[3], output_shape[1], output_shape[2])
 
-            if type(input_shape) is list:
+            if ((type(input_shape) is list) and (len(input_shape[0]) == 4)):
                 input_shape = [(shape[0], shape[3], shape[1], shape[2]) for shape in input_shape]
-            else:
+            elif((type(input_shape) is not list) and (len(input_shape) == 4)):
                 input_shape = (input_shape[0], input_shape[3], input_shape[1], input_shape[2])
 
         print(input_shape, output_shape)
