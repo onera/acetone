@@ -121,8 +121,8 @@ def load_nnet(file_to_parse, normalize):
 
     f.close()
 
-    layers.append(InputLayer(idx=0, size=layerSizes[0]))
-    layers[0].road = 0
+    layers.append(InputLayer(idx=0, size=layerSizes[0], input_shape=[layerSizes[0]], data_format='channels_first'))
+    layers[0].path = 0
     layers[0].find_output_str(dict_cst)
     
     # list of lists -> list of arrays

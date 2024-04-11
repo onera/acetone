@@ -21,31 +21,20 @@ import sys
 sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
 import acetoneTestCase as acetoneTestCase
 
-import onnx
-import onnxruntime as rt
-
-class TestACASXU_ONNX_normalized(acetoneTestCase.AcetoneTestCase):
+class TestACASXU_NNet_normalized(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def testACASXUNormalizedONNX(self):
-        model = onnx.load('./tests/models/acas/ACASXU/ACASXU_normalized.onnx')
-        testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+    def testACASXUNormalizedNNet(self):
+        NNet_result = [2.46398403e+04, 2.44853907e+04,  2.44597071e+04, 2.44829454e+04, 2.44301250e+04]
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_COC/nn_acas_COC.nnet', './tests/models/acas/ACASXU/test_input_ACASXU.txt',normalize=True)
 
-        sess = rt.InferenceSession('./tests/models/acas/ACASXU/ACASXU_normalized.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU_normalized.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
-    def testACASXUNormalizedONNXPython(self):
-        model = onnx.load('./tests/models/acas/ACASXU/ACASXU_normalized.onnx')
-        testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
+    def testACASXUNormalizedNNetPython(self):
+        testshape = (5,)
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
     
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU_normalized.onnx', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_COC/nn_acas_COC.nnet', self.tmpdir_name+'/dataset.txt',normalize=True)
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
