@@ -99,7 +99,7 @@ def cli_compare(reference_file, c_file, nb_tests, precision):
     print("   Max absolute error for %s test(s): %s" % (nb_tests, max_diff_file))
 
 
-if __name__ == "__cli_compare__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Program to verify the semantic preservation of ')
 
