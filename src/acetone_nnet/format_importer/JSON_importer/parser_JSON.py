@@ -24,12 +24,12 @@ import numpy as np
 
 from ...graph import graph_interpretor
 
-from ...code_generator.layers.Pooling_layers import AveragePooling2D, MaxPooling2D
-from ...code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
-from ...code_generator.layers.Pad_layers import ConstantPad
-from ...code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
-from ...code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from ...code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Flatten
+from ...code_generator.layers import AveragePooling2D, MaxPooling2D
+from ...code_generator.layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
+from ...code_generator.layers import Constant_Pad
+from ...code_generator.layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
+from ...code_generator.layers import ResizeCubic, ResizeLinear, ResizeNearest
+from ...code_generator.layers import  Concatenate, InputLayer, Dense, Softmax,  Dot, Flatten
 from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
 
 def create_actv_function_obj(activation_str):
@@ -48,24 +48,24 @@ def create_actv_function_obj(activation_str):
 def create_conv2d_obj(algorithm, **kwargs):
        
     if '6loops' in algorithm:
-        return Conv2D_6loops.Conv2D_6loops(**kwargs)
+        return Conv2D_6loops(**kwargs)
 
     elif 'std_gemm' in algorithm:
-        return Conv2D_std_gemm.Conv2D_std_gemm(**kwargs)   
+        return Conv2D_std_gemm(**kwargs)   
 
     elif 'indirect_gemm' in algorithm:
-        return Conv2D_indirect_gemm.Conv2D_indirect_gemm(**kwargs)
+        return Conv2D_indirect_gemm(**kwargs)
 
 def create_resize_obj(mode, **kwargs):
 
     if mode == 'bicubic':
-        return ResizeCubic.ResizeCubic(**kwargs)
+        return ResizeCubic(**kwargs)
     
     elif mode == 'bilinear':
-        return ResizeLinear.ResizeLinear(**kwargs)
+        return ResizeLinear(**kwargs)
     
     else:
-        return ResizeNearest.ResizeNearest(**kwargs)
+        return ResizeNearest(**kwargs)
 
 def load_json(file_to_parse, conv_algorithm):
         
@@ -89,7 +89,7 @@ def load_json(file_to_parse, conv_algorithm):
 
         layers = []
 
-        l_temp = Input.InputLayer(0, model['config']['layers'][0]['config']['size'], model['config']['layers'][0]['config']['input_shape'], data_format)
+        l_temp = InputLayer(0, model['config']['layers'][0]['config']['size'], model['config']['layers'][0]['config']['input_shape'], data_format)
 
         layers.append(l_temp)
 
@@ -113,7 +113,7 @@ def load_json(file_to_parse, conv_algorithm):
                 weights = np.moveaxis(weights, 2, 0)
                 if(len(weights.shape) < 4):
                     weights = np.expand_dims(weights, axis=0)
-                current_layer = Dense.Dense(idx=idx,
+                current_layer = Dense(idx=idx,
                                       size=layer['config']['units'],
                                       weights=np.array(data_type_py(layer['weights'])),
                                       biases=data_type_py(layer['biases']),
@@ -144,7 +144,7 @@ def load_json(file_to_parse, conv_algorithm):
                                                   activation_function = create_actv_function_obj(layer['config']['activation']))
             
             elif layer['class_name'] == 'AveragePooling2D':
-                current_layer = AveragePooling2D.AveragePooling2D(idx = idx,
+                current_layer = AveragePooling2D(idx = idx,
                                                  size = layer['config']['size'],
                                                  padding = layer['config']['padding'],
                                                  strides = layer['config']['strides'][0],
@@ -154,7 +154,7 @@ def load_json(file_to_parse, conv_algorithm):
                                                  activation_function = Linear())
             
             elif layer['class_name'] == 'MaxPooling2D':
-                current_layer = MaxPooling2D.MaxPooling2D(idx = idx,
+                current_layer = MaxPooling2D(idx = idx,
                                              size = layer['config']['size'],
                                              padding = layer['config']['padding'],
                                              strides = layer['config']['strides'][0],
@@ -164,27 +164,27 @@ def load_json(file_to_parse, conv_algorithm):
                                              activation_function = Linear())
             
             elif layer['class_name'] == 'Flatten':
-                current_layer = Flatten.Flatten(idx = idx,
+                current_layer = Flatten(idx = idx,
                                                 size = layer['config']['size'],
                                                 input_shape = layer['config']['input_shape'],
                                                 data_format = data_format)
             
             elif layer['class_name'] == 'Add':
-                current_layer = Add.Add(idx = layer['config']['idx'],
+                current_layer = Add(idx = layer['config']['idx'],
                                     size = layer['config']['size'],
                                     input_shapes = layer['config']['input_shape'],
                                     output_shape = layer['config']['output_shape'],
                                     activation_function = Linear())
 
             elif layer['class_name'] == 'Multiply':
-                current_layer = Multiply.Multiply(idx = layer['config']['idx'],
+                current_layer = Multiply(idx = layer['config']['idx'],
                                          size = layer['config']['size'], 
                                          input_shapes = layer['config']['input_shape'], 
                                          output_shape = layer['config']['output_shape'],
                                          activation_function= Linear())
             
             elif layer['class_name'] == 'Subtract':
-                current_layer = Subtract.Subtract(idx = layer['config']['idx'], 
+                current_layer = Subtract(idx = layer['config']['idx'], 
                                          size = layer['config']['size'], 
                                          input_shapes = layer['config']['input_shape'], 
                                          output_shape = layer['config']['output_shape'],
@@ -197,7 +197,7 @@ def load_json(file_to_parse, conv_algorithm):
                         axis = 1
                     else:
                         axis = axis + 1
-                current_layer = Concatenate.Concatenate(idx = layer['config']['idx'], 
+                current_layer = Concatenate(idx = layer['config']['idx'], 
                                             size = layer['config']['size'],
                                             axis = axis, 
                                             input_shapes = layer['config']['input_shape'], 
@@ -205,14 +205,14 @@ def load_json(file_to_parse, conv_algorithm):
                                             activation_function=Linear())
             
             elif layer['class_name'] == 'Maximum':
-                current_layer = Maximum.Maximum(idx = layer['config']['idx'], 
+                current_layer = Maximum(idx = layer['config']['idx'], 
                                          size = layer['config']['size'], 
                                          input_shapes = layer['config']['input_shape'], 
                                          output_shape = layer['config']['output_shape'],
                                          activation_function= Linear())
                 
             elif layer['class_name'] == 'Minimum':
-                current_layer = Minimum.Minimum(idx = layer['config']['idx'], 
+                current_layer = Minimum(idx = layer['config']['idx'], 
                                          size = layer['config']['size'], 
                                          input_shapes = layer['config']['input_shape'], 
                                          output_shape = layer['config']['output_shape'],
@@ -226,7 +226,7 @@ def load_json(file_to_parse, conv_algorithm):
                                          activation_function= Linear())
             
             elif layer['class_name'] == 'Dot':
-                current_layer = Dot.Dot(idx = layer['config']['idx'],
+                current_layer = Dot(idx = layer['config']['idx'],
                                     size = layer['config']['size'],
                                     axis= layer['config']['axes'],
                                     input_shapes = layer['config']['input_shape'], 
@@ -261,7 +261,7 @@ def load_json(file_to_parse, conv_algorithm):
                 else:
                     pads = [0,0,pads[0],0,0,0,pads[1],0]
 
-                current_layer = ConstantPad.Constant_Pad(idx = layer['config']['idx'],
+                current_layer = Constant_Pad(idx = layer['config']['idx'],
                                              size = layer['config']['size'],
                                              pads = pads,
                                              constant_value = 0,
@@ -282,7 +282,7 @@ def load_json(file_to_parse, conv_algorithm):
                         pad_left, pad_right = pads[1][0], pads[1][1]
                     pads = [0,0,pad_top,pad_left,0,0,pad_bottom,pad_right]
 
-                current_layer = ConstantPad.Constant_Pad(idx = layer['config']['idx'],
+                current_layer = Constant_Pad(idx = layer['config']['idx'],
                                              size = layer['config']['size'],
                                              pads = pads,
                                              constant_value = 0,

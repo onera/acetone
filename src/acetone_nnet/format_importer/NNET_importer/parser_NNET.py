@@ -24,8 +24,7 @@ import numpy as np
 
 from . import nnet_normalize
 
-from ...code_generator.layers.Dense import Dense
-from ...code_generator.layers.Input import InputLayer
+from ...code_generator.layers import Dense, InputLayer
 from ...code_generator.activation_functions import Linear, ReLu
 
 tf.keras.backend.set_floatx('float32')

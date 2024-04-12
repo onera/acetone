@@ -22,48 +22,50 @@
 import numpy as np
 import onnx
 
-from ...code_generator.layers.Pooling_layers import AveragePooling2D, MaxPooling2D
-from ...code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
-from ...code_generator.layers.Pad_layers import EdgePad, WrapPad, ReflectPad, ConstantPad
-from ...code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
-from ...code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from ...code_generator.layers import  Concatenate, Input, Softmax,  Dot, Gather, Gemm, MatMul, AddBias
+from ...code_generator.layers import (
+    AveragePooling2D, MaxPooling2D,
+    Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm,
+    Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
+    Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
+    ResizeCubic, ResizeLinear, ResizeNearest,
+    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul, Add_Bias
+)
 
-from ...code_generator import activation_functions
+from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm
 
 ###### Utility functions ######
 
 def create_conv2d_obj(algorithm, **kwargs):
        
     if '6loops' in algorithm:
-        return Conv2D_6loops.Conv2D_6loops(**kwargs)
+        return Conv2D_6loops(**kwargs)
 
     elif 'std_gemm' in algorithm:
-        return Conv2D_std_gemm.Conv2D_std_gemm(**kwargs)   
+        return Conv2D_std_gemm(**kwargs)   
 
     elif 'indirect_gemm' in algorithm:
-        return Conv2D_indirect_gemm.Conv2D_indirect_gemm(**kwargs)
+        return Conv2D_indirect_gemm(**kwargs)
         
 
 def create_resize_obj(mode, **kwargs):
     if mode == b'nearest':
-        return ResizeNearest.ResizeNearest(**kwargs)
+        return ResizeNearest(**kwargs)
     
     elif mode == b'linear':
-        return ResizeLinear.ResizeLinear(**kwargs)
+        return ResizeLinear(**kwargs)
     
     elif mode == b'cubic':
-        return ResizeCubic.ResizeCubic(**kwargs)
+        return ResizeCubic(**kwargs)
 
 def create_pad_obj(mode, **kwargs):
     if mode == b'constant':
-        return ConstantPad.Constant_Pad(**kwargs)
+        return Constant_Pad(**kwargs)
     elif mode == b'edge':
-        return EdgePad.Edge_pad(**kwargs)
+        return Edge_pad(**kwargs)
     elif mode == b'wrap':
-        return WrapPad.Wrap_pad(**kwargs)
+        return Wrap_pad(**kwargs)
     elif mode == b'reflect':
-        return ReflectPad.Reflect_pad(**kwargs)
+        return Reflect_pad(**kwargs)
 
 #Go find the constant named initialzer_name in model(an onnx model)
 def look_for_initializer(initializer_name,model):
@@ -119,7 +121,7 @@ def create_Input_Layer(input_layer,idx,dict_output):
         output_shape = [input_layer.type.tensor_type.shape.dim[i].dim_value for i in range(len(input_layer.type.tensor_type.shape.dim))]
         size = find_size(output_shape)
         
-        return Input.InputLayer(idx,size,output_shape,'channels_first')
+        return InputLayer(idx,size,output_shape,'channels_first')
 
 #Create a layer Softmax
 def create_Softmax(node,idx,dict_input,dict_output,model):
@@ -127,7 +129,7 @@ def create_Softmax(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Softmax.Softmax(idx = idx,
+    return Softmax(idx = idx,
                             size = size)
 
 
@@ -168,7 +170,7 @@ def create_Conv(node,idx,dict_input,dict_output,model,conv_algorithm):
                                 output_shape= output_shape,
                                 weights= np.moveaxis(onnx.numpy_helper.to_array(initializers[0]), 0,3),
                                 biases= biases,
-                                activation_function= activation_functions.Linear())
+                                activation_function= Linear())
     
 
 #Create a layer Concat
@@ -181,12 +183,12 @@ def create_Concat(node,idx,dict_input,dict_output,model):
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
     attributs = extract_attribut(node)
-    return Concatenate.Concatenate(idx,
-                                size, 
-                                attributs['axis'],
-                                input_shapes,
-                                output_shape,
-                                activation_function= activation_functions.Linear())
+    return Concatenate(idx,
+                        size, 
+                        attributs['axis'],
+                        input_shapes,
+                        output_shape,
+                        activation_function= Linear())
     
 #Create a layer Resize
 def create_Resize(node,idx,dict_input,dict_output,model):
@@ -240,7 +242,7 @@ def create_Resize(node,idx,dict_input,dict_output,model):
                              extrapolation_value = attributs['extrapolation_value'],
                              nearest_mode = attributs['nearest_mode'],
                              cubic_coeff_a=attributs['cubic_coeff_a'],
-                             activation_function = activation_functions.Linear())
+                             activation_function = Linear())
     
 #create a layer Pad
 def create_Pad(node,idx,dict_input,dict_output,model):
@@ -263,7 +265,7 @@ def create_Pad(node,idx,dict_input,dict_output,model):
                           constant_value = onnx.numpy_helper.to_array(initializers[1]),
                           axes = axes,
                           input_shape = input_shape,
-                          activation_function = activation_functions.Linear())
+                          activation_function = Linear())
 
 
 #create a layer Gather
@@ -275,13 +277,13 @@ def create_Gather(node,idx,dict_input,dict_output,model):
     dict_output[node.output[0]] = idx
     attributs = extract_attribut(node)
     initializer = look_for_initializer(node.input[1],model)
-    return Gather.Gather(idx = idx,
-                         size = size,
-                         axis = attributs['axis'],
-                         indices = onnx.numpy_helper.to_array(initializer),
-                         input_shape = input_shape,
-                         output_shape = output_shape,
-                         activation_function = activation_functions.Linear())
+    return Gather(idx = idx,
+                    size = size,
+                    axis = attributs['axis'],
+                    indices = onnx.numpy_helper.to_array(initializer),
+                    input_shape = input_shape,
+                    output_shape = output_shape,
+                    activation_function = Linear())
 
 #create a layer Gemm
 def create_Gemm(node,idx,dict_input,dict_output,model):
@@ -304,17 +306,17 @@ def create_Gemm(node,idx,dict_input,dict_output,model):
         attributs['alpha'] = 1.0
     if('beta' not in attributs):
         attributs['beta'] = 1.0
-    return Gemm.Gemm(idx = idx,
-                       size = size,
-                       alpha = attributs['alpha'],
-                       beta = attributs['beta'],
-                       transA = attributs['transA'],
-                       transB = attributs['transB'],
-                       weights = onnx.numpy_helper.to_array(B_tensor),
-                       bias = onnx.numpy_helper.to_array(C_tensor),
-                       input_shape = input_shape,
-                       output_shape = output_shape,
-                       activation_function = activation_functions.Linear())
+    return Gemm(idx = idx,
+                size = size,
+                alpha = attributs['alpha'],
+                beta = attributs['beta'],
+                transA = attributs['transA'],
+                transB = attributs['transB'],
+                weights = onnx.numpy_helper.to_array(B_tensor),
+                bias = onnx.numpy_helper.to_array(C_tensor),
+                input_shape = input_shape,
+                output_shape = output_shape,
+                activation_function = Linear())
 
 def create_MatMul(node,idx,dict_input,dict_output,model):
     output_shape = get_shape(node.output[0],model)
@@ -338,24 +340,24 @@ def create_MatMul(node,idx,dict_input,dict_output,model):
             weights = np.reshape(weights, (1,1,get_shape(node.input[0],model)[-1],output_shape[-1]))
             dict_input[idx] = [node.input[0]]
             input_shape = get_shape(node.input[0],model)
-        return MatMul.MatMul(idx = idx,
-                             size = size,
-                             input_shape = input_shape,
-                             weights = weights,
-                             side = side,
-                             activation_function = activation_functions.Linear())
+        return MatMul(idx = idx,
+                        size = size,
+                        input_shape = input_shape,
+                        weights = weights,
+                        side = side,
+                        activation_function = Linear())
     else:
         dict_input[idx] = node.input
         input_shapes =[]
         for input in node.input:
             input_shapes.append(get_shape(input,model))
         # to check
-        return Dot.Dot(idx = idx,
-                       size = size,
-                       axis = [-1,-2],
-                       input_shapes = input_shapes,
-                       output_shape = output_shape,
-                       activation_function = activation_functions.Linear())
+        return Dot(idx = idx,
+                    size = size,
+                    axis = [-1,-2],
+                    input_shapes = input_shapes,
+                    output_shape = output_shape,
+                    activation_function = Linear())
 
 ### Pooling layers ###
 
@@ -373,14 +375,14 @@ def create_MaxPool(node,idx,dict_input,dict_output,model):
         attributs['auto_pad'] = attributs['pads']
     if ('strides' not in attributs):
         attributs['strides'] = [1,1]
-    return MaxPooling2D.MaxPooling2D(idx = idx,
-                                size = size,
-                                padding =attributs['auto_pad'],
-                                strides = attributs['strides'][0],
-                                pool_size = attributs['kernel_shape'][0],
-                                input_shape = input_shape,
-                                output_shape = output_shape,
-                                activation_function = activation_functions.Linear())
+    return MaxPooling2D(idx = idx,
+                        size = size,
+                        padding =attributs['auto_pad'],
+                        strides = attributs['strides'][0],
+                        pool_size = attributs['kernel_shape'][0],
+                        input_shape = input_shape,
+                        output_shape = output_shape,
+                        activation_function = Linear())
 
 #cerate a layer AveragePool
 def create_AveragePool(node,idx,dict_input,dict_output,model):
@@ -396,14 +398,14 @@ def create_AveragePool(node,idx,dict_input,dict_output,model):
         attributs['auto_pad'] = attributs['pads']
     if ('strides' not in attributs):
         attributs['strides'] = [1,1]
-    return AveragePooling2D.AveragePooling2D(idx=idx,
-                                   size=size, 
-                                   padding=attributs['auto_pad'],
-                                   strides=attributs['strides'][0], 
-                                   pool_size=attributs['kernel_shape'][0], 
-                                   input_shape=input_shape,
-                                   output_shape=output_shape,
-                                   activation_function = activation_functions.Linear())
+    return AveragePooling2D(idx=idx,
+                            size=size, 
+                            padding=attributs['auto_pad'],
+                            strides=attributs['strides'][0], 
+                            pool_size=attributs['kernel_shape'][0], 
+                            input_shape=input_shape,
+                            output_shape=output_shape,
+                            activation_function = Linear())
 
 #Create a layer GlobalAveragePool
 def create_GlobalAveragePool(node,idx,dict_input,dict_output,model):
@@ -412,14 +414,14 @@ def create_GlobalAveragePool(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return AveragePooling2D.AveragePooling2D(idx = idx,
-                                    size = size,
-                                    padding = [0,0,0,0],
-                                    strides = 0,
-                                    pool_size = input_shape[2],
-                                    input_shape = input_shape,
-                                    output_shape = output_shape,
-                                    activation_function = activation_functions.Linear())
+    return AveragePooling2D(idx = idx,
+                            size = size,
+                            padding = [0,0,0,0],
+                            strides = 0,
+                            pool_size = input_shape[2],
+                            input_shape = input_shape,
+                            output_shape = output_shape,
+                            activation_function = Linear())
 
 ### Broadcats layers ###
 
@@ -435,11 +437,11 @@ def create_Add(node,idx,dict_input,dict_output,model):
         for input in node.input:
             input_shapes.append(get_shape(input,model))
         dict_input[idx] = node.input
-        return Add.Add(idx=idx,
-                        size=size,
-                        input_shapes=input_shapes,
-                        output_shape=output_shape,
-                        activation_function= activation_functions.Linear())
+        return Add(idx=idx,
+                    size=size,
+                    input_shapes=input_shapes,
+                    output_shape=output_shape,
+                    activation_function= Linear())
     else:
         if(right_tensor):
             biases = onnx.numpy_helper.to_array(right_tensor)
@@ -447,10 +449,10 @@ def create_Add(node,idx,dict_input,dict_output,model):
         elif(left_tensor):
             biases = onnx.numpy_helper.to_array(left_tensor)
             dict_input[idx] = [node.input[0]]
-        return AddBias.Add_Bias(idx = idx,
-                                  size = size,
-                                  biases = biases,
-                                  activation_function = activation_functions.Linear())
+        return Add_Bias(idx = idx,
+                            size = size,
+                            biases = biases,
+                            activation_function = Linear())
     
 #create a layer Div
 def create_Div(node,idx,dict_input,dict_output,model):
@@ -461,11 +463,11 @@ def create_Div(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Divide.Divide(idx=idx,
-                      size=size,
-                      input_shapes=input_shapes,
-                      output_shape=output_shape,
-                      activation_function= activation_functions.Linear())
+    return Divide(idx=idx,
+                    size=size,
+                    input_shapes=input_shapes,
+                    output_shape=output_shape,
+                    activation_function= Linear())
 
 #create a layer Mul
 def create_Mul(node,idx,dict_input,dict_output,model):
@@ -476,11 +478,11 @@ def create_Mul(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Multiply.Multiply(idx=idx,
-                      size=size,
-                      input_shapes=input_shapes,
-                      output_shape=output_shape,
-                      activation_function= activation_functions.Linear())
+    return Multiply(idx=idx,
+                    size=size,
+                    input_shapes=input_shapes,
+                    output_shape=output_shape,
+                    activation_function= Linear())
 
 #create a layer Sub
 def create_Sub(node,idx,dict_input,dict_output,model):
@@ -491,11 +493,11 @@ def create_Sub(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Subtract.Subtract(idx=idx,
-                      size=size,
-                      input_shapes=input_shapes,
-                      output_shape=output_shape,
-                      activation_function= activation_functions.Linear())
+    return Subtract(idx=idx,
+                    size=size,
+                    input_shapes=input_shapes,
+                    output_shape=output_shape,
+                    activation_function= Linear())
     
 #create a layer Max
 def create_Max(node,idx,dict_input,dict_output,model):
@@ -506,11 +508,11 @@ def create_Max(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Maximum.Maximum(idx=idx,
-                      size=size,
-                      input_shapes=input_shapes,
-                      output_shape=output_shape,
-                      activation_function= activation_functions.Linear())
+    return Maximum(idx=idx,
+                    size=size,
+                    input_shapes=input_shapes,
+                    output_shape=output_shape,
+                    activation_function= Linear())
 
 #create a layer Min
 def create_Min(node,idx,dict_input,dict_output,model):
@@ -521,11 +523,11 @@ def create_Min(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Minimum.Minimum(idx=idx,
-                      size=size,
-                      input_shapes=input_shapes,
-                      output_shape=output_shape,
-                      activation_function= activation_functions.Linear())
+    return Minimum(idx=idx,
+                    size=size,
+                    input_shapes=input_shapes,
+                    output_shape=output_shape,
+                    activation_function= Linear())
 
 #create a layer Average
 def create_Avg(node,idx,dict_input,dict_output,model):
@@ -536,11 +538,11 @@ def create_Avg(node,idx,dict_input,dict_output,model):
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
-    return Average.Average(idx=idx,
-                      size=size,
-                      input_shapes=input_shapes,
-                      output_shape=output_shape,
-                      activation_function= activation_functions.Linear())
+    return Average(idx=idx,
+                    size=size,
+                    input_shapes=input_shapes,
+                    output_shape=output_shape,
+                    activation_function= Linear())
 
 ###### Dict of all the functions ######
 layer_type = {"Softmax":create_Softmax,
@@ -588,27 +590,27 @@ unused_layers = {"Dropout":bypass,
 
 #Fuse the activation layer ReLu with the prior layer
 def fuse_ReLu(node,dict_output,model,layers):
-    layers[dict_output[node.input[0]]].activation_function = activation_functions.ReLu()
+    layers[dict_output[node.input[0]]].activation_function = ReLu()
     bypass(node,dict_output,model)
 
 #Fuse the activation layer Tanh with the prior layer
 def fuse_Tanh(node,dict_output,model,layers):
-    layers[dict_output[node.input[0]]].activation_function = activation_functions.TanH()
+    layers[dict_output[node.input[0]]].activation_function = TanH()
     bypass(node,dict_output,model)
 
 #Fuse the activation layer Sigmoide with the prior layer
 def fuse_Sigmoid(node,dict_output,model,layers):
-    layers[dict_output[node.input[0]]].activation_function = activation_functions.Sigmoid()
+    layers[dict_output[node.input[0]]].activation_function = Sigmoid()
     bypass(node,dict_output,model)
 
 #Fuse the activation layer Sigmoide with the prior layer
 def fuse_Exp(node,dict_output,model,layers):
-    layers[dict_output[node.input[0]]].activation_function = activation_functions.Exponential()
+    layers[dict_output[node.input[0]]].activation_function = Exponential()
     bypass(node,dict_output,model)
 
 #Fuse the activation layer Sigmoide with the prior layer
 def fuse_Log(node,dict_output,model,layers):
-    layers[dict_output[node.input[0]]].activation_function = activation_functions.Logarithm()
+    layers[dict_output[node.input[0]]].activation_function = Logarithm()
     bypass(node,dict_output,model)
 
 #Fuse a layer Clip with the prior layer
@@ -618,7 +620,7 @@ def fuse_Clip(node,dict_output,model,layers):
         min = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))[0]
     if(node.input[2]):
         max = onnx.numpy_helper.to_array(look_for_initializer(node.input[2],model))[0]
-    layers[dict_output[node.input[0]]].activation_function = activation_functions.Clip(max=max,min=min)
+    layers[dict_output[node.input[0]]].activation_function = Clip(max=max,min=min)
     bypass(node,dict_output,model)
     
     
