@@ -18,14 +18,14 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Resize_layers.Resize as Resize
+from .Resize import Resize
 import numpy as np
 import tensorflow as tf
 import pystache
 
 #The mode Linear of the Resize layers
 #The value in the output tensor are found thanks to a (bi)linear interpolation
-class ResizeLinear(Resize.Resize):
+class ResizeLinear(Resize):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

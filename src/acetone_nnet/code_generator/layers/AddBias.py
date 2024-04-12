@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import numpy as np
 import pystache
 
-class Add_Bias(Layer.Layer):
+class Add_Bias(Layer):
 
     def __init__(self, idx, size, biases,activation_function):
         

@@ -18,14 +18,14 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Resize_layers.Resize as Resize
+from .Resize import Resize
 import tensorflow as tf
 import numpy as np
 import pystache
 
 #The mode Nearest of the Resize layers.
 #The value in the new tensor is found by applying an rounding operation
-class ResizeNearest(Resize.Resize):
+class ResizeNearest(Resize):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

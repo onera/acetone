@@ -21,7 +21,7 @@
 import argparse
 import pathlib
 
-from code_generator.neural_network import CodeGenerator
+from .code_generator.neural_network import CodeGenerator
 
 def cli_acetone(model_file, function_name, nb_tests, conv_algorithm, output_dir, test_dataset_file=None, normalize=False ):
     normalize = bool(normalize)

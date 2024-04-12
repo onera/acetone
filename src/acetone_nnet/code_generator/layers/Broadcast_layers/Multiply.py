@@ -18,10 +18,10 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+from .Broadcast import Broadcast
 
 #Multiplication of several tensors
-class Multiply(Broadcast.Broadcast):
+class Multiply(Broadcast):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

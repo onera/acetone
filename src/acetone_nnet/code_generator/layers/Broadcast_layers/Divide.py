@@ -18,10 +18,10 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+from .Broadcast import Broadcast
 
 #Division of several tensors
-class Divide(Broadcast.Broadcast):
+class Divide(Broadcast):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

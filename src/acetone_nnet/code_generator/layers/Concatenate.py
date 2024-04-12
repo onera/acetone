@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import numpy as np
 import pystache
 
@@ -26,7 +26,7 @@ import pystache
 #attribut: axis alongside of which the concatenation will be done
 #input: a list of tensor to concatenate
 #output: the concatenated tensor 
-class Concatenate(Layer.Layer):
+class Concatenate(Layer):
     def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
         super().__init__()
         self.idx = idx

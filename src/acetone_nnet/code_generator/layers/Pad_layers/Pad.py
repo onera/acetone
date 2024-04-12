@@ -18,7 +18,8 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ...Layer import Layer
+
 import numpy as np
 from abc import abstractmethod
 
@@ -28,7 +29,7 @@ from abc import abstractmethod
 #input: a tensor to be padded, the desired pads, the value of teh constant if mode == constant
 #output:the resized tensor
 ######################### cf https://onnx.ai/onnx/operators/onnx__Pad.html for the doc
-class Pad(Layer.Layer):
+class Pad(Layer):
     
     def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
         super().__init__()

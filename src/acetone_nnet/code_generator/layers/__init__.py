@@ -18,58 +18,53 @@
  ******************************************************************************
 """
 
-from AddBias import Add_Bias
-from Concatenate import Concatenate
-from Dense import Dense
-from Dot import Dot
-from Flatten import Flatten
-from Gather import Gather
-from Gemm import Gemm
-from Input import InputLayer
-from MatMul import MatMul
-from Softmax import Softmax
-_layers = {"Add_Bias", "Concatenate", "Dense", "Dot", "Flatten", "Gather", "Gemm", "InputLayer", "MatMul", "Softmax"}
+from .AddBias import Add_Bias
+from .Concatenate import Concatenate
+from .Dense import Dense
+from .Dot import Dot
+from .Flatten import Flatten
+from .Gather import Gather
+from .Gemm import Gemm
+from .Input import InputLayer
+from .MatMul import MatMul
+from .Softmax import Softmax
 
-from Broadcast_layers.Add import Add
-from Broadcast_layers.Average import Average
-from Broadcast_layers.Broadcast import Broadcast
-from Broadcast_layers.Divide import Divide
-from Broadcast_layers.Maximum import Maximum
-from Broadcast_layers.Minimum import Minimum
-from Broadcast_layers.Multiply import Multiply
-from Broadcast_layers.Subtract import Subtract
-_broadcast = {"Add", "Average", "Broadcast", "Divide", "Maximum", "Minimum", "Multiply", "Subtract"}
+from .Broadcast_layers.Add import Add
+from .Broadcast_layers.Average import Average
+from .Broadcast_layers.Broadcast import Broadcast
+from .Broadcast_layers.Divide import Divide
+from .Broadcast_layers.Maximum import Maximum
+from .Broadcast_layers.Minimum import Minimum
+from .Broadcast_layers.Multiply import Multiply
+from .Broadcast_layers.Subtract import Subtract
 
-from Conv_layers.Conv2D import Conv2D
-from Conv_layers.Conv2D_6loops import Conv2D_6loops
-from Conv_layers.Conv2D_gemm import Conv2D_gemm
-from Conv_layers.Conv2D_indirect_gemm import Conv2D_indirect_gemm
-from Conv_layers.Conv2D_std_gemm import Conv2D_std_gemm
-_conv = {"Conv2D", "Conv2D_6loops", "Conv2D_gemm", "Conv2D_indirect_gemm", "Conv2D_std_gemm"}
+from .Conv_layers.Conv2D import Conv2D
+from .Conv_layers.Conv2D_6loops import Conv2D_6loops
+from .Conv_layers.Conv2D_gemm import Conv2D_gemm
+from .Conv_layers.Conv2D_indirect_gemm import Conv2D_indirect_gemm
+from .Conv_layers.Conv2D_std_gemm import Conv2D_std_gemm
 
-from Pad_layers.Pad import Pad
-from Pad_layers.ConstantPad import Constant_Pad
-from Pad_layers.EdgePad import Edge_pad
-from Pad_layers.ReflectPad import Reflect_pad
-from Pad_layers.WrapPad import Wrap_pad
-_pad = {"Pad", "Edge_pad", "Constant_Pad", "Reflect_pad", "Wrap_pad"}
+from .Pad_layers.Pad import Pad
+from .Pad_layers.ConstantPad import Constant_Pad
+from .Pad_layers.EdgePad import Edge_pad
+from .Pad_layers.ReflectPad import Reflect_pad
+from .Pad_layers.WrapPad import Wrap_pad
 
-from Pooling_layers.Pooling2D import Pooling2D
-from Pooling_layers.AveragePooling2D import  AveragePooling2D
-from Pooling_layers.MaxPooling2D import MaxPooling2D
-_pooling = {"Pooling2D", "AveragePooling2D", "MaxPooling2D"}
+from .Pooling_layers.Pooling2D import Pooling2D
+from .Pooling_layers.AveragePooling2D import  AveragePooling2D
+from .Pooling_layers.MaxPooling2D import MaxPooling2D
 
-from Resize_layers.Resize import Resize
-from Resize_layers.ResizeCubic import ResizeCubic
-from Resize_layers.ResizeLinear import ResizeLinear
-from Resize_layers.ResizeNearest import ResizeNearest
-_resize = {"Resize", "ResizeCubic", "ResizeLinear", "ResizeNearest"}
+from .Resize_layers.Resize import Resize
+from .Resize_layers.ResizeCubic import ResizeCubic
+from .Resize_layers.ResizeLinear import ResizeLinear
+from .Resize_layers.ResizeNearest import ResizeNearest
 
-__all__ = list(
-    _layers,
-    _broadcast,
-    _conv,
-    _pad,
-    _pooling,
-    _resize
+
+__all__ = (
+    "Add_Bias", "Concatenate", "Dense", "Dot", "Flatten", "Gather", "Gemm", "InputLayer", "MatMul", "Softmax",
+    "Add", "Average", "Broadcast", "Divide", "Maximum", "Minimum", "Multiply", "Subtract",
+    "Conv2D", "Conv2D_6loops", "Conv2D_gemm", "Conv2D_indirect_gemm", "Conv2D_std_gemm",
+    "Pad", "Edge_pad", "Constant_Pad", "Reflect_pad", "Wrap_pad",
+    "Pooling2D", "AveragePooling2D", "MaxPooling2D",
+    "Resize", "ResizeCubic", "ResizeLinear", "ResizeNearest"
 )

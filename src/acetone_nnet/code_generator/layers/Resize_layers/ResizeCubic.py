@@ -18,14 +18,15 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Resize_layers.Resize as Resize
+from .Resize import Resize
+
 import numpy as np
 import tensorflow as tf
 import pystache
 
 #The Cubic mode of the Resize layers
 #Use a (bi)cubic interpolation to find the new value
-class ResizeCubic(Resize.Resize):
+class ResizeCubic(Resize):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

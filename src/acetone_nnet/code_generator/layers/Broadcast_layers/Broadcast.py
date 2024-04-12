@@ -18,7 +18,8 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ...Layer import Layer
+
 from abc import abstractmethod
 import pystache
 
@@ -26,7 +27,7 @@ import pystache
 #attribut: none
 #input: a list of tensor
 #output: the resultant tensor
-class Broadcast(Layer.Layer):
+class Broadcast(Layer):
     def __init__(self, idx, size, input_shapes, output_shape,activation_function):
         super().__init__()
         self.idx = idx

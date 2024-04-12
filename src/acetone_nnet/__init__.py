@@ -18,18 +18,8 @@
  ******************************************************************************
 """
 
-import graph
-from graph import (
-    tri_topo, updatepath, setNewpath, to_save, parcours_prof_topo
-)
-
-import format_importer
-from format_importer import (
-    parser, load_json, load_nnet, load_onnx, JSON_from_keras_model
-)
-
-import code_generator
-from code_generator import (
+from . import code_generator
+from .code_generator import (
     CodeGenerator, Layer,
     Add_Bias, Concatenate, Dense, Dot, Flatten, Gather, Gemm, InputLayer, MatMul, Softmax,
     Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract,
@@ -40,13 +30,10 @@ from code_generator import (
     ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip
 )
 
-from cli_acetone import cli_acetone
-from cli_compare import cli_compare
-_cli = {"cli_acetone", "cli_compare"}
+from .cli_acetone import cli_acetone
+from .cli_compare import cli_compare
 
-__all__ = list(
-    _cli,
-    set(code_generator.__all__),
-    set(format_importer.__all__),
-    set(graph.__all__)
+__all__ = (
+    "cli_acetone", "cli_compare",
+    code_generator.__all__
 )

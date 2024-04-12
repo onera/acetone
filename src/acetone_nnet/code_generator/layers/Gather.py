@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import numpy as np
 import pystache
 
@@ -26,7 +26,7 @@ import pystache
 #attribut: axis alongside of which the submatrix will be extracted (if the desired submatrix must have the height, width or channels of the parent tensor)
 #input: a tensor
 #output: a list of tensor
-class Gather(Layer.Layer):
+class Gather(Layer):
     
     def __init__(self, idx, size, axis,  indices, input_shape, output_shape,activation_function):
         

@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import numpy as np
 import pystache
 
@@ -27,7 +27,7 @@ import pystache
 #atribut: the axis alongside of which the dot product will be done. if type(axis) == int, same axis for the two tensor. can be tuples of axis (element i of axis represent axis of tensor i)
 #input: two tensor
 #output: the resultant tensor 
-class Dot(Layer.Layer):
+class Dot(Layer):
     def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
         super().__init__()
         self.idx = idx

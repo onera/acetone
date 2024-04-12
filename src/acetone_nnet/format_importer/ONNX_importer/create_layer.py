@@ -22,14 +22,14 @@
 import numpy as np
 import onnx
 
-from code_generator.layers.Pooling_layers import AveragePooling2D, MaxPooling2D
-from code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
-from code_generator.layers.Pad_layers import EdgePad, WrapPad, ReflectPad, ConstantPad
-from code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
-from code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from code_generator.layers import  Concatenate, Input, Softmax,  Dot, Gather, Gemm, MatMul, AddBias
+from ...code_generator.layers.Pooling_layers import AveragePooling2D, MaxPooling2D
+from ...code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
+from ...code_generator.layers.Pad_layers import EdgePad, WrapPad, ReflectPad, ConstantPad
+from ...code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
+from ...code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
+from ...code_generator.layers import  Concatenate, Input, Softmax,  Dot, Gather, Gemm, MatMul, AddBias
 
-import code_generator.activation_functions as activation_functions
+from ...code_generator import activation_functions
 
 ###### Utility functions ######
 

@@ -18,10 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Conv_layers.Conv2D as Conv2D
+from .Conv2D import Conv2D
+
 import pystache
 
-class Conv2D_6loops(Conv2D.Conv2D):
+class Conv2D_6loops(Conv2D):
     """Implements Conv2D using the six-loops algorithm (direc conv)"""
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

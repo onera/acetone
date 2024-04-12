@@ -18,11 +18,12 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+from .Broadcast import Broadcast
+
 import numpy as np
 
 #Return a tensor with where each position (f,i,j) contains the min of all the values at position (f,i,j) in each tensor
-class Minimum(Broadcast.Broadcast):
+class Minimum(Broadcast):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
         self.name = 'Minimum'

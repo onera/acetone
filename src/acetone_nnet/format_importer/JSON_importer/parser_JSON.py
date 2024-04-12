@@ -22,15 +22,15 @@ import json
 from itertools import islice
 import numpy as np
 
-import graph.graph_interpretor as graph
+from ...graph import graph_interpretor
 
-from code_generator.layers.Pooling_layers import AveragePooling2D, MaxPooling2D
-from code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
-from code_generator.layers.Pad_layers import ConstantPad
-from code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
-from code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
-from code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Flatten
-from code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
+from ...code_generator.layers.Pooling_layers import AveragePooling2D, MaxPooling2D
+from ...code_generator.layers.Conv_layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
+from ...code_generator.layers.Pad_layers import ConstantPad
+from ...code_generator.layers.Broadcast_layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
+from ...code_generator.layers.Resize_layers import ResizeCubic, ResizeLinear, ResizeNearest
+from ...code_generator.layers import  Concatenate, Input, Dense, Softmax,  Dot, Flatten
+from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
 
 def create_actv_function_obj(activation_str):
 
@@ -322,7 +322,7 @@ def load_json(file_to_parse, conv_algorithm):
                 l_temp = current_layer
                 layers.append(current_layer)
 
-        layers, listRoad, maxRoad, dict_cst = graph.tri_topo(layers)
+        layers, listRoad, maxRoad, dict_cst = graph_interpretor.tri_topo(layers)
         layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
         print("Finished model initialization.")    
         return layers, data_type, data_type_py, data_format, maxRoad, dict_cst

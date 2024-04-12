@@ -18,10 +18,10 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import pystache
 
-class InputLayer(Layer.Layer):
+class InputLayer(Layer):
 
     def __init__(self, idx, size, input_shape, data_format):
        

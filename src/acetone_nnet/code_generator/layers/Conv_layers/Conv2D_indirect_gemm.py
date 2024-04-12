@@ -18,11 +18,12 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Conv_layers.Conv2D_gemm as Conv2D_gemm
+from .Conv2D_gemm import Conv2D_gemm
+
 import numpy as np
 import pystache
 
-class Conv2D_indirect_gemm(Conv2D_gemm.Conv2D_gemm):
+class Conv2D_indirect_gemm(Conv2D_gemm):
     """Implements Conv2D using indirect im2col (or im2row) and GeMM"""
    
     def __init__(self, **kwargs):

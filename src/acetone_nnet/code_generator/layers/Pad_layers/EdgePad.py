@@ -17,13 +17,13 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+from .Pad import Pad
 
-import code_generator.layers.Pad_layers.Pad as Pad
 import pystache
 
 #The Edge mode of the Pad layers
 #Pads with the edge values of array.
-class Edge_pad(Pad.Pad):
+class Edge_pad(Pad):
     
     def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
         super().__init__(idx, size, pads, constant_value, axes, input_shape,activation_function)

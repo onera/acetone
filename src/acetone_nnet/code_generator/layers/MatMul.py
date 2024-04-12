@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import numpy as np
 import pystache
 
-class MatMul(Layer.Layer):
+class MatMul(Layer):
 
     def __init__(self, idx, size, input_shape, weights, side, activation_function):
         

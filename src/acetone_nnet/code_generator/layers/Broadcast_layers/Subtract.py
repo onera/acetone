@@ -18,10 +18,10 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+from .Broadcast import Broadcast
 
 #Subtraction of several tensors
-class Subtract(Broadcast.Broadcast):
+class Subtract(Broadcast):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

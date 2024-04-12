@@ -18,10 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Pooling_layers.Pooling2D as Pooling2D
+from .Pooling2D import Pooling2D
+
 import numpy as np
 
-class AveragePooling2D(Pooling2D.Pooling2D):
+class AveragePooling2D(Pooling2D):
     def __init__(self, **kwds):
         super().__init__(**kwds)
         

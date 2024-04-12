@@ -19,7 +19,7 @@
 """
 
 import numpy as np
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 class ActivationFunctions():
     def __init__(self):

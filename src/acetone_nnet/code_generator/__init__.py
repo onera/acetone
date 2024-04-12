@@ -18,19 +18,16 @@
  ******************************************************************************
 """
 
-from code_generator.activation_functions import (
+from .activation_functions import (
     ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip
 )
-_activationfunctions = {"ActivationFunctions", "Linear", "Sigmoid", "ReLu", "TanH", "Exponential", "Logarithm", "Clip"}
 
-from code_generator.neural_network import CodeGenerator
-_codegenerator = {"CodeGenerator"}
+from .neural_network import CodeGenerator
 
-from code_generator.Layer import Layer
-_layer = {"Layer"}
+from .Layer import Layer
 
-from code_generator import layers
-from code_generator.layers import (
+from . import layers
+from .layers import (
     Add_Bias, Concatenate, Dense, Dot, Flatten, Gather, Gemm, InputLayer, MatMul, Softmax,
     Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract,
     Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm,
@@ -39,9 +36,9 @@ from code_generator.layers import (
     Resize, ResizeCubic, ResizeLinear, ResizeNearest
 )
 
-__all__ = list(
-    _activationfunctions,
-    _codegenerator,
-    _layer,
+__all__ = (
+    "CodeGenerator",
+    "ActivationFunctions", "Linear", "Sigmoid", "ReLu", "TanH", "Exponential", "Logarithm", "Clip",
+    "Layer",
     set(layers.__all__)
 )

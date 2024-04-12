@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import numpy as np
 import pystache
 
-class Dense(Layer.Layer):
+class Dense(Layer):
 
     def __init__(self, idx, size, weights, biases, activation_function):
         

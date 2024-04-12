@@ -18,12 +18,13 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ...Layer import Layer
+
 import numpy as np
 import pystache
 from abc import abstractmethod
 
-class Pooling2D(Layer.Layer):
+class Pooling2D(Layer):
     def __init__(self, idx, size, padding, strides, pool_size, input_shape, output_shape, activation_function,**kwargs):
         
         super().__init__()

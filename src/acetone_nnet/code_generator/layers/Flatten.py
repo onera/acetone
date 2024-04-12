@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import pystache
 import numpy as np
 
-class Flatten(Layer.Layer):
+class Flatten(Layer):
 
     def __init__(self, idx, size, input_shape, data_format):
        

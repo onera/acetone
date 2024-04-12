@@ -18,11 +18,12 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ...Layer import Layer
+
 import numpy as np
 from abc import abstractmethod
 
-class Conv2D(Layer.Layer):
+class Conv2D(Layer):
     
     def __init__(self, idx, conv_algorithm, size, padding, strides, kernel_h, kernel_w, dilation_rate, nb_filters, input_shape, output_shape, weights, biases, activation_function):
         super().__init__()

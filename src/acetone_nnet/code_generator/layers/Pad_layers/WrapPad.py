@@ -18,13 +18,14 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Pad_layers.Pad as Pad
+from .Pad import Pad
+
 import pystache
 
 #The Wrap mode of the Pad layers
 #Pads with the wrap of the vector along the axis. 
 #The first values are used to pad the end and the end values are used to pad the beginning.
-class Wrap_pad(Pad.Pad):
+class Wrap_pad(Pad):
     
     def __init__(self, idx, size, mode, pads, constant_value, axes, input_shape):
         super().__init__(idx, size, mode, pads, constant_value, axes, input_shape)

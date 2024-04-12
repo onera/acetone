@@ -18,12 +18,13 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Pad_layers.Pad as Pad
+from .Pad import Pad
+
 import pystache
 
 #The Constant mode of the Pad layers
 #Use a constant to fill paddings
-class Constant_Pad(Pad.Pad):
+class Constant_Pad(Pad):
     
     def __init__(self, idx, size, pads, constant_value, axes,input_shape,activation_function):
         super().__init__(idx, size, pads, constant_value, axes,input_shape,activation_function)

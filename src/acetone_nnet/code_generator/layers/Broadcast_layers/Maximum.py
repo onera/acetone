@@ -18,11 +18,12 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+from .Broadcast import Broadcast
+
 import numpy as np
 
 #Return a tensor with where each position (f,i,j) contains the max of all the values at position (f,i,j) in each tensor
-class Maximum(Broadcast.Broadcast):
+class Maximum(Broadcast):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
         self.name = 'Maximum'

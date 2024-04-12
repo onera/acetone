@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ..Layer import Layer
 import numpy as np
 import pystache
 
-class Softmax(Layer.Layer):
+class Softmax(Layer):
 
     def __init__(self, idx, size):
         

@@ -24,27 +24,14 @@ from pathlib import Path
 from abc import ABC
 import pystache
 
-from format_importer.parser import parser
+from ..format_importer.parser import parser
 
-from code_generator.layers.Dense import Dense
-from code_generator.layers.Dot import Dot
-from code_generator.layers.Softmax import Softmax
-from code_generator.layers.Gather import Gather
-from code_generator.layers.Gemm import Gemm
-from code_generator.layers.MatMul import MatMul
-from code_generator.layers.Pad_layers.Pad import Pad
-from code_generator.layers.Resize_layers.ResizeLinear import ResizeLinear
-from code_generator.layers.Resize_layers.ResizeNearest import ResizeNearest
-from code_generator.layers.Resize_layers.ResizeCubic import ResizeCubic
-from code_generator.layers.Conv_layers.Conv2D_6loops import Conv2D_6loops
-from code_generator.layers.Conv_layers.Conv2D_indirect_gemm import Conv2D_indirect_gemm
-from code_generator.layers.Conv_layers.Conv2D_std_gemm import Conv2D_std_gemm
-from code_generator.layers.Conv_layers.Conv2D import Conv2D
-from code_generator.layers.Concatenate import Concatenate
-from code_generator.layers.Pooling_layers.Pooling2D import Pooling2D
-from code_generator.layers.Pooling_layers.AveragePooling2D import AveragePooling2D
-from code_generator.layers.Pooling_layers.MaxPooling2D import MaxPooling2D
-from code_generator.layers.Broadcast_layers.Broadcast import Broadcast
+from .layers import (
+    Dense, Dot, Softmax, Gather, Gemm, MatMul, Concatenate, Pad, Broadcast,
+    ResizeLinear, ResizeCubic, ResizeNearest, 
+    Conv2D, Conv2D_6loops, Conv2D_indirect_gemm, Conv2D_std_gemm,
+    Pooling2D, MaxPooling2D, AveragePooling2D
+)
 
 class CodeGenerator(ABC):
 

@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 
-import code_generator.Layer as Layer
+from ...Layer import Layer
 from abc import abstractmethod
 
 #The resize Layers
@@ -29,7 +29,7 @@ from abc import abstractmethod
 ##############  https://onnx.ai/onnx/operators/onnx__Resize.html for more informations
 #The strategie is always to go throught the elements, find the coordinate in the original tensor 
 # and apply a transformation to the value in the original tensor to find the value to enter in the new tensor
-class Resize(Layer.Layer):
+class Resize(Layer):
     
     def __init__(self,idx,size,input_shape,activation_function,axes=[],coordinate_transformation_mode='half_pixel',exclude_outside=0,
                  keep_aspect_ratio_policy='stretch',boolean_resize = None,target_size=[],roi=[],extrapolation_value=0, 

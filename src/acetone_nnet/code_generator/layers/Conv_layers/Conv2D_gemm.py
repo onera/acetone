@@ -18,11 +18,11 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Conv_layers.Conv2D as Conv2D
+from .Conv2D import Conv2D
 import numpy as np
 import pystache
 
-class Conv2D_gemm(Conv2D.Conv2D):
+class Conv2D_gemm(Conv2D):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

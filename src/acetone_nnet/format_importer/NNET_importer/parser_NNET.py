@@ -22,11 +22,11 @@
 import tensorflow as tf
 import numpy as np
 
-import format_importer.NNET_importer.nnet_normalize as nnet_normalize
+from . import nnet_normalize
 
-from code_generator.layers.Dense import Dense
-from code_generator.layers.Input import InputLayer
-from code_generator.activation_functions import Linear, ReLu
+from ...code_generator.layers.Dense import Dense
+from ...code_generator.layers.Input import InputLayer
+from ...code_generator.activation_functions import Linear, ReLu
 
 tf.keras.backend.set_floatx('float32')
 

@@ -18,12 +18,13 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Pad_layers.Pad as Pad
+from .Pad import Pad
+
 import pystache
 
 #The Reflect mode of the Pad layers
 #Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
-class Reflect_pad(Pad.Pad):
+class Reflect_pad(Pad):
     
     def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
         super().__init__(idx, size, pads, constant_value, axes, input_shape,activation_function)

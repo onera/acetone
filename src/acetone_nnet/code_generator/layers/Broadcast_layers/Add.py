@@ -18,10 +18,10 @@
  ******************************************************************************
 """
 
-import code_generator.layers.Broadcast_layers.Broadcast as Broadcast
+from .Broadcast import Broadcast
 
 #Addition of several tensor
-class Add(Broadcast.Broadcast):
+class Add(Broadcast):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
