@@ -82,7 +82,7 @@ def create_dataset(tmpdir:str, shape:tuple):
 
 def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='', conv_algo:str='std_gemm_nn', normalize=False):
 
-    cmd = ['python3', 'src/cli_acetone.py', model, 'inference', '1', conv_algo, tmpdir_name, datatest_path]
+    cmd = ['python3', './cli_acetone.py', model, 'inference', '1', conv_algo, tmpdir_name, datatest_path]
     if(normalize):
         cmd.append('True')
     result = subprocess.run(cmd).returncode
