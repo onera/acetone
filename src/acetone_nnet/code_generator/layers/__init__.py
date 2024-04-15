@@ -29,42 +29,27 @@ from .Input import InputLayer
 from .MatMul import MatMul
 from .Softmax import Softmax
 
-from .Broadcast_layers.Add import Add
-from .Broadcast_layers.Average import Average
-from .Broadcast_layers.Broadcast import Broadcast
-from .Broadcast_layers.Divide import Divide
-from .Broadcast_layers.Maximum import Maximum
-from .Broadcast_layers.Minimum import Minimum
-from .Broadcast_layers.Multiply import Multiply
-from .Broadcast_layers.Subtract import Subtract
+from . import Broadcast_layers
+from .Broadcast_layers import Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract 
 
-from .Conv_layers.Conv2D import Conv2D
-from .Conv_layers.Conv2D_6loops import Conv2D_6loops
-from .Conv_layers.Conv2D_gemm import Conv2D_gemm
-from .Conv_layers.Conv2D_indirect_gemm import Conv2D_indirect_gemm
-from .Conv_layers.Conv2D_std_gemm import Conv2D_std_gemm
+from . import Conv_layers
+from .Conv_layers import Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm
 
-from .Pad_layers.Pad import Pad
-from .Pad_layers.ConstantPad import Constant_Pad
-from .Pad_layers.EdgePad import Edge_pad
-from .Pad_layers.ReflectPad import Reflect_pad
-from .Pad_layers.WrapPad import Wrap_pad
+from . import Pad_layers
+from .Pad_layers import Pad, Constant_Pad, Edge_pad, Reflect_pad, Wrap_pad
 
-from .Pooling_layers.Pooling2D import Pooling2D
-from .Pooling_layers.AveragePooling2D import  AveragePooling2D
-from .Pooling_layers.MaxPooling2D import MaxPooling2D
+from . import Pooling_layers
+from .Pooling_layers import Pooling2D, AveragePooling2D, MaxPooling2D
 
-from .Resize_layers.Resize import Resize
-from .Resize_layers.ResizeCubic import ResizeCubic
-from .Resize_layers.ResizeLinear import ResizeLinear
-from .Resize_layers.ResizeNearest import ResizeNearest
+from . import Resize_layers
+from .Resize_layers import Resize, ResizeCubic, ResizeLinear, ResizeNearest
 
 
 __all__ = (
     "Add_Bias", "Concatenate", "Dense", "Dot", "Flatten", "Gather", "Gemm", "InputLayer", "MatMul", "Softmax",
-    "Add", "Average", "Broadcast", "Divide", "Maximum", "Minimum", "Multiply", "Subtract",
-    "Conv2D", "Conv2D_6loops", "Conv2D_gemm", "Conv2D_indirect_gemm", "Conv2D_std_gemm",
-    "Pad", "Edge_pad", "Constant_Pad", "Reflect_pad", "Wrap_pad",
-    "Pooling2D", "AveragePooling2D", "MaxPooling2D",
-    "Resize", "ResizeCubic", "ResizeLinear", "ResizeNearest"
+    Broadcast_layers.__all__,
+    Conv_layers.__all__,
+    Pad_layers.__all__,
+    Pooling_layers.__all__,
+    Resize_layers.__all__
 )

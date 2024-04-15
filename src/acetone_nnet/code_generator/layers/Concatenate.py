@@ -79,7 +79,7 @@ class Concatenate(Layer):
             borne_inf += self.input_shapes[k][self.axis]
 
 
-        with open('./templates/layers/template_Concatenate.c.tpl','r') as template_file:
+        with open(self.template_path+'layers/template_Concatenate.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

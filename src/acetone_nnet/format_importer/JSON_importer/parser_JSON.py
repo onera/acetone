@@ -219,7 +219,7 @@ def load_json(file_to_parse, conv_algorithm):
                                          activation_function= Linear())
             
             elif layer['class_name'] == 'Average':
-                current_layer = Average.Average(idx = layer['config']['idx'], 
+                current_layer = Average(idx = layer['config']['idx'], 
                                          size = layer['config']['size'], 
                                          input_shapes = layer['config']['input_shape'], 
                                          output_shape = layer['config']['output_shape'],
@@ -316,7 +316,7 @@ def load_json(file_to_parse, conv_algorithm):
             # Separeted method to generate softmax
             if add_softmax_layer:
                 nb_softmax_layers += 1
-                current_layer = Softmax.Softmax(idx+1, l_temp.size)
+                current_layer = Softmax(idx+1, l_temp.size)
                 l_temp.next_layer.append(current_layer)
                 current_layer.previous_layer.append(l_temp)
                 l_temp = current_layer

@@ -80,7 +80,7 @@ class Gather(Layer):
         if(self.fused_layer):
             mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('tensor_temp[position]',self.idx,'position')
 
-        with open('./templates/layers/template_Gather.c.tpl','r') as template_file:
+        with open(self.template_path+'layers/template_Gather.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

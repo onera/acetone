@@ -21,6 +21,7 @@
 import pystache
 import numpy as np
 from abc import ABC
+from ... import templates
 
 class Normalizer(ABC):
 
@@ -31,6 +32,7 @@ class Normalizer(ABC):
         self.maxes = maxes
         self.means = means
         self.ranges = ranges
+        self.template_path = templates.__file__[:-11]
         super().__init__()
 
     def array_to_str(self,array):
@@ -41,7 +43,7 @@ class Normalizer(ABC):
         return s
 
     def write_pre_processing(self):
-        with open('./templates/normalization/template_pre_processing.c.tpl','r') as template_file:
+        with open(self.template_path+'normalization/template_pre_processing.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -49,7 +51,7 @@ class Normalizer(ABC):
 
 
     def write_post_processing(self):
-        with open('./templates/normalization/template_post_processing.c.tpl','r') as template_file:
+        with open(self.template_path+'normalization/template_post_processing.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -60,7 +62,7 @@ class Normalizer(ABC):
 
         mustach_hash['input_size'] = self.input_size
 
-        with open('./templates/normalization/template_normalization_cst_in_header_file.c.tpl','r') as template_file:
+        with open(self.template_path+'normalization/template_normalization_cst_in_header_file.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -77,7 +79,7 @@ class Normalizer(ABC):
         mustach_hash['output_mean'] = self.means[-1]
         mustach_hash['output_range'] = self.ranges[-1]
 
-        with open('./templates/normalization/template_normalization_cst_in_global_var_file.c.tpl','r') as template_file:
+        with open(self.template_path+'normalization/template_normalization_cst_in_global_var_file.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

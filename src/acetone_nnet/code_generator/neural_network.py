@@ -24,6 +24,8 @@ from pathlib import Path
 from abc import ABC
 import pystache
 
+from .. import templates
+
 from ..format_importer.parser import parser
 
 from .layers import (
@@ -43,6 +45,7 @@ class CodeGenerator(ABC):
         self.nb_tests = nb_tests
         self.conv_algorithm = conv_algorithm
         self.normalize = normalize
+        self.template_path = templates.__file__[:-11]
 
         if (not self.normalize):
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(self.file, self.conv_algorithm)
@@ -205,11 +208,12 @@ class CodeGenerator(ABC):
         testdataset_header = open(self.c_files_directory + '/test_dataset.h' , "w+")
         testdataset_source = open(self.c_files_directory + '/test_dataset.c' , "w+")
 
-        with open('./templates/template_test_dataset_header.c.tpl','r') as template_file:
+        with open(self.template_path+'template_test_dataset_header.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
         testdataset_header.write(pystache.render(template, {'nb_tests':self.nb_tests, 'nb_inputs':self.layers[0].size, 'nb_outputs':self.layers[-1].size, 'data_type':self.data_type}))
+        testdataset_header.close()
 
         dataset = '{'
         if self.test_dataset is None:
@@ -221,19 +225,21 @@ class CodeGenerator(ABC):
         
         dataset += '};\n'
 
-        with open('./templates/template_test_dataset_source.c.tpl','r') as template_file:
+        with open(self.template_path+'template_test_dataset_source.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
         testdataset_source.write(pystache.render(template,{'data_type':self.data_type, 'dataset':dataset}))
+        testdataset_source.close()
 
     def generate_main_file(self):
 
-        with open('./templates/template_main_file.c.tpl','r') as template_file:
+        with open(self.template_path+'template_main_file.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
         self.main_file.write(pystache.render(template, {'data_type':self.data_type}))
+        self.main_file.close()
 
     def generate_makefile(self):
 
@@ -244,11 +250,12 @@ class CodeGenerator(ABC):
             elif '.h' in filename : header_files.append(filename)
             else : pass
 
-        with open('./templates/template_Makefile.tpl','r') as template_file:
+        with open(self.template_path+'template_Makefile.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
         self.makefile.write(pystache.render(template, {'source_files':' '.join(source_files), 'header_files':' '.join(header_files), 'function_name':self.function_name}))
+        self.makefile.close()
 
     def generate_c_files(self, c_files_directory):  
 
@@ -347,7 +354,7 @@ class CodeGenerator(ABC):
             output_hash['output_height'] = self.layers[-1].output_height
             output_hash['output_width'] = self.layers[-1].output_width
 
-            with open('./templates/memory_layout/template_channels_last_output.c.tpl','r') as template_file:
+            with open(self.template_path+'memory_layout/template_channels_last_output.c.tpl','r') as template_file:
                 template = template_file.read()
             template_file.close()
             mustach_hash['ouput_str'] = pystache.render(template, output_hash)
@@ -359,14 +366,14 @@ class CodeGenerator(ABC):
             else:
                 output_hash['comment'] = 'Returning the output (output flatten)'
             
-            with open('./templates/memory_layout/template_channels_first_output.c.tpl','r') as template_file:
+            with open(self.template_path+'memory_layout/template_channels_first_output.c.tpl','r') as template_file:
                 template = template_file.read()
             template_file.close()
             mustach_hash['ouput_str'] = pystache.render(template, output_hash)
             
 
 
-        with open('./templates/template_source_file.c.tpl', 'r') as template_file:
+        with open(self.template_path+'template_source_file.c.tpl', 'r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -375,7 +382,8 @@ class CodeGenerator(ABC):
             mustach_hash['post_processing'] = self.Normalizer.write_post_processing()
         
         self.source_file.write(pystache.render(template,mustach_hash))
-        
+        self.source_file.close()
+
     def generate_function_header_file(self):
 
         mustach_hash = {}
@@ -443,12 +451,13 @@ class CodeGenerator(ABC):
         if(self.normalize):
             mustach_hash['normalization_cst'] = self.Normalizer.write_normalization_cst_in_header_file()
         
-        with open('./templates/template_header_file.c.tpl', 'r') as template_file:
+        with open(self.template_path+'template_header_file.c.tpl', 'r') as template_file:
             template = template_file.read()
         template_file.close()
 
         self.header_file.write(pystache.render(template,mustach_hash))
-    
+        self.header_file.close()
+
     def generate_globalvars_file(self):
 
         mustach_hash = {}
@@ -508,7 +517,7 @@ class CodeGenerator(ABC):
             if (to_print):
                 mustach_hash['layers'].append(layer_hash)
         
-        with open('./templates/template_global_var_file.c.tpl', 'r') as template_file:
+        with open(self.template_path+'template_global_var_file.c.tpl', 'r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -516,3 +525,5 @@ class CodeGenerator(ABC):
 
         if(self.normalize):
             self.globalvars_file.write(self.Normalizer.write_normalization_cst_in_globalvars_file())
+        
+        self.globalvars_file.close()

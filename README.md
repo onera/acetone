@@ -20,6 +20,17 @@ The [test](./test/) directory includes several tests for the framework and the d
 The [src](./src/) folder contains the backend code of ACETONE.
 
 ## Installation
+
+### User mode
+
+Install le package using `pip`
+```
+pip install acetone-nnet
+```
+
+
+### Development Mode
+
 Clone the GitHub repo on your computer
 
 ```
@@ -61,22 +72,22 @@ Then, generate the C code with ACETONE.
   * The input file with the test data
 
 ```
-python3 src/cli_acetone.py tests/models/lenet5/lenet5_example/lenet5.h5  lenet5 1 std_gemm_nn tests/models/lenet5/lenet5_example/lenet5_generated .tests/models/lenet5/lenet5_example/test_input_lenet5.txt
+python3 -m acetone_nnet tests/models/lenet5/lenet5_example/lenet5.h5  lenet5 1 std_gemm_nn tests/models/lenet5/lenet5_example/lenet5_generated tests/models/lenet5/lenet5_example/test_input_lenet5.txt
 ```
 
 * Compile the code
 ```
-make -C tests/models/lenet5/lenet5_example all
+make -C tests/models/lenet5/lenet5_example/lenet5_generated all
 ```
 
 * Execute the file with the path to the directory of the output file as argument
 ```
-./tests/models/lenet5/lenet5_example/lenet5 ./tests/models/lenet5/lenet5_example/output_acetone.txt
+./tests/models/lenet5/lenet5_example/lenet5_generated/lenet5 ./tests/models/lenet5/lenet5_example/lenet5_generated/output_acetone.txt
 ```
 
 * Compare the output given by Keras and ACETONE
 ```
-python3 src/cli_compare.py ./tests/models/lenet5/lenet5_example/output_keras.txt ./tests/models/lenet5/lenet5_example/output_acetone.txt 1
+python3 src/acetone_nnet/cli_compare.py ./tests/models/lenet5/lenet5_example/output_keras.txt ./tests/models/lenet5/lenet5_example/lenet5_generated/output_acetone.txt 1
 ```
 
 ## Tests

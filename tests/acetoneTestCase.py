@@ -84,7 +84,7 @@ def create_dataset(tmpdir:str, shape:tuple):
 
 def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='', conv_algo:str='std_gemm_nn', normalize=False):
 
-    acetone_nnet.cli_acetone(model_file=model, function_name='infrence', nb_tests=1, conv_algorithm=conv_algo, output_dir=tmpdir_name, test_dataset_file=datatest_path, normalize=normalize)
+    acetone_nnet.cli_acetone(model_file=model, function_name='inference', nb_tests=1, conv_algorithm=conv_algo, output_dir=tmpdir_name, test_dataset_file=datatest_path, normalize=normalize)
     
     cmd = ['make', '-C', tmpdir_name, 'all']
     result = subprocess.run(cmd).returncode

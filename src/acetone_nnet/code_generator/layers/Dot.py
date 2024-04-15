@@ -79,7 +79,7 @@ class Dot(Layer):
         elif(self.axis[1] == 0):
             mustach_hash['indice_right'] = 'j + '+ str(self.output_width) + ' * (i + ' + str(self.output_height) + ' * k)'
         
-        with open('./templates/layers/template_Dot.c.tpl','r') as template_file:
+        with open(self.template_path+'layers/template_Dot.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 

@@ -20,6 +20,7 @@
 
 import numpy as np
 from abc import ABC, abstractmethod
+from .. import templates
 
 class Layer(ABC):
     
@@ -34,6 +35,7 @@ class Layer(ABC):
         self.sorted = None
         self.output_str = ''
         self.fused_layer = None
+        self.template_path = templates.__file__[:-11]
       
         super().__init__()
 

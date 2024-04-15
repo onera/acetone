@@ -7,7 +7,7 @@ include-package-data = true
 
 [project]
 name = "acetone-nnet"
-version = "0.0.1.dev4"
+version = "0.1.dev2"
 requires-python = ">=3.10"
 
 authors = [
@@ -45,18 +45,18 @@ dependencies = [
 where = ["src"]
 
 [tool.setuptools.package-data]
-acetone_nnet = ["templates/**.c.tpl",
-    "templates/normalization/*.c.tpl",
-    "templates/memory_layout/*.c.tpl",
-    "templates/layers/*.c.tpl",
-    "templates/layers/Resize/*.c.tpl",
-    "templates/layers/Pad/*.c.tpl",
-    "templates/layers/Gemm/*.c.tpl",
-    "templates/layers/Conv/*.c.tpl"]
+acetone_nnet = ["templates/**.tpl",
+    "templates/normalization/*.tpl",
+    "templates/memory_layout/*.tpl",
+    "templates/layers/*.tpl",
+    "templates/layers/Resize/*.tpl",
+    "templates/layers/Pad/*.tpl",
+    "templates/layers/Gemm/*.tpl",
+    "templates/layers/Conv/*.tpl"]
 
 [project.scripts]
-cli-acetone = "acetone.src.cli_acetone:cli_acetone"
-cli_compare = "acetone.src.cli_compare:cli_compare"
+cli-acetone = "acetone_nnet.cli_acetone:cli_acetone"
+cli_compare = "acetone_nnet.cli_compare:cli_compare"
 
 [project.urls]
 Repository = "https://github.com/onera/acetone/"

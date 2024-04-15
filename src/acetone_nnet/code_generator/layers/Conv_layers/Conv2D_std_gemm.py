@@ -63,7 +63,7 @@ class Conv2D_std_gemm(Conv2D_gemm):
         mustach_hash['patches_width'] = self.patches_width
         mustach_hash['output_str'] = output_str
 
-        with open('./templates/layers/Conv/template_im2col.c.tpl','r') as template_file:
+        with open(self.template_path+'layers/Conv/template_im2col.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -91,7 +91,7 @@ class Conv2D_std_gemm(Conv2D_gemm):
         mustach_hash['patches_width'] = self.patches_width
         mustach_hash['output_str'] = output_str
 
-        with open('./templates/layers/Conv/template_im2row.c.tpl','r') as template_file:
+        with open(self.template_path+'layers/Conv/template_im2row.c.tpl','r') as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -116,7 +116,7 @@ class Conv2D_std_gemm(Conv2D_gemm):
             mustach_hash['input_size'] = self.input_channels*self.input_height*self.input_width
         
 
-        with open('./templates/layers/Conv/template_Conv_std_gemm.c.tpl','r') as template_file:
+        with open(self.template_path+'layers/Conv/template_Conv_std_gemm.c.tpl','r') as template_file:
             tempalte = template_file.read()
         template_file.close()
 

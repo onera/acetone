@@ -30,8 +30,8 @@ class ResizeLinear(Resize):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.mode = 'linear'
-        self.template_dict = {'1D':'./templates/layers/Resize/template_ResizeLinear1D.c.tpl',
-                              '2D':'./templates/layers/Resize/template_ResizeLinear2D.c.tpl'}
+        self.template_dict = {'1D':self.template_path+'layers/Resize/template_ResizeLinear1D.c.tpl',
+                              '2D':self.template_path+'layers/Resize/template_ResizeLinear2D.c.tpl'}
         
     def generate_inference_code_layer(self):
 

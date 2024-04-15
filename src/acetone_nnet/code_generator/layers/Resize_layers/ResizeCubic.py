@@ -31,8 +31,8 @@ class ResizeCubic(Resize):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.mode = 'cubic'
-        self.template_dict = {'1D':'./templates/layers/Resize/template_ResizeCubic1D.c.tpl',
-                              '2D':'./templates/layers/Resize/template_ResizeCubic2D.c.tpl'}
+        self.template_dict = {'1D':self.template_path+'layers/Resize/template_ResizeCubic1D.c.tpl',
+                              '2D':self.template_path+'layers/Resize/template_ResizeCubic2D.c.tpl'}
     
     def forward_path_layer(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)

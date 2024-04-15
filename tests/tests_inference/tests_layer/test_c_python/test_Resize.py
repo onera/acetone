@@ -79,7 +79,9 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
+
+        
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
@@ -131,7 +133,7 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     
@@ -183,7 +185,7 @@ class TestLayers(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
