@@ -18,19 +18,19 @@
  ******************************************************************************
 """
 import sys
-sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
+sys.path.append(__file__[:-53])
 import acetoneTestCase as acetoneTestCase
 
-class TestACASXU_NNet(acetoneTestCase.AcetoneTestCase):
+class TestAcas_COC_NNet(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def testACASXUNNet(self):
+    def testAcas_COC_NNet(self):
         NNet_result = [2.45578096e+04, 2.44936744e+04, 2.44764976e+04, 2.44966370e+04, 2.44581565e+04]
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_COC/nn_acas_COC.nnet', './tests/models/acas/ACASXU/test_input_ACASXU.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
-    def testACASXUNNetPython(self):
+    def testAcas_COC_NNet_Python(self):
         testshape = (5,)
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
     

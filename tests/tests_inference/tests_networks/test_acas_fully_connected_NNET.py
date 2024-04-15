@@ -18,23 +18,23 @@
  ******************************************************************************
 """
 import sys
-sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
+sys.path.append(__file__[:-65])
 import acetoneTestCase as acetoneTestCase
 
-class TestACASXU_NNet_normalized(acetoneTestCase.AcetoneTestCase):
+class TestACASXU_NNet(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def testACASXUNormalizedNNet(self):
-        NNet_result = [2.76141835e+02, 2.87005223e+02, 2.78001989e+02, 2.95110734e+02, 2.58504458e+02]
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.nnet', './tests/models/acas/ACASXU/test_input_ACASXU.txt',normalize=True)
+    def testACASXUNNet(self):
+        NNet_result = [-2.21254643e-02, -1.89464034e-02, -1.90349368e-02, -1.90424083e-02, -1.90863556e-02]
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.nnet', './tests/models/acas/ACASXU/test_input_ACASXU.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
-    def testACASXUNormalizedNNetPython(self):
+    def testACASXUNNetPython(self):
         testshape = (5,)
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
     
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.nnet', self.tmpdir_name+'/dataset.txt',normalize=True)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.nnet', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

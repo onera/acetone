@@ -18,16 +18,16 @@
  ******************************************************************************
 """
 import sys
-sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
+sys.path.append(__file__[:-64])
 import acetoneTestCase as acetoneTestCase
 
 import onnx
 import onnxruntime as rt
 
-class TestACASXU_ONNX_normalized(acetoneTestCase.AcetoneTestCase):
+class TestAcas_COC_ONNX_normalized(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def testAcasCOCNormalizedONNX(self):
+    def testAcas_COC_Normalized_ONNX(self):
         model = onnx.load('./tests/models/acas/acas_COC/nn_acas_COC_normalized.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
@@ -40,7 +40,7 @@ class TestACASXU_ONNX_normalized(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
     
-    def testAcasCOCNormalizedONNXPython(self):
+    def testAcas_COC_Normalized_ONNX_Python(self):
         model = onnx.load('./tests/models/acas/acas_COC/nn_acas_COC_normalized.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)

@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 import sys
-sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
+sys.path.append(__file__[:-50])
 import acetoneTestCase as acetoneTestCase
 
 import onnx

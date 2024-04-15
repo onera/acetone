@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 import sys
-sys.path.append("/tmp_user/ldtis203h/yaitaiss/acetone/tests")
+sys.path.append(__file__[:-51])
 import acetoneTestCase as acetoneTestCase
 
 import keras
