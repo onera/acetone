@@ -7,13 +7,15 @@ include-package-data = true
 
 [project]
 name = "acetone-nnet"
-version = "0.1.dev2"
+version = "0.1.dev3"
 requires-python = ">=3.10"
 
 authors = [
-    { name="Iryna DE ALBUQUERQUE SILVA", email="Iryna.De_Albuquerque_Silva@onera.fr" },
+    { name="Yanis AIT-AISSA", email="Yanis.AIT-AISSA@student.isae-supaero.fr"},
     { name="Thomas CARLE", email="Thomas.Carle@irit.fr" },
+    { name="Iryna DE ALBUQUERQUE SILVA", email="Iryna.De_Albuquerque_Silva@onera.fr" },
     { name="Adrien GAUFFRIAU", email="Adrien.Gauffriau@airbus.com" },
+    { name="Benjamin LESAGE", email="benjamin.lesage@onera.fr"},
     { name="Claire PAGETTI", email="Claire.Pagetti@onera.fr" },
 ]
 
@@ -55,8 +57,8 @@ acetone_nnet = ["templates/**.tpl",
     "templates/layers/Conv/*.tpl"]
 
 [project.scripts]
-cli-acetone = "acetone_nnet.cli_acetone:cli_acetone"
-cli_compare = "acetone_nnet.cli_compare:cli_compare"
+cli_acetone = "acetone_nnet.cli_acetone:cli_acetone"
+acetone_compare = "acetone_nnet.cli_compare:cli_compare"
 
 [project.urls]
 Repository = "https://github.com/onera/acetone/"
