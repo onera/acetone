@@ -15,7 +15,7 @@ importer = ''
 
 
 ### All the test
-all = 'tests/'
+all = './'
 
 
 possible_test = {'all':all, 

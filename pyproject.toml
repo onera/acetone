@@ -57,7 +57,7 @@ acetone_nnet = ["templates/**.tpl",
     "templates/layers/Conv/*.tpl"]
 
 [project.scripts]
-cli_acetone = "acetone_nnet.cli_acetone:cli_acetone"
+acetone_generate = "acetone_nnet.cli_acetone:cli_acetone"
 acetone_compare = "acetone_nnet.cli_compare:cli_compare"
 
 [project.urls]
