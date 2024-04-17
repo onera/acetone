@@ -31,8 +31,8 @@ def JSON_from_keras_model(keras_model, output_dir_json):
         input_layer_size = input_layer_size * keras_model.input.shape[i]
 
     model_dict['config']['data_format'] = 'channels_first'
-    if ((hasattr(layer['config']['data_format']) ) 
-        and (layer['config']['data_format'] == 'channels_last') for layer in model_dict['config']['layers']): 
+    if (hasattr(model_dict['config']['layers'][j]['config'],'data_format')
+        and (model_dict['config']['layers'][j]['config']['data_format'] == 'channels_last') for j in range(len(model_dict['config']['layers']))):
         model_dict['config']['data_format'] = 'channels_last'
 
     if keras_model.layers[0].__class__.__name__ == 'InputLayer':
@@ -101,7 +101,6 @@ def JSON_from_keras_model(keras_model, output_dir_json):
         if layer_json['class_name'] == 'Dense' or layer_json['class_name'] == 'Conv2D' :
             if layer_json['config']['dtype'] == 'float64':
                 weights = np.float64(layer_keras.get_weights()[0])
-
                 if(len(weights.shape) < 3):
                     for i in range(3-len(weights.shape)): 
                         weights = np.expand_dims(weights, axis=-1)
@@ -111,14 +110,33 @@ def JSON_from_keras_model(keras_model, output_dir_json):
                     
                 layer_json['weights'] = weights
                 layer_json['biases'] = np.float64(layer_keras.get_weights()[1])
-            elif layer_json['config']['dtype'] == 'float32':
 
+            elif layer_json['config']['dtype'] == 'float32':
                 weights = np.float32(layer_keras.get_weights()[0])
+                if(len(weights.shape) < 3):
+                    for i in range(3-len(weights.shape)): 
+                        weights = np.expand_dims(weights, axis=-1)
+                weights = np.moveaxis(weights, 2, 0)
+                if(len(weights.shape) < 4):
+                    weights = np.expand_dims(weights, axis=0)
                 
                 layer_json['weights'] = weights
                 layer_json['biases'] = np.float32(layer_keras.get_weights()[1])
 
             i = i + 2
+        
+        if(layer_json['class_name'] == 'BatchNormalization'):
+            if layer_json['config']['dtype'] == 'float64':
+                layer_json['beta'] = np.float64(layer_keras.get_weights()[1])
+                layer_json['gamma'] = np.float64(layer_keras.get_weights()[0])
+                layer_json['moving_mean'] = np.float64(layer_keras.get_weights()[2])
+                layer_json['moving_var'] = np.float64(layer_keras.get_weights()[3])
+
+            elif layer_json['config']['dtype'] == 'float32':
+                layer_json['beta'] = np.float32(layer_keras.get_weights()[1])
+                layer_json['gamma'] = np.float32(layer_keras.get_weights()[0])
+                layer_json['moving_mean'] = np.float32(layer_keras.get_weights()[2])
+                layer_json['moving_var'] = np.float32(layer_keras.get_weights()[3])
         
         idx += 1
 

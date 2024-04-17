@@ -85,18 +85,19 @@ def create_dataset(tmpdir:str, shape:tuple):
 def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='', conv_algo:str='std_gemm_nn', normalize=False):
 
     acetone_nnet.cli_acetone(model_file=model, function_name='inference', nb_tests=1, conv_algorithm=conv_algo, output_dir=tmpdir_name, test_dataset_file=datatest_path, normalize=normalize)
-    
+    output_python = read_output_python(tmpdir_name+'/output_python.txt')
+
     cmd = ['make', '-C', tmpdir_name, 'all']
     result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code compilation failed")
-        return np.array([]), np.array([])
+        return np.array([]), output_python.flatten()
     
     cmd = [tmpdir_name+'/inference', tmpdir_name+'/output_c.txt']
     result = subprocess.run(cmd).returncode
     if result != 0:
         print("\nC code inference failed")
-        return np.array([]), np.array([])
+        return np.array([]), output_python.flatten()
     
     output_c = read_output_c(tmpdir_name+'/output_c.txt')
     output_python = read_output_python(tmpdir_name+'/output_python.txt')

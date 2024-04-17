@@ -29,7 +29,7 @@ from .. import templates
 from ..format_importer.parser import parser
 
 from .layers import (
-    Dense, Dot, Softmax, Gather, Gemm, MatMul, Concatenate, Pad, Broadcast,
+    Dense, Dot, Softmax, Gather, Gemm, MatMul, Concatenate, Pad, Broadcast, BatchNormalization,
     ResizeLinear, ResizeCubic, ResizeNearest, 
     Conv2D, Conv2D_6loops, Conv2D_indirect_gemm, Conv2D_std_gemm,
     Pooling2D, MaxPooling2D, AveragePooling2D
@@ -445,6 +445,10 @@ class CodeGenerator(ABC):
                 layer_hash['patches_size'] = layer.patches_size
                 to_print = True
             
+            if type(layer) is BatchNormalization:
+                layer_hash['channels'] = layer.output_channels
+                to_print = True
+
             if (to_print):
                 mustach_hash['layers'].append(layer_hash)
         
@@ -512,6 +516,13 @@ class CodeGenerator(ABC):
             if type(layer) is Conv2D_indirect_gemm:
                 layer_hash['patches_size'] = layer.patches_size
                 layer_hash['patches'] = layer.create_ppatches()
+                to_print = True
+            
+            if type(layer) is BatchNormalization:
+                layer_hash['channels'] = layer.output_channels
+                layer_hash['mean'] = self.flatten_array_orderc(layer.mean)
+                layer_hash['var'] = self.flatten_array_orderc(layer.var)
+                layer_hash['scale'] = self.flatten_array_orderc(layer.scale)
                 to_print = True
             
             if (to_print):

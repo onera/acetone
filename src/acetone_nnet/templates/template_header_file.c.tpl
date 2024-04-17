@@ -26,6 +26,11 @@ extern {{data_type}} biases_{{name}}_{{idx}}[{{nb_biases}}];
     {{#patches_size}}
 extern {{data_type}} *ppatches_{{name}}_{{idx}}[{{patches_size}}];
     {{/patches_size}}
+    {{#channels}}
+{{data_type}} mean_{{name}}_{{idx}}[{{channels}}];
+{{data_type}} var_{{name}}_{{idx}}[{{channels}}];
+{{data_type}} scale_{{name}}_{{idx}}[{{channels}}];
+    {{/channels}}
     
 {{/layers}}
 int inference({{data_type}} *prediction, {{data_type}} *nn_input);

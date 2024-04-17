@@ -18,6 +18,16 @@
  ******************************************************************************
 """
 
+from . import layers
+from .layers import (
+    Add_Bias, Concatenate, Dense, Dot, Flatten, Gather, Gemm, InputLayer, MatMul, Softmax, BatchNormalization,
+    Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract,
+    Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm,
+    Pad, Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
+    Pooling2D, MaxPooling2D, AveragePooling2D,
+    Resize, ResizeCubic, ResizeLinear, ResizeNearest
+)
+
 from .activation_functions import (
     ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip
 )
@@ -25,16 +35,6 @@ from .activation_functions import (
 from .neural_network import CodeGenerator
 
 from .Layer import Layer
-
-from . import layers
-from .layers import (
-    Add_Bias, Concatenate, Dense, Dot, Flatten, Gather, Gemm, InputLayer, MatMul, Softmax,
-    Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract,
-    Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm,
-    Pad, Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
-    Pooling2D, MaxPooling2D, AveragePooling2D,
-    Resize, ResizeCubic, ResizeLinear, ResizeNearest
-)
 
 __all__ = (
     "CodeGenerator",

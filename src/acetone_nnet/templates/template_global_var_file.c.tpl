@@ -32,4 +32,10 @@
 {{data_type}} *ppatches_{{name}}_{{idx}}[{{patches_size}}] = {{{patches}}};
 
     {{/patches_size}}
+    {{#channels}}
+{{data_type}} mean_{{name}}_{{idx}}[{{channels}}] = {{mean}};
+{{data_type}} var_{{name}}_{{idx}}[{{channels}}] = {{var}};
+{{data_type}} scale_{{name}}_{{idx}}[{{channels}}] = {{scale}};
+
+    {{/channels}}
 {{/layers}}

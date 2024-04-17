@@ -24,13 +24,15 @@ import numpy as np
 
 from ...graph import graph_interpretor
 
-from ...code_generator.layers import AveragePooling2D, MaxPooling2D
-from ...code_generator.layers import Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm 
-from ...code_generator.layers import Constant_Pad
-from ...code_generator.layers import Add, Multiply, Subtract, Divide, Maximum, Minimum, Average
-from ...code_generator.layers import ResizeCubic, ResizeLinear, ResizeNearest
-from ...code_generator.layers import  Concatenate, InputLayer, Dense, Softmax,  Dot, Flatten
-from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH
+from ...code_generator import (
+    AveragePooling2D, MaxPooling2D,
+    Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm,
+    Constant_Pad,
+    Add, Multiply, Subtract, Maximum, Minimum, Average,
+    ResizeCubic, ResizeLinear, ResizeNearest,
+    Concatenate, InputLayer, Dense, Softmax,  Dot, Flatten, BatchNormalization,
+    Linear, ReLu, Sigmoid, TanH
+)
 
 def create_actv_function_obj(activation_str):
 
@@ -107,12 +109,6 @@ def load_json(file_to_parse, conv_algorithm):
         
             if layer['class_name'] == 'Dense':
                 weights = np.array(data_type_py(layer['weights']))
-                if(len(weights.shape) < 3):
-                    for i in range(3-len(weights.shape)): 
-                        weights = np.expand_dims(weights, axis=-1)
-                weights = np.moveaxis(weights, 2, 0)
-                if(len(weights.shape) < 4):
-                    weights = np.expand_dims(weights, axis=0)
                 current_layer = Dense(idx=idx,
                                       size=layer['config']['units'],
                                       weights=np.array(data_type_py(layer['weights'])),
@@ -121,12 +117,6 @@ def load_json(file_to_parse, conv_algorithm):
             
             elif layer['class_name'] == 'Conv2D':
                 weights = np.array(data_type_py(layer['weights']))
-                if(len(weights.shape) < 3):
-                    for i in range(3-len(weights.shape)): 
-                        weights = np.expand_dims(weights, axis=-1)
-                weights = np.moveaxis(weights,2,0)
-                if(len(weights.shape) < 4):
-                    weights = np.expand_dims(weights, axis=0)
                 current_layer = create_conv2d_obj(algorithm = conv_algorithm,
                                                   conv_algorithm = conv_algorithm,
                                                   idx = idx,
@@ -290,6 +280,17 @@ def load_json(file_to_parse, conv_algorithm):
                                              input_shape = layer['config']['input_shape'],
                                              activation_function = Linear())
             
+            elif layer['class_name'] == 'BatchNormalization':
+                current_layer = BatchNormalization(idx = layer['config']['idx'],
+                                                   size = layer['config']['size'],
+                                                   input_shape = layer['config']['input_shape'],
+                                                   epsilon = layer['config']['epsilon'],
+                                                   scale = np.array(data_type_py(layer['gamma'])),
+                                                   biases = np.array(data_type_py(layer['beta'])),
+                                                   mean = np.array(data_type_py(layer['moving_mean'])),
+                                                   var = np.array(data_type_py(layer['moving_var'])),
+                                                   activation_function = Linear())
+            
             
             elif  'Normalization' in layer['class_name']:
                 continue
@@ -324,6 +325,7 @@ def load_json(file_to_parse, conv_algorithm):
 
         layers, listRoad, maxRoad, dict_cst = graph_interpretor.tri_topo(layers)
         layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
-        print("Finished model initialization.")    
+        print("Finished model initialization.")
+        file.close()
         return layers, data_type, data_type_py, data_format, maxRoad, dict_cst
 
