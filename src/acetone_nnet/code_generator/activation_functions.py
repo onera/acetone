@@ -67,6 +67,23 @@ class ReLu(ActivationFunctions):
         
         return s
 
+class LeakyReLu(ActivationFunctions):
+    
+    def __init__(self,alpha):
+        super().__init__()
+        self.name = 'leakyrelu'
+        self.comment = ' and apply rectifier'
+        self.alpha = alpha
+    
+    def compute(self, z):
+        return np.maximum(self.alpha*z,z)
+
+    def write_activation_str(self, local_var):
+
+        s = local_var +' > 0 ? '+ local_var +' : '+str(self.alpha)+'*'+local_var # output = condition ? value_if_true : value_if_false
+        
+        return s
+
 class TanH(ActivationFunctions):
     def __init__(self):
         super().__init__()
@@ -142,4 +159,3 @@ class Clip(ActivationFunctions):
     def write_activation_str(self,local_var):
         s = local_var +' > '+str(self.max)+' ? '+ str(self.max) +' : (' + local_var + ' < ' + str(self.min) + ' ? ' + str(self.min) + ' : ' + local_var + ')'
         return s
-    

@@ -28,24 +28,24 @@ class TestACASXU_ONNX(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
     def testACASXUONNX(self):
-        model = onnx.load('./tests/models/acas/ACASXU/ACASXU.onnx')
+        model = onnx.load('./tests/models/acas/acas_fully_connected/acas_fully_connected.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
 
-        sess = rt.InferenceSession('./tests/models/acas/ACASXU/ACASXU.onnx')
+        sess = rt.InferenceSession('./tests/models/acas/acas_fully_connected/acas_fully_connected.onnx')
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset[0]})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.onnx', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.onnx', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
     
     def testACASXUONNXPython(self):
-        model = onnx.load('./tests/models/acas/ACASXU/ACASXU.onnx')
+        model = onnx.load('./tests/models/acas/acas_fully_connected/acas_fully_connected.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
     
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.onnx', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.onnx', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

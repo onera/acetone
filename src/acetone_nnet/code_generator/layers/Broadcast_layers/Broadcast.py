@@ -22,13 +22,14 @@ from ...Layer import Layer
 
 from abc import abstractmethod
 import pystache
+import numpy as np
 
 #The class of the Layers which compute operation with broadcast numpy style
 #attribut: none
 #input: a list of tensor
 #output: the resultant tensor
 class Broadcast(Layer):
-    def __init__(self, idx, size, input_shapes, output_shape,activation_function):
+    def __init__(self, idx, size, input_shapes, output_shape,activation_function, constant = None):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -40,11 +41,12 @@ class Broadcast(Layer):
         self.output_channels = output_shape[1]
         self.specific_operator = ''
         self.activation_function = activation_function
+        self.constant = constant
+        if(constant is not None):
+            self.constant_size = self.count_elements_array(self.constant)
 
     #Go through all the indices and do the operation
     def generate_inference_code_layer(self):
-
-        mustach_hash = {}
 
         mustach_hash = {}
 
@@ -91,6 +93,15 @@ class Broadcast(Layer):
             if(k != len(self.previous_layer) -1):
                 previous_dict['operator'] = self.specific_operator
             mustach_hash['broadcast'].append(previous_dict)
+        
+        if(self.constant is not None):
+            constant_dict = {}
+            constant_dict['cst_width'] = self.input_shapes[-1][3]
+            constant_dict['cst_height'] = self.input_shapes[-1][2]
+            constant_dict['cst_channels'] = self.input_shapes[-1][1]
+            constant_dict['operator'] = self.specific_operator
+            mustach_hash['constant'] = [constant_dict]
+
         
         with open(self.template_path+'layers/template_Broadcast.c.tpl','r') as template_file:
             template = template_file.read()

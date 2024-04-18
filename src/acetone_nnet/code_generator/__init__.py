@@ -29,7 +29,7 @@ from .layers import (
 )
 
 from .activation_functions import (
-    ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip
+    ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip, LeakyReLu
 )
 
 from .neural_network import CodeGenerator
@@ -38,7 +38,7 @@ from .Layer import Layer
 
 __all__ = (
     "CodeGenerator",
-    "ActivationFunctions", "Linear", "Sigmoid", "ReLu", "TanH", "Exponential", "Logarithm", "Clip",
+    "ActivationFunctions", "Linear", "Sigmoid", "ReLu", "TanH", "Exponential", "Logarithm", "Clip", "LeakyReLu",
     "Layer",
     layers.__all__
 )

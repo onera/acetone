@@ -29,7 +29,14 @@ class Subtract(Broadcast):
         self.specific_operator = ' - '
     
     def forward_path_layer(self, inputs):
-        output = inputs[0]
-        for input in inputs[1:]:
-            output -= input
-        return self.activation_function.compute(output)
+        if(self.constant is None):
+            constant = 0
+        else: 
+            constant = self.constant
+        if(len(inputs.shape) == 4):
+            output = inputs[0]
+            for input in inputs[1:]:
+                output *= input
+        else:
+            output = inputs
+        return self.activation_function.compute(output-constant)

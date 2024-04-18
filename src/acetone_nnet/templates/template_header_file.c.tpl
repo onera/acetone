@@ -27,10 +27,13 @@ extern {{data_type}} biases_{{name}}_{{idx}}[{{nb_biases}}];
 extern {{data_type}} *ppatches_{{name}}_{{idx}}[{{patches_size}}];
     {{/patches_size}}
     {{#channels}}
-{{data_type}} mean_{{name}}_{{idx}}[{{channels}}];
-{{data_type}} var_{{name}}_{{idx}}[{{channels}}];
-{{data_type}} scale_{{name}}_{{idx}}[{{channels}}];
+extern {{data_type}} mean_{{name}}_{{idx}}[{{channels}}];
+extern {{data_type}} var_{{name}}_{{idx}}[{{channels}}];
+extern {{data_type}} scale_{{name}}_{{idx}}[{{channels}}];
     {{/channels}}
+    {{#constant_size}}
+extern {{data_type}} constant_{{name}}_{{idx}}[{{constant_size}}];
+    {{/constant_size}}
     
 {{/layers}}
 int inference({{data_type}} *prediction, {{data_type}} *nn_input);

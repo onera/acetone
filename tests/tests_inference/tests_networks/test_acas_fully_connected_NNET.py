@@ -26,7 +26,7 @@ class TestACASXU_NNet(acetoneTestCase.AcetoneTestCase):
 
     def testACASXUNNet(self):
         NNet_result = [-2.21254643e-02, -1.89464034e-02, -1.90349368e-02, -1.90424083e-02, -1.90863556e-02]
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.nnet', './tests/models/acas/ACASXU/test_input_ACASXU.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet', './tests/models/acas/acas_fully_connected/test_input_acas_fully_connected.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
@@ -34,7 +34,7 @@ class TestACASXU_NNet(acetoneTestCase.AcetoneTestCase):
         testshape = (5,)
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
     
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/ACASXU/ACASXU.nnet', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

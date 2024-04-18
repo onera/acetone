@@ -38,4 +38,8 @@
 {{data_type}} scale_{{name}}_{{idx}}[{{channels}}] = {{scale}};
 
     {{/channels}}
+    {{#constant_size}}
+{{data_type}} constant_{{name}}_{{idx}}[{{constant_size}}] = {{constant}};
+
+    {{/constant_size}}
 {{/layers}}

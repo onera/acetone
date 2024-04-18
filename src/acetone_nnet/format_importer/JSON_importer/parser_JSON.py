@@ -31,7 +31,7 @@ from ...code_generator import (
     Add, Multiply, Subtract, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
     Concatenate, InputLayer, Dense, Softmax,  Dot, Flatten, BatchNormalization,
-    Linear, ReLu, Sigmoid, TanH
+    Linear, ReLu, Sigmoid, TanH, LeakyReLu
 )
 
 def create_actv_function_obj(activation_str):
@@ -46,6 +46,8 @@ def create_actv_function_obj(activation_str):
             return Linear()
         elif activation_str == 'softmax':
             return Softmax()
+        elif activation_str == 'leaky_relu':
+            return LeakyReLu(0.2)
 
 def create_conv2d_obj(algorithm, **kwargs):
        

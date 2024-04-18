@@ -420,7 +420,7 @@ class CodeGenerator(ABC):
         if (any(isinstance(layer, Concatenate) 
                 or any(isinstance(layer, Conv2D)) 
                 or any(isinstance(layer, Dense))
-                or any(isinstance(layer, Broadcast)) 
+                or any(issubclass(layer, Broadcast)) 
                 or any(isinstance(layer, Gather)) 
                 or any(isinstance(layer, Pad))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
@@ -448,6 +448,11 @@ class CodeGenerator(ABC):
             if type(layer) is BatchNormalization:
                 layer_hash['channels'] = layer.output_channels
                 to_print = True
+            
+            if issubclass(type(layer), Broadcast):
+                if(layer.constant is not None):
+                    layer_hash['constant_size'] = layer.constant_size
+                    to_print = True
 
             if (to_print):
                 mustach_hash['layers'].append(layer_hash)
@@ -488,7 +493,7 @@ class CodeGenerator(ABC):
         if (any(isinstance(layer, Concatenate) 
                 or any(isinstance(layer, Conv2D)) 
                 or any(isinstance(layer, Dense))
-                or any(isinstance(layer, Broadcast)) 
+                or any(issubclass(layer, Broadcast)) 
                 or any(isinstance(layer, Gather)) 
                 or any(isinstance(layer, Pad))) for layer in self.layers):
             mustach_hash['tensor_temp'] = True
@@ -524,6 +529,12 @@ class CodeGenerator(ABC):
                 layer_hash['var'] = self.flatten_array_orderc(layer.var)
                 layer_hash['scale'] = self.flatten_array_orderc(layer.scale)
                 to_print = True
+            
+            if issubclass(type(layer), Broadcast):
+                if(layer.constant is not None):
+                    layer_hash['constant'] = self.flatten_array_orderc(layer.constant)
+                    layer_hash['constant_size'] = layer.constant_size
+                    to_print = True
             
             if (to_print):
                 mustach_hash['layers'].append(layer_hash)

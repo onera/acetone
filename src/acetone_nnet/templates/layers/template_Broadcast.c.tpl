@@ -21,7 +21,7 @@
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = ({{#broadcast}}{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]{{operator}}{{/broadcast}})/{{prev_size}};
                 {{/Average}}
                 {{#other}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] ={{#broadcast}}{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]{{operator}}{{/broadcast}};
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{#broadcast}}{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f % {{input_channels}}))]{{operator}}{{/broadcast}}{{#constant}}{{operator}}constant_{{name}}_{{idx}}[(j%{{cst_width}}) + {{cst_width}}*((i%{{cst_height}}) + {{cst_height}}*(f % {{cst_channels}}))]{{/constant}};
                 {{/other}}
             }
         }

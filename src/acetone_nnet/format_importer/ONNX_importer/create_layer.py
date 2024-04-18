@@ -425,79 +425,141 @@ def create_GlobalAveragePool(node,idx,dict_input,dict_output,model):
 
 ### Broadcats layers ###
 
-#create a layer Add
-def create_Add(node,idx,dict_input,dict_output,model):
+#create a layer Add_Biass 
+##### UNUSED #####
+def create_Add_Biass(node,idx,dict_input,dict_output,model):
     output_shape = get_shape(node.output[0],model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
     right_tensor = look_for_initializer(node.input[0],model)
     left_tensor = look_for_initializer(node.input[1],model)
-    if(not right_tensor and not left_tensor):
-        input_shapes =[]
-        for input in node.input:
+    if(right_tensor):
+        biases = onnx.numpy_helper.to_array(right_tensor)
+        dict_input[idx] = [node.input[1]]
+    elif(left_tensor):
+        biases = onnx.numpy_helper.to_array(left_tensor)
+        dict_input[idx] = [node.input[0]]
+    return Add_Bias(idx = idx,
+                        size = size,
+                        biases = biases,
+                        activation_function = Linear())
+
+#create a layer Add
+def create_Add(node,idx,dict_input,dict_output,model):
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_output[node.output[0]] = idx
+    dict_input[idx] = []
+    constant = np.zeros(get_shape(node.input[0], model))
+    input_shapes =[]
+    for input in node.input:
+        cst = look_for_initializer(input,model)
+        if(cst):
+            constant = constant + onnx.numpy_helper.to_array(cst)
+        else:
+            dict_input[idx].append(input)
             input_shapes.append(get_shape(input,model))
-        dict_input[idx] = node.input
-        return Add(idx=idx,
-                    size=size,
-                    input_shapes=input_shapes,
-                    output_shape=output_shape,
-                    activation_function= Linear())
+    if(constant.any()):
+        if (len(constant.shape)<4):
+            for i in range(0,4-len(constant.shape)):
+                constant = np.expand_dims(constant,axis=0)
+        input_shapes.append(constant.shape)
     else:
-        if(right_tensor):
-            biases = onnx.numpy_helper.to_array(right_tensor)
-            dict_input[idx] = [node.input[1]]
-        elif(left_tensor):
-            biases = onnx.numpy_helper.to_array(left_tensor)
-            dict_input[idx] = [node.input[0]]
-        return Add_Bias(idx = idx,
-                            size = size,
-                            biases = biases,
-                            activation_function = Linear())
+        constant = None
+    return Add(idx = idx,
+                size = size,
+                input_shapes = input_shapes,
+                output_shape = output_shape,
+                activation_function = Linear(),
+                constant = constant)
     
 #create a layer Div
 def create_Div(node,idx,dict_input,dict_output,model):
     input_shapes =[]
+    constant = 1
+    dict_input[idx] = []
     for input in node.input:
-        input_shapes.append(get_shape(input,model))
+        factor = look_for_initializer(input,model)
+        if(factor):
+            constant = constant / onnx.numpy_helper.to_array(factor)
+        else:
+            dict_input[idx].append(input)
+            input_shapes.append(get_shape(input,model))
     output_shape = get_shape(node.output[0],model)
     size = find_size(output_shape)
-    dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
+    if((constant == np.ones(constant.shape)).all()):
+        constant = None
+    else:
+        if (len(constant.shape)<4):
+            for i in range(0,4-len(constant.shape)):
+                constant = np.expand_dims(constant,axis=0)
+        input_shapes.append(constant.shape)
     return Divide(idx=idx,
                     size=size,
                     input_shapes=input_shapes,
                     output_shape=output_shape,
-                    activation_function= Linear())
+                    activation_function= Linear(),
+                    constant=constant)
+
 
 #create a layer Mul
 def create_Mul(node,idx,dict_input,dict_output,model):
     input_shapes =[]
+    constant = 1
+    dict_input[idx] = []
     for input in node.input:
-        input_shapes.append(get_shape(input,model))
+        factor = look_for_initializer(input,model)
+        if(factor):
+            constant = constant * onnx.numpy_helper.to_array(factor)
+        else:
+            dict_input[idx].append(input)
+            input_shapes.append(get_shape(input,model))
     output_shape = get_shape(node.output[0],model)
     size = find_size(output_shape)
-    dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
+    if((constant == np.ones(constant.shape)).all()):
+        constant = None
+    else:
+        if (len(constant.shape)<4):
+            for i in range(0,4-len(constant.shape)):
+                constant = np.expand_dims(constant,axis=0)
+        input_shapes.append(constant.shape)
     return Multiply(idx=idx,
                     size=size,
                     input_shapes=input_shapes,
                     output_shape=output_shape,
-                    activation_function= Linear())
+                    activation_function= Linear(),
+                    constant=constant)
 
 #create a layer Sub
 def create_Sub(node,idx,dict_input,dict_output,model):
     input_shapes =[]
+    constant = 0
+    dict_input[idx] = []
     for input in node.input:
-        input_shapes.append(get_shape(input,model))
+        factor = look_for_initializer(input,model)
+        if(factor):
+            constant = constant - onnx.numpy_helper.to_array(factor)
+        else:
+            dict_input[idx].append(input)
+            input_shapes.append(get_shape(input,model))
     output_shape = get_shape(node.output[0],model)
     size = find_size(output_shape)
-    dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
+    if((constant == np.ones(constant.shape)).all()):
+        constant = None
+    else:
+        if (len(constant.shape)<4):
+            for i in range(0,4-len(constant.shape)):
+                constant = np.expand_dims(constant,axis=0)
+        input_shapes.append(constant.shape)
     return Subtract(idx=idx,
                     size=size,
                     input_shapes=input_shapes,
                     output_shape=output_shape,
-                    activation_function= Linear())
+                    activation_function= Linear(),
+                    constant=constant)
     
 #create a layer Max
 def create_Max(node,idx,dict_input,dict_output,model):
