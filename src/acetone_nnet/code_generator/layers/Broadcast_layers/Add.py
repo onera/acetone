@@ -33,10 +33,10 @@ class Add(Broadcast):
             constant = 0
         else: 
             constant = self.constant
-        if(len(inputs.shape) == 4):
+        if(len(self.previous_layer) > 1):
             output = inputs[0]
             for input in inputs[1:]:
-                output *= input
+                output += input
         else:
             output = inputs
         return self.activation_function.compute(output+constant)

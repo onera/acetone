@@ -41,9 +41,8 @@ def load_onnx(file_to_parse, conv_algorithm):
     idx = 0
 
     #Creating and adding all the input layers to the list
-    for input_layer in model.graph.input:
-        layers.append(create_Input_Layer(input_layer,idx,dict_output))
-        idx+=1
+    layers.append(create_Input_Layer(model.graph.input[0],idx,dict_output))
+    idx+=1
     
     #Going through all the nodes to creat the layers and add them to the list
     for node in model.graph.node:

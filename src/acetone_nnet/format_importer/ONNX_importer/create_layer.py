@@ -31,7 +31,7 @@ from ...code_generator.layers import (
     Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul, Add_Bias
 )
 
-from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm
+from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm, LeakyReLu
 
 ###### Utility functions ######
 
@@ -97,8 +97,8 @@ def get_shape(shape_name,model):
     for output in model.graph.output:
         if(shape_name == output.name):
             shape = [output.type.tensor_type.shape.dim[i].dim_value for i in range(len(output.type.tensor_type.shape.dim))]
-    if (shape and len(shape)<=3):
-        shape = [1 for i in range(3-len(shape))] + shape
+    if (shape and len(shape)<=4):
+        shape = [1 for i in range(4-len(shape))] + shape
     for i in range(len(shape)):
         if shape[i] == 0:
             shape[i] = 1
@@ -670,7 +670,7 @@ def fuse_Exp(node,dict_output,model,layers):
     layers[dict_output[node.input[0]]].activation_function = Exponential()
     bypass(node,dict_output,model)
 
-#Fuse the activation layer Sigmoide with the prior layer
+#Fuse the activation layer Sigmoid with the prior layer
 def fuse_Log(node,dict_output,model,layers):
     layers[dict_output[node.input[0]]].activation_function = Logarithm()
     bypass(node,dict_output,model)
@@ -684,7 +684,12 @@ def fuse_Clip(node,dict_output,model,layers):
         max = onnx.numpy_helper.to_array(look_for_initializer(node.input[2],model))[0]
     layers[dict_output[node.input[0]]].activation_function = Clip(max=max,min=min)
     bypass(node,dict_output,model)
-    
+
+#Fuse the activation layer LeakyRelu with the prior layer
+def fuse_LeakyReLu(node,dict_output,model,layers):
+    attribut = extract_attribut(node)
+    layers[dict_output[node.input[0]]].activation_function = LeakyReLu(alpha=attribut['alpha'])
+    bypass(node,dict_output,model)
     
 ###### Dict of all the functions ######
 activation_layers = {"Relu":fuse_ReLu,
@@ -692,4 +697,5 @@ activation_layers = {"Relu":fuse_ReLu,
                      "Sigmoid":fuse_Sigmoid,
                      "Clip":fuse_Clip,
                      "Exp":fuse_Exp,
-                     "Log":fuse_Log}
+                     "Log":fuse_Log,
+                     "LeakyRelu":fuse_LeakyReLu}

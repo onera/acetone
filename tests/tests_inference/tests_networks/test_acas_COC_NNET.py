@@ -26,7 +26,7 @@ class TestAcas_COC_NNet(acetoneTestCase.AcetoneTestCase):
 
     def testAcas_COC_NNet(self):
         NNet_result = [2.45578096e+04, 2.44936744e+04, 2.44764976e+04, 2.44966370e+04, 2.44581565e+04]
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_COC/nn_acas_COC.nnet', './tests/models/acas/ACASXU/test_input_ACASXU.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_COC/nn_acas_COC.nnet', './tests/models/acas/acas_COC/test_input_acas_COC.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     

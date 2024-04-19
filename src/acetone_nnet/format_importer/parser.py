@@ -50,14 +50,7 @@ def parser(file_to_parse, conv_algorithm, normalize=False):
             return load_onnx(file_to_parse, conv_algorithm)
         
         elif("h5" in file_to_parse[-4:]):
-            model = keras.models.load_model(file_to_parse)
-
-            print("Creating the .json file...")
-            new_path = get_path(file_to_parse,"json")
-            JSON_from_keras_model(model, new_path)
-            print("File created\n")
-
-            return load_json(new_path, conv_algorithm)
+            return load_keras(file_to_parse, conv_algorithm)
         
         elif("nnet" in file_to_parse[-4:]):
             return load_nnet(file_to_parse,normalize)

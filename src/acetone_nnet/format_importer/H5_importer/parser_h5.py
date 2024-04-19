@@ -60,16 +60,18 @@ def get_output_dimensions(output,data_format):
         return dimensions
 
 def get_input_dimensions(input,data_format):
-    dimensions = input
-    if(data_format == 'channels_first'):
-        return dimensions
+    if(type(input) == list and len(input) == 1):
+        dimensions = input[0]
     else:
-        if(type(input) == list and len(input[0]) == 4):
-            return [(shape[0],shape[3],shape[1],shape[2]) for shape in dimensions]
-        elif(type(input) is not list and len(input) == 4):
-            return (dimensions[0],dimensions[3],dimensions[1],dimensions[2])
-        else: 
-            return dimensions
+        dimensions = input
+    
+    if(data_format == 'channels_last'):
+        if(type(dimensions) == list and len(dimensions[0]) == 4):
+            dimensions = [(shape[0],shape[3],shape[1],shape[2]) for shape in dimensions]
+        elif(type(dimensions) is not list and len(dimensions) == 4):
+            dimensions =  (dimensions[0],dimensions[3],dimensions[1],dimensions[2])
+    
+    return np.array(dimensions)
 
 def create_actv_function_obj(kears_activation_obj):
         if kears_activation_obj == keras.activations.sigmoid:
@@ -98,15 +100,20 @@ def create_conv2d_obj(algorithm, **kwargs):
 
 def load_keras(file_to_parse:keras.Model, conv_algorithm):
 
+    if(type(file_to_parse) == str): 
+        model = keras.models.load_model(file_to_parse)
+    else:
+        model = file_to_parse
+
     input_layer_size = 1
-    for i in range(1, len(file_to_parse.input.shape)): #start in idx 1 cause idx 0 represents batch size, so it's None in inference phase
-        input_layer_size = input_layer_size * file_to_parse.input.shape[i]
+    for i in range(1, len(model.input.shape)): #start in idx 1 cause idx 0 represents batch size, so it's None in inference phase
+        input_layer_size = input_layer_size * model.input.shape[i]
     
     data_format = 'channels_first'
-    if(hasattr(layer, 'data_format') and layer.data_format == 'channels_last' for layer in file_to_parse.layers):
+    if(hasattr(layer, 'data_format') and layer.data_format == 'channels_last' for layer in model.layers):
         data_format = 'channels_last'
 
-    data_type = file_to_parse.layers[0].dtype
+    data_type = model.layers[0].dtype
 
     if data_type == 'float64':
         data_type = 'double'
@@ -124,16 +131,16 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
     
     layers = []
 
-    if file_to_parse.layers[0].__class__.__name__ == 'InputLayer':
+    if model.layers[0].__class__.__name__ == 'InputLayer':
         l_temp = InputLayer(idx = 0,
-                            size = get_layer_size(file_to_parse.layers[0]),
-                            input_shape = get_input_dimensions(file_to_parse.layers[0].input_shape, data_format),
+                            size = get_layer_size(model.layers[0]),
+                            input_shape = get_input_dimensions(model.layers[0].input_shape, data_format),
                             data_format = data_format)
         start = 1
     else:
         l_temp = InputLayer(idx = 0, 
                             size = input_layer_size,
-                            input_shape = get_input_dimensions(file_to_parse.input_shape),
+                            input_shape = get_input_dimensions(model.input_shape, data_format),
                             data_format = data_format)
         start = 0
     
@@ -141,7 +148,7 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
 
     nb_softmax_layers = 0
 
-    for idx, layer_keras in list(islice(enumerate(file_to_parse.layers), start, None)):
+    for idx, layer_keras in list(islice(enumerate(model.layers), start, None)):
         add_softmax_layer = False
         idx += 1-start
         idx += nb_softmax_layers
@@ -194,8 +201,8 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
             current_layer = AveragePooling2D(idx = idx,
                                              size = get_layer_size(layer_keras),
                                              padding = layer_keras.padding,
-                                             strides = layer_keras.strides,
-                                             pool_size = layer_keras.pool_size,
+                                             strides = layer_keras.strides[0],
+                                             pool_size = layer_keras.pool_size[0],
                                              input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
                                              output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                              activation_function = Linear())
@@ -204,8 +211,8 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
             current_layer = MaxPooling2D(idx = idx,
                                          size = get_layer_size(layer_keras),
                                          padding = layer_keras.padding,
-                                         strides = layer_keras.strides,
-                                         pool_size = layer_keras.pool_size,
+                                         strides = layer_keras.strides[0],
+                                         pool_size = layer_keras.pool_size[0],
                                          input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
                                          output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                          activation_function = Linear())
@@ -213,7 +220,7 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
         elif layer_keras.__class__.__name__ == 'Flatten':
             current_layer = Flatten(idx = idx,
                                     size = get_layer_size(layer_keras),
-                                    intput_shape = get_input_dimensions(layer_keras.input_shape, data_format),
+                                    input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
                                     data_format= data_format)
         
         elif layer_keras.__class__.__name__ == 'Add':
@@ -269,13 +276,13 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
                                         size = get_layer_size(layer_keras),
                                         axis = axis,
                                         input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
-                                        output_shape = get_output_dimensions(layer_keras, data_format),
+                                        output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                         activation_function = Linear())
         
         elif layer_keras.__class__.__name__ == 'Dot':
             current_layer = Dot(idx = idx,
                                 size = get_layer_size(layer_keras),
-                                axis = axis,
+                                axis = layer_keras.axes,
                                 input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                 output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                 activation_function = Linear())
@@ -323,31 +330,29 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
         else:
             raise TypeError("Error: layer "+layer_keras.__class__.__name__+" not supported\n")
 
-        if type(file_to_parse) == keras.Sequential:
-            if idx - 1 > 0:
+        if type(model) == keras.Sequential:
+            if idx - 1 >= 0:
                 current_layer.previous_layer.append(layers[idx-1])
                 layers[idx-1].next_layer.append(current_layer)
         else:
             if(type(layer_keras.input) == list):
                 for input in layer_keras.input:
-                    for k in range(len(file_to_parse.layers)):
-                        prev_layer = file_to_parse.layers[k]
+                    for k in range(len(model.layers)):
+                        prev_layer = model.layers[k]
                         if prev_layer.name == input._keras_history.layer.name:
                             current_layer.previous_layer.append(layers[k])
                             layers[k].next_layer.append(current_layer)
                             break
             else:
-                for k in range(len(file_to_parse.layers)):
-                    prev_layer = file_to_parse.layers[k]
+                for k in range(len(model.layers)):
+                    prev_layer = model.layers[k]
                     if prev_layer.name == layer_keras.input._keras_history.layer.name:
-                        print(current_layer.name, prev_layer.name, layer_keras.input._keras_history.layer.name, k)
                         current_layer.previous_layer.append(layers[k])
                         layers[k].next_layer.append(current_layer)
                         break
 
             
         l_temp = current_layer
-        layers.append(l_temp)
 
         if add_softmax_layer:
             nb_softmax_layers += 1
