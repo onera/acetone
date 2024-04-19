@@ -31,8 +31,8 @@ def JSON_from_keras_model(keras_model, output_dir_json):
         input_layer_size = input_layer_size * keras_model.input.shape[i]
 
     model_dict['config']['data_format'] = 'channels_first'
-    if (hasattr(model_dict['config']['layers'][j]['config'],'data_format')
-        and (model_dict['config']['layers'][j]['config']['data_format'] == 'channels_last') for j in range(len(model_dict['config']['layers']))):
+    if (hasattr(layer['config'],'data_format')
+        and (layer['config']['data_format'] == 'channels_last') for layer in model_dict['config']['layers']):
         model_dict['config']['data_format'] = 'channels_last'
 
     if keras_model.layers[0].__class__.__name__ == 'InputLayer':

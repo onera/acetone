@@ -19,10 +19,15 @@
 """
 
 import keras
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
+import onnx
+
 from .JSON_importer.parser_JSON import load_json
 from .ONNX_importer.parser_ONNX import load_onnx
 from .NNET_importer.parser_NNET import load_nnet
 from .H5_importer.JSON_from_keras_model import JSON_from_keras_model
+from .H5_importer.parser_h5 import load_keras
 
 def get_path(file, new_type):
     new_path = ""
@@ -37,25 +42,36 @@ def get_path(file, new_type):
 
 def parser(file_to_parse, conv_algorithm, normalize=False):
 
-    if("json" in  file_to_parse[-4:]):
-        return load_json(file_to_parse, conv_algorithm)
+    if(type(file_to_parse) == str):
+        if("json" in  file_to_parse[-4:]):
+            return load_json(file_to_parse, conv_algorithm)
+        
+        elif("onnx" in file_to_parse[-4:]):
+            return load_onnx(file_to_parse, conv_algorithm)
+        
+        elif("h5" in file_to_parse[-4:]):
+            model = keras.models.load_model(file_to_parse)
+
+            print("Creating the .json file...")
+            new_path = get_path(file_to_parse,"json")
+            JSON_from_keras_model(model, new_path)
+            print("File created\n")
+
+            return load_json(new_path, conv_algorithm)
+        
+        elif("nnet" in file_to_parse[-4:]):
+            return load_nnet(file_to_parse,normalize)
+        
+        else:
+            print("\nError: model description ."+file_to_parse[-4:]+" not supported")
+            raise TypeError("Error: model description ."+file_to_parse[-4:]+" not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
     
-    elif("onnx" in file_to_parse[-4:]):
+    elif(type(file_to_parse) == onnx.ModelProto):
         return load_onnx(file_to_parse, conv_algorithm)
     
-    elif("h5" in file_to_parse[-4:]):
-        model = keras.models.load_model(file_to_parse)
+    elif(type(file_to_parse) == Functional or type(file_to_parse) == Sequential):
+        return load_keras(file_to_parse, conv_algorithm)
 
-        print("Creating the .json file...")
-        new_path = get_path(file_to_parse,"json")
-        JSON_from_keras_model(model, new_path)
-        print("File created\n")
-
-        return load_json(new_path, conv_algorithm)
-    
-    elif("nnet" in file_to_parse[-4:]):
-        return load_nnet(file_to_parse,normalize)
-    
     else:
-        print("\nError: model description ."+file_to_parse[-4:]+" not supported")
-        raise TypeError("Error: model description ."+file_to_parse[-4:]+" not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
+        print("\nError: model description .",type(file_to_parse),"not supported")
+        raise TypeError("Error: model description .",type(file_to_parse),"not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
