@@ -72,7 +72,7 @@ Then, generate the C code with ACETONE.
   * The input file with the test data
 
 ```
-cli-acetone tests/models/lenet5/lenet5_example/lenet5.h5  lenet5 1 std_gemm_nn tests/models/lenet5/lenet5_example/lenet5_generated tests/models/lenet5/lenet5_example/test_input_lenet5.txt
+acetone_generate tests/models/lenet5/lenet5_example/lenet5.h5  lenet5 1 std_gemm_nn tests/models/lenet5/lenet5_example/lenet5_generated tests/models/lenet5/lenet5_example/test_input_lenet5.txt
 ```
 
 * Compile the code
@@ -87,7 +87,7 @@ make -C tests/models/lenet5/lenet5_example/lenet5_generated all
 
 * Compare the output given by Keras and ACETONE
 ```
-cli_compare ./tests/models/lenet5/lenet5_example/output_keras.txt ./tests/models/lenet5/lenet5_example/lenet5_generated/output_acetone.txt 1
+acetone_compare ./tests/models/lenet5/lenet5_example/output_keras.txt ./tests/models/lenet5/lenet5_example/lenet5_generated/output_acetone.txt 1
 ```
 
 ## Tests
@@ -117,19 +117,19 @@ To reproduce the result of semantic experiment with ACETONE as described in the 
 
 * For the acas_decr128 model
 ```
-cli-acetone tests/models/acas/acas_decr128/acas_decr128.json acas_dcre128 1000 std_gemm_nn tests/models/acas/acas_decr128/output_acetone tests/models/acas/acas_decr128/test_input_acas_decr128.txt
+acetone_generate tests/models/acas/acas_decr128/acas_decr128.json acas_dcre128 1000 std_gemm_nn tests/models/acas/acas_decr128/output_acetone tests/models/acas/acas_decr128/test_input_acas_decr128.txt
 make -C tests/models/acas/acas_decr128/output_acetone all
 ./tests/models/acas/acas_decr128/output_acetone/acas_decr128 tests/models/acas/acas_decr128/output_acetone/output_acetone.txt
-cli_compare tests/models/acas/acas_decr128/output_keras.txt tests/models/acas/acas_decr128/output_acetone/output_acetone.txt
+acetone_compare tests/models/acas/acas_decr128/output_keras.txt tests/models/acas/acas_decr128/output_acetone/output_acetone.txt
 ```
 
 * For the lent5 model
 
 ```
-cli-acetone tests/models/lenet5/lenet5_trained/lenet5_trained.json lenet5_trained 1000 std_gemm_nn tests/models/lenet5/lenet5_trained/output_acetone tests/models/lenet5_trained/test_input_lenet5.txt
+acetone_generate tests/models/lenet5/lenet5_trained/lenet5_trained.json lenet5_trained 1000 std_gemm_nn tests/models/lenet5/lenet5_trained/output_acetone tests/models/lenet5_trained/test_input_lenet5.txt
 make -C tests/models/lenet5/lenet5_trained/output_acetone all
 ./tests/models/lenet5/lenet5_trained/output_acetone/lenet5_trained tests/models/lenet5/lenet5_trained/output_acetone/output_acetone.txt
-cli_compare tests/models/lenet5/lenet5_trained/output_keras.txt tests/models/lenet5/lenet5_trained/output_acetone/output_acetone.txt
+acetone_compare tests/models/lenet5/lenet5_trained/output_keras.txt tests/models/lenet5/lenet5_trained/output_acetone/output_acetone.txt
 ```
 
 ## Capability

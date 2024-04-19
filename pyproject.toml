@@ -7,7 +7,7 @@ include-package-data = true
 
 [project]
 name = "acetone-nnet"
-version = "0.1.dev4"
+version = "0.2"
 requires-python = ">=3.10"
 
 authors = [
@@ -57,8 +57,8 @@ acetone_nnet = ["templates/**.tpl",
     "templates/layers/Conv/*.tpl"]
 
 [project.scripts]
-acetone_generate = "acetone_nnet.cli_acetone:cli_acetone"
-acetone_compare = "acetone_nnet.cli_compare:cli_compare"
+acetone_generate = "acetone_nnet.bin.bin_acetone:acetone_generate"
+acetone_compare = "acetone_nnet.bin.bin_acetone:acetone_compare"
 
 [project.urls]
 Repository = "https://github.com/onera/acetone/"

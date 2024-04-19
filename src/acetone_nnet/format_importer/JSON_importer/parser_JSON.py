@@ -44,8 +44,6 @@ def create_actv_function_obj(activation_str):
             return TanH()
         elif activation_str == 'linear':
             return Linear()
-        elif activation_str == 'softmax':
-            return Softmax()
         elif activation_str == 'leaky_relu':
             return LeakyReLu(0.2)
 
@@ -73,261 +71,223 @@ def create_resize_obj(mode, **kwargs):
 
 def load_json(file_to_parse, conv_algorithm):
         
-        file = open(file_to_parse, 'r')
-        model = json.load(file)
-        data_format = model['config']['data_format'] 
+    file = open(file_to_parse, 'r')
+    model = json.load(file)
+    data_format = model['config']['data_format'] 
 
-        data_type = model['config']['layers'][0]['config']['dtype']
+    data_type = model['config']['layers'][0]['config']['dtype']
 
-        if data_type == 'float64':
-            data_type = 'double'
-            data_type_py = np.float64
+    if data_type == 'float64':
+        data_type = 'double'
+        data_type_py = np.float64
 
-        elif data_type == 'float32':
-            data_type = 'float'
-            data_type_py = np.float32
+    elif data_type == 'float32':
+        data_type = 'float'
+        data_type_py = np.float32
 
-        elif data_type == 'int':
-            data_type = 'long int'
-            data_type_py = np.int32
+    elif data_type == 'int':
+        data_type = 'long int'
+        data_type_py = np.int32
 
-        layers = []
+    layers = []
 
-        l_temp = InputLayer(0, model['config']['layers'][0]['config']['size'], model['config']['layers'][0]['config']['input_shape'], data_format)
+    l_temp = InputLayer(0, model['config']['layers'][0]['config']['size'], model['config']['layers'][0]['config']['input_shape'], data_format)
 
-        layers.append(l_temp)
+    layers.append(l_temp)
 
-        nb_softmax_layers = 0
+    nb_softmax_layers = 0
 
-        for idx, layer in list(islice(enumerate(model['config']['layers']), 1, None)):
-            add_softmax_layer = False
-            
-            idx += nb_softmax_layers
-
-            if 'activation' in layer['config']:
-                if layer['config']['activation'] == 'softmax':
-                    layer['config']['activation'] = 'linear'
-                    add_softmax_layer = True
+    for idx, layer in list(islice(enumerate(model['config']['layers']), 1, None)):
+        add_softmax_layer = False
         
-            if layer['class_name'] == 'Dense':
-                weights = np.array(data_type_py(layer['weights']))
-                current_layer = Dense(idx=idx,
-                                      size=layer['config']['units'],
-                                      weights=np.array(data_type_py(layer['weights'])),
-                                      biases=data_type_py(layer['biases']),
-                                      activation_function=create_actv_function_obj(layer['config']['activation']))
+        idx += nb_softmax_layers
+
+        if 'activation' in layer['config']:
+            if layer['config']['activation'] == 'softmax':
+                layer['config']['activation'] = 'linear'
+                add_softmax_layer = True
+    
+        if layer['class_name'] == 'Dense':
+            current_layer = Dense(idx=idx,
+                                    size=layer['config']['units'],
+                                    weights=np.array(data_type_py(layer['weights'])),
+                                    biases=data_type_py(layer['biases']),
+                                    activation_function=create_actv_function_obj(layer['config']['activation']))
+        
+        elif layer['class_name'] == 'Conv2D':
+            current_layer = create_conv2d_obj(algorithm = conv_algorithm,
+                                                conv_algorithm = conv_algorithm,
+                                                idx = idx,
+                                                size = layer['config']['size'],
+                                                padding = layer['config']['padding'],
+                                                strides = layer['config']['strides'][0],
+                                                kernel_h = layer['config']['kernel_size'][0],
+                                                kernel_w = layer['config']['kernel_size'][1],
+                                                dilation_rate = layer['config']['dilation_rate'][0],
+                                                nb_filters = layer['config']['filters'],
+                                                input_shape = layer['config']['input_shape'],
+                                                output_shape = layer['config']['output_shape'],
+                                                weights = np.array(data_type_py(layer['weights'])), 
+                                                biases = data_type_py(layer['biases']),
+                                                activation_function = create_actv_function_obj(layer['config']['activation']))
+        
+        elif layer['class_name'] == 'AveragePooling2D':
+            current_layer = AveragePooling2D(idx = idx,
+                                                size = layer['config']['size'],
+                                                padding = layer['config']['padding'],
+                                                strides = layer['config']['strides'][0],
+                                                pool_size = layer['config']['pool_size'][0],
+                                                input_shape = layer['config']['input_shape'],
+                                                output_shape = layer['config']['output_shape'],
+                                                activation_function = Linear())
+        
+        elif layer['class_name'] == 'MaxPooling2D':
+            current_layer = MaxPooling2D(idx = idx,
+                                            size = layer['config']['size'],
+                                            padding = layer['config']['padding'],
+                                            strides = layer['config']['strides'][0],
+                                            pool_size = layer['config']['pool_size'][0],
+                                            input_shape = layer['config']['input_shape'],
+                                            output_shape = layer['config']['output_shape'],
+                                            activation_function = Linear())
+        
+        elif layer['class_name'] == 'Flatten':
+            current_layer = Flatten(idx = idx,
+                                            size = layer['config']['size'],
+                                            input_shape = layer['config']['input_shape'],
+                                            data_format = data_format)
+        
+        elif layer['class_name'] == 'Add':
+            current_layer = Add(idx = layer['config']['idx'],
+                                size = layer['config']['size'],
+                                input_shapes = layer['config']['input_shape'],
+                                output_shape = layer['config']['output_shape'],
+                                activation_function = Linear())
+
+        elif layer['class_name'] == 'Multiply':
+            current_layer = Multiply(idx = layer['config']['idx'],
+                                        size = layer['config']['size'], 
+                                        input_shapes = layer['config']['input_shape'], 
+                                        output_shape = layer['config']['output_shape'],
+                                        activation_function= Linear())
+        
+        elif layer['class_name'] == 'Subtract':
+            current_layer = Subtract(idx = layer['config']['idx'], 
+                                        size = layer['config']['size'], 
+                                        input_shapes = layer['config']['input_shape'], 
+                                        output_shape = layer['config']['output_shape'],
+                                        activation_function= Linear())
+        
+        elif layer['class_name'] == 'Concatenate':
+            axis = layer['config']['axis']
+            if(data_format == 'channels_last'):
+                if(axis == 3):
+                    axis = 1
+                else:
+                    axis = axis + 1
+            current_layer = Concatenate(idx = layer['config']['idx'], 
+                                        size = layer['config']['size'],
+                                        axis = axis, 
+                                        input_shapes = layer['config']['input_shape'], 
+                                        output_shape = layer['config']['output_shape'],
+                                        activation_function=Linear())
+        
+        elif layer['class_name'] == 'Maximum':
+            current_layer = Maximum(idx = layer['config']['idx'], 
+                                        size = layer['config']['size'], 
+                                        input_shapes = layer['config']['input_shape'], 
+                                        output_shape = layer['config']['output_shape'],
+                                        activation_function= Linear())
             
-            elif layer['class_name'] == 'Conv2D':
-                weights = np.array(data_type_py(layer['weights']))
-                current_layer = create_conv2d_obj(algorithm = conv_algorithm,
-                                                  conv_algorithm = conv_algorithm,
-                                                  idx = idx,
-                                                  size = layer['config']['size'],
-                                                  padding = layer['config']['padding'],
-                                                  strides = layer['config']['strides'][0],
-                                                  kernel_h = layer['config']['kernel_size'][0],
-                                                  kernel_w = layer['config']['kernel_size'][1],
-                                                  dilation_rate = layer['config']['dilation_rate'][0],
-                                                  nb_filters = layer['config']['filters'],
-                                                  input_shape = layer['config']['input_shape'],
-                                                  output_shape = layer['config']['output_shape'],
-                                                  weights = weights, 
-                                                  biases = data_type_py(layer['biases']),
-                                                  activation_function = create_actv_function_obj(layer['config']['activation']))
-            
-            elif layer['class_name'] == 'AveragePooling2D':
-                current_layer = AveragePooling2D(idx = idx,
-                                                 size = layer['config']['size'],
-                                                 padding = layer['config']['padding'],
-                                                 strides = layer['config']['strides'][0],
-                                                 pool_size = layer['config']['pool_size'][0],
-                                                 input_shape = layer['config']['input_shape'],
-                                                 output_shape = layer['config']['output_shape'],
-                                                 activation_function = Linear())
-            
-            elif layer['class_name'] == 'MaxPooling2D':
-                current_layer = MaxPooling2D(idx = idx,
-                                             size = layer['config']['size'],
-                                             padding = layer['config']['padding'],
-                                             strides = layer['config']['strides'][0],
-                                             pool_size = layer['config']['pool_size'][0],
-                                             input_shape = layer['config']['input_shape'],
-                                             output_shape = layer['config']['output_shape'],
-                                             activation_function = Linear())
-            
-            elif layer['class_name'] == 'Flatten':
-                current_layer = Flatten(idx = idx,
+        elif layer['class_name'] == 'Minimum':
+            current_layer = Minimum(idx = layer['config']['idx'], 
+                                        size = layer['config']['size'], 
+                                        input_shapes = layer['config']['input_shape'], 
+                                        output_shape = layer['config']['output_shape'],
+                                        activation_function= Linear())
+        
+        elif layer['class_name'] == 'Average':
+            current_layer = Average(idx = layer['config']['idx'], 
+                                        size = layer['config']['size'], 
+                                        input_shapes = layer['config']['input_shape'], 
+                                        output_shape = layer['config']['output_shape'],
+                                        activation_function= Linear())
+        
+        elif layer['class_name'] == 'Dot':
+            current_layer = Dot(idx = layer['config']['idx'],
+                                size = layer['config']['size'],
+                                axis= layer['config']['axes'],
+                                input_shapes = layer['config']['input_shape'], 
+                                output_shape = layer['config']['output_shape'],
+                                activation_function = Linear())
+
+        elif layer['class_name'] == 'ZeroPadding2D':
+            pads = layer['config']['padding']
+            if(type(pads) == int):
+                pads = [pads for i in range(8)]
+            else:
+                if(type(pads[0]) == int):
+                    pad_top, pad_bottom = pads[0], pads[0]
+                    pad_left, pad_right = pads[1], pads[1]
+                else:
+                    pad_top, pad_bottom = pads[0][0], pads[0][1]
+                    pad_left, pad_right = pads[1][0], pads[1][1]
+                pads = [0,0,pad_top,pad_left,0,0,pad_bottom,pad_right]
+
+            current_layer = Constant_Pad(idx = layer['config']['idx'],
+                                            size = layer['config']['size'],
+                                            pads = pads,
+                                            constant_value = 0,
+                                            axes = [],
+                                            input_shape = layer['config']['input_shape'],
+                                            activation_function = Linear())
+        
+        elif layer['class_name'] == 'BatchNormalization':
+            current_layer = BatchNormalization(idx = layer['config']['idx'],
                                                 size = layer['config']['size'],
                                                 input_shape = layer['config']['input_shape'],
-                                                data_format = data_format)
-            
-            elif layer['class_name'] == 'Add':
-                current_layer = Add(idx = layer['config']['idx'],
-                                    size = layer['config']['size'],
-                                    input_shapes = layer['config']['input_shape'],
-                                    output_shape = layer['config']['output_shape'],
-                                    activation_function = Linear())
+                                                epsilon = layer['config']['epsilon'],
+                                                scale = np.array(data_type_py(layer['gamma'])),
+                                                biases = np.array(data_type_py(layer['beta'])),
+                                                mean = np.array(data_type_py(layer['moving_mean'])),
+                                                var = np.array(data_type_py(layer['moving_var'])),
+                                                activation_function = Linear())
+        
+        
+        elif  'Normalization' in layer['class_name']:
+            continue
 
-            elif layer['class_name'] == 'Multiply':
-                current_layer = Multiply(idx = layer['config']['idx'],
-                                         size = layer['config']['size'], 
-                                         input_shapes = layer['config']['input_shape'], 
-                                         output_shape = layer['config']['output_shape'],
-                                         activation_function= Linear())
-            
-            elif layer['class_name'] == 'Subtract':
-                current_layer = Subtract(idx = layer['config']['idx'], 
-                                         size = layer['config']['size'], 
-                                         input_shapes = layer['config']['input_shape'], 
-                                         output_shape = layer['config']['output_shape'],
-                                         activation_function= Linear())
-            
-            elif layer['class_name'] == 'Concatenate':
-                axis = layer['config']['axis']
-                if(data_format == 'channels_last'):
-                    if(axis == 3):
-                        axis = 1
-                    else:
-                        axis = axis + 1
-                current_layer = Concatenate(idx = layer['config']['idx'], 
-                                            size = layer['config']['size'],
-                                            axis = axis, 
-                                            input_shapes = layer['config']['input_shape'], 
-                                            output_shape = layer['config']['output_shape'],
-                                            activation_function=Linear())
-            
-            elif layer['class_name'] == 'Maximum':
-                current_layer = Maximum(idx = layer['config']['idx'], 
-                                         size = layer['config']['size'], 
-                                         input_shapes = layer['config']['input_shape'], 
-                                         output_shape = layer['config']['output_shape'],
-                                         activation_function= Linear())
-                
-            elif layer['class_name'] == 'Minimum':
-                current_layer = Minimum(idx = layer['config']['idx'], 
-                                         size = layer['config']['size'], 
-                                         input_shapes = layer['config']['input_shape'], 
-                                         output_shape = layer['config']['output_shape'],
-                                         activation_function= Linear())
-            
-            elif layer['class_name'] == 'Average':
-                current_layer = Average(idx = layer['config']['idx'], 
-                                         size = layer['config']['size'], 
-                                         input_shapes = layer['config']['input_shape'], 
-                                         output_shape = layer['config']['output_shape'],
-                                         activation_function= Linear())
-            
-            elif layer['class_name'] == 'Dot':
-                current_layer = Dot(idx = layer['config']['idx'],
-                                    size = layer['config']['size'],
-                                    axis= layer['config']['axes'],
-                                    input_shapes = layer['config']['input_shape'], 
-                                    output_shape = layer['config']['output_shape'],
-                                    activation_function = Linear())
-            
-            elif layer['class_name'] == 'UpSampling2D': # Need to make sure that the 'size' attribut of the Layer is renamed
-                target_size = layer['config']['scale']
-                if(type(target_size) == int):
-                    target_size = [target_size,target_size]
-                target_size = [1,1]+target_size
-                current_layer = create_resize_obj(mode = layer['config']['interpolation'],
-                                                  idx = layer['config']['idx'],
-                                                  size = layer['config']['size'],
-                                                  input_shape = layer['config']['input_shape'],
-                                                  axes = [],
-                                                  coordinate_transformation_mode = 'half_pixel',
-                                                  exclude_outside = 0,
-                                                  keep_aspect_ratio_policy = 'stretch',
-                                                  boolean_resize = True,
-                                                  target_size = target_size,
-                                                  roi = [],
-                                                  extrapolation_value = 0,
-                                                  nearest_mode = 'round_prefer_floor',
-                                                  cubic_coeff_a = -0.75,
-                                                  activation_function= Linear())
-            
-            elif layer['class_name'] == 'ZeroPadding1D':
-                pads = layer['config']['padding']
-                if(type(pads) == int):
-                    pads = [pads for i in range(8)]
-                else:
-                    pads = [0,0,pads[0],0,0,0,pads[1],0]
+        elif  'Dropout' in layer['class_name']:
+            continue
 
-                current_layer = Constant_Pad(idx = layer['config']['idx'],
-                                             size = layer['config']['size'],
-                                             pads = pads,
-                                             constant_value = 0,
-                                             axes = [],
-                                             input_shape = layer['config']['input_shape'],
-                                             activation_function = Linear())
+        elif  layer['class_name'] == 'Reshape':
+            continue
 
-            elif layer['class_name'] == 'ZeroPadding2D':
-                pads = layer['config']['padding']
-                if(type(pads) == int):
-                    pads = [pads for i in range(8)]
-                else:
-                    if(type(pads[0]) == int):
-                        pad_top, pad_bottom = pads[0], pads[0]
-                        pad_left, pad_right = pads[1], pads[1]
-                    else:
-                        pad_top, pad_bottom = pads[0][0], pads[0][1]
-                        pad_left, pad_right = pads[1][0], pads[1][1]
-                    pads = [0,0,pad_top,pad_left,0,0,pad_bottom,pad_right]
+        elif  layer['class_name'] == 'Permute':
+            continue
 
-                current_layer = Constant_Pad(idx = layer['config']['idx'],
-                                             size = layer['config']['size'],
-                                             pads = pads,
-                                             constant_value = 0,
-                                             axes = [],
-                                             input_shape = layer['config']['input_shape'],
-                                             activation_function = Linear())
-            
-            elif layer['class_name'] == 'BatchNormalization':
-                current_layer = BatchNormalization(idx = layer['config']['idx'],
-                                                   size = layer['config']['size'],
-                                                   input_shape = layer['config']['input_shape'],
-                                                   epsilon = layer['config']['epsilon'],
-                                                   scale = np.array(data_type_py(layer['gamma'])),
-                                                   biases = np.array(data_type_py(layer['beta'])),
-                                                   mean = np.array(data_type_py(layer['moving_mean'])),
-                                                   var = np.array(data_type_py(layer['moving_var'])),
-                                                   activation_function = Linear())
-            
-            
-            elif  'Normalization' in layer['class_name']:
-                continue
+        else:
+            raise TypeError("Error: layer"+layer['class_name']+" not supported\n")
+        
+        for i in layer['config']['prev_layer_idx']:
+            current_layer.previous_layer.append(layers[i])
+            layers[i].next_layer.append(current_layer)
 
-            elif  'Dropout' in layer['class_name']:
-                continue
+        l_temp = current_layer
+        layers.append(current_layer)
 
-            elif  layer['class_name'] == 'Reshape':
-                continue
-
-            elif  layer['class_name'] == 'Permute':
-                continue
-
-            else:
-                raise TypeError("Error: layer"+layer['class_name']+" not supported\n")
-            
-            for i in layer['config']['prev_layer_idx']:
-                current_layer.previous_layer.append(layers[i])
-                layers[i].next_layer.append(current_layer)
-
+        # Separeted method to generate softmax
+        if add_softmax_layer:
+            nb_softmax_layers += 1
+            current_layer = Softmax(idx+1, l_temp.size)
+            l_temp.next_layer.append(current_layer)
+            current_layer.previous_layer.append(l_temp)
             l_temp = current_layer
             layers.append(current_layer)
 
-            # Separeted method to generate softmax
-            if add_softmax_layer:
-                nb_softmax_layers += 1
-                current_layer = Softmax(idx+1, l_temp.size)
-                l_temp.next_layer.append(current_layer)
-                current_layer.previous_layer.append(l_temp)
-                l_temp = current_layer
-                layers.append(current_layer)
-
-        layers, listRoad, maxRoad, dict_cst = graph_interpretor.tri_topo(layers)
-        layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
-        print("Finished model initialization.")
-        file.close()
-        return layers, data_type, data_type_py, data_format, maxRoad, dict_cst
+    layers, listRoad, maxRoad, dict_cst = graph_interpretor.tri_topo(layers)
+    layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
+    print("Finished model initialization.")
+    file.close()
+    return layers, data_type, data_type_py, data_format, maxRoad, dict_cst
 
