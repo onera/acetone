@@ -353,6 +353,7 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
 
             
         l_temp = current_layer
+        layers.append(l_temp)
 
         if add_softmax_layer:
             nb_softmax_layers += 1
