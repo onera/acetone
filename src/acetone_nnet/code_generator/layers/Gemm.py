@@ -168,7 +168,11 @@ class Gemm(Layer):
         return pystache.render(template, mustach_hash)
     
     def forward_path_layer(self,input):
-        input = input.reshape(self.input_height,self.input_width)
+        if(self.transpo[0]):
+            input = input.reshape(self.input_width,self.input_height).transpose()
+        else:
+            input = input.reshape(self.input_height,self.input_width)
+            
         if(self.transpo[1]):
             self.weights = self.weights.transpose()
         

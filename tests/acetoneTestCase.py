@@ -74,7 +74,7 @@ def read_output_python(path_to_output:str):
 
 
 def create_dataset(tmpdir:str, shape:tuple):
-    dataset = np.float32(np.random.default_rng(seed=10).random((1,)+ shape))
+    dataset = np.float64(np.random.default_rng(seed=10).random((1,)+ shape))
     with open(tmpdir+'/dataset.txt', 'w') as filehandle:
         row = (dataset[0]).flatten(order='C')
         json.dump(row.tolist(), filehandle)
