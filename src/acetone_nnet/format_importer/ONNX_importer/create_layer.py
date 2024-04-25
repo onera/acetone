@@ -28,7 +28,7 @@ from ...code_generator.layers import (
     Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
     Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
-    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul, Add_Bias
+    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul, Add_Bias, BatchNormalization
 )
 
 from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm, LeakyReLu
@@ -359,6 +359,33 @@ def create_MatMul(node,idx,dict_input,dict_output,model):
                     output_shape = output_shape,
                     activation_function = Linear())
 
+def create_BatchNorm(node,idx,dict_input,dict_output,model):
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = [node.input[0]]
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    
+    if('epsilon' not in attributs):
+        attributs['epsilon'] = 1e-05
+    
+    scale = look_for_initializer(node.input[1],model)
+    biases = look_for_initializer(node.input[2],model)
+    mean = look_for_initializer(node.input[3],model)
+    var = look_for_initializer(node.input[4],model)
+
+    return BatchNormalization(idx = idx,
+                              size = size,
+                              input_shape = output_shape,
+                              epsilon = attributs['epsilon'],
+                              scale = onnx.numpy_helper.to_array(scale),
+                              biases = onnx.numpy_helper.to_array(biases),
+                              mean = onnx.numpy_helper.to_array(mean),
+                              var = onnx.numpy_helper.to_array(var),
+                              activation_function = Linear())
+
+
+
 ### Pooling layers ###
 
 #Create a layer MaxPool
@@ -645,8 +672,7 @@ unused_layers = {"Dropout":bypass,
                   "Unsqueeze":bypass,
                   "Reshape":bypass,
                   "LRN":bypass,
-                  "Shape":bypass,
-                  "BatchNormalization":bypass}
+                  "Shape":bypass}
 
 ###### Function to fuse to ONNX layers ######
 
@@ -688,9 +714,38 @@ def fuse_Clip(node,dict_output,model,layers):
 #Fuse the activation layer LeakyRelu with the prior layer
 def fuse_LeakyReLu(node,dict_output,model,layers):
     attribut = extract_attribut(node)
+    if('alpha' not in attribut):
+        attribut['alpha'] = 0.01
     layers[dict_output[node.input[0]]].activation_function = LeakyReLu(alpha=attribut['alpha'])
     bypass(node,dict_output,model)
+
+#Fuse a BatchNormalization layer with the previous Conv2D layer
+def fuse_BatchNormalization(node,dict_output,model,layers):
+    attributs = extract_attribut(node)
+    if('epsilon' not in attributs):
+        attributs['epsilon'] = 1e-05
     
+    scale = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+    bias = onnx.numpy_helper.to_array(look_for_initializer(node.input[2],model))
+    mean = onnx.numpy_helper.to_array(look_for_initializer(node.input[3],model))
+    var = onnx.numpy_helper.to_array(look_for_initializer(node.input[4],model))
+
+    weights = layers[dict_output[node.input[0]]].weights
+    biases = layers[dict_output[node.input[0]]].biases
+
+    print(weights.shape)
+
+    for z in range(len(weights[0,0,0,:])):
+        alpha = scale[z]/np.sqrt(var[z] + attributs['epsilon'])
+        B = bias[z] - (mean[z]*alpha)
+        weights[:,:,:,z] = alpha*weights[:,:,:,z]
+        biases[z] = alpha*biases[z] + B
+    
+    layers[dict_output[node.input[0]]].weights = weights
+    layers[dict_output[node.input[0]]].biases = biases
+
+    bypass(node, dict_output, model)
+
 ###### Dict of all the functions ######
 activation_layers = {"Relu":fuse_ReLu,
                      "Tanh":fuse_Tanh,

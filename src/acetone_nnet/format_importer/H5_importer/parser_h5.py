@@ -19,8 +19,7 @@
 """
 
 import keras
-import keras.layers
-import keras.activations
+from keras import activations
 from itertools import islice
 import numpy as np
 
@@ -31,7 +30,6 @@ from ...code_generator import (
     Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm,
     Constant_Pad,
     Add, Multiply, Subtract, Maximum, Minimum, Average,
-    ResizeCubic, ResizeLinear, ResizeNearest,
     Concatenate, InputLayer, Dense, Softmax,  Dot, Flatten, BatchNormalization,
     Linear, ReLu, Sigmoid, TanH, LeakyReLu
 )
@@ -74,17 +72,17 @@ def get_input_dimensions(input,data_format):
     return np.array(dimensions)
 
 def create_actv_function_obj(kears_activation_obj):
-        if kears_activation_obj == keras.activations.sigmoid:
+        if kears_activation_obj == activations.sigmoid:
             return Sigmoid()
-        elif kears_activation_obj == keras.activations.relu:
+        elif kears_activation_obj == activations.relu:
             return ReLu()
-        elif kears_activation_obj == keras.activations.tanh:
+        elif kears_activation_obj == activations.tanh:
             return TanH()
-        elif kears_activation_obj == keras.activations.linear:
+        elif kears_activation_obj == activations.linear:
             return Linear()
-        elif kears_activation_obj == keras.activations.leaky_relu:
+        elif kears_activation_obj == activations.leaky_relu:
             return LeakyReLu(0.2)
-        elif kears_activation_obj == keras.activations.softmax:
+        elif kears_activation_obj == activations.softmax:
             return Linear()
 
 def create_conv2d_obj(algorithm, **kwargs):
@@ -308,15 +306,35 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
                                          activation_function = Linear())
         
         elif layer_keras.__class__.__name__ == 'BatchNormalization':
-            current_layer = BatchNormalization(idx = idx,
-                                               size = get_layer_size(layer_keras),
-                                               input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
-                                               epsilon = layer_keras.epsilon,
-                                               scale = data_type_py(layer_keras.get_weights()[0]),
-                                               biases = data_type_py(layer_keras.get_weights()[1]),
-                                               mean = data_type_py(layer_keras.get_weights()[2]),
-                                               var = data_type_py(layer_keras.get_weights()[3]),
-                                               activation_function = Linear())
+            if(layers[-1].name == 'Conv2D'):
+                scale = data_type_py(layer_keras.get_weights()[0])
+                bias = data_type_py(layer_keras.get_weights()[1])
+                mean = data_type_py(layer_keras.get_weights()[2])
+                var = data_type_py(layer_keras.get_weights()[3])
+
+                weights = layers[-1].weights
+                biases = layers[-1].biases
+
+                for z in range(len(weights[0,0,0,:])):
+                    alpha = scale[z]/np.sqrt(var[z] + layer_keras.epsilon)
+                    B = bias[z] - (mean[z]*alpha)
+                    weights[:,:,:,z] = alpha*weights[:,:,:,z]
+                    biases[z] = alpha*biases[z] + B
+    
+                layers[-1].weights = weights
+                layers[-1].biases = biases
+
+                continue
+            else:
+                current_layer = BatchNormalization(idx = idx,
+                                                   size = get_layer_size(layer_keras),
+                                                   input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
+                                                   epsilon = layer_keras.epsilon,
+                                                   scale = data_type_py(layer_keras.get_weights()[0]),
+                                                   biases = data_type_py(layer_keras.get_weights()[1]),
+                                                   mean = data_type_py(layer_keras.get_weights()[2]),
+                                                   var = data_type_py(layer_keras.get_weights()[3]),
+                                                   activation_function = Linear())
         
         elif layer_keras.__class__.__name__ == 'Reshape':
             continue

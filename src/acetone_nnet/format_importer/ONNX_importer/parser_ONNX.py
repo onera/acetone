@@ -46,7 +46,13 @@ def load_onnx(file_to_parse, conv_algorithm):
     
     #Going through all the nodes to creat the layers and add them to the list
     for node in model.graph.node:
-        if(node.op_type in layer_type): #If the node is a useful layer, we add it to the list
+        if(node.op_type == 'BatchNormalization'):
+            if(layers[-1].name == 'Conv2D'):
+                fuse_BatchNormalization(node, dict_output, model, layers)
+            else:
+                layers.append(create_BatchNorm(node,idx,dict_input,dict_output,model))
+                idx+=1
+        elif(node.op_type in layer_type): #If the node is a useful layer, we add it to the list
             if(node.op_type == "Conv"):    
                 layers.append(layer_type[node.op_type](node,idx,dict_input,dict_output,model,conv_algorithm))
                 idx+=1

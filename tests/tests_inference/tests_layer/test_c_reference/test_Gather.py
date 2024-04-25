@@ -18,7 +18,7 @@
  ******************************************************************************
 """
 import sys
-sys.path.append(__file__[:-58])
+sys.path.append(__file__[:-60])
 import acetoneTestCase as acetoneTestCase
 
 import numpy as np

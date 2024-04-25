@@ -243,15 +243,36 @@ def load_json(file_to_parse, conv_algorithm):
                                             activation_function = Linear())
         
         elif layer['class_name'] == 'BatchNormalization':
-            current_layer = BatchNormalization(idx = layer['config']['idx'],
-                                                size = layer['config']['size'],
-                                                input_shape = layer['config']['input_shape'],
-                                                epsilon = layer['config']['epsilon'],
-                                                scale = np.array(data_type_py(layer['gamma'])),
-                                                biases = np.array(data_type_py(layer['beta'])),
-                                                mean = np.array(data_type_py(layer['moving_mean'])),
-                                                var = np.array(data_type_py(layer['moving_var'])),
-                                                activation_function = Linear())
+            if(layers[-1].name == 'Conv2D'):
+                scale = np.array(data_type_py(layer['gamma']))
+                bias = np.array(data_type_py(layer['beta']))
+                mean = np.array(data_type_py(layer['moving_mean']))
+                var = np.array(data_type_py(layer['moving_var']))
+
+                weights = layers[-1].weights
+                biases = layers[-1].biases
+
+                for z in range(len(weights[0,0,0,:])):
+                    alpha = scale[z]/np.sqrt(var[z] + layer['config']['epsilon'])
+                    print(alpha)
+                    B = bias[z] - (mean[z]*alpha)
+                    weights[:,:,:,z] = alpha*weights[:,:,:,z]
+                    biases[z] = alpha*biases[z] + B
+    
+                layers[-1].weights = weights
+                layers[-1].biases = biases
+
+                continue
+            else:
+                current_layer = BatchNormalization(idx = layer['config']['idx'],
+                                                    size = layer['config']['size'],
+                                                    input_shape = layer['config']['input_shape'],
+                                                    epsilon = layer['config']['epsilon'],
+                                                    scale = np.array(data_type_py(layer['gamma'])),
+                                                    biases = np.array(data_type_py(layer['beta'])),
+                                                    mean = np.array(data_type_py(layer['moving_mean'])),
+                                                    var = np.array(data_type_py(layer['moving_var'])),
+                                                    activation_function = Linear())
         
         
         elif  'Normalization' in layer['class_name']:

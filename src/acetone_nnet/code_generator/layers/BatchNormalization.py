@@ -55,7 +55,7 @@ class BatchNormalization(Layer):
         mustach_hash['path'] = self.path
         
         if(self.activation_function.name != 'linear'):
-            mustach_hash['activation_function'] = self.activation_function.write_activation_str()
+            mustach_hash['activation_function'] = self.activation_function.write_activation_str('output_'+str(self.path)+'[k + '+str(self.output_height*self.output_width)+'*f]')
 
         mustach_hash['input_channels'] = self.output_channels
         mustach_hash['channel_size'] = self.output_height*self.output_width
