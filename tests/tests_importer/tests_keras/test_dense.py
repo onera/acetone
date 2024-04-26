@@ -48,7 +48,7 @@ class TestDense(importerTestCase.ImporterTestCase):
         code_gen = self.import_layers(self.tmpdir_name+'/model.h5')
         list_layers = code_gen.layers
 
-        print(list_layers[1] == reference[1])
+        self.assert_List_Layers_equals(list_layers, reference)
 
 
 if __name__ == '__main__':

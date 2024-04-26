@@ -30,22 +30,19 @@ def are_layers_equals(self, other):
     if type(self) != type(other):
         return False
     else:
-        print(self.__dict__)
-        dict_self = self.__dict__.copy()
-        del dict_self['previous_layer']
-        del dict_self['next_layer']
-
-        dict_other = other.__dict__.copy()
-        del dict_other['previous_layer']
-        del dict_other['next_layer']
         
-        keys = list(dict_other.keys())
+        keys = list(self.__dict__.keys())
         for key in keys:
-            if type(dict_self[key]) == np.ndarray or type(dict_self[key]) == list:
-                if (dict_other[key] != dict_self[key]).any():
+            if key == 'previous_layer':
+                continue
+            elif key == 'next_layer':
+                continue
+
+            if type(self.__dict__[key]) == np.ndarray or type(self.__dict__[key]) == list:
+                if (other.__dict__[key] != self.__dict__[key]).any():
                     return False
             else:
-                if dict_other[key] != dict_self[key]:
+                if other.__dict__[key] != self.__dict__[key]:
                     return False
     return True
 
@@ -140,10 +137,11 @@ class ImporterTestCase(unittest.TestCase):
                     layer_msg += 'Type mismatch: ' + type(layer1).__name__ + ' and ' + type(layer2).__name__
                 else:
                     keys = list(layer1.__dict__.keys())
-                    keys.remove('previous_layer')
-                    keys.remove('next_layer')
                     mismatched_keys = []
                     for attribut in keys:
+                        if attribut == 'previou_layer' or attribut == 'next_layer':
+                           continue
+
                         if type(layer1.__dict__[attribut]) == np.ndarray or type(layer1.__dict__[attribut]) == list or type(layer1.__dict__[attribut]) == tuple:
                             if (layer1.__dict__[attribut] != layer2.__dict__[attribut]).any():
                                 mismatched_keys.append(attribut)
