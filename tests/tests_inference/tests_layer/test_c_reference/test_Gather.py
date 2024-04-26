@@ -17,15 +17,17 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(__file__[:-60])
-import acetoneTestCase as acetoneTestCase
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 import numpy as np
 import onnx
 import onnxruntime as rt
 
-class TestLayers(acetoneTestCase.AcetoneTestCase):
+class TestGather(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
     def testGather1(self):

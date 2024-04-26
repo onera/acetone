@@ -17,9 +17,11 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(__file__[:-56])
-import acetoneTestCase 
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 import tensorflow as tf
 import keras
@@ -28,7 +30,7 @@ from keras.layers import Input, Dense
 tf.keras.backend.set_floatx('float32')
 
 
-class TestLayers(acetoneTestCase.AcetoneTestCase):
+class TestDense(acetoneTestCase.AcetoneTestCase):
     """Test for Dense Layer"""
 
     def test_Dense1(self):

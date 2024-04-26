@@ -17,14 +17,16 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(__file__[:-54])
-import acetoneTestCase as acetoneTestCase
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 import keras
 from keras.layers import Input, ZeroPadding2D
 
-class TestLayers(acetoneTestCase.AcetoneTestCase):
+class TestPad(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
     def test_Pads(self):

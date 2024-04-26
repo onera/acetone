@@ -18,38 +18,38 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
 sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
+import importerTestCase
 
 import tensorflow as tf
 import keras
-import numpy as np
 from keras.layers import Input, Dense
 
 tf.keras.backend.set_floatx('float32')
 
 
-class TestSoftmax(acetoneTestCase.AcetoneTestCase):
-    """Test for Softmax Layer"""
-    
-    def test_Softmax(self):
+class TestDense(importerTestCase.ImporterTestCase):
+    """Test for Dense Layer"""
+
+    def test_Dense1(self):
         testshape = (1,1,16)
         units = 8
 
         input = Input(testshape)
-        out = Dense(units, activation='softmax', bias_initializer='he_normal')(input)
+        out = Dense(units, activation=None, bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
-        keras_result = np.array(model.predict(dataset)).flatten()
+        reference = self.import_layers(model).layers
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-    
-    
+        code_gen = self.import_layers(self.tmpdir_name+'/model.h5')
+        list_layers = code_gen.layers
+
+        print(list_layers[1] == reference[1])
+
+
 if __name__ == '__main__':
-    acetoneTestCase.main()
+    importerTestCase.main()

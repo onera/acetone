@@ -17,17 +17,19 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(__file__[:-76])
-import acetoneTestCase as acetoneTestCase
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 import onnx
 import onnxruntime as rt
 
-class TestACASXU_ONNX_normalized(acetoneTestCase.AcetoneTestCase):
+class TestAcas_fully_connected_ONNX_normalized(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
-    def testACASXUNormalizedONNX(self):
+    def testAcas_fully_connected_NormalizedONNX(self):
         model = onnx.load('./tests/models/acas/acas_fully_connected/acas_fully_connected_normalized.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
@@ -40,7 +42,7 @@ class TestACASXU_ONNX_normalized(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
     
-    def testACASXUNormalizedONNXPython(self):
+    def testAcas_fully_connected_NormalizedONNXPython(self):
         model = onnx.load('./tests/models/acas/acas_fully_connected/acas_fully_connected_normalized.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(0,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)

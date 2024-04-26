@@ -17,9 +17,11 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(__file__[:-70])
-import acetoneTestCase as acetoneTestCase
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 import tensorflow as tf
 import keras
@@ -29,7 +31,7 @@ from keras.layers import Input, Dense, Conv2D
 tf.keras.backend.set_floatx('float32')
 
 
-class TestLayers(acetoneTestCase.AcetoneTestCase):
+class TestActivation(acetoneTestCase.AcetoneTestCase):
     """Test for Activations Layer"""
     
     def testReLu(self):

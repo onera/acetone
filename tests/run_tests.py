@@ -12,19 +12,20 @@ inference = 'tests/tests_inference/'
 
 ### Testing the import from the model
 importer = 'tests/tests_importer/'
-
+keras = importer + 'tests_keras/'
 
 ### All the test
 all = './'
 
 
 possible_test = {'all':all, 
-                    'test_importer':importer, 
+                    'test_importer':importer,
+                        'tests_keras':keras,
                     'test_inference': inference,
-                        'test_layer':layer,
+                        'tests_layer':layer,
                             'test_c_reference':c_reference,
                             'test_c_python':c_python,
-                        'test_network':network}
+                        'tests_network':network}
 
 cmd = ['python3','-m','unittest','discover']
 

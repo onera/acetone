@@ -17,9 +17,11 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
+
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(__file__[:-76])
-import acetoneTestCase as acetoneTestCase
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 class TestAcas_fully_connected_NNet_normalized(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
