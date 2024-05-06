@@ -88,19 +88,19 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
     def test_Resize_Linear(self):
-        testshape = (1,2,2)
+        testshape = (1,4,4)
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
-                                            [None,1,2,2])
+                                            [None,1,4,4])
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                             onnx.TensorProto.FLOAT,
-                                            [None,1,4,4])
+                                            [None,1,8,8])
 
         size_name = 'size'
-        size = np.array((1,1,4,4))
+        size = np.array((1,1,8,8))
         size_initializer = acetoneTestCase.create_initializer_tensor(name=size_name,
                                                                       tensor_array=size,
                                                                       data_type=onnx.TensorProto.INT64)

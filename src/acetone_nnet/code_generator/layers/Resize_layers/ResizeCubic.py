@@ -21,7 +21,7 @@
 from .Resize import Resize
 
 import numpy as np
-import tensorflow as tf
+import math
 import pystache
 
 #The Cubic mode of the Resize layers
@@ -34,84 +34,39 @@ class ResizeCubic(Resize):
         self.template_dict = {'1D':self.template_path+'layers/Resize/template_ResizeCubic1D.c.tpl',
                               '2D':self.template_path+'layers/Resize/template_ResizeCubic2D.c.tpl'}
     
+    def cubic_interpolation_1D(self,input,f,x,y,s):
+        col_index = max(0,min(self.input_width-1,y))
+        f_1 = input[f,max(0,min(self.input_height-1,x-1)),col_index]
+        f0 = input[f,max(0,min(self.input_height-1,x)),col_index]
+        f1 = input[f,max(0,min(self.input_height-1,x+1)),col_index]
+        f2 = input[f,max(0,min(self.input_height-1,x+2)),col_index]
+
+        coeff1 = (((self.cubic_coeff_a*(s + 1) -5*self.cubic_coeff_a)*(s + 1) + 8*self.cubic_coeff_a)*(s + 1) -4*self.cubic_coeff_a)
+        coeff2 = (((self.cubic_coeff_a + 2)*(s) - (self.cubic_coeff_a + 3))*s*s + 1)
+        coeff3 = (((self.cubic_coeff_a + 2)*(1 - s) - (self.cubic_coeff_a + 3))*(1 - s)*(1 - s) +1)
+        coeff4 = (((self.cubic_coeff_a*(2 - s) -5*self.cubic_coeff_a)*(2 - s) + 8*self.cubic_coeff_a)*(2 - s) -4*self.cubic_coeff_a)
+
+        return f_1*coeff1 + f0*coeff2 + f1*coeff3 + f2*coeff4
+    
     def forward_path_layer(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
-        input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
-        output = tf.image.resize(input, [self.output_height,self.output_width], method='bicubic') #No numpy method for this layer
-        output= np.transpose(output,(2,0,1))
-        return self.activation_function.compute(output)
-    
-    #Compute the simple cubic convolution as describe in https://ieeexplore.ieee.org/document/1163711 (cf doc ONNX)
-    def cubic_convolution_interpolation(self,f_1,f0,f1,f2,x,output):
-        #give the values to the constants of the interpolation
-        s = '                f_1 = ' + f_1 + ';\n'
-        s+= '                f0 = ' + f0 + ';\n'
-        s+= '                f1 = ' + f1 + ';\n'
-        s+= '                f2 = ' + f2 + ';\n'
-        s+= '                s = ' + x + '-floor('+x+');\n'
-        s+= '                '+output+' = '
-        #the value of the variable of interest: the result of the interpolation
-        s+= 'f_1 * a * s * (1 + s * (s - 2)) + '
-        s+= 'f0 * (s * s *(a * (s - 1) + 2 * s - 3) + 1) + '
-        s+= 'f1 * s * (s * (-s * (2 + a) + 2 * a + 3) - a) + '
-        s+= 'f2 * a * s * s * (1 - s);\n'
-        return s
-    
-    #To do the bicubic interpolation, you need to do 4 cubic interpolation alongside a dimension,
-    #Then you use this result to do a cubic interpolation alongside the last dimension
-    #cf https://en.wikipedia.org/wiki/Bicubic_interpolation
-    def bicubic_convolution_interpolation(self,f_1_1,f0_1,f1_1,f2_1,f_10,f00,f10,f20,f_11,f01,f11,f21,f_12,f02,f12,f22):
-        s = self.cubic_convolution_interpolation(f_1_1,f0_1,f1_1,f2_1,'x','b_1')
-        s+= self.cubic_convolution_interpolation(f_10,f00,f10,f20,'x','b0')
-        s+= self.cubic_convolution_interpolation(f_11,f01,f11,f21,'x','b1')
-        s+= self.cubic_convolution_interpolation(f_12,f02,f12,f22,'x','b2')
-        s+= self.cubic_convolution_interpolation('b_1','b0','b1','b2','y','result_interpolation')
-        return s
-    
-    def transforme_coordinate(self,source_file):
-        if ((self.input_height == 1) and (self.input_width > 1)):
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'x'))
-        elif((self.input_height > 1) and (self.input_width == 1)):
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x'))
-        elif((self.input_height > 1) and (self.input_width > 1)):
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('i',2,'x'))#Finding the coordinate in the original tensor
-            source_file.write(self.coordinate_transformation_mode_mapping[self.coordinate_transformation_mode]('j',3,'y'))
-    
-    #The function writing the interpoaltion(s) in C
-    def interpolation(self):
-        output_str = self.previous_layer[0].output_str
-        #Setting up the values
-        if ((self.input_height > 1) and (self.input_width >1)):
-            #All the values used to calculate the output
-            f_1_1 = output_str+'[y0-1 + ' + str(self.input_width) + ' * (x0-1 + ' + str(self.input_height) + ' * f)];\n'
-            f0_1 = output_str+'[y0-1 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
-            f1_1 = output_str+'[y0-1 + ' + str(self.input_width) + ' * (x0+1 + ' + str(self.input_height) + ' * f)];\n'
-            f2_1 = output_str+'[y0-1 + ' + str(self.input_width) + ' * (x0+2 + ' + str(self.input_height) + ' * f)];\n'
-            f_10 = output_str+'[y0 + ' + str(self.input_width) + ' * (x0-1 + ' + str(self.input_height) + ' * f)];\n'
-            f00 = output_str+'[y0 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
-            f10 = output_str+'[y0 + ' + str(self.input_width) + ' * (x0+1 + ' + str(self.input_height) + ' * f)];\n'
-            f20 = output_str+'[y0 + ' + str(self.input_width) + ' * (x0+2 + ' + str(self.input_height) + ' * f)];\n'
-            f_11 = output_str+'[y0+1 + ' + str(self.input_width) + ' * (x0-1 + ' + str(self.input_height) + ' * f)];\n'
-            f01 = output_str+'[y0+1 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
-            f11 = output_str+'[y0+1 + ' + str(self.input_width) + ' * (x0+1 + ' + str(self.input_height) + ' * f)];\n'
-            f21 = output_str+'[y0+1 + ' + str(self.input_width) + ' * (x0+2 + ' + str(self.input_height) + ' * f)];\n'
-            f_12 = output_str+'[y0+2 + ' + str(self.input_width) + ' * (x0-1 + ' + str(self.input_height) + ' * f)];\n'
-            f02 = output_str+'[y0+2 + ' + str(self.input_width) + ' * (x0 + ' + str(self.input_height) + ' * f)];\n'
-            f12 = output_str+'[y0+2 + ' + str(self.input_width) + ' * (x0+1 + ' + str(self.input_height) + ' * f)];\n'
-            f22 = output_str+'[y0+2 + ' + str(self.input_width) + ' * (x0+2 + ' + str(self.input_height) + ' * f)];\n'
-            return self.bicubic_convolution_interpolation(f_1_1,f0_1,f1_1,f2_1,f_10,f00,f10,f20,f_11,f01,f11,f21,f_12,f02,f12,f22)
-        elif((self.input_height > 1) and (self.input_width == 1)):
-            f_1 = output_str+'[x0-1 + ' + str(self.input_height) + ' * f];\n'
-            f0 = output_str+'[x0 + ' + str(self.input_height) + ' * f];\n'
-            f1 = output_str+'[x0+1 + ' + str(self.input_height) + ' * f];\n'
-            f2 = output_str+'[x0+2 + ' + str(self.input_height) + ' * f];\n'
-            return self.cubic_convolution_interpolation(f_1,f0,f1,f2,'x','result_interpolation')
-        elif((self.input_height == 1) and (self.input_width > 1)):
-            f_1 = output_str+'[x0-1 + ' + str(self.input_width) + ' * f];\n'
-            f0 = output_str+'[x0 + ' + str(self.input_width) + ' * f];\n'
-            f1 = output_str+'[x0+1 + ' + str(self.input_width) + ' * f];\n'
-            f2 = output_str+'[x0+2 + ' + str(self.input_width) + ' * f];\n'
-            return self.cubic_convolution_interpolation(f_1,f0,f1,f2,'x','result_interpolation')
+        output = np.zeros((self.output_channels,self.output_height,self.output_width))
+        for f in range(self.output_channels):
+            for i in range(self.output_height):
+                for j in range(self.output_width):
+                    x = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](i,2)
+                    x0 = math.floor(x)
+                    y = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](j,3)
+                    y0 = math.floor(y)
+
+                    s = y - y0
+                    coeff1 = (((self.cubic_coeff_a*(s + 1) -5*self.cubic_coeff_a)*(s + 1) + 8*self.cubic_coeff_a)*(s + 1) -4*self.cubic_coeff_a)
+                    coeff2 = (((self.cubic_coeff_a + 2)*(s) - (self.cubic_coeff_a + 3))*s*s + 1)
+                    coeff3 = (((self.cubic_coeff_a + 2)*(1 - s) - (self.cubic_coeff_a + 3))*(1 - s)*(1 - s) +1)
+                    coeff4 = (((self.cubic_coeff_a*(2 - s) -5*self.cubic_coeff_a)*(2 - s) + 8*self.cubic_coeff_a)*(2 - s) -4*self.cubic_coeff_a)
+
+                    output[f,i,j] = coeff1*self.cubic_interpolation_1D(input,f,x0,y0-1,x-x0) + coeff2*self.cubic_interpolation_1D(input,f,x0,y0,x-x0) + coeff3*self.cubic_interpolation_1D(input,f,x0,y0+1,x-x0) + coeff4*self.cubic_interpolation_1D(input,f,x0,y0+2,x-x0)
+        return output
             
     def generate_inference_code_layer(self):
 

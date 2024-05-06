@@ -60,7 +60,14 @@ class Resize(Layer):
                                                        "align_corners":self.align_corners,
                                                        "asymmetric":self.asymmetric,
                                                        "tf_crop_and_resize":self.tf_crop_and_resize}
-        #if channel first
+        
+        self.coordinate_transformation_mode_implem_mapping =  {"half_pixel":self.half_pixel_implem, 
+                                                                "half_pixel_symmetric":self.half_pixel_symmetric_implem,
+                                                                "pytorch_half_pixel":self.pytorch_half_pixel_implem,
+                                                                "align_corners":self.align_corners_implem,
+                                                                "asymmetric":self.asymmetric_implem,
+                                                                "tf_crop_and_resize":self.tf_crop_and_resize_implem}
+        
         self.input_channels = input_shape[1]
         self.input_height = input_shape[2]
         self.input_width = input_shape[3]
@@ -90,25 +97,61 @@ class Resize(Layer):
     def half_pixel(self,coord_resized,coord_dim,coord_original):
         s = coord_original + ' = ('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         return s
+
+    def half_pixel_implem(self, coordinate, coordinate_dimension):
+        return (coordinate + 0.5)/self.scale[coordinate_dimension] - 0.5 
     
     def half_pixel_symmetric(self,coord_resized,coord_dim,coord_original):
-        s = 'float adjustment = ' + str(int(self.output_width)) + '/' + str(self.output_width)  +';\n'
-        s += '                float center = ' + str(self.input_width) + '/2;\n'
+        if(coord_dim==2):
+            target_length = self.output_height*self.scale[2]
+            input_length = self.input_height
+        else: 
+            target_length = self.output_width*self.scale[3]
+            input_length = self.input_width
+
+        s = 'float adjustment = ' + str(int(target_length)) + '/' + str(target_length)  +';\n'
+        s += '                float center = ' + str(input_length) + '/2;\n'
         s += '                float offset = center*(1 - adjustment);\n'
         s +='                '+ coord_original + ' = offset + ('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         return s
     
+    def half_pixel_symmetric_implem(self, coordinate, coordinate_dimension):
+        if(coordinate_dimension==2):
+            target_length = self.output_height*self.scale[2]
+            input_length = self.input_height
+        else: 
+            target_length = self.output_width*self.scale[3]
+            input_length = self.input_width
+
+        adjustment = int(target_length)/target_length
+        center = input_length/2
+        offset = center*(1 - adjustment)
+        return offset + (coordinate + 0.5)/self.scale[coordinate_dimension] - 0.5 
+
     def pytorch_half_pixel(self,coord_resized,coord_dim,coord_original):
         if(coord_dim==2):
-            length = self.output_height
-        else: length = self.output_width
+            target_length = self.output_height
+        else: 
+            target_length = self.output_width
+        
         s = coord_original + ' = '
-        if (length > 1):
+        if (target_length > 1):
             s += '('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         else:
             s += '0;' 
         return s
     
+    def pytorch_half_pixel_implem(self, coordinate, coordinate_dimension):
+        if(coordinate_dimension==2):
+            target_length = self.output_height
+        else: 
+            target_length = self.output_width
+        
+        if(target_length > 1):
+            return (coordinate + 0.5)/self.scale[coordinate_dimension] - 0.5 
+        else:
+            return 0
+
     def align_corners(self,coord_resized,coord_dim,coord_original):
         if(coord_dim==2):
             length_original = self.input_height
@@ -120,9 +163,22 @@ class Resize(Layer):
         s = coord_original + ' = ' +coord_resized+'*(' + str(length_original)+' - 1)/(' + str(length_resized)+' - 1);'
         return s
     
+    def align_corners_implem(self, coordinate, coordinate_dimension):
+        if(coordinate_dimension==2):
+            length_original = self.input_height
+            length_resized = self.output_height
+        else: 
+            length_original = self.input_width
+            length_resized = self.output_width
+        
+        return coordinate * (length_original - 1)/(length_resized - 1)
+    
     def asymmetric(self,coord_resized,coord_dim,coord_original):
         s = coord_original + ' = '+ coord_resized+'/'+ str(self.scale[coord_dim]) +';'
         return s
+    
+    def asymmetric_implem(self, coordinate, coordinate_dimension):
+        return coordinate/self.scale[coordinate_dimension]
     
     def tf_crop_and_resize(self,coord_resized,coord_dim,coord_original):
         if(coord_dim==2):
@@ -143,3 +199,25 @@ class Resize(Layer):
             s+= '0.5*(' +str(end)+' - '+str(start)+')*('+str(length_original)+' - 1);\n'
         s+= '                if(('+coord_original+' < 0) || ('+coord_original+' > '+str(length_original)+'){'+coord_original+' = '+ str(self.extrapolation_value)+'}'
         return s
+
+    def tf_crop_and_resize_implem(self, coordinate, coordinate_dimension):
+        if(coordinate_dimension==2):
+            length_original = self.input_height
+            length_resized = self.output_height
+            start = self.roi[2]
+            end = self.roi[6]
+        else: 
+            length_original = self.input_width
+            length_resized = self.output_width
+            start = self.roi[3]
+            end = self.roi[7]
+
+        if(length_resized > 1):
+            coordinate_original =  start*(length_original - 1) + coordinate*(end - start)*(length_original -1)/(length_resized - 1)
+        else:
+            coordinate_original = 0.5*(start + end)*(length_original - 1)
+
+        if(coordinate_original >= length_original or coordinate_original < 0):
+            return self.extrapolation_value
+        else:
+            return coordinate_original

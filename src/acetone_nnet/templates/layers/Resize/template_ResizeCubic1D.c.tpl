@@ -10,11 +10,12 @@
                 {{{coordinate_transformation_mode}}}
                 x0 = floor(x);
 
-                f_1 = {{output_str}}[x0-1 + {{dimension}}*f];
-                f0 = {{output_str}}[x0 + {{dimension}}*f];
-                f1 = {{output_str}}[x0+1 + {{dimension}}*f];
-                f2 = {{output_str}}[x0+2 + {{dimension}}*f];
-                s = x - floor(x);
+                f_1 = x0-1 < 0 ? {{output_str}}[0 + {{dimension}}*f] : x0-1 >= {{dimension}} ? {{output_str}}[{{dimension}} - 1 + {{dimension}}*f] : {{output_str}}[x0-1 + {{dimension}}*f];
+                f0 = x0 < 0 ? {{output_str}}[0 + {{dimension}}*f] : x0 >= {{dimension}} ? {{output_str}}[{{dimension}} - 1 + {{dimension}}*f] : {{output_str}}[x0 + {{dimension}}*f];
+                f1 = x0+1 < 0 ? {{output_str}}[0 + {{dimension}}*f] : x0+1 >= {{dimension}} ? {{output_str}}[{{dimension}} - 1 + {{dimension}}*f] : {{output_str}}[x0+1 + {{dimension}}*f];
+                f2 = x0+ 2 < 0 ? {{output_str}}[0 + {{dimension}}*f] : x0+2 >= {{dimension}} ? {{output_str}}[{{dimension}} - 1 + {{dimension}}*f] : {{output_str}}[x0+2 + {{dimension}}*f];
+
+                s = x - x0;
 
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = f_1*a*s*(1 + s*(s - 2)) + f0*(s*s*(a*(s - 1) + 2*s - 3) + 1) + f1*s*(s*(-s*(2 + a) + 2*a + 3) - a) + f2*a*s*s*(1 - s);
                 {{#activation_function}}
