@@ -34,6 +34,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     int y0;
 {{/is_resize}}
 {{#is_cubic_interpolation}}
+    int col_index;
     float a;
     float f_1;
     float f0;

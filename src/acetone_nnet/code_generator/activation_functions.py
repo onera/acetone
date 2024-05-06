@@ -76,7 +76,10 @@ class LeakyReLu(ActivationFunctions):
         self.alpha = alpha
     
     def compute(self, z):
-        return np.maximum(self.alpha*z,z)
+        if(z<0):
+            return self.alpha*z
+        else:
+            return z
 
     def write_activation_str(self, local_var):
 

@@ -45,7 +45,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt',conv_algo='6loops')
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result[0],keras_result)
     
@@ -61,7 +61,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt',conv_algo='indirect_gemm_nn')
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(acetone_result[0],keras_result)
     

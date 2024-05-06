@@ -19,8 +19,8 @@
 """
 
 from .Resize import Resize
-import tensorflow as tf
 import numpy as np
+import math
 import pystache
 
 #The mode Nearest of the Resize layers.
@@ -34,6 +34,11 @@ class ResizeNearest(Resize):
                                      "round_prefer_ceil":self.round_prefer_ceil,
                                      "floor":self.floor,
                                      "ceil":self.ceil}
+        
+        self.nearest_mode_implem_mapping = {"round_prefer_floor":self.round_prefer_floor_implem,
+                                            "round_prefer_ceil":self.round_prefer_ceil_implem,
+                                            "floor":math.floor,
+                                            "ceil":math.ceil}
     
     #Defining the several method to chose the nearest
     def floor(self,x,y):
@@ -45,8 +50,14 @@ class ResizeNearest(Resize):
     def round_prefer_floor(self,x,y):
         return x+' = floor(ceil(2 * ' + y + ') / 2);'
     
+    def round_prefer_floor_implem(self,x):
+        return math.floor(math.ceil(2*x)/2)
+    
     def round_prefer_ceil(self,x,y):
         return x+' = ceil(floor(2 * ' + y + ') / 2);'
+    
+    def round_prefer_ceil_implem(self,x):
+        return math.ceil(math.floor(2*x)/2)
     
     def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
@@ -80,7 +91,14 @@ class ResizeNearest(Resize):
     
     def forward_path_layer(self, input):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
-        input= np.transpose(input,(1,2,0))#Function resize in tensorflow take a format channel last
-        output = (tf.image.resize(input, [self.output_height,self.output_width], method='nearest')).numpy() #No numpy method for this layer
-        output= np.transpose(output,(2,0,1))
-        return self.activation_function.compute(output)
+        output = np.zeros((self.output_channels,self.output_height,self.output_width))
+        for f in range(self.output_channels):
+            for i in range(self.output_height):
+                for j in range(self.output_width):
+                    x = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](i,2)
+                    x0 = self.nearest_mode_implem_mapping[self.nearest_mode](x)
+                    y = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](j,3)
+                    y0 = self.nearest_mode_implem_mapping[self.nearest_mode](y)
+
+                    output[f,i,j] = input[f,x0,y0]
+        return output
