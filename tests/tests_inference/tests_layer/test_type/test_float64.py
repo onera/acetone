@@ -51,7 +51,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testLeakyReLu(self):
         testshape = (10,10,3)
@@ -68,7 +68,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testSigmoid(self):
         testshape = (10,10,3)
@@ -85,7 +85,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testTanh(self):
         testshape = (10,10,3)
@@ -102,7 +102,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def test_Dense1(self):
         testshape = (1,1,16)
@@ -118,7 +118,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     
     def test_Dense2(self):
@@ -135,7 +135,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
 
     def testBatchNorm(self):
         testshape = (10,10,3)
@@ -153,7 +153,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testAdd(self):
         testshape = (10,10,3)
@@ -172,7 +172,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
 
     def testMul(self):
         testshape = (10,10,3)
@@ -191,7 +191,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testSub(self):
         testshape = (10,10,3)
@@ -210,7 +210,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testAvg(self):
         testshape = (10,10,3)
@@ -229,7 +229,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testMax(self):
         testshape = (10,10,3)
@@ -248,7 +248,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
 
     def testMin(self):
         testshape = (10,10,3)
@@ -267,7 +267,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def testConcatenate(self):
         testshape = (10,10,3)
@@ -286,7 +286,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
 
     def testConv_6loops(self):
         testshape = (10,10,3)
@@ -300,9 +300,9 @@ class TestType(acetoneTestCase.AcetoneTestCase):
 
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5',conv_algo='6loops')
         
-        self.assertListAlmostEqual(acetone_result[0],acetone_result[1])
+        self.assertListAlmostEqual(acetone_result[0],acetone_result[1],atol=1e-15)
     
     def testConv_indirect_gemm_nn(self):
         testshape = (10,10,3)
@@ -316,9 +316,9 @@ class TestType(acetoneTestCase.AcetoneTestCase):
 
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5',conv_algo='indirect_gemm_nn')
         
-        self.assertListAlmostEqual(acetone_result[0],acetone_result[1])
+        self.assertListAlmostEqual(acetone_result[0],acetone_result[1],atol=1e-15)
     
     def testConv_std_gemm_nn(self):
         testshape = (10,10,3)
@@ -334,7 +334,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
 
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
-        self.assertListAlmostEqual(acetone_result[0],acetone_result[1])
+        self.assertListAlmostEqual(acetone_result[0],acetone_result[1],atol=1e-15)
     
     def test_Pads(self):
         testshape = (10,10,3)
@@ -349,7 +349,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
 
     def testMaxPooling(self):
         testshape = (10,10,3)
@@ -366,7 +366,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
    
     def testAveragePooling2D(self):
         testshape = (10,10,3)
@@ -383,7 +383,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
     
     def test_Softmax(self):
         testshape = (1,1,16)
@@ -399,7 +399,7 @@ class TestType(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
         
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-07)
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]),atol=1e-15)
 
 if __name__ == '__main__':
     acetoneTestCase.main()

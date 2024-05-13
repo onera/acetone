@@ -72,7 +72,7 @@ class CodeGenerator(ABC):
         self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile', 'test_dataset.h', 'test_dataset.c']
         
     def create_test_dataset(self):
-        test_dataset = np.float32(np.random.default_rng(seed=10).random((int(self.nb_tests),1,int(self.layers[0].size))))
+        test_dataset = self.data_type_py(np.random.default_rng(seed=10).random((int(self.nb_tests),1,int(self.layers[0].size))))
         return test_dataset 
      
     def load_test_dataset(self):

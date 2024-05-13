@@ -100,6 +100,5 @@ def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str='', conv
         return np.array([]), output_python.flatten()
     
     output_c = read_output_c(tmpdir_name+'/output_c.txt')
-    output_python = read_output_python(tmpdir_name+'/output_python.txt')
     
     return output_c.flatten(), output_python.flatten()

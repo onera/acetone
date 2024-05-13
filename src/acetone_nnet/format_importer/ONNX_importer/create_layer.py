@@ -400,8 +400,10 @@ def create_MaxPool(node,idx,dict_input,dict_output,model):
     attributs = extract_attribut(node)
     if ('dilations' not in attributs):
         attributs['dilations'] = [1]
-    if (('auto_pad' not in attributs) or ( attributs['auto_pad'] == 'NOTSET')):
+    if (('auto_pad' not in attributs) or ( attributs['auto_pad'].decode() == 'NOTSET')):
         attributs['auto_pad'] = attributs['pads']
+    else:
+        attributs['auto_pad'] = attributs['auto_pad'].decode()
     if ('strides' not in attributs):
         attributs['strides'] = [1,1]
     return MaxPooling2D(idx = idx,
@@ -423,8 +425,10 @@ def create_AveragePool(node,idx,dict_input,dict_output,model):
     attributs = extract_attribut(node)
     if ('dilations' not in attributs):
         attributs['dilations'] = [1]
-    if (('auto_pad' not in attributs) or ( attributs['auto_pad'] == 'NOTSET')):
+    if (('auto_pad' not in attributs) or ( attributs['auto_pad'].decode() == 'NOTSET')):
         attributs['auto_pad'] = attributs['pads']
+    else:
+        attributs['auto_pad'] = attributs['auto_pad'].decode()
     if ('strides' not in attributs):
         attributs['strides'] = [1,1]
     return AveragePooling2D(idx=idx,

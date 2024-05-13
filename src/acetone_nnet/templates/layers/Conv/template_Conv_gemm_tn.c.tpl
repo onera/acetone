@@ -1,5 +1,5 @@
     // gemm_tn
-    for (i = 0; i < {{m}}; i++)
+    for (i = 0; i < {{m}}; ++i)
     {
         for (p = 0; p < {{k}}; ++p)
         {

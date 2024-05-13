@@ -22,7 +22,7 @@ acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
 sys.path.append(acetoneTestCase_path)
 import acetoneTestCase
-
+import acetone_nnet
 import onnx
 import onnxruntime as rt
 
@@ -50,6 +50,21 @@ class TestYolo(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/yolo/tinyyolov2-7.onnx', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+    
+    def testYoloONNXPython(self):
+        model = onnx.load('./tests/models/yolo/tinyyolov2-7.onnx')
+        testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
+        
+        sess = rt.InferenceSession('./tests/models/yolo/tinyyolov2-7.onnx')
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None,{input_name: dataset})
+        onnx_result = result[0].ravel().flatten()
+
+        code_gen = acetone_nnet.CodeGenerator('./tests/models/yolo/tinyyolov2-7.onnx',self.tmpdir_name+'/dataset.txt','inference',1,'std_gemm_nn',False)
+        acetone_result = code_gen.compute_inference(self.tmpdir_name).flatten()
+
+        self.assertListAlmostEqual(list(acetone_result), list(onnx_result))
 
 if __name__ == '__main__':
     acetoneTestCase.main()

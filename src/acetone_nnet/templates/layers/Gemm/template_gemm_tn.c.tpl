@@ -4,7 +4,7 @@
         for(j = 0; j < {{n}}; ++j)
         {
             float register output = 0;
-            for (p = 0; p < {{k}}; ++j)
+            for (p = 0; p < {{k}}; ++p)
             {
                 output += {{#alpha}}{{.}}{{/alpha}} * {{A}}[i*{{k}}+p] * {{#direct}}*{{/direct}}({{B}}[p*{{n}}+j]);
             }   

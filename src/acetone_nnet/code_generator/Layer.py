@@ -72,12 +72,12 @@ class Layer(ABC):
                 else:
                     pad_along_width = max(filter_width - (in_width % strides), 0)
                 
-                if((padding == 'SAME_LOWER') or (padding == 'same')):
+                if((padding == 'SAME_UPPER') or (padding == 'same')):
                     pad_top = pad_along_height // 2
                     pad_bottom = pad_along_height - pad_top
                     pad_left = pad_along_width // 2
                     pad_right = pad_along_width - pad_left
-                elif(padding == 'SAME_UPPER'):
+                elif(padding == 'SAME_LOWER'):
                     pad_bottom = pad_along_height // 2
                     pad_top = pad_along_height - pad_bottom
                     pad_right = pad_along_width // 2
