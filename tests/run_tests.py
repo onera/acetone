@@ -2,13 +2,17 @@ import sys
 import subprocess
 
 ### testing the result of the inference
-network = 'tests/tests_inference/tests_networks/'
-c_python = 'tests/tests_inference/tests_layer/test_c_python/'
-c_reference = 'tests/tests_inference/tests_layer/test_c_reference/'
-without_template = 'tests/tests_inference/tests_layer/test_without_template/'
-
-layer = 'tests/tests_inference/tests_layer/'
 inference = 'tests/tests_inference/'
+
+network = inference+'/tests_networks/'
+
+layer = inference+'/tests_layer/'
+c_python = layer+'/test_c_python/'
+c_reference = layer+'/test_c_reference/'
+without_template = layer+'/test_without_template/'
+
+
+
 
 ### Testing the import from the model
 importer = 'tests/tests_importer/'

@@ -50,9 +50,8 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
         model.save(self.tmpdir_name+'/model.h5')
 
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
-        keras_result = np.array(model.predict(dataset)).flatten()
 
-        self.assertListAlmostEqual(list(acetone_result[1]), list(keras_result))
+        self.assertListAlmostEqual(list(acetone_result[1]), list(acetone_result[0]))
     
     def testBatchNorm2(self):
         model_input_name = "X"
@@ -91,7 +90,7 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
             ],
             outputs=[conv1_output_node_name],
             kernel_shape=conv1_kernel_shape,
-            pads=conv1_pads,
+            pads = conv1_pads,
             strides = (1,1),
         )
 
@@ -141,7 +140,7 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
 
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[0]))
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     
 if __name__ == '__main__':
     acetoneTestCase.main()

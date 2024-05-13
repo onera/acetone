@@ -19,7 +19,7 @@
 """
 
 
-import tensorflow as tf
+import keras.backend
 import numpy as np
 
 from . import nnet_normalize
@@ -27,7 +27,7 @@ from . import nnet_normalize
 from ...code_generator.layers import Dense, InputLayer
 from ...code_generator.activation_functions import Linear, ReLu
 
-tf.keras.backend.set_floatx('float32')
+keras.backend.set_floatx('float32')
 
 
 def load_nnet(file_to_parse, normalize):

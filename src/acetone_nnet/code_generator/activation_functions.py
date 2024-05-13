@@ -76,10 +76,11 @@ class LeakyReLu(ActivationFunctions):
         self.alpha = alpha
     
     def compute(self, z):
-        if(z<0):
-            return self.alpha*z
-        else:
-            return z
+        temp_tensor = z.flatten()
+        for i in range(len(temp_tensor)):
+            if(temp_tensor[i]<0):
+                temp_tensor[i] =  self.alpha*temp_tensor[i]
+        return temp_tensor.reshape(z.shape)
 
     def write_activation_str(self, local_var):
 

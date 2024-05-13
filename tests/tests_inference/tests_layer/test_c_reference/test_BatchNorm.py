@@ -56,6 +56,7 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
         self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
     
     def testBatchNorm2(self):
+        print('ONNX')
         testshape = (1,3,10,10)
 
         model_input_name = "X"
@@ -94,7 +95,7 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
             ],
             outputs=[conv1_output_node_name],
             kernel_shape=conv1_kernel_shape,
-            pads=conv1_pads,
+            auto_pad='SAME_UPPER',
             strides = (1,1),
         )
 

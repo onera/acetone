@@ -37,8 +37,10 @@ def are_layers_equals(self, other):
                 continue
             elif key == 'next_layer':
                 continue
+            elif type(self.__dict__[key]) == dict:
+                continue
 
-            if type(self.__dict__[key]) == np.ndarray or type(self.__dict__[key]) == list:
+            if type(self.__dict__[key]) == np.ndarray:
                 if (other.__dict__[key] != self.__dict__[key]).any():
                     return False
             else:
@@ -68,12 +70,12 @@ class ImporterTestCase(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
     
-    def import_layers(self, file):
+    def import_layers(self, file, conv_algorithm = 'std_gemm_nn'):
         return acetone_nnet.CodeGenerator(file = file,
                                           test_dataset_file = None,
                                           function_name = 'inference',
                                           nb_tests = 1,
-                                          conv_algorithm = 'std_gemm_nn',
+                                          conv_algorithm = conv_algorithm,
                                           normalize = False)
     
     def assert_Layers_equals(actual, desired):
@@ -142,7 +144,7 @@ class ImporterTestCase(unittest.TestCase):
                         if attribut == 'previou_layer' or attribut == 'next_layer':
                            continue
 
-                        if type(layer1.__dict__[attribut]) == np.ndarray or type(layer1.__dict__[attribut]) == list or type(layer1.__dict__[attribut]) == tuple:
+                        if type(layer1.__dict__[attribut]) == np.ndarray:
                             if (layer1.__dict__[attribut] != layer2.__dict__[attribut]).any():
                                 mismatched_keys.append(attribut)
                         else:

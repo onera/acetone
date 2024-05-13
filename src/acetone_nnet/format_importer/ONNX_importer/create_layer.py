@@ -146,8 +146,10 @@ def create_Conv(node,idx,dict_input,dict_output,model,conv_algorithm):
         attributs['dilations'] = 1
     if ('group' not in attributs):
         attributs['group'] = 1
-    if (('auto_pad' not in attributs) or ( attributs['auto_pad'] == 'NOTSET')):
+    if (('auto_pad' not in attributs) or ( attributs['auto_pad'].decode() == 'NOTSET')):
         attributs['auto_pad'] = attributs['pads']
+    else:
+        attributs['auto_pad'] = attributs['auto_pad'].decode()
     if ('strides' not in attributs):
         attributs['strides'] = [1,1]
         
@@ -164,7 +166,7 @@ def create_Conv(node,idx,dict_input,dict_output,model,conv_algorithm):
                                 strides= attributs['strides'][0],
                                 kernel_h= attributs['kernel_shape'][0], 
                                 kernel_w= attributs['kernel_shape'][1], 
-                                dilation_rate= attributs['dilations'], 
+                                dilation_rate= attributs['dilations'][0], 
                                 nb_filters= initializers[0].dims[0],
                                 input_shape= input_shape, 
                                 output_shape= output_shape,
@@ -732,8 +734,6 @@ def fuse_BatchNormalization(node,dict_output,model,layers):
 
     weights = layers[dict_output[node.input[0]]].weights
     biases = layers[dict_output[node.input[0]]].biases
-
-    print(weights.shape)
 
     for z in range(len(weights[0,0,0,:])):
         alpha = scale[z]/np.sqrt(var[z] + attributs['epsilon'])
