@@ -41,15 +41,16 @@ class Gemm(Layer):
                              (1,1):self.write_gemm_tt,
                              (1,0):self.write_gemm_tn}
         
-        self.output_height = output_shape[1]
-        self.output_width = output_shape[2]
+        self.output_height = output_shape[2]
+        self.output_width = output_shape[3]
         if(input_shape):
+            print(input_shape)
             if(transA):
-                self.input_height = input_shape[2]
-                self.input_width = input_shape[1]
-            else:
-                self.input_height = input_shape[1]
+                self.input_height = input_shape[3]
                 self.input_width = input_shape[2]
+            else:
+                self.input_height = input_shape[2]
+                self.input_width = input_shape[3]
         else:
             self.input_height = 1
             self.input_width = 1

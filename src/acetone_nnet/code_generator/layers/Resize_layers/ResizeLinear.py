@@ -99,7 +99,7 @@ class ResizeLinear(Resize):
                     x0,x1 = math.floor(x), math.floor(x) + 1
                     y0,y1 = math.floor(y), math.floor(y) + 1
 
-                    f11 = input[x0,y0]
+                    f11 = input[f,x0,y0]
                     if x1 >= self.input_height:
                         f21 = 0
                     else:

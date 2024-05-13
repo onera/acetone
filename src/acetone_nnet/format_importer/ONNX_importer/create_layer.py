@@ -143,7 +143,7 @@ def create_Conv(node,idx,dict_input,dict_output,model,conv_algorithm):
     initializers = [look_for_initializer(initializer_name,model) for initializer_name in node.input[1:]]
     attributs = extract_attribut(node)
     if ('dilations' not in attributs):
-        attributs['dilations'] = 1
+        attributs['dilations'] = [1]
     if ('group' not in attributs):
         attributs['group'] = 1
     if (('auto_pad' not in attributs) or ( attributs['auto_pad'].decode() == 'NOTSET')):
@@ -399,7 +399,7 @@ def create_MaxPool(node,idx,dict_input,dict_output,model):
     dict_output[node.output[0]] = idx
     attributs = extract_attribut(node)
     if ('dilations' not in attributs):
-        attributs['dilations'] = 1
+        attributs['dilations'] = [1]
     if (('auto_pad' not in attributs) or ( attributs['auto_pad'] == 'NOTSET')):
         attributs['auto_pad'] = attributs['pads']
     if ('strides' not in attributs):
@@ -422,7 +422,7 @@ def create_AveragePool(node,idx,dict_input,dict_output,model):
     dict_output[node.output[0]] = idx
     attributs = extract_attribut(node)
     if ('dilations' not in attributs):
-        attributs['dilations'] = 1
+        attributs['dilations'] = [1]
     if (('auto_pad' not in attributs) or ( attributs['auto_pad'] == 'NOTSET')):
         attributs['auto_pad'] = attributs['pads']
     if ('strides' not in attributs):
