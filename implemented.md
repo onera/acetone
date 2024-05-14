@@ -11,6 +11,10 @@ The DNN can be:
 The DNN must be:
 * Feedforward (without back-propagation)
 
+The DNN must have:
+* Only one input
+* Only one output
+
 # Formats
 
 The DNN is describeb in one of the following formats:
@@ -45,7 +49,7 @@ For each format, the following layers cans be used in the DNN:
 * Subtract
 * ZeroPadding2D
 
-### Activation layers implemented as a main layer
+#### Activation layers implemented as a main layer
 
 * Softmax
 
@@ -100,7 +104,7 @@ For each format, the following layers cans be used in the DNN:
 * Sub
 * Unsqueeze
 
-### Activation layers implemented as a main layer
+#### Activation layers implemented as a main layer
 
 * Softmax
 

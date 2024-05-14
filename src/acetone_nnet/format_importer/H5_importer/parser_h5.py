@@ -96,7 +96,7 @@ def create_conv2d_obj(algorithm, **kwargs):
     elif 'indirect_gemm' in algorithm:
         return Conv2D_indirect_gemm(**kwargs)
 
-def load_keras(file_to_parse:keras.Model, conv_algorithm):
+def load_keras(file_to_parse, conv_algorithm, debug):
 
     if(type(file_to_parse) == str): 
         model = keras.models.load_model(file_to_parse)
@@ -298,7 +298,7 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
                                          activation_function = Linear())
         
         elif layer_keras.__class__.__name__ == 'BatchNormalization':
-            if(layers[-1].name == 'Conv2D'):
+            if layers[-1].name == 'Conv2D' and not debug:
                 scale = data_type_py(layer_keras.get_weights()[0])
                 bias = data_type_py(layer_keras.get_weights()[1])
                 mean = data_type_py(layer_keras.get_weights()[2])
@@ -364,7 +364,7 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
 
         if add_softmax_layer:
             nb_softmax_layers += 1
-            current_layer = Softmax(idx = idx,
+            current_layer = Softmax(idx = idx+1,
                                     size = l_temp.size)
             l_temp.next_layer.append(current_layer)
             current_layer.previous_layer.append(l_temp)
@@ -375,4 +375,3 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
     layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
     print("Finished model initialization.")
     return layers, data_type, data_type_py, data_format, maxRoad, dict_cst
-            

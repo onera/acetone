@@ -39,17 +39,17 @@ def get_path(file, new_type):
     new_path += file_name + "." + new_type
     return new_path
 
-def parser(file_to_parse, conv_algorithm, normalize=False):
+def parser(file_to_parse, conv_algorithm, normalize=False, debug=None):
 
     if(type(file_to_parse) == str):
         if("json" in  file_to_parse[-4:]):
             return load_json(file_to_parse, conv_algorithm)
         
         elif("onnx" in file_to_parse[-4:]):
-            return load_onnx(file_to_parse, conv_algorithm)
+            return load_onnx(file_to_parse, conv_algorithm, debug)
         
         elif("h5" in file_to_parse[-4:]):
-            return load_keras(file_to_parse, conv_algorithm)
+            return load_keras(file_to_parse, conv_algorithm, debug)
         
         elif("nnet" in file_to_parse[-4:]):
             return load_nnet(file_to_parse,normalize)
@@ -59,10 +59,10 @@ def parser(file_to_parse, conv_algorithm, normalize=False):
             raise TypeError("Error: model description ."+file_to_parse[-4:]+" not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
     
     elif(type(file_to_parse) == onnx.ModelProto):
-        return load_onnx(file_to_parse, conv_algorithm)
+        return load_onnx(file_to_parse, conv_algorithm, debug)
     
     elif(type(file_to_parse) == Functional or type(file_to_parse) == Sequential):
-        return load_keras(file_to_parse, conv_algorithm)
+        return load_keras(file_to_parse, conv_algorithm, debug)
 
     else:
         print("\nError: model description .",type(file_to_parse),"not supported")

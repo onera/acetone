@@ -32,7 +32,6 @@ network = inference+'tests_networks/'
 layer = inference+'tests_layer/'
 c_python = layer+'test_c_python/'
 c_reference = layer+'test_c_reference/'
-without_template = layer+'test_without_template/'
 
 ### Testing the import from the model
 importer = all+'tests_importer/'
@@ -42,9 +41,9 @@ keras = importer + 'tests_keras/'
 
 
 possible_test = {'all':all, 
-                    'test_importer':importer,
+                    'tests_importer':importer,
                         'tests_keras':keras,
-                    'test_inference': inference,
+                    'tests_inference': inference,
                         'tests_layer':layer,
                             'test_c_reference':c_reference,
                             'test_c_python':c_python,
@@ -53,11 +52,13 @@ possible_test = {'all':all,
 cmd = ['python3','-m','unittest','discover']
 
 if(len(sys.argv) == 1):
-    print('Add as argument the name of the test folder you want to run, or use all for testing all of them.')
+    print('Please enter the name of the test folder you want to run, or use all for testing all of them.')
     print('The argument can be the name of a directory containing test folders (ex: "test_layer" will run "test_c_python", "test_c_reference" and "test_without_template")')
+    test = input()
 else:
-    cmd += [possible_test[sys.argv[1]]]
-    cmd += ['test_*.py']
+    test = sys.argv[1]
+cmd += [possible_test[test]]
+cmd += ['test_*.py']
 
 
-    subprocess.run(cmd)
+subprocess.run(cmd)

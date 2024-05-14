@@ -21,7 +21,7 @@ import onnx
 from ..ONNX_importer.create_layer import *
 from ...graph.graph_interpretor import tri_topo
 
-def load_onnx(file_to_parse, conv_algorithm):
+def load_onnx(file_to_parse, conv_algorithm, debug):
     #Loading the model and adding value_info if it's not already in it
     if(type(file_to_parse) == str): 
         model = onnx.load(file_to_parse)
@@ -46,22 +46,22 @@ def load_onnx(file_to_parse, conv_algorithm):
     
     #Going through all the nodes to creat the layers and add them to the list
     for node in model.graph.node:
-        if(node.op_type == 'BatchNormalization'):
-            if(layers[-1].name == 'Conv2D'):
+        if node.op_type == 'BatchNormalization':
+            if layers[-1].name == 'Conv2D' and not debug:
                 fuse_BatchNormalization(node, dict_output, model, layers)
             else:
                 layers.append(create_BatchNorm(node,idx,dict_input,dict_output,model))
                 idx+=1
-        elif(node.op_type in layer_type): #If the node is a useful layer, we add it to the list
-            if(node.op_type == "Conv"):    
+        elif node.op_type in layer_type: #If the node is a useful layer, we add it to the list
+            if node.op_type == "Conv":    
                 layers.append(layer_type[node.op_type](node,idx,dict_input,dict_output,model,conv_algorithm))
                 idx+=1
             else:
                 layers.append(layer_type[node.op_type](node,idx,dict_input,dict_output,model))
                 idx+=1
-        elif(node.op_type in unused_layers): #If the node is a layer only used in trainning, we do layer_input=layer_output
+        elif node.op_type in unused_layers: #If the node is a layer only used in trainning, we do layer_input=layer_output
             unused_layers[node.op_type](node,dict_output,model)
-        elif(node.op_type in activation_layers):
+        elif node.op_type in activation_layers:
             activation_layers[node.op_type](node,dict_output,model,layers)
         else:
             raise TypeError("Error: layer "+node.op_type+" not supported\n")

@@ -31,7 +31,7 @@ class Flatten(Layer):
         self.size = size
         self.input_shape = input_shape
         self.data_format = data_format
-        self.name = 'Input_layer'
+        self.name = 'Flatten'
 
     def generate_inference_code_layer(self):
 

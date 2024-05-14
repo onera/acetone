@@ -37,7 +37,7 @@ from .layers import (
 
 class CodeGenerator(ABC):
 
-    def __init__(self, file, test_dataset_file = None, function_name = 'inference', nb_tests = None, conv_algorithm = 'conv_gemm_optim', normalize = False,**kwargs):
+    def __init__(self, file, test_dataset_file = None, function_name = 'inference', nb_tests = None, conv_algorithm = 'conv_gemm_optim', normalize = False, debug_mode = False, debug_target = [],**kwargs):
 
         self.file = file
         self.test_dataset_file = test_dataset_file
@@ -67,9 +67,29 @@ class CodeGenerator(ABC):
             print("creating random dataset")
             ds = self.create_test_dataset()
             self.test_dataset = ds
-            
+        
+        ##### Debug Mode #####
+        if debug_mode:
+            self.debug_mode = debug_mode
+            self.debug_target = self.load_debug_target(debug_mode, debug_target)
+        ##### Debug Mode #####
 
         self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile', 'test_dataset.h', 'test_dataset.c']
+    
+    def load_debug_target(self, debug_mode, debug_target):
+        if debug_target != []:
+            return debug_target
+        
+        else:
+            targets = []
+
+            for layer in self.layers[1:]:
+                if debug_mode == 'keras' and layer.name == 'Softmax':
+                    targets[-1] = layer.idx
+                else:
+                    targets.append(layer.idx)
+
+            return targets
         
     def create_test_dataset(self):
         test_dataset = self.data_type_py(np.random.default_rng(seed=10).random((int(self.nb_tests),1,int(self.layers[0].size))))
@@ -102,6 +122,11 @@ class CodeGenerator(ABC):
     def compute_inference(self, c_files_directory):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
+                
+                ##### Debug Mode #####
+                if self.debug_mode:
+                    debug_output = []
+                ##### Debug Mode #####
 
                 if((self.data_format == 'channels_last') and (len(self.layers[0].input_shape) == 4)): 
                     shape = (self.layers[0].input_shape[2],self.layers[0].input_shape[3],self.layers[0].input_shape[1])
@@ -154,7 +179,23 @@ class CodeGenerator(ABC):
                     for prev in layer.previous_layer:
                         if ((prev.sorted == len(prev.next_layer)) and (prev in to_store)):#if all the children of the parent layer are "taken care of", we "forget" the parent's value ( *2 because of the creation of the dict in graph.to_save)
                             to_store.pop(prev.idx)
-                            
+                    
+                    ##### Debug Mode #####
+                    if self.debug_mode:
+                        # Add the inference result of the layer to debug_output
+                        if layer.name != 'Input_layer':
+                            print(layer.name)
+                            if layer.idx in self.debug_target:
+                                debug_output.append(previous_layer_result[layer.path])
+                                if((self.data_format == 'channels_last') and hasattr(layer, 'output_channels')): debug_output[-1] = np.transpose(debug_output[-1], (1,2,0))
+                                debug_output[-1] = debug_output[-1].flatten()
+
+                        # If all the targets are saved, the inference is stopped and the result is given
+                        if len(debug_output) == len(self.debug_target):
+                            targets = [str(self.layers[k].name) + " " + str(self.layers[k].idx) for k in self.debug_target]
+                            return debug_output, targets
+                    ##### Debug Mode #####
+                        
                 nn_output = previous_layer_result[layer.path]
                 # print(nn_output) # write to file instead
                 
@@ -166,7 +207,7 @@ class CodeGenerator(ABC):
                     nn_output = self.Normalizer.post_processing(nn_output)
                 
                 for j in range(len(nn_output)):
-                    print('{:.9g}'.format(nn_output[j]), end=' ', file=fi, flush=True)           
+                    print('{:.9g}'.format(nn_output[j]), end=' ', file=fi, flush=True)
                     # print(decimal.Decimal(nn_output[j]), end=' ', file=fi, flush=True)
                 print(" ",file=fi)
         
