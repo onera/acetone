@@ -17,12 +17,13 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
-
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
 import json
 import numpy as np
 from numpyencoder import NumpyEncoder
 
-def JSON_from_keras_model(keras_model, output_dir_json):
+def JSON_from_keras_model(keras_model:Functional|Sequential, output_dir_json:str):
     model_json = keras_model.to_json()
     model_dict =  json.loads(model_json)
 

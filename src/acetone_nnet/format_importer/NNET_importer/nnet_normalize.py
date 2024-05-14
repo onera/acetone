@@ -25,7 +25,7 @@ from ... import templates
 
 class Normalizer(ABC):
 
-    def __init__(self, input_size, output_size, mins, maxes, means, ranges):
+    def __init__(self, input_size:int, output_size:int, mins:list, maxes:list, means:list, ranges:list):
         self.input_size = input_size
         self.output_size = output_size
         self.mins = mins
@@ -35,7 +35,7 @@ class Normalizer(ABC):
         self.template_path = templates.__file__[:-11]
         super().__init__()
 
-    def array_to_str(self,array):
+    def array_to_str(self, array:list):
         s = "{"
         for element in array:
             s += str(element) + ", "
@@ -85,13 +85,13 @@ class Normalizer(ABC):
 
         return  pystache.render(template, mustach_hash)
 
-    def pre_processing(self, nn_input):
+    def pre_processing(self, nn_input:np.ndarray):
         inputs = nn_input.flatten()
         for i in range(self.input_size):
             inputs[i] = (max(self.mins[i],min(self.maxes[i],inputs[i])) - self.means[i]) / self.ranges[i]
         return np.reshape(inputs, nn_input.shape)
 
-    def post_processing(self, nn_output):
+    def post_processing(self, nn_output:np.ndarray):
         for i in range(len(nn_output)):
             nn_output[i] = nn_output[i]*self.ranges[-1] + self.means[-1]
         return nn_output

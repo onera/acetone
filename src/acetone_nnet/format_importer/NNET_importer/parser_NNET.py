@@ -30,7 +30,7 @@ from ...code_generator.activation_functions import Linear, ReLu
 keras.backend.set_floatx('float32')
 
 
-def load_nnet(file_to_parse, normalize):
+def load_nnet(file_to_parse:str, normalize:bool):
     """
     Inspired from : # https://github.com/NeuralNetworkVerification/Marabou/blob/master/maraboupy/MarabouNetworkNNet.py
     """

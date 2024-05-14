@@ -21,7 +21,7 @@ import onnx
 from ..ONNX_importer.create_layer import *
 from ...graph.graph_interpretor import tri_topo
 
-def load_onnx(file_to_parse, conv_algorithm, debug):
+def load_onnx(file_to_parse:str|onnx.ModelProto, conv_algorithm:str, debug:None|str):
     #Loading the model and adding value_info if it's not already in it
     if(type(file_to_parse) == str): 
         model = onnx.load(file_to_parse)

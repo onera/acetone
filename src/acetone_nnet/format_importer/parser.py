@@ -28,18 +28,7 @@ from .ONNX_importer.parser_ONNX import load_onnx
 from .NNET_importer.parser_NNET import load_nnet
 from .H5_importer.parser_h5 import load_keras
 
-def get_path(file, new_type):
-    new_path = ""
-    list_path = file.split("/")
-    file_name = list_path[-1].split(".")[0]
-
-    for dir in list_path[:-1]:
-        new_path += dir+"/"
-    
-    new_path += file_name + "." + new_type
-    return new_path
-
-def parser(file_to_parse, conv_algorithm, normalize=False, debug=None):
+def parser(file_to_parse:str|onnx.ModelProto|Functional|Sequential, conv_algorithm:str, normalize:bool=False, debug:None|str=None):
 
     if(type(file_to_parse) == str):
         if("json" in  file_to_parse[-4:]):

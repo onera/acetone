@@ -34,7 +34,7 @@ from ...code_generator import (
     Linear, ReLu, Sigmoid, TanH, LeakyReLu
 )
 
-def create_actv_function_obj(activation_str):
+def create_actv_function_obj(activation_str:str):
 
         if activation_str == 'sigmoid':
             return Sigmoid()
@@ -47,7 +47,7 @@ def create_actv_function_obj(activation_str):
         elif activation_str == 'leaky_relu':
             return LeakyReLu(0.2)
 
-def create_conv2d_obj(algorithm, **kwargs):
+def create_conv2d_obj(algorithm:str, **kwargs):
        
     if '6loops' in algorithm:
         return Conv2D_6loops(**kwargs)
@@ -58,7 +58,7 @@ def create_conv2d_obj(algorithm, **kwargs):
     elif 'indirect_gemm' in algorithm:
         return Conv2D_indirect_gemm(**kwargs)
 
-def create_resize_obj(mode, **kwargs):
+def create_resize_obj(mode:str, **kwargs):
 
     if mode == 'bicubic':
         return ResizeCubic(**kwargs)
@@ -69,7 +69,7 @@ def create_resize_obj(mode, **kwargs):
     else:
         return ResizeNearest(**kwargs)
 
-def load_json(file_to_parse, conv_algorithm):
+def load_json(file_to_parse:str, conv_algorithm:str):
         
     file = open(file_to_parse, 'r')
     model = json.load(file)

@@ -20,6 +20,10 @@
 
 import keras
 from keras import activations
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
+from keras.engine.base_layer import Layer
+
 from itertools import islice
 import numpy as np
 
@@ -30,11 +34,11 @@ from ...code_generator import (
     Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm,
     Constant_Pad,
     Add, Multiply, Subtract, Maximum, Minimum, Average,
-    Concatenate, InputLayer, Dense, Softmax,  Dot, Flatten, BatchNormalization,
+    Concatenate, InputLayer, Dense, Softmax, Flatten, BatchNormalization,
     Linear, ReLu, Sigmoid, TanH, LeakyReLu
 )
 
-def get_layer_size(keras_layer):
+def get_layer_size(keras_layer:Layer):
     size = 1
     if type(keras_layer.output_shape) is list:
         for dim in keras_layer.output_shape[0][1:]:
@@ -44,7 +48,7 @@ def get_layer_size(keras_layer):
             size = size*dim
     return size
 
-def get_output_dimensions(output,data_format):
+def get_output_dimensions(output:list, data_format:str):
     if type(output) is list:
         dimensions = output[0]
     else:
@@ -57,7 +61,7 @@ def get_output_dimensions(output,data_format):
     else:
         return dimensions
 
-def get_input_dimensions(input,data_format):
+def get_input_dimensions(input:list, data_format:str):
     if(type(input) == list and len(input) == 1):
         dimensions = input[0]
     else:
@@ -85,7 +89,7 @@ def create_actv_function_obj(kears_activation_obj):
         elif kears_activation_obj == activations.softmax:
             return Linear()
 
-def create_conv2d_obj(algorithm, **kwargs):
+def create_conv2d_obj(algorithm:str, **kwargs):
        
     if '6loops' in algorithm:
         return Conv2D_6loops(**kwargs)
@@ -96,7 +100,7 @@ def create_conv2d_obj(algorithm, **kwargs):
     elif 'indirect_gemm' in algorithm:
         return Conv2D_indirect_gemm(**kwargs)
 
-def load_keras(file_to_parse, conv_algorithm, debug):
+def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:None|str):
 
     if(type(file_to_parse) == str): 
         model = keras.models.load_model(file_to_parse)
