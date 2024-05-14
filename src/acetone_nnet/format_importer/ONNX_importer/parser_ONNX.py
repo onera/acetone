@@ -78,12 +78,15 @@ def load_onnx(file_to_parse, conv_algorithm):
     
     if data_type_py == 'float64':
         data_type = 'double'
+        data_type_py = np.float64
 
     elif data_type_py == 'float32':
         data_type = 'float'
+        data_type_py = np.float32
 
     elif data_type_py == 'int':
         data_type = 'long int'
+        data_type_py = np.int32
     
     #Sorting the graph and adding the road to the layers
     layers, listRoad, maxRoad, dict_cst = tri_topo(layers)

@@ -136,7 +136,7 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+        onnx.save(model,self.tmpdir_name+'/model.onnx')
 
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
 

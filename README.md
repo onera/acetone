@@ -134,48 +134,7 @@ acetone_compare tests/models/lenet5/lenet5_trained/output_keras.txt tests/models
 
 ## Capability
 
-As of the 26/03/2024, the framework can generate code for neural network meeting the following condition:
-
-* The neural network is Sequential and Feedforward
-
-* The neural-network is describeb in one of the following formats:
-  * JSON (specifique decription made for the framework. Confer to the file [JSON_from_keras_model.py](./src/format_importer/H5_importer/JSON_from_keras_model.py))
-  * NNET 
-  * ONNX
-  * H5 (by transforming into a JSON file)
-
-* Its layers are amongst the following (both Keras and Onnx layers):
-  * Dense
-  * Convolutional (Conv2D) (3 option for the algorithm)
-  * Pooling (AveragePooling2D, MaxPooling2D)
-  * Flatten
-  * Normalization (Normalization layers of Keras)
-  * Dropout (Dropout layers of Keras)
-  * Reshape
-  * Permute
-  * MatMul
-  * Gemm
-  * Gather
-  * Dot
-  * Concatenate
-  * Clip
-  * Add (where one of the inputs is an ONNX initializer)
-  * Resize (Cubic interpolation, Linear interpolation, Nearest)
-  * Pad (Wrap padding, Edge padding, Reflect padding, Constant padding)
-  * Broadcast (Add, Average, Divide, Maximum, Minimum, Multiply, Subtract)
-  * Unsqueeze (ONNX layer)
-  * LRN (ONNX layer)
-  * Shape (ONNX layer)
-  * BatchNormalization (ONNX layer)
-
-* Its activation layers are amongst the following:
-  * Linear
-  * Tanh
-  * ReLu
-  * Sigmoid
-  * Softmax
-  * Exp
-  * Log
+Please refer to the [`implemented.md`](./implemented.md) file to see the current capabilities of the framework.
 
 ## License
 

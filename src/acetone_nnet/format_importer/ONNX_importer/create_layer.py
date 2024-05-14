@@ -678,7 +678,8 @@ unused_layers = {"Dropout":bypass,
                   "Unsqueeze":bypass,
                   "Reshape":bypass,
                   "LRN":bypass,
-                  "Shape":bypass}
+                  "Shape":bypass,
+                  "Flatten":bypass}
 
 ###### Function to fuse to ONNX layers ######
 

@@ -26,8 +26,8 @@ import pystache
 #Use a constant to fill paddings
 class Constant_Pad(Pad):
     
-    def __init__(self, idx, size, pads, constant_value, axes,input_shape,activation_function):
-        super().__init__(idx, size, pads, constant_value, axes,input_shape,activation_function)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mode = 'constant'
     
     def generate_inference_code_layer(self):

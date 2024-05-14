@@ -212,14 +212,6 @@ def load_json(file_to_parse, conv_algorithm):
                                         input_shapes = layer['config']['input_shape'], 
                                         output_shape = layer['config']['output_shape'],
                                         activation_function= Linear())
-        
-        elif layer['class_name'] == 'Dot':
-            current_layer = Dot(idx = layer['config']['idx'],
-                                size = layer['config']['size'],
-                                axis= layer['config']['axes'],
-                                input_shapes = layer['config']['input_shape'], 
-                                output_shape = layer['config']['output_shape'],
-                                activation_function = Linear())
 
         elif layer['class_name'] == 'ZeroPadding2D':
             pads = layer['config']['padding']
@@ -282,9 +274,6 @@ def load_json(file_to_parse, conv_algorithm):
             continue
 
         elif  layer['class_name'] == 'Reshape':
-            continue
-
-        elif  layer['class_name'] == 'Permute':
             continue
 
         else:

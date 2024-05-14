@@ -277,14 +277,6 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
                                         output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                         activation_function = Linear())
         
-        elif layer_keras.__class__.__name__ == 'Dot':
-            current_layer = Dot(idx = idx,
-                                size = get_layer_size(layer_keras),
-                                axis = layer_keras.axes,
-                                input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
-                                output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
-                                activation_function = Linear())
-        
         elif layer_keras.__class__.__name__ == 'ZeroPadding2D':
             pads = layer_keras.padding
             if type(pads) == int:
@@ -341,10 +333,7 @@ def load_keras(file_to_parse:keras.Model, conv_algorithm):
 
         elif layer_keras.__class__.__name__ == 'Dropout':
             continue
-
-        elif layer_keras.__class__.__name__ == 'Permute':
-            continue
-
+        
         else:
             raise TypeError("Error: layer "+layer_keras.__class__.__name__+" not supported\n")
 

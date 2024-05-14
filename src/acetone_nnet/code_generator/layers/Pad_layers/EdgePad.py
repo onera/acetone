@@ -25,10 +25,9 @@ import pystache
 #Pads with the edge values of array.
 class Edge_pad(Pad):
     
-    def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
-        super().__init__(idx, size, pads, constant_value, axes, input_shape,activation_function)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mode = 'edge'
-
 
     def write_padding(self):
         mustach_hash = {}

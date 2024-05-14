@@ -27,8 +27,8 @@ import pystache
 #The first values are used to pad the end and the end values are used to pad the beginning.
 class Wrap_pad(Pad):
     
-    def __init__(self, idx, size, mode, pads, constant_value, axes, input_shape):
-        super().__init__(idx, size, mode, pads, constant_value, axes, input_shape)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mode = 'wrap'
     
     def write_padding(self):

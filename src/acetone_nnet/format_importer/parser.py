@@ -26,7 +26,6 @@ import onnx
 from .JSON_importer.parser_JSON import load_json
 from .ONNX_importer.parser_ONNX import load_onnx
 from .NNET_importer.parser_NNET import load_nnet
-from .H5_importer.JSON_from_keras_model import JSON_from_keras_model
 from .H5_importer.parser_h5 import load_keras
 
 def get_path(file, new_type):

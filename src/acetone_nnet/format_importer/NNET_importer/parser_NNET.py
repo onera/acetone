@@ -32,12 +32,7 @@ keras.backend.set_floatx('float32')
 
 def load_nnet(file_to_parse, normalize):
     """
-    Reads nnet networks from ACAS project and to pull it in .h5 format
-    Inspired from : # https://github.com/NeuralNetworkVerification/Marabou/blob/master/maraboupy/MarabouNetworkNNet.py  read function
-    Args:
-        model_file_net (.nnet): file describing the neural network
-    Returns: 
-        model (.h5): Keras model
+    Inspired from : # https://github.com/NeuralNetworkVerification/Marabou/blob/master/maraboupy/MarabouNetworkNNet.py
     """
 
     #Recall : Example of nnet file head:
@@ -52,11 +47,10 @@ def load_nnet(file_to_parse, normalize):
     #biaises
 
     layers = []
-    listRoad = [0,1]
     maxRoad = 1
     dict_cst = {}
-    data_type = 'float'
-    data_type_py = 'float32'
+    data_type = float
+    data_type_py = np.float32
 
     with open(file_to_parse) as f:
      
@@ -95,14 +89,6 @@ def load_nnet(file_to_parse, normalize):
             currentLayerSize = layerSizes[layernum + 1]
             weights.append([])
             biases.append([])
-            
-            # weights
-            # for i in range(previousLayerSize):
-            #     line = f.readline()
-            #     aux = [float(x) for x in line.strip().split(",")[:-1]]
-            #     weights[layernum].append([])
-            #     for j in range(currentLayerSize):
-            #         weights[layernum][i].append(aux[j])
 
             # weights for non conventional nnet
             for i in range(currentLayerSize):

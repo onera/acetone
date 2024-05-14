@@ -26,8 +26,8 @@ import pystache
 #Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
 class Reflect_pad(Pad):
     
-    def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
-        super().__init__(idx, size, pads, constant_value, axes, input_shape,activation_function)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.mode = 'reflect'
     
     def write_padding(self):

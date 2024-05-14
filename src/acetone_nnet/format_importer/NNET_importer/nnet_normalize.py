@@ -88,7 +88,7 @@ class Normalizer(ABC):
     def pre_processing(self, nn_input):
         inputs = nn_input.flatten()
         for i in range(self.input_size):
-            inputs[i] = (max(self.mins[i],min(self.maxes[i],nn_input[i])) - self.means[i]) / self.ranges[i]
+            inputs[i] = (max(self.mins[i],min(self.maxes[i],inputs[i])) - self.means[i]) / self.ranges[i]
         return np.reshape(inputs, nn_input.shape)
 
     def post_processing(self, nn_output):
