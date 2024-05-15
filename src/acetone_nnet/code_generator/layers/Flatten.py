@@ -24,7 +24,7 @@ import numpy as np
 
 class Flatten(Layer):
 
-    def __init__(self, idx, size, input_shape, data_format):
+    def __init__(self, idx:int, size:int, input_shape:int, data_format:str):
        
         super().__init__()
         self.idx = idx
@@ -53,7 +53,7 @@ class Flatten(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         if(self.data_format == 'channels_last'):
             return np.transpose(np.reshape(input,self.input_shape[1:]),(1,2,0))
         else:

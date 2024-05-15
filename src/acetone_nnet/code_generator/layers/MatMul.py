@@ -19,12 +19,13 @@
 """
 
 from ..Layer import Layer
+from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
 class MatMul(Layer):
 
-    def __init__(self, idx, size, input_shape, weights, side, activation_function):
+    def __init__(self, idx:int, size:int, input_shape:list, weights:list, side:bool, activation_function:ActivationFunctions):
         
         super().__init__()
         self.idx = idx
@@ -72,6 +73,6 @@ class MatMul(Layer):
         if (self.side):
             weights = np.moveaxis(self.weights, 3,0)
             weights = np.reshape(weights, (weights.shape[1],weights.shape[2],weights.shape[3],weights.shape[0]))
-            return self.activation_function.compute((np.matmul(weights,input)))
+            return self.activation_function.compute(np.matmul(weights,input))
         else:
-            return self.activation_function.compute((np.matmul(input,self.weights)))
+            return self.activation_function.compute(np.matmul(input,self.weights))

@@ -36,7 +36,7 @@ class Conv2D_gemm(Conv2D):
                                    'gemm_tn' : self.write_gemm_tn,
                                    'gemm_tt' : self.write_gemm_tt}
 
-    def write_gemm_nn(self, m, n, k, A, B, C, direct):
+    def write_gemm_nn(self, m:int, n:int, k:int, A:str, B:str, C:str, direct:bool):
 
         mustach_hash = {}
 
@@ -65,7 +65,7 @@ class Conv2D_gemm(Conv2D):
 
         return pystache.render(template, mustach_hash)
     
-    def write_gemm_nt(self, m, n, k, A, B, C, direct):
+    def write_gemm_nt(self, m:int, n:int, k:int, A:str, B:str, C:str, direct:bool):
 
         mustach_hash = {}
 
@@ -94,7 +94,7 @@ class Conv2D_gemm(Conv2D):
 
         return pystache.render(template, mustach_hash)
 
-    def write_gemm_tn(self, m, n, k, A, B, C, direct):
+    def write_gemm_tn(self, m:int, n:int, k:int, A:str, B:str, C:str, direct:bool):
 
         mustach_hash = {}
 
@@ -123,7 +123,7 @@ class Conv2D_gemm(Conv2D):
 
         return pystache.render(template, mustach_hash)
 
-    def write_gemm_tt(self, m, n, k, A, B, C, direct):
+    def write_gemm_tt(self, m:int, n:int, k:int, A:str, B:str, C:str, direct:bool):
 
         mustach_hash = {}
 

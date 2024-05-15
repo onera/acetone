@@ -18,8 +18,10 @@
  ******************************************************************************
 """
 
+from ..code_generator.Layer import Layer
+
 #Sort the graph (list of nodes) based on the topological sort
-def tri_topo(dnn):
+def tri_topo(dnn:list):
     list_path = []
     #The sorted list to be returned
     list_layers = []
@@ -36,7 +38,7 @@ def tri_topo(dnn):
     return list_layers, list_path, max_path, dict_cst
 
 #Compute the sorting of a node
-def parcours_prof_topo(list_layers,layer):
+def parcours_prof_topo(list_layers:list, layer:Layer):
     #The node is currently being sorted
     layer.sorted = 1
     for nxt_layer in layer.next_layer:
@@ -50,7 +52,7 @@ def parcours_prof_topo(list_layers,layer):
 
 
 #The function to open a new path
-def setNewpath(layer,listCurrentpaths):
+def setNewpath(layer:Layer, listCurrentpaths:list):
     #if the list isn't in the right format, it return -1
     if(len(listCurrentpaths)%2!=0):
         print("Error: listCurrentpaths must be in format:[name_path, is_path_closed, ...]")
@@ -76,7 +78,7 @@ def setNewpath(layer,listCurrentpaths):
             layer.path = listCurrentpaths[-2]
         
 #give a layer the right path    
-def updatepath(layer,listCurrentpaths):
+def updatepath(layer:Layer, listCurrentpaths:list):
     if(layer.previous_layer == []):
         #if the layer has no previous one, we creat a new path
         setNewpath(layer,listCurrentpaths)
@@ -104,7 +106,7 @@ def updatepath(layer,listCurrentpaths):
         listCurrentpaths[layer.path*2 + 1] = 1
 
 #Function creating the dict {idx_layer:idx_cst} saying if a layer must be stored
-def to_save(layer,dict_cst):
+def to_save(layer:Layer, dict_cst:dict):
     for parent in layer.previous_layer:
         if(parent in dict_cst):
             #if the previous_layer are in the dict, we add one to the number of next_layer already "taken care of"

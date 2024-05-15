@@ -19,13 +19,13 @@
 """
 
 from ...Layer import Layer
-
+from ...activation_functions import ActivationFunctions
 import numpy as np
 from abc import abstractmethod
 
 class Conv2D(Layer):
     
-    def __init__(self, idx, conv_algorithm, size, padding, strides, kernel_h, kernel_w, dilation_rate, nb_filters, input_shape, output_shape, weights, biases, activation_function):
+    def __init__(self, idx:int, conv_algorithm:str, size:int, padding:str|list, strides:int, kernel_h:int, kernel_w:int, dilation_rate:int, nb_filters:int, input_shape:list, output_shape:list, weights:np.ndarray, biases:np.ndarray, activation_function:ActivationFunctions):
         super().__init__()
         self.conv_algorithm = conv_algorithm
         self.idx = idx
@@ -47,8 +47,8 @@ class Conv2D(Layer):
         self.input_shape = [self.input_channels, self.input_height, self.input_width]
         self.output_channels = self.nb_filters
 
-        self.weights = np.asarray(weights)
-        self.biases = np.asarray(biases)
+        self.weights = weights
+        self.biases = biases
         self.activation_function = activation_function
         self.local_var = 'sum'
 
@@ -60,7 +60,7 @@ class Conv2D(Layer):
     def generate_inference_code_layer(self):
         pass
 
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         # Conv for chw
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         

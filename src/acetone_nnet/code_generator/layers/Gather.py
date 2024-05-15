@@ -19,6 +19,7 @@
 """
 
 from ..Layer import Layer
+from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
@@ -28,7 +29,7 @@ import pystache
 #output: a list of tensor
 class Gather(Layer):
     
-    def __init__(self, idx, size, axis,  indices, input_shape, output_shape,activation_function):
+    def __init__(self, idx:int, size:int, axis:int,  indices:list, input_shape:list, output_shape:list, activation_function:ActivationFunctions):
         
         super().__init__()
         self.idx = idx
@@ -86,6 +87,6 @@ class Gather(Layer):
 
         return pystache.render(template, mustach_hash)
         
-    def forward_path_layer(self,input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_channels,self.input_height,self.input_width)
         return np.take(input, indices=self.indices, axis=self.axis-1)

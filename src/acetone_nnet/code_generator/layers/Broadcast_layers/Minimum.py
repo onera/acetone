@@ -19,7 +19,6 @@
 """
 
 from .Broadcast import Broadcast
-
 import numpy as np
 
 #Return a tensor with where each position (f,i,j) contains the min of all the values at position (f,i,j) in each tensor
@@ -29,7 +28,7 @@ class Minimum(Broadcast):
         self.name = 'Minimum'
         self.specific_operator = ', '
 
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         mini = inputs[0]
         for input in inputs[1:]:
             mini = np.minimum(mini, input)

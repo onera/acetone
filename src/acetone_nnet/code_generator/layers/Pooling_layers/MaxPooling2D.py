@@ -31,19 +31,13 @@ class MaxPooling2D(Pooling2D):
         self.local_var = 'max'
         self.output_var = self.local_var
 
-    def declare_local_vars(self, data_type):
-        
-        s = '    '+ data_type + ' '+ self.local_var +';\n\n'
-
-        return s
-
     def update_local_vars(self):
         
         s = self.local_var +' = -INFINITY;\n'
 
         return s
 
-    def specific_function(self, index, input_of_layer):
+    def specific_function(self, index:str, input_of_layer:str):
         s = 'if ('+input_of_layer+'['+index+'] > '+self.local_var+')\n'
         s += '                                '+self.local_var+' = '+input_of_layer+'['+index+'];\n'
     

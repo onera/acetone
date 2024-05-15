@@ -37,7 +37,7 @@ from .layers import (
 
 class CodeGenerator(ABC):
 
-    def __init__(self, file, test_dataset_file = None, function_name = 'inference', nb_tests = None, conv_algorithm = 'conv_gemm_optim', normalize = False, debug_mode = False, debug_target = [],**kwargs):
+    def __init__(self, file:str, test_dataset_file:str = None, function_name:str = 'inference', nb_tests:int = None, conv_algorithm:str = 'std_gemm_nn', normalize:bool = False, debug_mode:str|None = None, debug_target:list|None = None,**kwargs):
 
         self.file = file
         self.test_dataset_file = test_dataset_file
@@ -69,15 +69,15 @@ class CodeGenerator(ABC):
             self.test_dataset = ds
         
         ##### Debug Mode #####
-        if debug_mode:
-            self.debug_mode = debug_mode
+        self.debug_mode = debug_mode
+        if self.debug_mode:
             self.debug_target = self.load_debug_target(debug_mode, debug_target)
         ##### Debug Mode #####
 
         self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile', 'test_dataset.h', 'test_dataset.c']
     
-    def load_debug_target(self, debug_mode, debug_target):
-        if debug_target != []:
+    def load_debug_target(self, debug_mode:str|None, debug_target:list|None):
+        if debug_target != None:
             return debug_target
         
         else:
@@ -119,7 +119,7 @@ class CodeGenerator(ABC):
         
         return test_dataset
 
-    def compute_inference(self, c_files_directory):
+    def compute_inference(self, c_files_directory:str):
         with open(os.path.join(c_files_directory, 'output_python.txt'), 'w+') as fi:
             for nn_input in self.test_dataset:
                 
@@ -184,7 +184,6 @@ class CodeGenerator(ABC):
                     if self.debug_mode:
                         # Add the inference result of the layer to debug_output
                         if layer.name != 'Input_layer':
-                            print(layer.name)
                             if layer.idx in self.debug_target:
                                 debug_output.append(previous_layer_result[layer.path])
                                 if((self.data_format == 'channels_last') and hasattr(layer, 'output_channels')): debug_output[-1] = np.transpose(debug_output[-1], (1,2,0))
@@ -217,7 +216,7 @@ class CodeGenerator(ABC):
 
         return nn_output
 
-    def flatten_array_orderc(self, array):
+    def flatten_array_orderc(self, array:np.ndarray):
     
         flattened_aray = array.flatten(order='C')
         s = '\n        {'
@@ -228,7 +227,7 @@ class CodeGenerator(ABC):
         
         return s
     
-    def flatten_array(self,array):
+    def flatten_array(self, array:np.ndarray):
         s = '\n        {'
         shape = array.shape
         if(len(shape)<4):
@@ -298,7 +297,7 @@ class CodeGenerator(ABC):
         self.makefile.write(pystache.render(template, {'source_files':' '.join(source_files), 'header_files':' '.join(header_files), 'function_name':self.function_name}))
         self.makefile.close()
 
-    def generate_c_files(self, c_files_directory):  
+    def generate_c_files(self, c_files_directory:str):  
 
         self.c_files_directory = c_files_directory
         

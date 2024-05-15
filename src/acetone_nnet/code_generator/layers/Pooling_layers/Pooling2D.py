@@ -19,13 +19,13 @@
 """
 
 from ...Layer import Layer
-
+from ...activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 from abc import abstractmethod
 
 class Pooling2D(Layer):
-    def __init__(self, idx, size, padding, strides, pool_size, input_shape, output_shape, activation_function,**kwargs):
+    def __init__(self, idx:int, size:int, padding:str|list, strides:int, pool_size:int, input_shape:list, output_shape:list, activation_function:ActivationFunctions, **kwargs):
         
         super().__init__()
         self.idx = idx
@@ -53,7 +53,11 @@ class Pooling2D(Layer):
         self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(self.padding,self.input_height, self.input_width, self.pool_size,self.pool_size, self.strides)
 
     @abstractmethod    
-    def specific_function(self, index, input_of_layer):
+    def specific_function(self, index:str, input_of_layer:str):
+        pass
+
+    @abstractmethod    
+    def update_local_vars(self):
         pass
 
     def generate_inference_code_layer(self):
@@ -92,7 +96,7 @@ class Pooling2D(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         
         output = np.zeros((self.input_channels, self.output_height, self.output_width))

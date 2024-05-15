@@ -19,7 +19,7 @@
 """
 
 from ...Layer import Layer
-
+from ...activation_functions import ActivationFunctions
 import numpy as np
 from abc import abstractmethod
 
@@ -31,7 +31,7 @@ from abc import abstractmethod
 ######################### cf https://onnx.ai/onnx/operators/onnx__Pad.html for the doc
 class Pad(Layer):
     
-    def __init__(self, idx, size, pads, constant_value, axes, input_shape,activation_function):
+    def __init__(self, idx:int, size:int, pads:list, constant_value:float, axes:np.ndarray, input_shape:list, activation_function:ActivationFunctions):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -46,7 +46,7 @@ class Pad(Layer):
         self.mode = ''
         self.activation_function = activation_function
     
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_shape[1], self.input_shape[2], self.input_shape[3])
         nb_dim = len(self.pads)//2
         pad_width = [(self.pads[i],self.pads[i+nb_dim]) for i in range(1,nb_dim)] #Constructing the pads accordingly to the numpy nomenclature

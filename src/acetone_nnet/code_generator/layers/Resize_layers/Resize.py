@@ -19,6 +19,8 @@
 """
 
 from ...Layer import Layer
+from ...activation_functions import ActivationFunctions
+import numpy as np
 from abc import abstractmethod
 
 #The resize Layers
@@ -31,9 +33,9 @@ from abc import abstractmethod
 # and apply a transformation to the value in the original tensor to find the value to enter in the new tensor
 class Resize(Layer):
     
-    def __init__(self,idx,size,input_shape,activation_function,axes=[],coordinate_transformation_mode='half_pixel',exclude_outside=0,
-                 keep_aspect_ratio_policy='stretch',boolean_resize = None,target_size=[],roi=[],extrapolation_value=0, 
-                 nearest_mode = 'round_prefer_floor',cubic_coeff_a = -0.75):
+    def __init__(self, idx:int, size:int, input_shape:list, activation_function:ActivationFunctions, axes:list=[], coordinate_transformation_mode:str='half_pixel', exclude_outside:int=0,
+                 keep_aspect_ratio_policy:str='stretch', boolean_resize:None|bool=None, target_size:list=[], roi:list=[], extrapolation_value:float=0, 
+                 nearest_mode:str='round_prefer_floor', cubic_coeff_a:float=-0.75):
         super().__init__()
         self.idx = idx
         if(type(nearest_mode) == bytes):
@@ -86,7 +88,7 @@ class Resize(Layer):
             self.scale[3] = self.output_width / self.input_width
             
     @abstractmethod
-    def forward_path_layer(self,input):
+    def forward_path_layer(self, input:np.ndarray):
         pass
     
     @abstractmethod
@@ -94,14 +96,14 @@ class Resize(Layer):
         pass
 
     #Defining the several coordinate transformations. cf documentation 
-    def half_pixel(self,coord_resized,coord_dim,coord_original):
+    def half_pixel(self, coord_resized:str, coord_dim,coord_original:str):
         s = coord_original + ' = ('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         return s
 
-    def half_pixel_implem(self, coordinate, coordinate_dimension):
+    def half_pixel_implem(self, coordinate:int, coordinate_dimension:int):
         return (coordinate + 0.5)/self.scale[coordinate_dimension] - 0.5 
     
-    def half_pixel_symmetric(self,coord_resized,coord_dim,coord_original):
+    def half_pixel_symmetric(self, coord_resized:str, coord_dim,coord_original:str):
         if(coord_dim==2):
             target_length = self.output_height*self.scale[2]
             input_length = self.input_height
@@ -115,7 +117,7 @@ class Resize(Layer):
         s +='                '+ coord_original + ' = offset + ('+ coord_resized+' + 0.5)/'+ str(self.scale[coord_dim])+' - 0.5;'
         return s
     
-    def half_pixel_symmetric_implem(self, coordinate, coordinate_dimension):
+    def half_pixel_symmetric_implem(self, coordinate:int, coordinate_dimension:int):
         if(coordinate_dimension==2):
             target_length = self.output_height*self.scale[2]
             input_length = self.input_height
@@ -128,7 +130,7 @@ class Resize(Layer):
         offset = center*(1 - adjustment)
         return offset + (coordinate + 0.5)/self.scale[coordinate_dimension] - 0.5 
 
-    def pytorch_half_pixel(self,coord_resized,coord_dim,coord_original):
+    def pytorch_half_pixel(self, coord_resized:str, coord_dim,coord_original:str):
         if(coord_dim==2):
             target_length = self.output_height
         else: 
@@ -141,7 +143,7 @@ class Resize(Layer):
             s += '0;' 
         return s
     
-    def pytorch_half_pixel_implem(self, coordinate, coordinate_dimension):
+    def pytorch_half_pixel_implem(self, coordinate:int, coordinate_dimension:int):
         if(coordinate_dimension==2):
             target_length = self.output_height
         else: 
@@ -152,7 +154,7 @@ class Resize(Layer):
         else:
             return 0
 
-    def align_corners(self,coord_resized,coord_dim,coord_original):
+    def align_corners(self, coord_resized:str, coord_dim,coord_original:str):
         if(coord_dim==2):
             length_original = self.input_height
             length_resized = self.output_height
@@ -163,7 +165,7 @@ class Resize(Layer):
         s = coord_original + ' = ' +coord_resized+'*(' + str(length_original)+' - 1)/(' + str(length_resized)+' - 1);'
         return s
     
-    def align_corners_implem(self, coordinate, coordinate_dimension):
+    def align_corners_implem(self, coordinate:int, coordinate_dimension:int):
         if(coordinate_dimension==2):
             length_original = self.input_height
             length_resized = self.output_height
@@ -173,14 +175,14 @@ class Resize(Layer):
         
         return coordinate * (length_original - 1)/(length_resized - 1)
     
-    def asymmetric(self,coord_resized,coord_dim,coord_original):
+    def asymmetric(self, coord_resized:str, coord_dim,coord_original:str):
         s = coord_original + ' = '+ coord_resized+'/'+ str(self.scale[coord_dim]) +';'
         return s
     
-    def asymmetric_implem(self, coordinate, coordinate_dimension):
+    def asymmetric_implem(self, coordinate:int, coordinate_dimension:int):
         return coordinate/self.scale[coordinate_dimension]
     
-    def tf_crop_and_resize(self,coord_resized,coord_dim,coord_original):
+    def tf_crop_and_resize(self, coord_resized:str, coord_dim,coord_original:str):
         if(coord_dim==2):
             length_original = self.input_height
             length_resized = self.output_height
@@ -200,7 +202,7 @@ class Resize(Layer):
         s+= '                if(('+coord_original+' < 0) || ('+coord_original+' > '+str(length_original)+'){'+coord_original+' = '+ str(self.extrapolation_value)+'}'
         return s
 
-    def tf_crop_and_resize_implem(self, coordinate, coordinate_dimension):
+    def tf_crop_and_resize_implem(self, coordinate:int, coordinate_dimension:int):
         if(coordinate_dimension==2):
             length_original = self.input_height
             length_resized = self.output_height

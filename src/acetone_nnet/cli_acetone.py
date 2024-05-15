@@ -23,7 +23,7 @@ import pathlib
 
 from .code_generator.neural_network import CodeGenerator
 
-def cli_acetone(model_file, function_name, nb_tests, conv_algorithm, output_dir, test_dataset_file=None, normalize=False ):
+def cli_acetone(model_file:str, function_name:str, nb_tests:int, conv_algorithm:str, output_dir:str, test_dataset_file:str|None=None, normalize:bool=False ):
     normalize = bool(normalize)
     print(normalize)
     print("C CODE GENERATOR FOR NEURAL NETWORKS")

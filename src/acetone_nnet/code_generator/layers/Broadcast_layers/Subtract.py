@@ -19,6 +19,7 @@
 """
 
 from .Broadcast import Broadcast
+import numpy as np
 
 #Subtraction of several tensors
 class Subtract(Broadcast):
@@ -28,7 +29,7 @@ class Subtract(Broadcast):
         self.name = 'Subtract'
         self.specific_operator = ' - '
     
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         if(self.constant is None):
             constant = 0
         else: 

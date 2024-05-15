@@ -19,6 +19,7 @@
 """
 
 from .Broadcast import Broadcast
+import numpy as np
 
 #Return a tensor with where each position (f,i,j) contains the average of all the values at position (f,i,j) in each tensor
 class Average(Broadcast):
@@ -27,7 +28,7 @@ class Average(Broadcast):
         self.name = 'Average'
         self.specific_operator = ' + '
 
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         output = inputs[0]
         for input in inputs[1:]:
             output +=input 

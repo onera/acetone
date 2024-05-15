@@ -19,12 +19,13 @@
 """
 
 from ..Layer import Layer
+from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
 class BatchNormalization(Layer):
 
-    def __init__(self, idx, size, input_shape, epsilon, scale, biases, mean, var, activation_function):
+    def __init__(self, idx:int, size:int, input_shape:list, epsilon:float|int, scale:np.ndarray, biases:np.ndarray, mean:np.ndarray, var:np.ndarray, activation_function:ActivationFunctions):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -66,7 +67,7 @@ class BatchNormalization(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self,input):
+    def forward_path_layer(self, input:np.ndarray):
         input = np.reshape(input, (self.output_channels, self.output_height, self.output_width))
         output = []
         for i in range(self.output_channels):

@@ -24,7 +24,7 @@ import pystache
 
 class Softmax(Layer):
 
-    def __init__(self, idx, size):
+    def __init__(self, idx:int, size:int):
         
         super().__init__()
         self.idx = idx
@@ -51,7 +51,7 @@ class Softmax(Layer):
 
         return pystache.render(template, mustach_hash)
     
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         
         exp = np.exp(input, dtype=np.float)
         output = exp/np.sum(exp)

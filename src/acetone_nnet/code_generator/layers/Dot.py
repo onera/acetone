@@ -19,6 +19,7 @@
 """
 
 from ..Layer import Layer
+from..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
@@ -28,7 +29,7 @@ import pystache
 #input: two tensor
 #output: the resultant tensor 
 class Dot(Layer):
-    def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
+    def __init__(self, idx:int, size:int, axis:int|list, input_shapes:list, output_shape:list, activation_function:ActivationFunctions):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -85,7 +86,7 @@ class Dot(Layer):
 
         return pystache.render(template, mustach_hash)
     
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         inputs[0] = inputs[0].reshape(self.input_shapes[0][1],self.input_shapes[0][2],self.input_shapes[0][3])
         inputs[1] = inputs[1].reshape(self.input_shapes[1][1],self.input_shapes[1][2],self.input_shapes[1][3])
         output = np.tensordot(inputs[0],inputs[1],axes=[self.axis[0]-1,self.axis[1]-1])

@@ -34,7 +34,7 @@ class ResizeCubic(Resize):
         self.template_dict = {'1D':self.template_path+'layers/Resize/template_ResizeCubic1D.c.tpl',
                               '2D':self.template_path+'layers/Resize/template_ResizeCubic2D.c.tpl'}
     
-    def cubic_interpolation_1D(self,input,f,x,y,s):
+    def cubic_interpolation_1D(self, input:np.ndarray, f:int, x:int, y:int, s:float):
         col_index = max(0,min(self.input_width-1,y))
         f_1 = input[f,max(0,min(self.input_height-1,x-1)),col_index]
         f0 = input[f,max(0,min(self.input_height-1,x)),col_index]
@@ -48,7 +48,7 @@ class ResizeCubic(Resize):
 
         return f_1*coeff1 + f0*coeff2 + f1*coeff3 + f2*coeff4
     
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         output = np.zeros((self.output_channels,self.output_height,self.output_width))
         for f in range(self.output_channels):

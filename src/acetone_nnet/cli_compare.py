@@ -26,7 +26,7 @@ import numpy as np
 # https://floating-point-gui.de/errors/comparison/
 
 
-def compare_floats(a, b, epsilon = (128*sys.float_info.epsilon), abs_th = sys.float_info.min):
+def compare_floats(a:float|int, b:float|int, epsilon:float=(128*sys.float_info.epsilon), abs_th:float=sys.float_info.min):
     diff = abs(a-b) 
     if a == b:
         return True, diff
@@ -38,7 +38,7 @@ def compare_floats(a, b, epsilon = (128*sys.float_info.epsilon), abs_th = sys.fl
         else: 
             return False, diff
 
-def preprocess_line(line, precision):
+def preprocess_line(line:list, precision:str):
     line = line.split(' ')
     line[:] = [x for x in line if x.strip()]
     if precision == 'double':
@@ -47,7 +47,7 @@ def preprocess_line(line, precision):
         line = list(map(np.float32,line))  
     return line 
 
-def compare_lines(line_f1, line_f2, precision):
+def compare_lines(line_f1:list, line_f2:list, precision:str):
 
     line_f1 = preprocess_line(line_f1, precision)
     line_f2 = preprocess_line(line_f2, precision)
@@ -65,7 +65,7 @@ def compare_lines(line_f1, line_f2, precision):
         return False, max_diff
 
 
-def compare_files(file1, file2, nb_tests, precision):
+def compare_files(file1:str, file2:str, nb_tests:int, precision:str):
     f1 = open(file1, 'r')
     f2 = open(file2, 'r')
 
@@ -93,7 +93,7 @@ def compare_files(file1, file2, nb_tests, precision):
     else: 
         return False, max_diff_file
 
-def cli_compare(reference_file, c_file, nb_tests, precision):
+def cli_compare(reference_file:str, c_file:str, nb_tests:int, precision:str):
     _, max_diff_file = compare_files(reference_file, c_file, nb_tests, precision)
     
     print("   Max absolute error for %s test(s): %s" % (nb_tests, max_diff_file))

@@ -19,6 +19,7 @@
 """
 
 from .Broadcast import Broadcast
+import numpy as np
 
 #Multiplication of several tensors
 class Multiply(Broadcast):
@@ -28,7 +29,7 @@ class Multiply(Broadcast):
         self.name = 'Multiply'
         self.specific_operator = '*'
     
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         if(self.constant is None):
             constant = 1
         else: 

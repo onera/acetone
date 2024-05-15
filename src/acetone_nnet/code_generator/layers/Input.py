@@ -18,12 +18,13 @@
  ******************************************************************************
 """
 
+import numpy as np
 from ..Layer import Layer
 import pystache
 
 class InputLayer(Layer):
 
-    def __init__(self, idx, size, input_shape, data_format):
+    def __init__(self, idx:int, size:int, input_shape:list, data_format:str):
        
         super().__init__()
         self.idx = idx
@@ -57,6 +58,6 @@ class InputLayer(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         
         return input 

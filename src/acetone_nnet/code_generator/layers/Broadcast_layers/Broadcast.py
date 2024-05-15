@@ -19,6 +19,7 @@
 """
 
 from ...Layer import Layer
+from ...activation_functions import ActivationFunctions
 
 from abc import abstractmethod
 import pystache
@@ -29,7 +30,7 @@ import numpy as np
 #input: a list of tensor
 #output: the resultant tensor
 class Broadcast(Layer):
-    def __init__(self, idx, size, input_shapes, output_shape,activation_function, constant = None):
+    def __init__(self, idx:int, size:int, input_shapes:list, output_shape:list, activation_function:ActivationFunctions, constant:np.ndarray|float|int|None=None):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -110,5 +111,5 @@ class Broadcast(Layer):
         return pystache.render(template, mustach_hash)
 
     @abstractmethod
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         pass

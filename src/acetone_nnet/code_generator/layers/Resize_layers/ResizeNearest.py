@@ -41,22 +41,22 @@ class ResizeNearest(Resize):
                                             "ceil":math.ceil}
     
     #Defining the several method to chose the nearest
-    def floor(self,x,y):
+    def floor(self, x:str, y:str):
         return x+' = floor('+y+');'
     
-    def ceil(self,x,y):
+    def ceil(self, x:str, y:str):
         return x+' = ceil('+y+');'
     
-    def round_prefer_floor(self,x,y):
+    def round_prefer_floor(self, x:str, y:str):
         return x+' = floor(ceil(2 * ' + y + ') / 2);'
     
-    def round_prefer_floor_implem(self,x):
+    def round_prefer_floor_implem(self, x:float):
         return math.floor(math.ceil(2*x)/2)
     
-    def round_prefer_ceil(self,x,y):
+    def round_prefer_ceil(self, x:str, y:str):
         return x+' = ceil(floor(2 * ' + y + ') / 2);'
     
-    def round_prefer_ceil_implem(self,x):
+    def round_prefer_ceil_implem(self, x:float):
         return math.ceil(math.floor(2*x)/2)
     
     def generate_inference_code_layer(self):
@@ -89,7 +89,7 @@ class ResizeNearest(Resize):
 
         return pystache.render(template, mustach_hash)    
     
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         output = np.zeros((self.output_channels,self.output_height,self.output_width))
         for f in range(self.output_channels):

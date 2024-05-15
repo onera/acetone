@@ -47,12 +47,12 @@ class Layer(ABC):
     def forward_path_layer(self):
         pass
 
-    def count_elements_array(self, array):
+    def count_elements_array(self, array:np.ndarray):
         nb_elements = 1
         for dim in np.shape(array) : nb_elements *= dim
         return nb_elements
 
-    def compute_padding(self,padding, in_height, in_width, kernel_h, kernel_w, strides, dilation_rate=1):
+    def compute_padding(self,padding:str|list, in_height:int, in_width:int, kernel_h:int, kernel_w:int, strides:int, dilation_rate:int=1):
         if(type(padding) == str):
             # Compute 'same' padding tensorflow
 
@@ -88,7 +88,7 @@ class Layer(ABC):
         return pad_right, pad_left, pad_bottom, pad_top
     
     #Give to the layer an string saying were the output will be saved (either in a 'cst' or in an 'output_road')
-    def find_output_str(self,dict_cst):
+    def find_output_str(self, dict_cst:dict):
         #dict_cst is the dict linking an layer to the cst in which the must be saved if needed
         
         #either it has to be saved

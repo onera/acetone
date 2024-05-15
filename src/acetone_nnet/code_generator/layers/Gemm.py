@@ -19,6 +19,7 @@
 """
 
 from ..Layer import Layer
+from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
@@ -27,7 +28,7 @@ import pystache
 #data: alpha and beta constante used in the operation, transpo un tuple saying if the tensor T or W must be transposed before the operation
 #output: The result of the operation """alpha*T*W + beta*B"""
 class Gemm(Layer):
-    def __init__(self, idx, size, alpha, beta, transA, transB, weights, bias, input_shape, output_shape,activation_function):
+    def __init__(self, idx:int, size:int, alpha:float|int, beta:float|int, transA:bool, transB:bool, weights:np.ndarray, bias:np.ndarray, input_shape:list, output_shape:list, activation_function:ActivationFunctions):
         super().__init__() 
         self.name = 'Gemm'
         self.idx = idx
@@ -44,7 +45,6 @@ class Gemm(Layer):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         if(input_shape):
-            print(input_shape)
             if(transA):
                 self.input_height = input_shape[3]
                 self.input_width = input_shape[2]
@@ -55,8 +55,8 @@ class Gemm(Layer):
             self.input_height = 1
             self.input_width = 1
         
-        self.weights = np.asarray(weights)
-        self.biases = np.asarray(bias)
+        self.weights = weights
+        self.biases = bias
         self.activation_function = activation_function
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)
@@ -168,7 +168,7 @@ class Gemm(Layer):
 
         return pystache.render(template, mustach_hash)
     
-    def forward_path_layer(self,input):
+    def forward_path_layer(self, input:np.ndarray):
         if(self.transpo[0]):
             input = input.reshape(self.input_width,self.input_height).transpose()
         else:

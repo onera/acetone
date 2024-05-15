@@ -19,12 +19,13 @@
 """
 
 from ..Layer import Layer
+from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
 class Add_Bias(Layer):
 
-    def __init__(self, idx, size, biases,activation_function):
+    def __init__(self, idx:int, size:int, biases:int, activation_function:ActivationFunctions):
         
         super().__init__()
         self.idx = idx
@@ -61,7 +62,7 @@ class Add_Bias(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.previous_layer[0].size)
 
         return self.activation_function.compute(input + self.biases)

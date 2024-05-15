@@ -24,8 +24,11 @@ import numpy as np
 
 import acetone_nnet
 from acetone_nnet import Layer, ActivationFunctions
+import onnx
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
 
-def are_layers_equals(self, other):
+def are_layers_equals(self, other:acetone_nnet.Layer):
     #compare two layers and say if they are equals
     if type(self) != type(other):
         return False
@@ -51,16 +54,6 @@ def are_layers_equals(self, other):
 Layer.__eq__ = are_layers_equals
 ActivationFunctions.__eq__ = are_layers_equals
 
-def get_weights(layer_keras,data_type_py = np.float32):
-    weights = data_type_py(layer_keras.get_weights()[0])
-    if(len(weights.shape) < 3):
-        for i in range(3-len(weights.shape)): 
-            weights = np.expand_dims(weights, axis=-1)
-    weights = np.moveaxis(weights, 2, 0)
-    if(len(weights.shape) < 4):
-        weights = np.expand_dims(weights, axis=0)
-    return weights
-
 class ImporterTestCase(unittest.TestCase):
 
     def setUp(self):
@@ -70,7 +63,7 @@ class ImporterTestCase(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
     
-    def import_layers(self, file, conv_algorithm = 'std_gemm_nn'):
+    def import_layers(self, file:str|onnx.ModelProto|Functional|Sequential, conv_algorithm:str='std_gemm_nn'):
         return acetone_nnet.CodeGenerator(file = file,
                                           test_dataset_file = None,
                                           function_name = 'inference',
@@ -78,7 +71,7 @@ class ImporterTestCase(unittest.TestCase):
                                           conv_algorithm = conv_algorithm,
                                           normalize = False)
     
-    def assert_Layers_equals(actual, desired):
+    def assert_Layers_equals(actual:Layer, desired:Layer):
 
         mismatched_type = []
         if not issubclass(type(actual), acetone_nnet.Layer) :
@@ -108,7 +101,7 @@ class ImporterTestCase(unittest.TestCase):
             
             raise AssertionError(err_msg)
     
-    def assert_List_Layers_equals(self, actual, desired, verbose=True):
+    def assert_List_Layers_equals(self, actual:list, desired:list, verbose:bool=True):
 
         if(len(actual) != len(desired)):
             err_msg = 'Shape error: ' + str(len(actual)) + ' != ' + str(len(desired))

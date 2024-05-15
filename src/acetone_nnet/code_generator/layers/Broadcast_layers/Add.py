@@ -19,6 +19,7 @@
 """
 
 from .Broadcast import Broadcast
+import numpy as np
 
 #Addition of several tensor
 class Add(Broadcast):
@@ -28,7 +29,7 @@ class Add(Broadcast):
         self.name = 'Add'
         self.specific_operator = ' + '
     
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         if(self.constant is None):
             constant = 0
         else: 

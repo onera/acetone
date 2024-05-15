@@ -85,7 +85,7 @@ class ResizeLinear(Resize):
 
         return pystache.render(template,mustach_hash)
 
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_channels, self.input_height, self.input_width)
         output = np.zeros((self.output_channels,self.output_height,self.output_width))
         for f in range(self.output_channels):

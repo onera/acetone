@@ -19,7 +19,6 @@
 """
 
 from .Broadcast import Broadcast
-
 import numpy as np
 
 #Return a tensor with where each position (f,i,j) contains the max of all the values at position (f,i,j) in each tensor
@@ -29,7 +28,7 @@ class Maximum(Broadcast):
         self.name = 'Maximum'
         self.specific_operator = ', '
 
-    def forward_path_layer(self, inputs):
+    def forward_path_layer(self, inputs:np.ndarray):
         maxi = inputs[0]
         for input in inputs[1:]:
             maxi = np.maximum(maxi, input)

@@ -19,6 +19,7 @@
 """
 
 from ..Layer import Layer
+from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
@@ -27,7 +28,7 @@ import pystache
 #input: a list of tensor to concatenate
 #output: the concatenated tensor 
 class Concatenate(Layer):
-    def __init__(self, idx, size, axis, input_shapes,output_shape,activation_function):
+    def __init__(self, idx:int, size:int, axis:int, input_shapes:list, output_shape:list, activation_function:ActivationFunctions):
         super().__init__()
         self.idx = idx
         self.size = size

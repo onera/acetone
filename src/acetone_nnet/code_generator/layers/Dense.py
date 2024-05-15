@@ -19,19 +19,20 @@
 """
 
 from ..Layer import Layer
+from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
 class Dense(Layer):
 
-    def __init__(self, idx, size, weights, biases, activation_function):
+    def __init__(self, idx:int, size:int, weights:np.ndarray, biases:np.ndarray, activation_function:ActivationFunctions):
         
         super().__init__()
         self.idx = idx
         self.size = size
         self.name = 'Dense'
-        self.weights = np.asarray(weights)
-        self.biases = np.asarray(biases)
+        self.weights = weights
+        self.biases = biases
         self.activation_function = activation_function
         self.local_var = 'dotproduct'
         
@@ -68,6 +69,6 @@ class Dense(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input):
+    def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.previous_layer[0].size)
         return self.activation_function.compute(np.dot(input, self.weights) + self.biases)
