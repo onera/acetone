@@ -31,6 +31,7 @@ def compare_result(acetone_result:list, reference_result:list, targets:list, ver
         
         return False
     
+    correct = True
     for i in range(len(acetone_result)):
         print('--------------------------------------------')
         print('Comparing',targets[i])
@@ -38,12 +39,45 @@ def compare_result(acetone_result:list, reference_result:list, targets:list, ver
             np.testing.assert_allclose(acetone_result[i],reference_result[i],atol=1e-06)
         except AssertionError as msg:
             print("Error: output value of",targets[i],"incorrect")
-
+            correct = False
             if verbose:
                 print(msg)
-            print('--------------------------------------------')
-            return False
         print('--------------------------------------------')
 
-    return True
+    return correct
 
+def extract_outputs_c(path_to_output:str, data_type:str, nb_targets:int):
+    list_result = []
+    targets = []
+    to_transpose = False
+    with open(path_to_output,'r') as f:
+        for i, line in enumerate(f):
+    
+            if i%2 == 0:
+                line = line[:-1].split(' ')
+                targets.append(line[0] + " " + line[1])
+                to_transpose = int(line[2])
+                if to_transpose:
+                    shape = (int(line[3]),int(line[4]),int(line[5]))
+            else:
+                line = line[:-2].split(' ')
+                if data_type == 'int':
+                    line = list(map(int,line))
+                elif data_type == 'double':
+                    line = list(map(float,line)) 
+                elif data_type == 'float':
+                    line = list(map(np.float32,line))
+                line = np.array(line)
+
+                if to_transpose:
+                    line = np.reshape(line, shape)
+                    line = np.transpose(line, (1,2,0))
+                    line = line.flatten()
+
+                list_result.append(line)
+    
+            if i == 2*nb_targets-1:
+                break
+    f.close()
+
+    return list_result, targets

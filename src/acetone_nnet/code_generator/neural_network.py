@@ -18,6 +18,10 @@
  ******************************************************************************
 """
 
+import onnx
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
+
 import os
 import numpy as np
 from pathlib import Path
@@ -37,14 +41,14 @@ from .layers import (
 
 class CodeGenerator(ABC):
 
-    def __init__(self, file:str, test_dataset_file:str = None, function_name:str = 'inference', nb_tests:int = None, conv_algorithm:str = 'std_gemm_nn', normalize:bool = False, debug_mode:str|None = None, debug_target:list|None = None,**kwargs):
+    def __init__(self, file:str|onnx.ModelProto|Functional|Sequential, test_dataset_file:str=None, function_name:str='inference', nb_tests:int|str=None, conv_algorithm:str='std_gemm_nn', normalize:bool|str=False, debug_mode:str|None=None, debug_target:list|None=None,**kwargs):
 
         self.file = file
         self.test_dataset_file = test_dataset_file
         self.function_name = function_name
         self.nb_tests = nb_tests
         self.conv_algorithm = conv_algorithm
-        self.normalize = normalize
+        self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
 
         if (not self.normalize):
@@ -67,22 +71,21 @@ class CodeGenerator(ABC):
             print("creating random dataset")
             ds = self.create_test_dataset()
             self.test_dataset = ds
+
+        self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile', 'test_dataset.h', 'test_dataset.c']
         
         ##### Debug Mode #####
         self.debug_mode = debug_mode
         if self.debug_mode:
             self.debug_target = self.load_debug_target(debug_mode, debug_target)
         ##### Debug Mode #####
-
-        self.files_to_gen = ['inference.c', 'inference.h', 'global_vars.c', 'main.c', 'Makefile', 'test_dataset.h', 'test_dataset.c']
     
     def load_debug_target(self, debug_mode:str|None, debug_target:list|None):
-        if debug_target != None:
+        if debug_target == None:
             return debug_target
         
         else:
             targets = []
-
             for layer in self.layers[1:]:
                 if debug_mode == 'keras' and layer.name == 'Softmax':
                     targets[-1] = layer.idx
@@ -377,13 +380,28 @@ class CodeGenerator(ABC):
         if any(isinstance(layer, ResizeLinear) for layer in self.layers):
             mustach_hash['is_linear_interpolation'] = True
         
+        if self.debug_mode:
+            mustach_hash['debug_file'] = "debug_file.txt"
+        
         mustach_hash['layers'] = []
         for layer in self.layers:
             layer_hash = {'inference_function':layer.generate_inference_code_layer(), 'path':layer.path, 'size':layer.size}
             
-            if(layer in self.dict_cst):
+            if layer in self.dict_cst:
                 layer_hash['cst'] = True
                 layer_hash['cst_name'] = self.dict_cst[layer]
+            
+            if self.debug_mode:
+                if layer.idx in self.debug_target:
+                    layer_hash['debug_layer'] = True
+                    layer_hash['name'] = layer.name
+                    layer_hash['idx'] = layer.idx
+                    layer_hash['to_transpose'] = 0
+                    if ((self.data_format == 'channels_last') and (hasattr(layer,'output_channels'))):
+                        layer_hash['to_transpose'] = 1
+                        layer_hash['channels'] = layer.output_channels
+                        layer_hash['height'] = layer.output_height
+                        layer_hash['width'] = layer.output_width
 
             mustach_hash['layers'].append(layer_hash)
         

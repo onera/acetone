@@ -3,6 +3,10 @@
 #include "inference.h"
 
 int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[{{input_size}}]){
+    {{#debug_file}}
+    FILE *fp = fopen("{{debug_file}}", "w+");
+
+    {{/debug_file}}
     int f;
     int i;
     int j;
@@ -60,6 +64,17 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 {{{pre_processing}}}
 {{#layers}}
 {{{inference_function}}}
+{{#debug_layer}}
+    fprintf(fp, "{{name}} {{idx}} {{to_transpose}} {{channels}} {{height}} {{width}} \n");
+    for (k = 0; k < {{size}}; ++k)
+    {
+        fprintf(fp,"%.9g ", output_{{path}}[k]);
+        if (k == {{size}} - 1)
+        {
+            fprintf(fp, "\n");
+        }
+    }
+{{/debug_layer}}
 
     {{#cst}}
     for (k = 0; k < {{size}}; k++)
