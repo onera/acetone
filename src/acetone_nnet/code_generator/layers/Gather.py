@@ -29,7 +29,7 @@ import pystache
 #output: a list of tensor
 class Gather(Layer):
     
-    def __init__(self, idx:int, size:int, axis:int,  indices:list, input_shape:list, output_shape:list, activation_function:ActivationFunctions):
+    def __init__(self, idx:int, size:int, axis:int,  indices:np.ndarray, input_shape:list, output_shape:list, activation_function:ActivationFunctions):
         
         super().__init__()
         self.idx = idx
@@ -37,12 +37,31 @@ class Gather(Layer):
         self.name = 'Gather'
         self.indices = indices
         self.axis = axis
-        self.input_channels = input_shape[1]
+        self.output_channels = input_shape[1]
         self.input_height = input_shape[2]
         self.input_width = input_shape[3]
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.activation_function = activation_function
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.axis) == int
+        assert type(self.indices) == np.ndarray
+        assert type(self.output_channels) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert type(self.input_height) == int
+        assert type(self.input_width) == int
+        assert isinstance(self.activation_function,ActivationFunctions)
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert axis in [1,2,3]
+        assert all(indice >= 0 and indice < input_shape[axis] for indice in self.indices.flatten())
         
     def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
@@ -68,11 +87,11 @@ class Gather(Layer):
             mustach_hash['output_width'] = self.output_width
         elif(self.axis == 2):
             mustach_hash['heights'] = True
-            mustach_hash['output_channels'] = self.input_channels
+            mustach_hash['output_channels'] = self.output_channels
             mustach_hash['output_width'] = self.output_width
         elif(self.axis == 3):
             mustach_hash['widths'] = True
-            mustach_hash['output_channels'] = self.input_channels
+            mustach_hash['output_channels'] = self.output_channels
             mustach_hash['output_height'] = self.output_height
 
         if(self.activation_function.name == 'linear'):
@@ -88,5 +107,5 @@ class Gather(Layer):
         return pystache.render(template, mustach_hash)
         
     def forward_path_layer(self, input:np.ndarray):
-        input = input.reshape(self.input_channels,self.input_height,self.input_width)
+        input = input.reshape(self.output_channels,self.input_height,self.input_width)
         return np.take(input, indices=self.indices, axis=self.axis-1)

@@ -65,7 +65,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 {{#layers}}
 {{{inference_function}}}
 {{#debug_layer}}
-    fprintf(fp, "{{name}} {{idx}} {{to_transpose}} {{channels}} {{height}} {{width}} \n");
+    fprintf(fp, "{{name}} {{idx}} {{to_transpose}} {{channels}} {{height}} {{width}}\n");
     for (k = 0; k < {{size}}; ++k)
     {
         fprintf(fp,"%.9g ", output_{{path}}[k]);

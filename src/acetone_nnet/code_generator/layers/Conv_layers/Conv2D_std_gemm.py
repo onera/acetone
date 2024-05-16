@@ -26,16 +26,6 @@ class Conv2D_std_gemm(Conv2D_gemm):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-
-        self.patches_height = self.input_channels * self.kernel_h * self.kernel_w
-        self.patches_width = self.output_height * self.output_width
-        self.patches_size = self.patches_height * self.patches_width
-
-        self.conv_algorithm = self.conv_algorithm[-7:]
-        self.algo_gemm_mapping = { 'gemm_nn' : self.write_gemm_nn,
-                                   'gemm_nt' : self.write_gemm_nt,
-                                   'gemm_tn' : self.write_gemm_tn,
-                                   'gemm_tt' : self.write_gemm_tt}
         
         self.algo_patch_building_mapping = { 'gemm_nn' : self.write_im2col,
                                              'gemm_nt' : self.write_im2row,

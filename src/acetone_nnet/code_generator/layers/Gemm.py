@@ -28,7 +28,7 @@ import pystache
 #data: alpha and beta constante used in the operation, transpo un tuple saying if the tensor T or W must be transposed before the operation
 #output: The result of the operation """alpha*T*W + beta*B"""
 class Gemm(Layer):
-    def __init__(self, idx:int, size:int, alpha:float|int, beta:float|int, transA:bool, transB:bool, weights:np.ndarray, bias:np.ndarray, input_shape:list, output_shape:list, activation_function:ActivationFunctions):
+    def __init__(self, idx:int, size:int, alpha:float|int, beta:float|int, transA:bool|int, transB:bool|int, weights:np.ndarray, bias:np.ndarray, input_shape:list, output_shape:list, activation_function:ActivationFunctions):
         super().__init__() 
         self.name = 'Gemm'
         self.idx = idx
@@ -45,12 +45,8 @@ class Gemm(Layer):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         if(input_shape):
-            if(transA):
-                self.input_height = input_shape[3]
-                self.input_width = input_shape[2]
-            else:
-                self.input_height = input_shape[2]
-                self.input_width = input_shape[3]
+            self.input_height = input_shape[2]
+            self.input_width = input_shape[3]
         else:
             self.input_height = 1
             self.input_width = 1
@@ -60,6 +56,30 @@ class Gemm(Layer):
         self.activation_function = activation_function
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.alpha) == float or type(self.alpha) == int
+        assert type(self.beta) == float or type(self.beta) == int
+        assert type(self.transpo) == tuple[int] or type(self.transpo) == tuple[bool]
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert type(self.input_height) == int
+        assert type(self.input_width) == int
+        assert type(self.weights) == np.ndarray
+        assert type(self.biases) == np.ndarray
+        assert isinstance(self.activation_function,ActivationFunctions)
+
+        ### Checking value consistency ###
+        assert self.size == self.output_height*self.output_width
+        assert self.weights.shape[2 + self.transpo[1]] == self.input_height if self.transpo[0] else self.input_width
+        assert self.output_height == self.input_width if self.transpo[0] else self.input_height
+        assert self.output_width == self.weights.shape[3 - self.transpo[1]]
+        assert (self.biases.shape[0] == 1 or self.biases.shape[0] == self.output_height) and (self.biases.shape[1] == 1 or self.biases.shape[1] == self.output_width)
+
         
     #The various ways to compute the operation: 
     
@@ -169,10 +189,9 @@ class Gemm(Layer):
         return pystache.render(template, mustach_hash)
     
     def forward_path_layer(self, input:np.ndarray):
+        input = input.reshape(self.input_height,self.input_width)
         if(self.transpo[0]):
-            input = input.reshape(self.input_width,self.input_height).transpose()
-        else:
-            input = input.reshape(self.input_height,self.input_width)
+            input = input.transpose()
             
         if(self.transpo[1]):
             self.weights = self.weights.transpose()
@@ -190,7 +209,10 @@ class Gemm(Layer):
         mustach_hash['road'] = self.path
 
         mustach_hash['patches_size'] = self.output_width*self.output_height
-        mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.transpo](self.output_height, self.output_width, self.input_width, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), self.previous_layer[0].output_str)
+        if self.transpo[0]:
+            mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.transpo](self.output_height, self.output_width, self.input_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), self.previous_layer[0].output_str)
+        else:
+            mustach_hash['gemm_code'] = self.algo_gemm_mapping[self.transpo](self.output_height, self.output_width, self.input_width, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), self.previous_layer[0].output_str)
 
         with open(self.template_path+'layers/Gemm/template_Gemm.c.tpl','r') as template_file:
             template = template_file.read()

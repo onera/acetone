@@ -38,7 +38,25 @@ class Concatenate(Layer):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.output_channels = output_shape[1]
-        self.activation_function = activation_function            
+        self.activation_function = activation_function
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert all((type(shape) == int for shape in input_shape) for input_shape in self.input_shapes)
+        assert self.axis in [1,2,3]
+        assert type(self.output_channels) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert isinstance(self.activation_function, ActivationFunctions)
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert self.axis == 1 or all(self.output_channels == input_shape[1] for input_shape in self.input_shapes)
+        assert self.axis == 2 or all(self.output_height== input_shape[2] for input_shape in self.input_shapes)
+        assert self.axis == 3 or all(self.output_width == input_shape[3] for input_shape in self.input_shapes)
     
     def generate_inference_code_layer(self):
         borne_sup = 0

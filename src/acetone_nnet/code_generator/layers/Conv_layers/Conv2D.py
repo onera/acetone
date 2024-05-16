@@ -21,11 +21,12 @@
 from ...Layer import Layer
 from ...activation_functions import ActivationFunctions
 import numpy as np
+import math
 from abc import abstractmethod
 
 class Conv2D(Layer):
     
-    def __init__(self, idx:int, conv_algorithm:str, size:int, padding:str|list, strides:int, kernel_h:int, kernel_w:int, dilation_rate:int, nb_filters:int, input_shape:list, output_shape:list, weights:np.ndarray, biases:np.ndarray, activation_function:ActivationFunctions):
+    def __init__(self, idx:int, conv_algorithm:str, size:int, padding:str|np.ndarray, strides:int, kernel_h:int, kernel_w:int, dilation_rate:int, nb_filters:int, input_shape:list, output_shape:list, weights:np.ndarray, biases:np.ndarray, activation_function:ActivationFunctions):
         super().__init__()
         self.conv_algorithm = conv_algorithm
         self.idx = idx
@@ -56,6 +57,36 @@ class Conv2D(Layer):
         self.nb_biases = self.count_elements_array(self.biases)
         self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(self.padding,self.input_height, self.input_width, self.kernel_h, self.kernel_w, self.strides, self.dilation_rate)
     
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(conv_algorithm) == str
+        assert type(self.padding) == str or type(self.padding) == np.ndarray
+        assert type(self.strides) == int
+        assert type(self.kernel_h) == int
+        assert type(self.kernel_w) == int
+        assert type(self.dilation_rate) == int
+        assert type(self.nb_filters) == int
+        assert type(self.input_channels) == int
+        assert type(self.input_height) == int
+        assert type(self.input_width) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert type(self.weights) == np.ndarray
+        assert type(self.biases) == np.ndarray
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert self.weights.shape == (self.input_channels, self.kernel_h, self.kernel_w, self.nb_filters)
+        assert len(self.biases.shape) == 1 and self.biases.shape[0] == self.nb_filters
+        assert self.output_height == math.ceil((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1)*(self.dilation_rate - 1))/self.strides) + 1
+        assert self.output_width == math.ceil((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1
+        assert self.conv_algorithm in ['6loops',
+                                       'indirect_gemm_nn','indirect_gemm_tn','indirect_gemm_nt','indirect_gemm_tt',
+                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']
+
     @abstractmethod
     def generate_inference_code_layer(self):
         pass

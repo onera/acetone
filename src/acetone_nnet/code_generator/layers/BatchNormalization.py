@@ -42,6 +42,29 @@ class BatchNormalization(Layer):
 
         self.activation_function = activation_function
 
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.output_channels) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert type(self.epsilon) == float or type(self.epsilon) == int
+        assert type(self.scale) == np.ndarray
+        assert type(self.mean) == np.ndarray 
+        assert type(self.var) == np.ndarray
+        assert type(self.biases) == np.ndarray
+        assert isinstance(self.activation_function, ActivationFunctions)
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert len(self.scale.shape) == 1 and self.scale.shape[0] == self.output_channels
+        assert len(self.mean.shape) == 1 and self.mean.shape[0] == self.output_channels
+        assert len(self.var.shape) == 1 and self.var.shape[0] == self.output_channels
+        assert len(self.biases.shape) == 1 and self.biases.shape[0] == self.output_channels
+
+
     def generate_inference_code_layer(self):
         #Variable indicating under which name the input tensor is
         output_str = self.previous_layer[0].output_str

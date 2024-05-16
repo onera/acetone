@@ -31,7 +31,7 @@ from abc import abstractmethod
 ######################### cf https://onnx.ai/onnx/operators/onnx__Pad.html for the doc
 class Pad(Layer):
     
-    def __init__(self, idx:int, size:int, pads:list, constant_value:float, axes:np.ndarray, input_shape:list, activation_function:ActivationFunctions):
+    def __init__(self, idx:int, size:int, pads:np.ndarray, constant_value:float, axes:np.ndarray|list, input_shape:list, activation_function:ActivationFunctions):
         super().__init__()
         self.idx = idx
         self.size = size
@@ -45,6 +45,24 @@ class Pad(Layer):
         self.output_width = input_shape[3] + pads[3] + pads[7]
         self.mode = ''
         self.activation_function = activation_function
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert all(type(pad) == int for pad in self.pads)
+        assert type(self.constant_value) == float or type(self.constant_value) == int
+        assert type(self.output_channels) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert all(type(shape) == int for shape in self.input_shape)
+        assert isinstance(self.activation_function, ActivationFunctions)
+
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert all(0 <= axe and axe < 4 for axe in self.axes)
     
     def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_shape[1], self.input_shape[2], self.input_shape[3])

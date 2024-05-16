@@ -203,6 +203,10 @@ def create_Resize(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
     attributs = extract_attribut(node)
     if ('axes' not in attributs):
         attributs['axes'] = []
+    else:
+        for axe in attributs['axes']:
+            if axe < 0:
+                axe = len(input_shape) - axe
     if('coordinate_transformation_mode' not in attributs):
         attributs['coordinate_transformation_mode'] = 'half_pixel'
     if('exclude_outside' not in attributs):
@@ -228,7 +232,7 @@ def create_Resize(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
     if(initializers[0]):
         roi = onnx.numpy_helper.to_array(initializers[0])
     else:
-        roi = initializers[0]
+        roi = []
     
     return create_resize_obj(mode = attributs['mode'],
                              idx = idx,
@@ -257,9 +261,12 @@ def create_Pad(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
     initializers = [look_for_initializer(initializer_name,model) for initializer_name in node.input[1:]]
     attributs = extract_attribut(node)
     if(len(initializers)==2):
-        initializers.append([])
-    if(initializers[2]):
+        axes = []
+    else:
         axes = onnx.numpy_helper.to_array(initializers[2])
+        for axe in axes:
+            if axe < 0:
+                axe = len(input_shape) - axe
     return create_pad_obj(mode = attributs['mode'],
                           idx = idx,
                           size = size,
@@ -278,11 +285,14 @@ def create_Gather(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
     dict_input[idx] = [node.input[0]]
     dict_output[node.output[0]] = idx
     attributs = extract_attribut(node)
-    initializer = look_for_initializer(node.input[1],model)
+    indices = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+    for indice in indices.flatten():
+        if indice < 0:
+            indice = input_shape[attributs['axis']] - indice
     return Gather(idx = idx,
                     size = size,
                     axis = attributs['axis'],
-                    indices = onnx.numpy_helper.to_array(initializer),
+                    indices = indices,
                     input_shape = input_shape,
                     output_shape = output_shape,
                     activation_function = Linear())
@@ -299,7 +309,7 @@ def create_Gemm(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict,
     if(len(node.input) == 3):
         C_tensor = look_for_initializer(node.input[2],model)
     else:
-        C_tensor = 0
+        C_tensor = np.zeros((1,1))
     if('transA' not in attributs):
         attributs['transA'] = 0
     if('transB' not in attributs):
@@ -331,7 +341,7 @@ def create_MatMul(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
             #the weigth is the right tensor:  MatMul(W,T)
             side = True
             weights = onnx.numpy_helper.to_array(right_tensor)
-            weights = np.reshape(weights, (get_shape(node.input[1],model)[-1],1,1,output_shape[-1]))
+            weights = np.reshape(weights, (get_shape(node.input[1],model)[-2],1,1,output_shape[-2]))
             weights = np.moveaxis(weights, 0,3)
             dict_input[idx] = [node.input[1]]
             input_shape = get_shape(node.input[1],model)

@@ -21,11 +21,12 @@
 from ...Layer import Layer
 from ...activation_functions import ActivationFunctions
 import numpy as np
+import math
 import pystache
 from abc import abstractmethod
 
 class Pooling2D(Layer):
-    def __init__(self, idx:int, size:int, padding:str|list, strides:int, pool_size:int, input_shape:list, output_shape:list, activation_function:ActivationFunctions, **kwargs):
+    def __init__(self, idx:int, size:int, padding:str|np.ndarray, strides:int, pool_size:int, input_shape:list, output_shape:list, activation_function:ActivationFunctions, **kwargs):
         
         super().__init__()
         self.idx = idx
@@ -43,7 +44,7 @@ class Pooling2D(Layer):
 
         self.output_channels = self.input_channels
 
-        self.pooling_funtion = ''
+        self.pooling_function = ''
         self.local_var = ''
         self.local_var_2 = ''
         self.output_var = ''
@@ -52,6 +53,28 @@ class Pooling2D(Layer):
 
         self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(self.padding,self.input_height, self.input_width, self.pool_size,self.pool_size, self.strides)
 
+
+    ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.padding) == str or type(self.padding) == np.ndarray
+        assert type(self.strides) == int
+        assert type(self.pool_size) == int
+        assert type(self.input_channels) == int
+        assert type(self.input_height) == int
+        assert type(self.input_width) == int
+        assert type(self.output_channels) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert isinstance(self.activation_function, ActivationFunctions)
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert self.output_height == math.ceil((self.input_height - self.pool_size)/self.strides) + 1
+        assert self.output_width == math.ceil((self.input_width - self.pool_size)/self.strides) + 1
+    
     @abstractmethod    
     def specific_function(self, index:str, input_of_layer:str):
         pass

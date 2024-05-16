@@ -33,6 +33,11 @@ class ResizeCubic(Resize):
         self.mode = 'cubic'
         self.template_dict = {'1D':self.template_path+'layers/Resize/template_ResizeCubic1D.c.tpl',
                               '2D':self.template_path+'layers/Resize/template_ResizeCubic2D.c.tpl'}
+        
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.cubic_coeff_a) == float or type(self.cubic_coeff_a) == int
     
     def cubic_interpolation_1D(self, input:np.ndarray, f:int, x:int, y:int, s:float):
         col_index = max(0,min(self.input_width-1,y))

@@ -33,6 +33,17 @@ class Flatten(Layer):
         self.data_format = data_format
         self.name = 'Flatten'
 
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert all(type(shape) == int for shape in self.input_shape)
+        assert self.data_format == 'channels_last' or self.data_format == 'channels_first'
+
+        ### Checking value consistency ###
+        assert self.size == self.input_shape[1]*self.input_shape[2]*self.input_shape[3]
+
     def generate_inference_code_layer(self):
 
         mustach_hash = {}

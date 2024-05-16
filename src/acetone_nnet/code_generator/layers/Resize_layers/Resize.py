@@ -33,8 +33,8 @@ from abc import abstractmethod
 # and apply a transformation to the value in the original tensor to find the value to enter in the new tensor
 class Resize(Layer):
     
-    def __init__(self, idx:int, size:int, input_shape:list, activation_function:ActivationFunctions, axes:list=[], coordinate_transformation_mode:str='half_pixel', exclude_outside:int=0,
-                 keep_aspect_ratio_policy:str='stretch', boolean_resize:None|bool=None, target_size:list=[], roi:list=[], extrapolation_value:float=0, 
+    def __init__(self, idx:int, size:int, input_shape:list, activation_function:ActivationFunctions, axes:np.ndarray|list=[], coordinate_transformation_mode:str='half_pixel', exclude_outside:int=0,
+                 keep_aspect_ratio_policy:str='stretch', boolean_resize:None|bool=None, target_size:np.ndarray|list=[], roi:np.ndarray|list=[], extrapolation_value:float|int=0., 
                  nearest_mode:str='round_prefer_floor', cubic_coeff_a:float=-0.75):
         super().__init__()
         self.idx = idx
@@ -73,7 +73,7 @@ class Resize(Layer):
         self.input_channels = input_shape[1]
         self.input_height = input_shape[2]
         self.input_width = input_shape[3]
-        self.scale = [1,0,0,0]
+        self.scale = [1.,0.,0.,0.]
         if (boolean_resize):
             self.scale = target_size
             self.output_channels = int(self.input_channels*target_size[1]) #should be equal to input_channels
@@ -86,7 +86,37 @@ class Resize(Layer):
             self.scale[1] = self.output_channels / self.input_channels #should be 1
             self.scale[2] = self.output_height / self.input_height
             self.scale[3] = self.output_width / self.input_width
-            
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.output_channels) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert type(self.input_channels) == int
+        assert type(self.input_height) == int
+        assert type(self.input_width) == int
+        assert type(self.coordinate_transformation_mode) == str
+        assert type(axes) == np.ndarray or type(axes) == list
+        assert type(self.exclude_outside) == int
+        assert type(self.keep_aspect_ratio_policy) == str
+        assert type(self.roi) == np.ndarray or type(self.roi) == list
+        assert type(self.extrapolation_value) == float or type(self.extrapolation_value) == int
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert self.coordinate_transformation_mode in ['half_pixel','half_pixel_symmetric','pytorch_half_pixel','align_corners','asymmetric','tf_crop_and_resize']
+        assert self.keep_aspect_ratio_policy in ['stretch','not_larger','not_smaller']
+        assert self.exclude_outside in [0,1]
+        assert all(axe >=0 and axe < 4 for axe in self.axes)
+        if self.roi:
+            assert len(self.roi) == 2*len(self.axes) if self.axes else len(self.roi) == 8
+            assert all(0 <= indice and indice <= 1 for indice in self.roi)
+        assert all(0 < coeff for coeff in self.scale)
+        
+
     @abstractmethod
     def forward_path_layer(self, input:np.ndarray):
         pass

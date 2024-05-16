@@ -39,6 +39,14 @@ class ResizeNearest(Resize):
                                             "round_prefer_ceil":self.round_prefer_ceil_implem,
                                             "floor":math.floor,
                                             "ceil":math.ceil}
+        
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.nearest_mode) == str
+
+        ### Checking value consistency ###
+        assert self.nearest_mode in ['round_prefer_floor','round_prefer_ceil','floor','ceil']
     
     #Defining the several method to chose the nearest
     def floor(self, x:str, y:str):

@@ -29,9 +29,24 @@ class InputLayer(Layer):
         super().__init__()
         self.idx = idx
         self.size = size
-        self.input_shape = input_shape
+        self.output_channels = input_shape[1]
+        self.output_height = input_shape[2]
+        self.output_width = input_shape[3]
         self.data_format = data_format
         self.name = 'Input_layer'
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.output_channels) == int
+        assert type(self.output_height) == int
+        assert type(self.output_width) == int
+        assert self.data_format == 'channels_last' or self.data_format == 'channels_first'
+
+        ### Checking value consistency ###
+        assert self.size == self.output_channels*self.output_height*self.output_width
 
     def generate_inference_code_layer(self):
 
@@ -43,9 +58,9 @@ class InputLayer(Layer):
 
         if(self.data_format == 'channels_last' and len(self.input_shape) == 4):
             mustach_hash['channels_last'] = True
-            mustach_hash['input_channels'] = self.input_shape[1]
-            mustach_hash['input_height'] = self.input_shape[2]
-            mustach_hash['input_width'] = self.input_shape[3]
+            mustach_hash['input_channels'] = self.output_channels
+            mustach_hash['input_height'] = self.output_height
+            mustach_hash['input_width'] = self.output_width
         else:
             mustach_hash['size'] = self.size
 

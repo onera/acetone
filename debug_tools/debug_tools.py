@@ -20,7 +20,7 @@
 
 import numpy as np
 
-def compare_result(acetone_result:list, reference_result:list, targets:list, verbose:bool = False):
+def compare_result(acetone_result:list|np.ndarray, reference_result:list|np.ndarray, targets:list, verbose:bool = False):
     try:
         assert len(acetone_result) == len(reference_result)
     except AssertionError as msg:

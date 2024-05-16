@@ -39,6 +39,19 @@ class Dense(Layer):
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)
 
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.weights) == np.ndarray
+        assert type(self.biases) == np.ndarray
+        assert isinstance(self.activation_function, ActivationFunctions)
+
+        ### Checking value consistency ###
+        assert self.size == self.weights.shape[-1]
+        assert self.size == self.biases.shape[0]
+
         
     def generate_inference_code_layer(self):
         #Variable indicating under which name the input tensor is

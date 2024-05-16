@@ -27,10 +27,22 @@ def clean_inputs(model:onnx.ModelProto):
         model.graph.input.pop()
 
 def extract_node_outputs(model:onnx.ModelProto):
+    activation = ["Relu","Tanh","Sigmoid","Clip","Exp","Log","LeakyRelu"]
     ouputs_name = []
     for node in model.graph.node:
-        ouputs_name.append(node.output[0])
+        if node.output[0] in activation:
+            ouputs_name[-1] = node.output[0]
+        else:
+            ouputs_name.append(node.output[0])
     return ouputs_name
+
+def extract_targets_indices(model:onnx.ModelProto,outputs_name:list[str]):
+    targets_indices = []
+    for name in outputs_name:
+        for i in range(len(model.graph.node)):
+            if model.graph.node[i].output[0] == name:
+                targets_indices.append(i)
+    return targets_indices
 
 def debug_onnx(target_model:onnx.ModelProto|str, debug_target:list=[], otpimize_inputs:bool = False, to_save:bool = False, path:str = ''):
     # Loading the model
@@ -39,11 +51,13 @@ def debug_onnx(target_model:onnx.ModelProto|str, debug_target:list=[], otpimize_
     else:
         model = target_model
 
-    # Tensor output name 
+    # Tensor output name and inidce for acetone debug
     if debug_target == []:
         inter_layers = extract_node_outputs(model)
+        targets_indices = []
     else:
         inter_layers = debug_target
+        targets_indices = extract_targets_indices(model, inter_layers)
 
     # Add an output after each name of inter_layers
     value_info_protos = []
@@ -65,7 +79,7 @@ def debug_onnx(target_model:onnx.ModelProto|str, debug_target:list=[], otpimize_
     if to_save:
         onnx.save(model,path)
     
-    return model
+    return model, targets_indices
 
 def run_model(model:onnx.ModelProto, dataset:np.ndarray, keep_full_model_result:bool = True):
     sess = rt.InferenceSession(model)

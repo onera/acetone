@@ -25,18 +25,36 @@ import pystache
 
 class MatMul(Layer):
 
-    def __init__(self, idx:int, size:int, input_shape:list, weights:list, side:bool, activation_function:ActivationFunctions):
+    def __init__(self, idx:int, size:int, input_shape:list, weights:np.ndarray, side:bool, activation_function:ActivationFunctions):
         
         super().__init__()
         self.idx = idx
         self.size = size
         self.name = 'MatMul'
-        self.weights = np.asarray(weights)
+        self.weights = weights
         self.activation_function = activation_function
         self.local_var = 'dotproduct'
         self.side = side
         self.input_shape = input_shape
         self.nb_weights = self.count_elements_array(self.weights)
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.input_shape) == list[int]
+        assert type(self.weights) == np.ndarray
+        assert type(side) == bool
+        assert isinstance(self.activation_function, ActivationFunctions)
+
+        ### Checking value consistency ###
+        if self.side:
+            assert self.weights.shape[-1] == self.input_shape[-2]
+            assert self.size == self.weights.shape[-2] * self.input_shape[-1]
+        else:
+            assert self.weights.shape[-2] == self.input_shape[-1]
+            assert self.size == self.weights.shape[-1] * self.input_shape[-2]
 
     def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
@@ -70,9 +88,7 @@ class MatMul(Layer):
     def forward_path_layer(self, input):
         
         input = input.reshape(self.previous_layer[0].size)
-        if (self.side):
-            weights = np.moveaxis(self.weights, 3,0)
-            weights = np.reshape(weights, (weights.shape[1],weights.shape[2],weights.shape[3],weights.shape[0]))
-            return self.activation_function.compute(np.matmul(weights,input))
+        if self.side:
+            return self.activation_function.compute(np.matmul(self.weights,input))
         else:
             return self.activation_function.compute(np.matmul(input,self.weights))

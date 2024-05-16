@@ -25,15 +25,26 @@ import pystache
 
 class Add_Bias(Layer):
 
-    def __init__(self, idx:int, size:int, biases:int, activation_function:ActivationFunctions):
+    def __init__(self, idx:int, size:int, biases:np.ndarray, activation_function:ActivationFunctions):
         
         super().__init__()
         self.idx = idx
         self.size = size
         self.name = 'Add_Biass'
-        self.biases = np.asarray(biases)
+        self.biases = biases
         self.nb_biases = self.count_elements_array(self.biases)
         self.activation_function = activation_function
+
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+        assert type(self.biases) == np.ndarray
+        assert isinstance(self.activation_function, ActivationFunctions)
+
+        ### Checking value consistency ###
+        assert  len(self.biases.shape) == 1 and self.biases.shape[0] == self.size
     
     #Go through all the indices and do the operation
     def generate_inference_code_layer(self):

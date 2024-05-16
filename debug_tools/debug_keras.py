@@ -26,8 +26,16 @@ import numpy as np
 def extract_node_outputs(model:Sequential|Functional):
     ouputs_name = []
     for layer in model.layers:
-        ouputs_name.append(model.get_layer(layer.name).output)
+        ouputs_name.append(model.get_layer(layer.name).output[0])
     return ouputs_name
+
+def extract_targets_indices(model:Functional|Sequential,outputs_name:list[str]):
+    targets_indices = []
+    for name in outputs_name:
+        for i in range(len(model.layers)):
+            if model.layers[i].output[0] == name:
+                targets_indices.append(i)
+    return targets_indices
 
 def debug_keras(target_model:Sequential|Functional|str, debug_target:list=[], to_save:bool = False, path:str = ''):
     # Loading the model
@@ -36,11 +44,13 @@ def debug_keras(target_model:Sequential|Functional|str, debug_target:list=[], to
     else:
         model = target_model
 
-    # Tensor output name
+    # Tensor output name and inidce for acetone debug
     if debug_target == []:
         inter_layers = extract_node_outputs(model)
+        targets_indices = []
     else:
         inter_layers = debug_target
+        targets_indices = extract_targets_indices(model, inter_layers)
     
     # Add an output after each name of inter_layers
     model = keras.Model(inputs=model.input, outputs=inter_layers)
@@ -49,7 +59,7 @@ def debug_keras(target_model:Sequential|Functional|str, debug_target:list=[], to
     if to_save:
         keras.models.save_model(model, path)
     
-    return model
+    return model, targets_indices
 
 def run_model(target_model:Sequential|Functional, dataset:np.ndarray):
     keras_result = target_model.predict(dataset)

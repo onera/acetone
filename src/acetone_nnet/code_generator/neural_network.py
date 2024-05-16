@@ -41,12 +41,11 @@ from .layers import (
 
 class CodeGenerator(ABC):
 
-    def __init__(self, file:str|onnx.ModelProto|Functional|Sequential, test_dataset_file:str=None, function_name:str='inference', nb_tests:int|str=None, conv_algorithm:str='std_gemm_nn', normalize:bool|str=False, debug_mode:str|None=None, debug_target:list|None=None,**kwargs):
+    def __init__(self, file:str|onnx.ModelProto|Functional|Sequential, test_dataset:str|np.ndarray|None=None, function_name:str='inference', nb_tests:int|str=None, conv_algorithm:str='std_gemm_nn', normalize:bool|str=False, debug_mode:str|None=None, debug_target:list|None=None,**kwargs):
 
         self.file = file
-        self.test_dataset_file = test_dataset_file
         self.function_name = function_name
-        self.nb_tests = nb_tests
+        self.nb_tests = int(nb_tests)
         self.conv_algorithm = conv_algorithm
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
@@ -64,9 +63,12 @@ class CodeGenerator(ABC):
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        if test_dataset_file:
+        if type(test_dataset) == str:
+            self.test_dataset_file = test_dataset
             ds = self.load_test_dataset()
             self.test_dataset = ds
+        elif type(test_dataset) == np.ndarray:
+            self.test_dataset = test_dataset
         else:
             print("creating random dataset")
             ds = self.create_test_dataset()
@@ -78,6 +80,29 @@ class CodeGenerator(ABC):
         self.debug_mode = debug_mode
         if self.debug_mode:
             self.debug_target = self.load_debug_target(debug_mode, debug_target)
+        ##### Debug Mode #####
+            
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.file) == str or type(self.file) == onnx.ModelProto or type(self.file) == Functional or type(self.file) == Sequential
+        assert type(test_dataset) == str or type(test_dataset) == np.ndarray or type(test_dataset) == None
+        assert type(self.test_dataset) == np.ndarray
+        assert type(self.function_name) == str
+        assert type(self.conv_algorithm) == str
+        assert type(self.debug_mode) == None or type(self.debug_mode) == str
+        if self.debug_mode:
+            assert type(self.debug_target) == list
+
+        ### Checking value consistency ###
+        assert self.conv_algorithm in ['6loops',
+                                       'indirect_gemm_nn','indirect_gemm_tn','indirect_gemm_nt','indirect_gemm_tt',
+                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']
+        ##### Debug Mode #####
+        if self.debug_mode:
+            assert self.debug_mode in ['keras','onnx']
+            assert len(self.debug_target) <= len(self.layers)
+            assert all(target <= len(self.layers) for target in self.debug_target)
         ##### Debug Mode #####
     
     def load_debug_target(self, debug_mode:str|None, debug_target:list|None):
@@ -95,7 +120,7 @@ class CodeGenerator(ABC):
             return targets
         
     def create_test_dataset(self):
-        test_dataset = self.data_type_py(np.random.default_rng(seed=10).random((int(self.nb_tests),1,int(self.layers[0].size))))
+        test_dataset = self.data_type_py(np.random.default_rng(seed=10).random((self.nb_tests,1,int(self.layers[0].size))))
         return test_dataset 
      
     def load_test_dataset(self):
@@ -112,7 +137,7 @@ class CodeGenerator(ABC):
                     elif self.data_type == 'float':
                         line = list(map(np.float32,line))
                     test_dataset.append(line)
-                    if i == int(self.nb_tests)-1:
+                    if i == self.nb_tests-1:
                         break
             test_dataset = np.array(test_dataset)
             f.close()

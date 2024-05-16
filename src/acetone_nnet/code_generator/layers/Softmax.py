@@ -31,6 +31,12 @@ class Softmax(Layer):
         self.size = size
         self.name = 'Softmax'
 
+        ####### Checking the instantiation#######
+
+        ### Checking argument type ###
+        assert type(self.idx) == int
+        assert type(self.size) == int
+
     def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
 
