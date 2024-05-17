@@ -97,11 +97,11 @@ def get_shape(shape_name:str, model:onnx.ModelProto):
     for output in model.graph.output:
         if(shape_name == output.name):
             shape = [output.type.tensor_type.shape.dim[i].dim_value for i in range(len(output.type.tensor_type.shape.dim))]
-    if (shape and len(shape)<=4):
-        shape = [1 for i in range(4-len(shape))] + shape
     for i in range(len(shape)):
         if shape[i] == 0:
             shape[i] = 1
+    if (shape and len(shape)<=4):
+        shape = [1 for i in range(4-len(shape))] + shape
     return shape
 
 #Return the size of the layer when given the list output_shape
@@ -340,11 +340,20 @@ def create_MatMul(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
         if(right_tensor and not left_tensor):
             #the weigth is the right tensor:  MatMul(W,T)
             side = True
+            input_shape = get_shape(node.input[1],model)
             weights = onnx.numpy_helper.to_array(right_tensor)
-            weights = np.reshape(weights, (get_shape(node.input[1],model)[-2],1,1,output_shape[-2]))
+            shape = get_shape(node.input[1],model)
+            count = 0
+            for i in shape:
+                if i == 1:
+                    count += 1
+            if count == 3 and input_shape[-1] != 1:
+                weights = np.reshape(weights, (get_shape(node.input[1],model)[-1],1,1,output_shape[-1]))
+                input_shape = [1,1,input_shape[-1],1]
+            else:
+                weights = np.reshape(weights, (get_shape(node.input[1],model)[-2],1,1,output_shape[-2]))
             weights = np.moveaxis(weights, 0,3)
             dict_input[idx] = [node.input[1]]
-            input_shape = get_shape(node.input[1],model)
         if(left_tensor and not right_tensor):
             #the weigth is the right tensor:  MatMul(W,T)
             side = False
@@ -460,7 +469,7 @@ def create_GlobalAveragePool(node:onnx.NodeProto, idx:int, dict_input:dict, dict
     return AveragePooling2D(idx = idx,
                             size = size,
                             padding = [0,0,0,0],
-                            strides = 0,
+                            strides = 1,
                             pool_size = input_shape[2],
                             input_shape = input_shape,
                             output_shape = output_shape,
@@ -509,6 +518,7 @@ def create_Add(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
         input_shapes.append(constant.shape)
     else:
         constant = None
+    input_shapes = np.array(input_shapes)
     return Add(idx = idx,
                 size = size,
                 input_shapes = input_shapes,
@@ -519,7 +529,7 @@ def create_Add(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
 #create a layer Div
 def create_Div(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
     input_shapes =[]
-    constant = 1
+    constant = np.ones(get_shape(node.input[0], model))
     dict_input[idx] = []
     for input in node.input:
         factor = look_for_initializer(input,model)
@@ -538,6 +548,7 @@ def create_Div(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
             for i in range(0,4-len(constant.shape)):
                 constant = np.expand_dims(constant,axis=0)
         input_shapes.append(constant.shape)
+    input_shapes = np.array(input_shapes)
     return Divide(idx=idx,
                     size=size,
                     input_shapes=input_shapes,
@@ -549,7 +560,7 @@ def create_Div(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
 #create a layer Mul
 def create_Mul(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
     input_shapes =[]
-    constant = 1
+    constant = np.ones(get_shape(node.input[0], model))
     dict_input[idx] = []
     for input in node.input:
         factor = look_for_initializer(input,model)
@@ -567,7 +578,8 @@ def create_Mul(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
         if (len(constant.shape)<4):
             for i in range(0,4-len(constant.shape)):
                 constant = np.expand_dims(constant,axis=0)
-        input_shapes.append(constant.shape)
+        input_shapes.append(list(constant.shape))
+    input_shapes = np.array(input_shapes)
     return Multiply(idx=idx,
                     size=size,
                     input_shapes=input_shapes,
@@ -578,7 +590,7 @@ def create_Mul(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
 #create a layer Sub
 def create_Sub(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
     input_shapes =[]
-    constant = 0
+    constant = np.zeros(get_shape(node.input[0], model))
     dict_input[idx] = []
     for input in node.input:
         factor = look_for_initializer(input,model)
@@ -590,13 +602,14 @@ def create_Sub(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
     output_shape = get_shape(node.output[0],model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    if((constant == np.ones(constant.shape)).all()):
+    if(not constant.any()):
         constant = None
     else:
         if (len(constant.shape)<4):
             for i in range(0,4-len(constant.shape)):
                 constant = np.expand_dims(constant,axis=0)
         input_shapes.append(constant.shape)
+    input_shapes = np.array(input_shapes)
     return Subtract(idx=idx,
                     size=size,
                     input_shapes=input_shapes,

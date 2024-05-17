@@ -18,22 +18,19 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+importerTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
+sys.path.append(importerTestCase_path)
+import importerTestCase
 
-import numpy as np
 import onnx
-import onnxruntime as rt
+import numpy as np
 
 
-class TestResize(acetoneTestCase.AcetoneTestCase):
-    """Test for Dense Layer"""
-    
-    def test_Resize_Nearest(self):
-        testshape = (1,2,2)
-        # IO tensors (ValueInfoProto).
+class TestResize(importerTestCase.ImporterTestCase):
+    """Test for Resize Layer"""
+
+    def testResizeNearest(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -45,7 +42,7 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
 
         size_name = 'size'
         size = np.array((1,1,7,8))
-        size_initializer = acetoneTestCase.create_initializer_tensor(name=size_name,
+        size_initializer = importerTestCase.create_initializer_tensor(name=size_name,
                                                                       tensor_array=size,
                                                                       data_type=onnx.TensorProto.INT64)
         
@@ -72,22 +69,18 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
         )
 
         # Create the model (ModelProto)
-        model_def = onnx.helper.make_model(graph_def, producer_name="onnx-example")
-        model_def.opset_import[0].version = 13
+        model = onnx.helper.make_model(graph_def, producer_name="onnx-example")
+        model.opset_import[0].version = 13
 
-        onnx.checker.check_model(model_def)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset})
-        onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-        self.assertListAlmostEqual(acetone_result[0],onnx_result)
-
+        reference = self.import_layers(model,conv_algorithm='indirect_gemm_nn').layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx',conv_algorithm='indirect_gemm_nn').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
+    
     def test_Resize_Linear(self):
-        testshape = (1,4,4)
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -100,7 +93,7 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
 
         size_name = 'size'
         size = np.array((1,1,8,8))
-        size_initializer = acetoneTestCase.create_initializer_tensor(name=size_name,
+        size_initializer = importerTestCase.create_initializer_tensor(name=size_name,
                                                                       tensor_array=size,
                                                                       data_type=onnx.TensorProto.INT64)
         
@@ -126,23 +119,18 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
             ],
         )
 
-        # Create the model (ModelProto)
-        model_def = onnx.helper.make_model(graph_def, producer_name="onnx-example")
-        model_def.opset_import[0].version = 13
+        model = onnx.helper.make_model(graph_def, producer_name="onnx-example")
+        model.opset_import[0].version = 13
 
-        onnx.checker.check_model(model_def)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset})
-        onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-        self.assertListAlmostEqual(acetone_result[0],onnx_result)
+        reference = self.import_layers(model,conv_algorithm='indirect_gemm_nn').layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx',conv_algorithm='indirect_gemm_nn').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
     
     def test_Resize_Cubic(self):
-        testshape = (1,4,4)
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -155,7 +143,7 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
 
         size_name = 'size'
         size = np.array((1,1,8,8))
-        size_initializer = acetoneTestCase.create_initializer_tensor(name=size_name,
+        size_initializer = importerTestCase.create_initializer_tensor(name=size_name,
                                                                       tensor_array=size,
                                                                       data_type=onnx.TensorProto.INT64)
         
@@ -180,24 +168,17 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
                 size_initializer
             ],
         )
+        
+        model = onnx.helper.make_model(graph_def, producer_name="onnx-example")
+        model.opset_import[0].version = 13
 
-        # Create the model (ModelProto)
-        model_def = onnx.helper.make_model(graph_def, producer_name="onnx-example")
-        model_def.opset_import[0].version = 13
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        onnx.checker.check_model(model_def)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
-
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset})
-        onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-        with open(self.tmpdir_name+'/output_onnx.txt','w') as f:
-            print(onnx_result,file=f)
-        f.close()
-        self.assertListAlmostEqual(acetone_result[0],onnx_result)
-
+        reference = self.import_layers(model,conv_algorithm='indirect_gemm_nn').layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx',conv_algorithm='indirect_gemm_nn').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
+    
 if __name__ == '__main__':
-    acetoneTestCase.main()
+    importerTestCase.main()

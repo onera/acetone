@@ -18,9 +18,9 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+importerTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(importerTestCase_path)
 import importerTestCase
 
 import tensorflow as tf
@@ -35,7 +35,6 @@ class TestDecr128(importerTestCase.ImporterTestCase):
     def test_decr128(self):
         model_path = '/'.join(__file__.split('/')[:-3])+'/models/acas/acas_decr128/acas_decr128.h5'
         model = keras.models.load_model(model_path)
-        model.save(self.tmpdir_name+'/model.h5')
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers

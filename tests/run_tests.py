@@ -36,6 +36,7 @@ c_reference = layer+'test_c_reference/'
 ### Testing the import from the model
 importer = all+'tests_importer/'
 keras = importer + 'tests_keras/'
+onnx = importer + 'tests_onnx/'
 
 
 
@@ -43,6 +44,7 @@ keras = importer + 'tests_keras/'
 possible_test = {'all':all, 
                     'tests_importer':importer,
                         'tests_keras':keras,
+                        'tests_onnx':onnx,
                     'tests_inference': inference,
                         'tests_layer':layer,
                             'test_c_reference':c_reference,

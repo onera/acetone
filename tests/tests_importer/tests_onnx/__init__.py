@@ -17,29 +17,3 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
-
-importerTestCase_path = '/'.join(__file__.split('/')[:-2])
-import sys
-sys.path.append(importerTestCase_path)
-import importerTestCase
-
-import tensorflow as tf
-import keras
-
-tf.keras.backend.set_floatx('float32')
-
-
-class TestLenet5(importerTestCase.ImporterTestCase):
-    """Test for Concatenate Layer"""
-    
-    def test_lenet5(self):
-        model_path = '/'.join(__file__.split('/')[:-3])+'/models/lenet5/lenet5_trained/lenet5_trained.h5'
-        model = keras.models.load_model(model_path)
-
-        reference = self.import_layers(model).layers
-        list_layers = self.import_layers(model_path).layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
-
-if __name__ == '__main__':
-    importerTestCase.main()

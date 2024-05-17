@@ -18,22 +18,19 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+importerTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
+sys.path.append(importerTestCase_path)
+import importerTestCase
 
 import onnx
-import onnxruntime as rt
 import numpy as np
 
 
-class TestMatMul(acetoneTestCase.AcetoneTestCase):
-    """Test for Dense Layer"""
-    
-    def test_MatMul(self):
-        testshape = (1,1,1,5)
-        # IO tensors (ValueInfoProto).
+class TestMatMul(importerTestCase.ImporterTestCase):
+    """Test for MatMul Layer"""
+
+    def testMatMul1(self): 
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -45,7 +42,7 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
 
         matmul_W = np.random.rand(5,50).astype(np.float32)
         matmul_W_name = "W0"
-        matmul_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(matmul_W_name,
+        matmul_W_initializer_tensor = importerTestCase.create_initializer_tensor(matmul_W_name,
                                                                 matmul_W,
                                                                 onnx.TensorProto.FLOAT)
 
@@ -69,23 +66,18 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
         )
 
         # Create the model (ModelProto)
-        model_def = onnx.helper.make_model(graph_def, producer_name="onnx-example")
-        model_def.opset_import[0].version = 13
+        model = onnx.helper.make_model(graph_def, producer_name="onnx-example")
+        model.opset_import[0].version = 13
 
-        onnx.checker.check_model(model_def)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-        self.assertListAlmostEqual(acetone_result[0],onnx_result)
+        reference = self.import_layers(model,conv_algorithm='indirect_gemm_nn').layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx',conv_algorithm='indirect_gemm_nn').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
     
-    def test_MatMul2(self):
-        testshape = (1,1,5,1)
-        # IO tensors (ValueInfoProto).
+    def testMatMul2(self): 
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -97,7 +89,7 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
 
         matmul_W = np.random.rand(50,5).astype(np.float32)
         matmul_W_name = "W0"
-        matmul_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(matmul_W_name,
+        matmul_W_initializer_tensor = importerTestCase.create_initializer_tensor(matmul_W_name,
                                                                 matmul_W,
                                                                 onnx.TensorProto.FLOAT)
 
@@ -121,19 +113,13 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
         )
 
         # Create the model (ModelProto)
-        model_def = onnx.helper.make_model(graph_def, producer_name="onnx-example")
-        model_def.opset_import[0].version = 13
+        model = onnx.helper.make_model(graph_def, producer_name="onnx-example")
+        model.opset_import[0].version = 13
 
-        onnx.checker.check_model(model_def)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        onnx.save(model_def,self.tmpdir_name+'/model.onnx' )
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-        self.assertListAlmostEqual(acetone_result[0],onnx_result)
-
-if __name__ == '__main__':
-    acetoneTestCase.main()
+        reference = self.import_layers(model,conv_algorithm='indirect_gemm_nn').layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx',conv_algorithm='indirect_gemm_nn').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)

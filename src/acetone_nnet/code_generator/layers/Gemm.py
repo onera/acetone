@@ -82,7 +82,6 @@ class Gemm(Layer):
 
         ### Checking value consistency ###
         assert self.size == self.output_height*self.output_width
-        print(self.weights.shape)
         assert self.weights.shape[self.transpo[1]] == self.input_height if self.transpo[0] else self.input_width
         assert self.output_height == self.input_width if self.transpo[0] else self.input_height
         assert self.output_width == self.weights.shape[1-self.transpo[1]]

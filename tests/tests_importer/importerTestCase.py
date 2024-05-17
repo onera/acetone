@@ -28,6 +28,21 @@ import onnx
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 
+def create_initializer_tensor(
+        name: str,
+        tensor_array: np.ndarray,
+        data_type: onnx.TensorProto = onnx.TensorProto.FLOAT
+) -> onnx.TensorProto:
+
+    # (TensorProto)
+    initializer_tensor = onnx.helper.make_tensor(
+        name=name,
+        data_type=data_type,
+        dims=tensor_array.shape,
+        vals=tensor_array.flatten().tolist())
+
+    return initializer_tensor
+
 def are_layers_equals(self, other:acetone_nnet.Layer):
     #compare two layers and say if they are equals
     if type(self) != type(other):

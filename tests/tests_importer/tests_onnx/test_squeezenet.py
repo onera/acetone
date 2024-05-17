@@ -17,55 +17,24 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
-
 importerTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
 sys.path.append(importerTestCase_path)
 import importerTestCase
 
-import tensorflow as tf
-import keras
-import numpy as np
-from keras.layers import Input, MaxPooling2D, AveragePooling2D
+import onnx
 
-tf.keras.backend.set_floatx('float32')
+class TestSqueeznet(importerTestCase.ImporterTestCase):
+    """Test for squeezenet"""
 
+    def test_squeezenet(self):
+        model_path = '/'.join(__file__.split('/')[:-3])+'/models/squeezenet1/squeezenet1.onnx'
+        model = onnx.load_model(model_path)
 
-class TestPooling(importerTestCase.ImporterTestCase):
-    """Test for Pooling Layer"""
-
-    def testMaxPooling(self):
-        testshape = (10,10,3)
-        pool_size = (3, 3)
-        strides = (1,1)
-
-        input = Input(testshape)
-        out = MaxPooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(model_path).layers
         
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-
         self.assert_List_Layers_equals(list_layers, reference)
-   
-    def testAveragePooling2D(self):
-        testshape = (10,10,3)
-        pool_size = (3, 3)
-        strides = (1,1)
-
-        input = Input(testshape)
-        out = AveragePooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
-
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-
-        self.assert_List_Layers_equals(list_layers, reference)
-
 
 if __name__ == '__main__':
     importerTestCase.main()

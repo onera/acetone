@@ -18,9 +18,9 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+importerTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(importerTestCase_path)
 import importerTestCase
 
 import tensorflow as tf

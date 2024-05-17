@@ -63,7 +63,7 @@ class Conv2D(Layer):
         assert type(self.idx) == int
         assert type(self.size) == int
         assert type(conv_algorithm) == str
-        assert type(self.padding) == str or type(self.padding) == np.ndarray
+        assert type(self.padding) == str or all(type(pad) == int for pad in self.padding)
         assert type(self.strides) == int
         assert type(self.kernel_h) == int
         assert type(self.kernel_w) == int
@@ -81,8 +81,8 @@ class Conv2D(Layer):
         assert self.size == self.output_channels*self.output_height*self.output_width
         assert self.weights.shape == (self.input_channels, self.kernel_h, self.kernel_w, self.nb_filters)
         assert len(self.biases.shape) == 1 and self.biases.shape[0] == self.nb_filters
-        assert self.output_height == math.ceil((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1)*(self.dilation_rate - 1))/self.strides) + 1
-        assert self.output_width == math.ceil((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1
+        assert self.output_height == math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1)*(self.dilation_rate - 1))/self.strides) + 1
+        assert self.output_width == math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1
         assert self.conv_algorithm in ['6loops',
                                        'indirect_gemm_nn','indirect_gemm_tn','indirect_gemm_nt','indirect_gemm_tt',
                                        'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']

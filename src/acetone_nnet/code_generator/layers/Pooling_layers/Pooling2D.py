@@ -59,7 +59,7 @@ class Pooling2D(Layer):
         ### Checking argument type ###
         assert type(self.idx) == int
         assert type(self.size) == int
-        assert type(self.padding) == str or type(self.padding) == np.ndarray
+        assert type(self.padding) == str or all(type(pad) == int for pad in self.padding)
         assert type(self.strides) == int
         assert type(self.pool_size) == int
         assert type(self.input_channels) == int
@@ -72,8 +72,9 @@ class Pooling2D(Layer):
 
         ### Checking value consistency ###
         assert self.size == self.output_channels*self.output_height*self.output_width
-        assert self.output_height == math.ceil((self.input_height - self.pool_size)/self.strides) + 1
-        assert self.output_width == math.ceil((self.input_width - self.pool_size)/self.strides) + 1
+        assert self.size == self.output_channels*self.output_height*self.output_width
+        assert self.output_height == math.floor((self.input_height + self.pad_bottom + self.pad_top - self.pool_size)/self.strides) + 1
+        assert self.output_width == math.floor((self.input_width + self.pad_left + self.pad_right - self.pool_size)/self.strides) + 1
     
     @abstractmethod    
     def specific_function(self, index:str, input_of_layer:str):

@@ -18,46 +18,19 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+importerTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
-
-import tensorflow as tf
-import keras
-import numpy as np
-from keras.layers import Input, BatchNormalization, Conv2D
+sys.path.append(importerTestCase_path)
+import importerTestCase
 
 import onnx
-import onnxruntime as rt
-
-tf.keras.backend.set_floatx('float32')
+import numpy as np
 
 
-class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
-    """Test for Concatenate Layer"""
+class TestBatchNorm(importerTestCase.ImporterTestCase):
+    """Test for BatchNorm Layer"""
 
-    def testBatchNorm(self):
-        testshape = (10,10,3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        out = BatchNormalization(axis=-1, gamma_initializer='he_normal', beta_initializer='he_normal', moving_mean_initializer='he_normal',moving_variance_initializer='ones')(x1)
-        
-        model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-    
-    def testBatchNorm2(self):
-        testshape = (1,3,10,10)
-
+    def testBatchNorm(self):        
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -76,12 +49,12 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -100,25 +73,25 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
 
         scale_name = 'scale'
         scale = np.random.rand(5)
-        scale_initializer = acetoneTestCase.create_initializer_tensor(name = scale_name,
+        scale_initializer = importerTestCase.create_initializer_tensor(name = scale_name,
                                                                        tensor_array = scale,
                                                                        data_type = onnx.TensorProto.FLOAT)
         
         bias_name = 'bias'
         bias = np.random.rand(5)
-        bias_initializer = acetoneTestCase.create_initializer_tensor(name = bias_name,
+        bias_initializer = importerTestCase.create_initializer_tensor(name = bias_name,
                                                                        tensor_array = bias,
                                                                        data_type = onnx.TensorProto.FLOAT)
         
         mean_name = 'mean'
         mean = np.random.rand(5)
-        mean_initializer = acetoneTestCase.create_initializer_tensor(name = mean_name,
+        mean_initializer = importerTestCase.create_initializer_tensor(name = mean_name,
                                                                        tensor_array = mean,
                                                                        data_type = onnx.TensorProto.FLOAT)
         
         var_name = 'var'
         var = np.random.rand(5)
-        var_initializer = acetoneTestCase.create_initializer_tensor(name = var_name,
+        var_initializer = importerTestCase.create_initializer_tensor(name = var_name,
                                                                        tensor_array = var,
                                                                        data_type = onnx.TensorProto.FLOAT)
         
@@ -137,20 +110,18 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
             outputs = [Y],
             initializer = [conv1_W_initializer_tensor,conv1_B_initializer_tensor,scale_initializer,bias_initializer,mean_initializer,var_initializer],
         )
+
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
 
 if __name__ == '__main__':
-    acetoneTestCase.main()
+    importerTestCase.main()

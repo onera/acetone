@@ -18,94 +18,19 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+importerTestCase_path = '/'.join(__file__.split('/')[:-2])
 import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
-
-import tensorflow as tf
-import keras
-import numpy as np
-from keras.layers import Input, Dense, Conv2D
+sys.path.append(importerTestCase_path)
+import importerTestCase
 
 import onnx
-import onnxruntime as rt
-
-tf.keras.backend.set_floatx('float32')
+import numpy as np
 
 
-class TestActivation(acetoneTestCase.AcetoneTestCase):
-    """Test for Activations Layer"""
-    
+class TestConv(importerTestCase.ImporterTestCase):
+    """Test for Conv Layer"""
+
     def testReLu(self):
-        testshape = (1,1,16)
-        units = 8
-
-        input = Input(testshape)
-        out = Dense(units, activation='relu', bias_initializer='he_normal')(input)
-
-        model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-    
-    def testLeakyReLu(self):
-        testshape = (10,10,3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation='leaky_relu', bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        
-        model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-    
-    def testSigmoid(self):
-        testshape = (10,10,3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation='sigmoid', bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        
-        model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-    
-    def testTanh(self):
-        testshape = (10,10,3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation='tanh', bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        
-        model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-        model.save(self.tmpdir_name+'/model.h5')
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-    
-    def testReLuONNX(self):
-        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -123,12 +48,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -161,20 +86,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-    
-    def testSigmoidONNX(self):
-        testshape = (1,3,10,10)
+    def testSigmoid(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -192,12 +111,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -230,20 +149,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
     
-    def testLeakyReludONNX(self):
-        testshape = (1,3,10,10)
+    def testLeakyReLu(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -261,12 +174,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -287,7 +200,6 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             op_type="LeakyRelu",
             inputs=[conv1_output_name],
             outputs=[model_output_name],
-            alpha = np.random.random()/10
         )
 
         graph = onnx.helper.make_graph(
@@ -300,20 +212,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
     
-    def testTanhONNX(self):
-        testshape = (1,3,10,10)
+    def testTanh(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -331,12 +237,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -369,20 +275,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testExpONNX(self):
-        testshape = (1,3,10,10)
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
+    
+    def testExp(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -400,12 +300,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -438,20 +338,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
     
-    def testLogONNX(self):
-        testshape = (1,3,10,10)
+    def testLog(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -469,12 +363,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -507,20 +401,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testClipONNX(self):
-        testshape = (1,3,10,10)
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
+    
+    def testClip(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                             onnx.TensorProto.FLOAT,
@@ -538,12 +426,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
                                 *conv1_kernel_shape).astype(np.float32)
         conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
         conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_W_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_W_initializer_tensor_name,
             tensor_array=conv1_W,
             data_type=onnx.TensorProto.FLOAT)
         conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+        conv1_B_initializer_tensor = importerTestCase.create_initializer_tensor(
             name=conv1_B_initializer_tensor_name,
             tensor_array=conv1_B,
             data_type=onnx.TensorProto.FLOAT)
@@ -560,11 +448,11 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             strides = (1,1),
         )
 
-        min_initializer = acetoneTestCase.create_initializer_tensor(name='min',
+        min_initializer = importerTestCase.create_initializer_tensor(name='min',
                                                                     tensor_array=np.random.rand(1)*10,
                                                                     data_type=onnx.TensorProto.FLOAT)
 
-        max_initializer = acetoneTestCase.create_initializer_tensor(name='max',
+        max_initializer = importerTestCase.create_initializer_tensor(name='max',
                                                                     tensor_array=np.random.rand(1)*20,
                                                                     data_type=onnx.TensorProto.FLOAT)
 
@@ -584,17 +472,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         onnx.save(model,self.tmpdir_name+'/model.onnx' )
 
-        sess = rt.InferenceSession(self.tmpdir_name+'/model.onnx')
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None,{input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', self.tmpdir_name+'/dataset.txt')
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name+'/model.onnx').layers
+        
+        self.assert_List_Layers_equals(list_layers, reference)
 
 if __name__ == '__main__':
-    acetoneTestCase.main()
+    importerTestCase.main()
