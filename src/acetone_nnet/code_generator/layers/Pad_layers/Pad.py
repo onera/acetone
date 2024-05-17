@@ -56,7 +56,7 @@ class Pad(Layer):
         assert type(self.output_channels) == int
         assert type(self.output_height) == int
         assert type(self.output_width) == int
-        assert all(type(shape) == int for shape in self.input_shape)
+        assert all(type(shape) == int for shape in self.input_shape[1:])
         assert isinstance(self.activation_function, ActivationFunctions)
 
 

@@ -34,8 +34,15 @@ class Gemm(Layer):
         self.idx = idx
         self.size = size
         
-        self.alpha = [alpha]
-        self.beta =  [beta]
+        if alpha != 1:
+            self.alpha = [alpha]
+        else:
+            self.alpha = []
+        if beta != 1:
+            self.beta =  [beta]
+        else:
+            self.beta = []
+            
         self.transpo = (transA,transB)
         self.algo_gemm_mapping = {(0,0):self.write_gemm_nn,
                              (0,1):self.write_gemm_nt,
@@ -62,9 +69,9 @@ class Gemm(Layer):
         ### Checking argument type ###
         assert type(self.idx) == int
         assert type(self.size) == int
-        assert type(self.alpha) == float or type(self.alpha) == int
-        assert type(self.beta) == float or type(self.beta) == int
-        assert type(self.transpo) == tuple[int] or type(self.transpo) == tuple[bool]
+        assert type(self.alpha[0]) == float or type(self.alpha[0]) == int
+        assert type(self.beta[0]) == float or type(self.beta[0]) == int
+        assert all(type(self.transpo[i]) == int or type(self.transpo[i]) == bool for i in range(2))
         assert type(self.output_height) == int
         assert type(self.output_width) == int
         assert type(self.input_height) == int
@@ -75,10 +82,11 @@ class Gemm(Layer):
 
         ### Checking value consistency ###
         assert self.size == self.output_height*self.output_width
-        assert self.weights.shape[2 + self.transpo[1]] == self.input_height if self.transpo[0] else self.input_width
+        print(self.weights.shape)
+        assert self.weights.shape[self.transpo[1]] == self.input_height if self.transpo[0] else self.input_width
         assert self.output_height == self.input_width if self.transpo[0] else self.input_height
-        assert self.output_width == self.weights.shape[3 - self.transpo[1]]
-        assert (self.biases.shape[0] == 1 or self.biases.shape[0] == self.output_height) and (self.biases.shape[1] == 1 or self.biases.shape[1] == self.output_width)
+        assert self.output_width == self.weights.shape[1-self.transpo[1]]
+        assert all(self.biases.shape[i] == 1 or self.biases.shape[i] == output_shape[3-i] for i in range(len(self.biases.shape)))
 
         
     #The various ways to compute the operation: 

@@ -55,16 +55,16 @@ class Broadcast(Layer):
         assert type(self.output_height) == int
         assert type(self.output_width) == int
         assert isinstance(self.activation_function, ActivationFunctions)
-        assert type(self.constant) == np.ndarray or type(self.constant) == None
+        assert type(self.constant) == np.ndarray or self.constant == None
 
         ### Checking value consistency ###
         assert self.size == self.output_channels*self.output_height*self.output_width
         assert all(shape[1] == 1 or shape[1]==self.output_channels for shape in self.input_shapes)
         assert all(shape[2] == 1 or shape[2]==self.output_height for shape in self.input_shapes)
         assert all(shape[3] == 1 or shape[3]==self.output_width for shape in self.input_shapes)
-        assert self.output_channels == np.max(self.input_shapes[:][1])
-        assert self.output_height == np.max(self.input_shapes[:][2])
-        assert self.output_width == np.max(self.input_shapes[:][3])
+        assert self.output_channels == np.max(self.input_shapes[:,1])
+        assert self.output_height == np.max(self.input_shapes[:,2])
+        assert self.output_width == np.max(self.input_shapes[:,3])
 
     #Go through all the indices and do the operation
     def generate_inference_code_layer(self):

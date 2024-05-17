@@ -80,9 +80,9 @@ class Resize(Layer):
             self.output_height = int(self.input_height*target_size[2])
             self.output_width = int(self.input_width*target_size[3])
         else:
-            self.output_channels = target_size[1] #should be equal to input_channels
-            self.output_height = target_size[2]
-            self.output_width = target_size[3]
+            self.output_channels = int(target_size[1]) #should be equal to input_channels
+            self.output_height = int(target_size[2])
+            self.output_width = int(target_size[3])
             self.scale[1] = self.output_channels / self.input_channels #should be 1
             self.scale[2] = self.output_height / self.input_height
             self.scale[3] = self.output_width / self.input_width
@@ -92,9 +92,6 @@ class Resize(Layer):
         ### Checking argument type ###
         assert type(self.idx) == int
         assert type(self.size) == int
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
         assert type(self.input_channels) == int
         assert type(self.input_height) == int
         assert type(self.input_width) == int

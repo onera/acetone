@@ -6,9 +6,9 @@
             float register output = 0;
             for (p = 0; p < {{k}}; ++p)
             {
-                output += {{#alpha}}{{.}}{{/alpha}} * {{A}}[i*{{k}}+p] * {{#direct}}*{{/direct}}({{B}}[p*{{n}}+j]);
+                output += {{#alpha}}{{.}}*{{/alpha}}{{A}}[i*{{k}}+p]*{{#direct}}*{{/direct}}({{B}}[p*{{n}}+j]);
             }   
-            output += {{#beta}}{{.}}{{/beta}} * biases_{{name}}_{{idx}}[i];
+            output += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[i];
         {{^fused_layer}}
             tensor_temp[j*{{m}} + i] = {{{activation_function}}};
         {{/fused_layer}}

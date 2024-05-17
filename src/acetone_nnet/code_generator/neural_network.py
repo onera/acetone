@@ -86,11 +86,11 @@ class CodeGenerator(ABC):
 
         ### Checking argument type ###
         assert type(self.file) == str or type(self.file) == onnx.ModelProto or type(self.file) == Functional or type(self.file) == Sequential
-        assert type(test_dataset) == str or type(test_dataset) == np.ndarray or type(test_dataset) == None
+        assert type(test_dataset) == str or type(test_dataset) == np.ndarray or test_dataset == None
         assert type(self.test_dataset) == np.ndarray
         assert type(self.function_name) == str
         assert type(self.conv_algorithm) == str
-        assert type(self.debug_mode) == None or type(self.debug_mode) == str
+        assert self.debug_mode == None or type(self.debug_mode) == str
         if self.debug_mode:
             assert type(self.debug_target) == list
 

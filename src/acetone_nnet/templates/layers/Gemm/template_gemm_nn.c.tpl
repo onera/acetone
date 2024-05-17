@@ -3,16 +3,16 @@
     {
         for (p = 0; p < {{k}}; ++p)
         {
-            register float weight = {{#alpha}}{{.}} * {{/alpha}}{{A}}[i*{{k}}+p];
+            register float weight = {{#alpha}}{{.}}*{{/alpha}}{{A}}[i*{{k}}+p];
             for(j = 0; j < {{n}}; ++j)
             {
-                tensor_temp[j*{{m}} + i] += weight * ({{B}}[j*{{k}} + p]);
+                tensor_temp[j*{{m}} + i] += weight*({{B}}[j*{{k}} + p]);
             }
         }
         for(j = 0; j<{{n}}; ++j)
         {
             register float output = tensor_temp[j*{{m}} + i];
-            output += {{#beta}}{{.}} * {{/beta}}biases_{{name}}_{{idx}}[i];
+            output += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[i];
         {{^fused_layer}}
             tensor_temp[j*{{m}} + i] = {{{activation_function}}};
         {{/fused_layer}}

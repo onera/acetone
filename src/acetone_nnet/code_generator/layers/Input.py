@@ -29,9 +29,11 @@ class InputLayer(Layer):
         super().__init__()
         self.idx = idx
         self.size = size
-        self.output_channels = input_shape[1]
-        self.output_height = input_shape[2]
-        self.output_width = input_shape[3]
+        self.input_shape = input_shape
+        if len(self.input_shape) == 4:
+            self.output_channels = self.input_shape[1]
+            self.output_height = self.input_shape[2]
+            self.output_width = self.input_shape[3]
         self.data_format = data_format
         self.name = 'Input_layer'
 
@@ -40,13 +42,19 @@ class InputLayer(Layer):
         ### Checking argument type ###
         assert type(self.idx) == int
         assert type(self.size) == int
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
+        assert all(type(dim) == int for dim in self.input_shape[1:])
         assert self.data_format == 'channels_last' or self.data_format == 'channels_first'
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
+        prod = 1
+        if len(self.input_shape) == 4:
+            for shape in self.input_shape[1:]:
+                prod *= shape
+        else:
+            for shape in self.input_shape:
+                prod *= shape
+
+        assert self.size == prod
 
     def generate_inference_code_layer(self):
 

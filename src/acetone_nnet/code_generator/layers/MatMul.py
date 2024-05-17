@@ -43,7 +43,7 @@ class MatMul(Layer):
         ### Checking argument type ###
         assert type(self.idx) == int
         assert type(self.size) == int
-        assert type(self.input_shape) == list[int]
+        assert all(type(shape) == int for shape in self.input_shape)
         assert type(self.weights) == np.ndarray
         assert type(side) == bool
         assert isinstance(self.activation_function, ActivationFunctions)
