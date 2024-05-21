@@ -45,9 +45,9 @@ l1 = acetone_nnet.InputLayer(idx=0,
 print('Dense Layer')
 l2 = acetone_nnet.Dense(idx=1,
                         size=300,
-                        weights=np.random.random((300,10)),
-                        biases=np.random.random(10),
-                        activation_function=acetone_nnet.Linear)
+                        weights=np.random.random((10,300)),
+                        biases=np.random.random(300),
+                        activation_function=acetone_nnet.Linear())
 
 #Convolution layer
 print('Convolution Layer')
@@ -64,7 +64,7 @@ l3 = acetone_nnet.Conv2D_6loops(idx=2,
                                 output_shape=[1,3,10,10],
                                 weights=np.random.random((3,3,3,3)),
                                 biases=np.random.random(3),
-                                activation_function=acetone_nnet.Linear)
+                                activation_function=acetone_nnet.Linear())
 
 #MaxPooling
 print('MaxPooling Layer')
@@ -75,35 +75,37 @@ l4 = acetone_nnet.MaxPooling2D(idx=3,
                                pool_size=3,
                                input_shape=[1,3,10,10],
                                output_shape=[1,3,10,10],
-                               activation_function=acetone_nnet.Sigmoid)
+                               activation_function=acetone_nnet.Sigmoid())
 
 #Add
 print('Add Layer')
 l5 = acetone_nnet.Add(idx=4,
                       size=140,
-                      input_shapes=[[1,4,7,5],[1,4,7,5]],
+                      input_shapes=np.array([[1,4,7,5],[1,4,7,5]]),
                       output_shape=[1,4,7,5],
-                      activation_function=acetone_nnet.TanH,
-                      constant=5)
+                      activation_function=acetone_nnet.TanH(),
+                      constant=np.array(5))
 
 #WrapPad
-print('WrapPadding Layer')
-l6 = acetone_nnet.Wrap_pad(idx=5,
-                           size=501305,
-                           pads=[0,0,5,7,0,0,6,3],
-                           constant_value=56,
-                           axes=[2,3],
-                           input_shape=[1,52,68,7],
-                           activation_function = acetone_nnet.ReLu)
-
+try:
+    print('WrapPadding Layer')
+    l6 = acetone_nnet.Wrap_pad(idx=5,
+                            size=501305,
+                            pads=[0,0,5,7,0,0,6,3],
+                            constant_value=56,
+                            axes=[2,3],
+                            input_shape=[1,52,68,7],
+                            activation_function = acetone_nnet.ReLu())
+except:
+    pass
 #Concatenate
 print('Concatenate Layer')
 l7 = acetone_nnet.Concatenate(idx=6,
                               size=300,
-                              axis=[3],
+                              axis=3,
                               input_shapes=[[1,3,10,5],[1,3,10,5]],
                               output_shape=[1,3,10,10],
-                              activation_function=acetone_nnet.Sigmoid)
+                              activation_function=acetone_nnet.Sigmoid())
 
 print('Layer creation done\n')
 

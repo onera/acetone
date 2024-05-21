@@ -41,7 +41,7 @@ from .layers import (
 
 class CodeGenerator(ABC):
 
-    def __init__(self, file:str|onnx.ModelProto|Functional|Sequential, test_dataset:str|np.ndarray|None=None, function_name:str='inference', nb_tests:int|str=None, conv_algorithm:str='std_gemm_nn', normalize:bool|str=False, debug_mode:str|None=None, debug_target:list|None=None,**kwargs):
+    def __init__(self, file:str|onnx.ModelProto|Functional|Sequential, test_dataset:str|np.ndarray|None=None, function_name:str='inference', nb_tests:int|str=None, conv_algorithm:str='std_gemm_nn', normalize:bool|str=False, debug_mode:str|None=None,**kwargs):
 
         self.file = file
         self.function_name = function_name
@@ -79,7 +79,7 @@ class CodeGenerator(ABC):
         ##### Debug Mode #####
         self.debug_mode = debug_mode
         if self.debug_mode:
-            self.debug_target = self.load_debug_target(debug_mode, debug_target)
+            self.debug_target = self.load_debug_target(debug_mode)
         ##### Debug Mode #####
             
         ####### Checking the instantiation#######
@@ -105,19 +105,15 @@ class CodeGenerator(ABC):
             assert all(target <= len(self.layers) for target in self.debug_target)
         ##### Debug Mode #####
     
-    def load_debug_target(self, debug_mode:str|None, debug_target:list|None):
-        if debug_target == None:
-            return debug_target
-        
-        else:
-            targets = []
-            for layer in self.layers[1:]:
-                if debug_mode == 'keras' and layer.name == 'Softmax':
-                    targets[-1] = layer.idx
-                else:
-                    targets.append(layer.idx)
+    def load_debug_target(self, debug_mode:str|None):
+        targets = []
+        for layer in self.layers[1:]:
+            if debug_mode == 'keras' and layer.name == 'Softmax':
+                targets[-1] = layer.idx
+            else:
+                targets.append(layer.idx)
 
-            return targets
+        return targets
         
     def create_test_dataset(self):
         test_dataset = self.data_type_py(np.random.default_rng(seed=10).random((self.nb_tests,1,int(self.layers[0].size))))
@@ -154,6 +150,7 @@ class CodeGenerator(ABC):
                 ##### Debug Mode #####
                 if self.debug_mode:
                     debug_output = []
+                    targets = []
                 ##### Debug Mode #####
 
                 if((self.data_format == 'channels_last') and (len(self.layers[0].input_shape) == 4)): 
@@ -219,8 +216,7 @@ class CodeGenerator(ABC):
 
                         # If all the targets are saved, the inference is stopped and the result is given
                         if len(debug_output) == len(self.debug_target):
-                            targets = [str(self.layers[k].name) + " " + str(self.layers[k].idx) for k in self.debug_target]
-                            return debug_output, targets
+                            targets.append(str(layer.name) + " " + str(layer.idx))
                     ##### Debug Mode #####
                         
                 nn_output = previous_layer_result[layer.path]
@@ -242,7 +238,10 @@ class CodeGenerator(ABC):
 
         print("File output_python.txt generated.")
 
-        return nn_output
+        if self.debug_mode:
+            return debug_output, targets
+        else:
+            return nn_output
 
     def flatten_array_orderc(self, array:np.ndarray):
     

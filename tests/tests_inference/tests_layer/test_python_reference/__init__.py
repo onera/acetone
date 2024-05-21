@@ -17,31 +17,3 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
-
-from . import code_generator
-from .code_generator import (
-    CodeGenerator, Layer,
-    Add_Bias, Concatenate, Dense, Dot, Flatten, Gather, Gemm, InputLayer, MatMul, Softmax, BatchNormalization,
-    Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract,
-    Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm,
-    Pad, Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
-    Pooling2D, MaxPooling2D, AveragePooling2D,
-    Resize, ResizeCubic, ResizeLinear, ResizeNearest,
-    ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip, LeakyReLu
-)
-
-from . import debug_tools
-from .debug_tools import (
-    debug_onnx, run_model_onnx, 
-    debug_keras, run_model_keras, 
-    compare_result, extract_outputs_c
-)
-
-from .cli_acetone import cli_acetone
-from .cli_compare import cli_compare
-
-__all__ = (
-    "cli_acetone", "cli_compare",
-    code_generator.__all__,
-    debug_tools.__all__
-)

@@ -61,7 +61,7 @@ def debug_keras(target_model:Sequential|Functional|str, debug_target:list=[], to
     
     return model, targets_indices
 
-def run_model(target_model:Sequential|Functional, dataset:np.ndarray):
+def run_model_keras(target_model:Sequential|Functional, dataset:np.ndarray):
     keras_result = target_model.predict(dataset)
 
     for i in range(len(keras_result)):

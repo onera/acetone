@@ -1,6 +1,6 @@
 # Date
 
-This document was last updated on the 14/05/2024.
+This document was last updated on the 21/05/2024.
 
 # Aspect of the DNN
 
@@ -15,6 +15,16 @@ The DNN must have:
 * Only one input
 * Only one output
 
+# Data format
+
+Only 1D and 2D operations are implemented.
+
+The tensor must be in one of the following format:
+* 'channels_first' (B,C,H,W)
+* 'channels_last' (B,H,W,C)
+
+with B the batch dimension (None or 1), C the number of channels, H the height of the tensor, W the width of the tensor.
+
 # Formats
 
 The DNN is describeb in one of the following formats:
@@ -23,7 +33,7 @@ The DNN is describeb in one of the following formats:
 * ONNX
 * H5
 
-# Layers implemented by formats
+# Layers by formats
 
 For each format, the following layers cans be used in the DNN:
 
@@ -116,7 +126,7 @@ For each format, the following layers cans be used in the DNN:
 * Sigmoid
 * TanH
 
-### Main layers implemented as a activation layer
+#### Main layers implemented as a activation layer
 
 * Clip
 * Exp

@@ -81,3 +81,9 @@ def extract_outputs_c(path_to_output:str, data_type:str, nb_targets:int):
     f.close()
 
     return list_result, targets
+
+def extract_outputs_python(result_python:tuple[list], targets_indice:list):
+    outputs = [result_python[0][i] for i in targets_indice]
+    targets = [result_python[1][i] for i in targets_indice]
+
+    return outputs, targets

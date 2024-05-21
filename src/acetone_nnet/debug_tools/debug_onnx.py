@@ -81,7 +81,7 @@ def debug_onnx(target_model:onnx.ModelProto|str, debug_target:list=[], otpimize_
     
     return model, targets_indices
 
-def run_model(model:onnx.ModelProto, dataset:np.ndarray, keep_full_model_result:bool = True):
+def run_model_onnx(model:onnx.ModelProto, dataset:np.ndarray, keep_full_model_result:bool = True):
     sess = rt.InferenceSession(model)
     input_name = sess.get_inputs()[0].name
     onnx_result = sess.run(None,{input_name: dataset})
