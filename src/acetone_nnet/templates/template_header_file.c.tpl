@@ -12,10 +12,10 @@
     {{/name}}
 {{/cst}}
 
-{{#tensor_temp}}
+{{#temp_size}}
 {{data_type}} tensor_temp[{{temp_size}}];
 
-{{/tensor_temp}}
+{{/temp_size}}
 {{#layers}}
     {{#nb_weights}}
 extern {{data_type}} weights_{{name}}_{{idx}}[{{nb_weights}}];

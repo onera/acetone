@@ -19,14 +19,19 @@
                     }
                 }
                 {{^fused_layer}}
-                output_{{road}}[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
                 {{/fused_layer}}
                 {{#fused_layer}}
                     {{^linear}}
                 {{local_var}} = {{{activation_function}}};
                     {{/linear}}
-                output_{{road}}[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
                 {{/fused_layer}}
             }
         }
+    }
+
+    for (k = 0; k < {{size}}; ++k)
+    {
+        output_{{road}}[k] = tensor_temp[k];
     }

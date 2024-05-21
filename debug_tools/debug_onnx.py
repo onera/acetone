@@ -91,7 +91,7 @@ def run_model(model:onnx.ModelProto, dataset:np.ndarray, keep_full_model_result:
     else:
         onnx_result.append(onnx_result.pop(0))
     
-    for inter_result in onnx_result:
-        inter_result = inter_result.ravel().flatten()
+    for i in range(len(onnx_result)):
+        onnx_result[i] = onnx_result[i].ravel().flatten()
     
     return onnx_result

@@ -87,7 +87,7 @@ class MatMul(Layer):
         
     def forward_path_layer(self, input):
         
-        input = input.reshape(self.previous_layer[0].size)
+        input = input.reshape(self.input_shape)
         if self.side:
             return self.activation_function.compute(np.matmul(self.weights,input))
         else:

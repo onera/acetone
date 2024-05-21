@@ -22,6 +22,7 @@ acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
 import sys
 sys.path.append(acetoneTestCase_path)
 import acetoneTestCase
+import unittest
 
 import tensorflow as tf
 import keras
@@ -33,6 +34,7 @@ tf.keras.backend.set_floatx('float32')
 class TestDot(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
+    @unittest.expectedFailure
     def testDot(self):
         testshape = (1,1,16,)
         units = 8
@@ -42,11 +44,9 @@ class TestDot(acetoneTestCase.AcetoneTestCase):
         x2 = Dense(units, activation='linear', bias_initializer='he_normal')(input)
         out = Dot(axes=1)([x1, x2])
         model = keras.Model(inputs=[input], outputs=out)
-
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     

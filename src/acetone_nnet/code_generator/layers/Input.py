@@ -47,11 +47,8 @@ class InputLayer(Layer):
 
         ### Checking value consistency ###
         prod = 1
-        if len(self.input_shape) == 4:
-            for shape in self.input_shape[1:]:
-                prod *= shape
-        else:
-            for shape in self.input_shape:
+        for shape in self.input_shape:
+            if shape != None and shape != 0:
                 prod *= shape
 
         assert self.size == prod

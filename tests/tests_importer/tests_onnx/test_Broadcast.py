@@ -37,7 +37,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
                                             onnx.TensorProto.FLOAT,
                                             [None, model_input_channels, 32, 32])
         model_output_name = "Y"
-        model_output_channels =60
+        model_output_channels =3
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                             onnx.TensorProto.FLOAT,
                                             [None, model_output_channels, 32,32])
@@ -142,7 +142,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
                                             onnx.TensorProto.FLOAT,
                                             [None, model_input_channels, 32, 32])
         model_output_name = "Y"
-        model_output_channels =60
+        model_output_channels =3
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                             onnx.TensorProto.FLOAT,
                                             [None, model_output_channels, 32,32])
@@ -248,7 +248,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
                                             onnx.TensorProto.FLOAT,
                                             [None, model_input_channels, 32, 32])
         model_output_name = "Y"
-        model_output_channels =60
+        model_output_channels =3
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                             onnx.TensorProto.FLOAT,
                                             [None, model_output_channels, 32,32])
@@ -354,7 +354,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
                                             onnx.TensorProto.FLOAT,
                                             [None, model_input_channels, 32, 32])
         model_output_name = "Y"
-        model_output_channels =60
+        model_output_channels =3
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                             onnx.TensorProto.FLOAT,
                                             [None, model_output_channels, 32,32])
@@ -460,7 +460,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
                                             onnx.TensorProto.FLOAT,
                                             [None, model_input_channels, 32, 32])
         model_output_name = "Y"
-        model_output_channels =60
+        model_output_channels =3
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                             onnx.TensorProto.FLOAT,
                                             [None, model_output_channels, 32,32])
@@ -566,7 +566,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
                                             onnx.TensorProto.FLOAT,
                                             [None, model_input_channels, 32, 32])
         model_output_name = "Y"
-        model_output_channels =60
+        model_output_channels =3
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                             onnx.TensorProto.FLOAT,
                                             [None, model_output_channels, 32,32])

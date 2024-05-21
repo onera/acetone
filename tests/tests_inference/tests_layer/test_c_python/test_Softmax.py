@@ -27,6 +27,9 @@ import tensorflow as tf
 import keras
 from keras.layers import Input, Dense
 
+import onnx
+import numpy as np
+
 tf.keras.backend.set_floatx('float32')
 
 
@@ -42,10 +45,71 @@ class TestSoftmax(acetoneTestCase.AcetoneTestCase):
         out = Dense(units, activation='softmax', bias_initializer='he_normal')(input)
 
         model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+    
+    def testSoftmaxONNX(self):
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3, 10, 10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,5, 10, 10])
+        
+        conv1_output_name = "output_conv1"
+        conv1_in_channels = 3
+        conv1_out_channels = 5
+        conv1_kernel_shape = (7,7)
+        conv1_W = np.random.rand(conv1_out_channels, conv1_in_channels,
+                                *conv1_kernel_shape).astype(np.float32)
+        conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
+        conv1_W_initializer_tensor_name = "Conv1_W"
+        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_W_initializer_tensor_name,
+            tensor_array=conv1_W,
+            data_type=onnx.TensorProto.FLOAT)
+        conv1_B_initializer_tensor_name = "Conv1_B"
+        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_B_initializer_tensor_name,
+            tensor_array=conv1_B,
+            data_type=onnx.TensorProto.FLOAT)
+
+        conv1_node = onnx.helper.make_node(
+            op_type="Conv",
+            inputs=[
+                model_input_name, conv1_W_initializer_tensor_name,
+                conv1_B_initializer_tensor_name
+            ],
+            outputs=[conv1_output_name],
+            kernel_shape=conv1_kernel_shape,
+            auto_pad='SAME_UPPER',
+            strides = (1,1),
+        )
+
+        activation_node = onnx.helper.make_node(
+            op_type="Softmax",
+            inputs=[conv1_output_name],
+            outputs=[model_output_name],
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes = [conv1_node,activation_node],
+            name = 'Conv',
+            inputs = [X],
+            outputs = [Y],
+            initializer = [conv1_W_initializer_tensor,conv1_B_initializer_tensor],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     

@@ -64,7 +64,7 @@ def debug_keras(target_model:Sequential|Functional|str, debug_target:list=[], to
 def run_model(target_model:Sequential|Functional, dataset:np.ndarray):
     keras_result = target_model.predict(dataset)
 
-    for inter_result in keras_result:
-        inter_result = inter_result.ravel().flatten()
+    for i in range(len(keras_result)):
+        keras_result[i] = keras_result[i].ravel().flatten()
         
     return keras_result

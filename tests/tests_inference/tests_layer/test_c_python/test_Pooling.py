@@ -27,6 +27,8 @@ import tensorflow as tf
 import keras
 from keras.layers import Input, MaxPooling2D, AveragePooling2D
 
+import onnx
+
 tf.keras.backend.set_floatx('float32')
 
 
@@ -42,10 +44,9 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
         out = MaxPooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
         
         model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
    
@@ -58,12 +59,76 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
         out = AveragePooling2D(pool_size=pool_size, strides=strides, padding='valid',data_format='channels_last')(input)
 
         model = keras.Model(input,out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         model.save(self.tmpdir_name+'/model.h5')
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))    
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+    
+    def testMaxPoolingONNX(self):
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3, 10, 10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3, 10, 10])
+
+        conv1_node = onnx.helper.make_node(
+            op_type="MaxPool",
+            inputs=[model_input_name],
+            outputs=[model_output_name],
+            pads=[1,1,1,1],
+            strides = (1,1),
+            kernel_shape = (3,3),
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes = [conv1_node],
+            name = 'Pooling',
+            inputs = [X],
+            outputs = [Y],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', conv_algo='indirect_gemm_nn')
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+    
+    def testGlobalPoolingONNX(self):
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,64, 10, 10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,64, 1, 1])
+
+        conv1_node = onnx.helper.make_node(
+            op_type="GlobalAveragePool",
+            inputs=[model_input_name],
+            outputs=[model_output_name],
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes = [conv1_node],
+            name = 'Pooling',
+            inputs = [X],
+            outputs = [Y],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx', conv_algo='indirect_gemm_nn')
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
 if __name__ == '__main__':
     acetoneTestCase.main()

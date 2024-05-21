@@ -506,7 +506,6 @@ class CodeGenerator(ABC):
                 or any(issubclass(layer, Broadcast)) 
                 or any(isinstance(layer, Gather)) 
                 or any(isinstance(layer, Pad))) for layer in self.layers):
-            mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
  
         mustach_hash['layers'] = []
@@ -579,7 +578,6 @@ class CodeGenerator(ABC):
                 or any(issubclass(layer, Broadcast)) 
                 or any(isinstance(layer, Gather)) 
                 or any(isinstance(layer, Pad))) for layer in self.layers):
-            mustach_hash['tensor_temp'] = True
             mustach_hash['temp_size'] = max(self.l_size_max,self.patches_size_max)
              
         if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):

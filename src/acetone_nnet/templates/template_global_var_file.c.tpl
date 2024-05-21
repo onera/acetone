@@ -11,10 +11,10 @@
     {{/name}}
 {{/cst}}
 
-{{#tensor_temp}}
+{{#temp_size}}
 {{data_type}} tensor_temp[{{temp_size}}];
 
-{{/tensor_temp}}
+{{/temp_size}}
 {{#zero}}
 {{data_type}} zero = 0.0f;
 

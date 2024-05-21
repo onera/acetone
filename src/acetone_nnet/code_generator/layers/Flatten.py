@@ -38,7 +38,7 @@ class Flatten(Layer):
         ### Checking argument type ###
         assert type(self.idx) == int
         assert type(self.size) == int
-        assert all(type(shape) == int for shape in self.input_shape)
+        assert all(type(shape) == int for shape in self.input_shape[1:])
         assert self.data_format == 'channels_last' or self.data_format == 'channels_first'
 
         ### Checking value consistency ###
