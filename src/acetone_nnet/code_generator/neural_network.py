@@ -214,8 +214,6 @@ class CodeGenerator(ABC):
                                 if((self.data_format == 'channels_last') and hasattr(layer, 'output_channels')): debug_output[-1] = np.transpose(debug_output[-1], (1,2,0))
                                 debug_output[-1] = debug_output[-1].flatten()
 
-                        # If all the targets are saved, the inference is stopped and the result is given
-                        if len(debug_output) == len(self.debug_target):
                             targets.append(str(layer.name) + " " + str(layer.idx))
                     ##### Debug Mode #####
                         

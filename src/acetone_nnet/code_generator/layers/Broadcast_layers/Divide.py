@@ -31,13 +31,13 @@ class Divide(Broadcast):
     
     def forward_path_layer(self, inputs:np.ndarray):
         if(self.constant is None):
-            constant = 1
+            constant = np.ones(1)
         else: 
             constant = self.constant
         if(len(self.previous_layer) > 1):
-            output = inputs[0]
-            for input in inputs[1:]:
-                output /= input
+            output = np.ones(self.input_shapes[0][1:])
+            for i in range(len(self.input_shapes)):
+                output /= np.reshape(inputs[i],self.input_shapes[i][1:])
         else:
-            output = inputs
+            output = np.reshape(inputs,self.input_shapes[0][1:])
         return self.activation_function.compute(output/constant)

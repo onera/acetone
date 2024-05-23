@@ -24,10 +24,7 @@ from keras.engine.sequential import Sequential
 import numpy as np
 
 def extract_node_outputs(model:Sequential|Functional):
-    ouputs_name = []
-    for layer in model.layers:
-        ouputs_name.append(model.get_layer(layer.name).output[0])
-    return ouputs_name
+    return [layer.output for layer in model.layers[1:]]
 
 def extract_targets_indices(model:Functional|Sequential,outputs_name:list[str]):
     targets_indices = []
@@ -37,7 +34,7 @@ def extract_targets_indices(model:Functional|Sequential,outputs_name:list[str]):
                 targets_indices.append(i)
     return targets_indices
 
-def debug_keras(target_model:Sequential|Functional|str, debug_target:list=[], to_save:bool = False, path:str = ''):
+def debug_keras(target_model:Sequential|Functional|str, dataset:np.ndarray, debug_target:list=[], to_save:bool = False, path:str = ''):
     # Loading the model
     if(type(target_model) == str): 
         model = keras.models.load_model(target_model)
@@ -53,18 +50,17 @@ def debug_keras(target_model:Sequential|Functional|str, debug_target:list=[], to
         targets_indices = extract_targets_indices(model, inter_layers)
     
     # Add an output after each name of inter_layers
-    model = keras.Model(inputs=model.input, outputs=inter_layers)
+    functional = [Functional([model.input],[out]) for out in inter_layers]
 
     # Saving the model
     if to_save:
-        keras.models.save_model(model, path)
-    
-    return model, targets_indices
+        for i in range(len(functional)):
+            keras.models.save_model(model, path+"model_"+str(i)+".h5")
 
-def run_model_keras(target_model:Sequential|Functional, dataset:np.ndarray):
-    keras_result = target_model.predict(dataset)
+    # Model inference
+    outputs = [func([dataset]) for func in functional]
 
-    for i in range(len(keras_result)):
-        keras_result[i] = keras_result[i].ravel().flatten()
-        
-    return keras_result
+    for i in range(len(outputs)):
+        outputs[i] = outputs[i].ravel().flatten()
+
+    return model, targets_indices, outputs

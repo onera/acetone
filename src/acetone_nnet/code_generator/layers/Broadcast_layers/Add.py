@@ -26,18 +26,21 @@ class Add(Broadcast):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        print('add',self.input_shapes)
         self.name = 'Add'
         self.specific_operator = ' + '
     
     def forward_path_layer(self, inputs:np.ndarray):
         if(self.constant is None):
-            constant = 0
+            constant = np.zeros(1)
         else: 
-            constant = self.constant
+            constant = np.reshape(self.constant,self.input_shapes[-1][1:])
+            self.input_shapes = np.delete(self.input_shapes,-1,axis=0)
         if(len(self.previous_layer) > 1):
-            output = inputs[0]
-            for input in inputs[1:]:
-                output += input
+            output = np.zeros(self.input_shapes[0][1:])
+            for i in range(len(self.input_shapes)):
+                output += np.reshape(inputs[i],self.input_shapes[i][1:])
         else:
-            output = inputs
-        return self.activation_function.compute(output+constant)
+            output = np.reshape(inputs,self.input_shapes[0][1:])
+        out = self.activation_function.compute(output+constant)
+        return out

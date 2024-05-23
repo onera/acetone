@@ -129,8 +129,12 @@ def create_Softmax(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:di
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    if 'axis' not in attributs:
+        attributs['axis'] = -1
     return Softmax(idx = idx,
-                            size = size)
+                    size = size,
+                    axis = attributs['axis'])
 
 
 #Create a layer Conv
@@ -628,7 +632,7 @@ def create_Max(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
     dict_output[node.output[0]] = idx
     return Maximum(idx=idx,
                     size=size,
-                    input_shapes=input_shapes,
+                    input_shapes=np.array(input_shapes),
                     output_shape=output_shape,
                     activation_function= Linear())
 
@@ -643,7 +647,7 @@ def create_Min(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, 
     dict_output[node.output[0]] = idx
     return Minimum(idx=idx,
                     size=size,
-                    input_shapes=input_shapes,
+                    input_shapes=np.array(input_shapes),
                     output_shape=output_shape,
                     activation_function= Linear())
 

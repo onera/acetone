@@ -18,29 +18,13 @@
  ******************************************************************************
 """
 
-from . import code_generator
-from .code_generator import (
-    CodeGenerator, Layer,
-    Add_Bias, Concatenate, Dense, Dot, Flatten, Gather, Gemm, InputLayer, MatMul, Softmax, BatchNormalization,
-    Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract,
-    Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm,
-    Pad, Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
-    Pooling2D, MaxPooling2D, AveragePooling2D,
-    Resize, ResizeCubic, ResizeLinear, ResizeNearest,
-    ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip, LeakyReLu
-)
+from .debug_keras import debug_keras
 
-from . import debug_tools
-from .debug_tools import (
-    debug_onnx, debug_keras, 
-    compare_result, extract_outputs_c, extract_outputs_python
-)
+from .debug_onnx import debug_onnx
 
-from .cli_acetone import cli_acetone
-from .cli_compare import cli_compare
+from .debug_tools import compare_result, extract_outputs_c, extract_outputs_python
 
 __all__ = (
-    "cli_acetone", "cli_compare",
-    code_generator.__all__,
-    debug_tools.__all__
+    "debug_keras", "debug_onnx",
+    "compare_result", "extract_outputs_c", "extract_outputs_python"
 )

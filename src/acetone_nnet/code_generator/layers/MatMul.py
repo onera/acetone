@@ -86,9 +86,10 @@ class MatMul(Layer):
         return pystache.render(template, mustach_hash)
         
     def forward_path_layer(self, input):
-        
         input = input.reshape(self.input_shape)
         if self.side:
-            return self.activation_function.compute(np.matmul(self.weights,input))
+            weights = np.moveaxis(self.weights,3,0)
+            weights = np.reshape(weights,(1,1,weights.shape[-1],weights.shape[0]))
+            return self.activation_function.compute(np.matmul(weights,input))
         else:
             return self.activation_function.compute(np.matmul(input,self.weights))

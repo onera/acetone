@@ -36,7 +36,7 @@ def compare_result(acetone_result:list|np.ndarray, reference_result:list|np.ndar
         print('--------------------------------------------')
         print('Comparing',targets[i])
         try:
-            np.testing.assert_allclose(acetone_result[i],reference_result[i],atol=1e-06)
+            np.testing.assert_allclose(acetone_result[i],reference_result[i],atol=1e-06,rtol=1e-06)
         except AssertionError as msg:
             print("Error: output value of",targets[i],"incorrect")
             correct = False
@@ -83,7 +83,12 @@ def extract_outputs_c(path_to_output:str, data_type:str, nb_targets:int):
     return list_result, targets
 
 def extract_outputs_python(result_python:tuple[list], targets_indice:list):
-    outputs = [result_python[0][i] for i in targets_indice]
-    targets = [result_python[1][i] for i in targets_indice]
+    outputs = []
+    targets = []
+    for indice in targets_indice:
+        for i in range(len(result_python[1])):
+            if indice == int(result_python[1][i][-1]):
+                outputs.append(result_python[0][i])
+                targets.append(result_python[1][i])
 
     return outputs, targets

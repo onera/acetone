@@ -44,7 +44,19 @@ def extract_targets_indices(model:onnx.ModelProto,outputs_name:list[str]):
                 targets_indices.append(i)
     return targets_indices
 
-def debug_onnx(target_model:onnx.ModelProto|str, debug_target:list=[], otpimize_inputs:bool = False, to_save:bool = False, path:str = ''):
+def run_model_onnx(model:onnx.ModelProto, dataset:np.ndarray):
+    sess = rt.InferenceSession(model)
+    input_name = sess.get_inputs()[0].name
+    onnx_result = sess.run(None,{input_name: dataset})
+
+    onnx_result.append(onnx_result.pop(0))
+    
+    for i in range(len(onnx_result)):
+        onnx_result[i] = onnx_result[i].ravel().flatten()
+    
+    return onnx_result
+
+def debug_onnx(target_model:onnx.ModelProto|str, dataset:np.ndarray, debug_target:list=[], otpimize_inputs:bool = False, to_save:bool = False, path:str = ''):
     # Loading the model
     if type(target_model) == str:
         model = onnx.load(target_model)
@@ -64,7 +76,6 @@ def debug_onnx(target_model:onnx.ModelProto|str, debug_target:list=[], otpimize_
     shape_info = onnx.shape_inference.infer_shapes(model)
     for idx, node in enumerate(shape_info.graph.value_info):
         if node.name in inter_layers:
-            print(idx, node)
             value_info_protos.append(node)
     assert len(value_info_protos) == len(inter_layers)
     model.graph.output.extend(value_info_protos)  #  in inference stage, these tensor will be added to output dict.
@@ -78,20 +89,8 @@ def debug_onnx(target_model:onnx.ModelProto|str, debug_target:list=[], otpimize_
     # Save the model
     if to_save:
         onnx.save(model,path)
-    
-    return model, targets_indices
 
-def run_model_onnx(model:onnx.ModelProto, dataset:np.ndarray, keep_full_model_result:bool = True):
-    sess = rt.InferenceSession(model)
-    input_name = sess.get_inputs()[0].name
-    onnx_result = sess.run(None,{input_name: dataset})
-
-    if not keep_full_model_result:
-        onnx_result.pop(0)
-    else:
-        onnx_result.append(onnx_result.pop(0))
+    # Model inference
+    outputs = run_model_onnx(model, dataset)
     
-    for i in range(len(onnx_result)):
-        onnx_result[i] = onnx_result[i].ravel().flatten()
-    
-    return onnx_result
+    return model, targets_indices, outputs

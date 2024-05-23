@@ -24,12 +24,13 @@ import pystache
 
 class Softmax(Layer):
 
-    def __init__(self, idx:int, size:int):
+    def __init__(self, idx:int, size:int, axis:int):
         
         super().__init__()
         self.idx = idx
         self.size = size
         self.name = 'Softmax'
+        self.axis = axis
 
         ####### Checking the instantiation#######
 
@@ -60,6 +61,6 @@ class Softmax(Layer):
     def forward_path_layer(self, input:np.ndarray):
         
         exp = np.exp(input, dtype=np.float)
-        output = exp/np.sum(exp)
+        output = exp/np.sum(exp,keepdims=1, axis=self.axis)
 
         return output
