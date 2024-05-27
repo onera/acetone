@@ -49,20 +49,32 @@ class Pad(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert all(type(pad) == int for pad in self.pads)
-        assert type(self.constant_value) == float or type(self.constant_value) == int
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert all(type(shape) == int for shape in self.input_shape[1:])
-        assert isinstance(self.activation_function, ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Pad (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Pad (size must be int)")
+        if any(type(pad) != int for pad in self.pads):
+            raise TypeError("Error: pads type in Pad (must be int)")
+        if type(self.constant_value) != float and type(self.constant_value) != int:
+            raise TypeError("Error: constant value type in Pad (must be float or int)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in Pad (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Pad (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Pad (must be int)")
+        if any(type(shape) != int for shape in self.input_shape[1:]):
+            raise TypeError("Error: input shape type in Pad (must be int)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Pad (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert all(0 <= axe and axe < 4 for axe in self.axes)
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Pad ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        for axe in self.axes:
+            if axe < 0 or axe >= 4:
+                raise ValueError("Error: axe out of bound in Pad ("+str(axe)+"for tensor in 4 dimension with first dimension unused)")
     
     def forward_path_layer(self, input:np.ndarray):
         input = input.reshape(self.input_shape[1], self.input_shape[2], self.input_shape[3])

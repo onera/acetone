@@ -85,24 +85,29 @@ class CodeGenerator(ABC):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.file) == str or type(self.file) == onnx.ModelProto or type(self.file) == Functional or type(self.file) == Sequential
-        assert type(test_dataset) == str or type(test_dataset) == np.ndarray or test_dataset == None
-        assert type(self.test_dataset) == np.ndarray
-        assert type(self.function_name) == str
-        assert type(self.conv_algorithm) == str
-        assert self.debug_mode == None or type(self.debug_mode) == str
+        if not (type(self.file) == str or type(self.file) == onnx.ModelProto or type(self.file) == Functional or type(self.file) == Sequential):
+            raise TypeError("Error: model type.\n Format must be: path to model, model ONNX or model Keras")
+        if not (type(test_dataset) == str or type(test_dataset) == np.ndarray or test_dataset == None):
+            raise TypeError("Error: test_dataset type.\n Must be: path to dataset text filen, numpy array or None")
+        if not type(self.function_name) == str:
+            raise TypeError("Error: function name type.\n Must be a string")
+        if not type(self.conv_algorithm) == str:
+            raise TypeError("Error: conv algorihtm type.\n Must be a string")
+        if not (self.debug_mode == None or type(self.debug_mode) == str):
+            raise TypeError("Error: debug mode type.\n Must be: string or None")
         if self.debug_mode:
             assert type(self.debug_target) == list
 
         ### Checking value consistency ###
-        assert self.conv_algorithm in ['6loops',
+        if self.conv_algorithm not in ['6loops',
                                        'indirect_gemm_nn','indirect_gemm_tn','indirect_gemm_nt','indirect_gemm_tt',
-                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']
+                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_tt']:
+            raise ValueError("Error: conv algorithm value.\n Must be one of: 6loops, indirect_gemm_nn, indirect_gemm_tn, indirect_gemm_nt, indirect_gemm_tt, std_gemm_nn, std_gemm_tn, std_gemm_nt, std_gemm_tt")
+        
         ##### Debug Mode #####
         if self.debug_mode:
-            assert self.debug_mode in ['keras','onnx']
-            assert len(self.debug_target) <= len(self.layers)
-            assert all(target <= len(self.layers) for target in self.debug_target)
+            if self.debug_mode not in ['keras','onnx']:
+                raise ValueError("Error: debug mode value.\n Must be one of: keras, onnx")
         ##### Debug Mode #####
     
     def load_debug_target(self, debug_mode:str|None):
@@ -403,7 +408,7 @@ class CodeGenerator(ABC):
             mustach_hash['is_linear_interpolation'] = True
         
         if self.debug_mode:
-            mustach_hash['debug_file'] = "debug_file.txt"
+            mustach_hash['debug_file'] = self.c_files_directory + "debug_file.txt"
         
         mustach_hash['layers'] = []
         for layer in self.layers:

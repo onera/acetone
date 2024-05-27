@@ -43,10 +43,12 @@ class ResizeNearest(Resize):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.nearest_mode) == str
+        if type(self.nearest_mode) != str:
+            raise TypeError("Error: nearest mode in Resize Nearest (must be string)")
 
         ### Checking value consistency ###
-        assert self.nearest_mode in ['round_prefer_floor','round_prefer_ceil','floor','ceil']
+        if self.nearest_mode not in ['round_prefer_floor','round_prefer_ceil','floor','ceil']:
+            raise ValueError("Error: nearest mode value in Resize Nearest ("+self.nearest_mode+")")
     
     #Defining the several method to chose the nearest
     def floor(self, x:str, y:str):

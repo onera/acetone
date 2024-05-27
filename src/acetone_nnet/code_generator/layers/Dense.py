@@ -42,15 +42,22 @@ class Dense(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.weights) == np.ndarray
-        assert type(self.biases) == np.ndarray
-        assert isinstance(self.activation_function, ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Dense (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Dense (size must be int)")
+        if type(self.weights) != np.ndarray:
+            raise TypeError("Error: weights in Dense (weights must be an numpy array)")
+        if type(self.biases) != np.ndarray:
+            raise TypeError("Error: biases in Dense (biases must be an numpy array)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Dense (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert self.size == self.weights.shape[-1]
-        assert self.size == self.biases.shape[0]
+        if self.size != self.weights.shape[-1]:
+            raise ValueError("Error: non consistency between weight shape and output shape in Dense ("+str(self.size)+"!="+str(self.weights.shape[-1])+")")
+        if self.size != self.biases.shape[0]:
+            raise ValueError("Error: non consistency between biases shape and output shape in Dense ("+str(self.size)+"!="+str(self.weights.shape[-1])+")")
 
         
     def generate_inference_code_layer(self):

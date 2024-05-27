@@ -26,7 +26,6 @@ class Add(Broadcast):
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        print('add',self.input_shapes)
         self.name = 'Add'
         self.specific_operator = ' + '
     
@@ -37,8 +36,8 @@ class Add(Broadcast):
             constant = np.reshape(self.constant,self.input_shapes[-1][1:])
             self.input_shapes = np.delete(self.input_shapes,-1,axis=0)
         if(len(self.previous_layer) > 1):
-            output = np.zeros(self.input_shapes[0][1:])
-            for i in range(len(self.input_shapes)):
+            output = np.copy(inputs[0]).reshape(self.input_shapes[0][1:])
+            for i in range(1,len(inputs)):
                 output += np.reshape(inputs[i],self.input_shapes[i][1:])
         else:
             output = np.reshape(inputs,self.input_shapes[0][1:])

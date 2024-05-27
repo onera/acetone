@@ -38,13 +38,18 @@ class Add_Bias(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.biases) == np.ndarray
-        assert isinstance(self.activation_function, ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in AddBias (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in AddBias (size must be int)")
+        if type(self.biases) != np.ndarray:
+            raise TypeError("Error: biases in AddBias (biases must be an numpy array)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in AddBias (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert  len(self.biases.shape) == 1 and self.biases.shape[0] == self.size
+        if len(self.biases.shape) != 1 or self.biases.shape[0] != self.size:
+            raise ValueError("Error:non consistency between the biases shape and the output shape in AddBias ("+str(self.biases.shape[0])+"!="+str(self.size)+")")
     
     #Go through all the indices and do the operation
     def generate_inference_code_layer(self):

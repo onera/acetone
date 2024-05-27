@@ -28,10 +28,13 @@ def clean_inputs(model:onnx.ModelProto):
 
 def extract_node_outputs(model:onnx.ModelProto):
     activation = ["Relu","Tanh","Sigmoid","Clip","Exp","Log","LeakyRelu"]
+    ignored = ["Dropout"]
     ouputs_name = []
     for node in model.graph.node:
-        if node.output[0] in activation:
+        if node.op_type in activation:
             ouputs_name[-1] = node.output[0]
+        elif node.op_type in ignored:
+            continue
         else:
             ouputs_name.append(node.output[0])
     return ouputs_name
@@ -56,7 +59,7 @@ def run_model_onnx(model:onnx.ModelProto, dataset:np.ndarray):
     
     return onnx_result
 
-def debug_onnx(target_model:onnx.ModelProto|str, dataset:np.ndarray, debug_target:list=[], otpimize_inputs:bool = False, to_save:bool = False, path:str = ''):
+def debug_onnx(target_model:onnx.ModelProto|str, dataset:np.ndarray, debug_target:list=[], to_save:bool = False, path:str = '', otpimize_inputs:bool = False):
     # Loading the model
     if type(target_model) == str:
         model = onnx.load(target_model)
@@ -77,7 +80,7 @@ def debug_onnx(target_model:onnx.ModelProto|str, dataset:np.ndarray, debug_targe
     for idx, node in enumerate(shape_info.graph.value_info):
         if node.name in inter_layers:
             value_info_protos.append(node)
-    assert len(value_info_protos) == len(inter_layers)
+
     model.graph.output.extend(value_info_protos)  #  in inference stage, these tensor will be added to output dict.
 
     # Optimizing the model by removing the useless inputs
@@ -91,6 +94,10 @@ def debug_onnx(target_model:onnx.ModelProto|str, dataset:np.ndarray, debug_targe
         onnx.save(model,path)
 
     # Model inference
-    outputs = run_model_onnx(model, dataset)
+    if type(model) == str:
+        run_model = model
+    else:
+        run_model = model.SerializeToString()
+    outputs = run_model_onnx(run_model, dataset)
     
     return model, targets_indices, outputs

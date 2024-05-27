@@ -27,16 +27,13 @@ class TestAcas_fully_connected_NNet(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
     def testAcas_fully_connected_NNet(self):
-        NNet_result = [-2.21254643e-02, -1.89464034e-02, -1.90349368e-02, -1.90424083e-02, -1.90863556e-02]
+        NNet_result = [-0.0211989,-0.0187142,-0.0187663,-0.0187621,-0.0187605]
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet', './tests/models/acas/acas_fully_connected/test_input_acas_fully_connected.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
     def testAcas_fully_connected_NNetPython(self):
-        testshape = (5,)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-    
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

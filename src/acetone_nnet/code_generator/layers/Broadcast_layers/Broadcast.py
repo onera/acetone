@@ -49,23 +49,34 @@ class Broadcast(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert isinstance(self.activation_function, ActivationFunctions)
-        assert type(self.constant) == np.ndarray or self.constant == None
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Broadcast (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Broadcast (size must be int)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in Broadcast (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Broadcast (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Broadcast (must be int)")
+        for input_shape in self.input_shapes[:,1:]:
+            for shape in input_shape:
+                if 'int' not in type(shape).__name__ :
+                    raise TypeError("Error: input_shape in Broadcast (all dim must be int)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Broadcast (activation function must be a sub-classe of acetone_nnet Activation Function)")
+        if type(self.constant) != np.ndarray and self.constant != None:
+            raise TypeError("Error: constant type in Broadcast")
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert all(shape[1] == 1 or shape[1]==self.output_channels for shape in self.input_shapes)
-        assert all(shape[2] == 1 or shape[2]==self.output_height for shape in self.input_shapes)
-        assert all(shape[3] == 1 or shape[3]==self.output_width for shape in self.input_shapes)
-        assert self.output_channels == np.max(self.input_shapes[:,1])
-        assert self.output_height == np.max(self.input_shapes[:,2])
-        assert self.output_width == np.max(self.input_shapes[:,3])
-
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Broadcast ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if (self.output_channels,self.output_height,self.output_width) != (np.max(self.input_shapes[:,1]),np.max(self.input_shapes[:,2]),np.max(self.input_shapes[:,3])):
+            raise ValueError("Error: non consistency between inputs shape and output shape in Broadcast ("+str((np.max(self.input_shapes[:,1]),np.max(self.input_shapes[:,2]),np.max(self.input_shapes[:,3])))+"!="+str((self.output_channels,self.output_height,self.output_width))+")")
+        for shape in self.input_shapes:
+            if (shape[1] != 1 and shape[1]!=self.output_channels) or (shape[2] != 1 and shape[2]!=self.output_height) or (shape[3] != 1 and shape[3]!=self.output_width):
+                raise ValueError("Error: input shape in Broadcast not broadcastable to shape " + str((self.output_channels,self.output_height,self.output_width)))
+        
     #Go through all the indices and do the operation
     def generate_inference_code_layer(self):
 

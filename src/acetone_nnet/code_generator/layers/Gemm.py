@@ -67,25 +67,44 @@ class Gemm(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.alpha[0]) == float or type(self.alpha[0]) == int
-        assert type(self.beta[0]) == float or type(self.beta[0]) == int
-        assert all(type(self.transpo[i]) == int or type(self.transpo[i]) == bool for i in range(2))
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert type(self.input_height) == int
-        assert type(self.input_width) == int
-        assert type(self.weights) == np.ndarray
-        assert type(self.biases) == np.ndarray
-        assert isinstance(self.activation_function,ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Gemm (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Gemm (size must be int)")
+        if  type(self.alpha[0]) != float and type(self.alpha[0]) == int:
+            raise TypeError("Error: alpha type in Gemm (alpha must be int or float)")
+        if  type(self.beta[0]) != float and type(self.beta[0]) == int:
+            raise TypeError("Error: beta type in Gemm (beta must be int or float)")
+        if any(type(self.transpo[i]) != int and type(self.transpo[i]) != bool for i in range(2)):
+            raise TypeError("Error: transpose type in Gemm (must be boolean or int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Gemm (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Gemm (must be int)")
+        if type(self.input_height) != int:
+            raise TypeError("Error: input height type in Gemm (must be int)")
+        if type(self.input_width) != int:
+            raise TypeError("Error: input width type in Gemm (must be int)")
+        if type(self.weights) != np.ndarray:
+            raise TypeError("Error: weights in Gemm (weights must be an numpy array)")
+        if type(self.biases) != np.ndarray:
+            raise TypeError("Error: biases in Gemm (biases must be an numpy array)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Gemm (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert self.size == self.output_height*self.output_width
-        assert self.weights.shape[self.transpo[1]] == self.input_height if self.transpo[0] else self.input_width
-        assert self.output_height == self.input_width if self.transpo[0] else self.input_height
-        assert self.output_width == self.weights.shape[1-self.transpo[1]]
-        assert all(self.biases.shape[i] == 1 or self.biases.shape[i] == output_shape[3-i] for i in range(len(self.biases.shape)))
+        if self.size != self.output_height*self.output_width:
+            raise ValueError("Error: size value in Gemm ("+str(self.size)+"!="+str(self.output_height*self.output_width)+")")
+        shape = self.input_height if self.transpo[0] else self.input_width
+        if self.weights.shape[self.transpo[1]] != shape:
+            raise ValueError("Error: non consistency between weight shape and input shape in Gemm ("+str(self.weights.shape[self.transpo[1]])+"!="+str(shape)+")")
+        shape = self.input_width if self.transpo[0] else self.input_height
+        if self.output_height != shape:
+            raise ValueError("Error: non consistency between input shape and output shape in Gemm ("+str(self.output_height)+"!="+str(shape)+")")
+        if self.output_width != self.weights.shape[1-self.transpo[1]]:
+            raise ValueError("Error: non consistency between output shape and weight shape in Gemm ("+str(self.output_width)+"!="+str(self.weights.shape[1-self.transpo[1]])+")")
+        if any(self.biases.shape[i] != 1 and self.biases.shape[i] != output_shape[3-i] for i in range(len(self.biases.shape))):
+            raise ValueError("Error: biases in Gemm not broadcastable to dim "+str((self.output_height,self.output_width)))
 
         
     #The various ways to compute the operation: 

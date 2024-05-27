@@ -43,20 +43,44 @@ class Concatenate(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert all((type(shape) == int for shape in input_shape) for input_shape in self.input_shapes)
-        assert self.axis in [1,2,3]
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert isinstance(self.activation_function, ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Concatenate (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Concatenate (size must be int)")
+        for input_shape in self.input_shapes:
+            if any(type(shape) != int for shape in input_shape[1:]):
+                raise TypeError("Error: input_shape in Concatenate (all dim must be int)")
+        if type(self.axis) != int:
+            raise TypeError("Erro: axis type in Concatenate (axis must be int)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in Concatenate (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Concatenate (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Concatenate (must be int)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Concatenate (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert self.axis == 1 or all(self.output_channels == input_shape[1] for input_shape in self.input_shapes)
-        assert self.axis == 2 or all(self.output_height== input_shape[2] for input_shape in self.input_shapes)
-        assert self.axis == 3 or all(self.output_width == input_shape[3] for input_shape in self.input_shapes)
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Concatenate ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        
+        for i in range(len(self.input_shapes)):
+            if self.axis != 1 and self.output_channels != self.input_shapes[i][1]:
+                raise ValueError("Error: non consistency between the tensors shapes in Concatenate ("+str(self.input_shapes[i][1:])+"!="+str((self.output_channels,self.output_height,self.output_width))+")")
+            if self.axis != 2 and self.output_height != self.input_shapes[i][2]:
+                raise ValueError("Error: non consistency between the tensors shapes in Concatenate ("+str(self.input_shapes[i][1:])+"!="+str((self.output_channels,self.output_height,self.output_width))+")")
+            if self.axis != 3 and self.output_width != self.input_shapes[i][3]:
+                raise ValueError("Error: non consistency between the tensors shapes in Concatenate ("+str(self.input_shapes[i][1:])+"!="+str((self.output_channels,self.output_height,self.output_width))+")")
+        
+
+
+        if self.axis == 1 and self.output_channels != sum([self.input_shapes[i][1] for i in range(len(self.input_shapes))]):
+            raise ValueError("Error: non consistency between the tensors shapes and the output shape in Concatenate("+str(sum(self.input_shapes[:][1]))+"!="+str(self.output_channels)+")")
+        if self.axis == 2 and self.output_height != sum([self.input_shapes[i][2] for i in range(len(self.input_shapes))]):
+            raise ValueError("Error: non consistency between the tensors shapes and the output shape in Concatenate("+str(sum(self.input_shapes[:][2]))+"!="+str(self.output_height)+")")
+        if self.axis == 3 and self.output_width != sum([self.input_shapes[i][3] for i in range(len(self.input_shapes))]):
+            raise ValueError("Error: non consistency between the tensors shapes and the output shape in Concatenate("+str(sum(self.input_shapes[:][3]))+"!="+str(self.output_width)+")")
     
     def generate_inference_code_layer(self):
         borne_sup = 0

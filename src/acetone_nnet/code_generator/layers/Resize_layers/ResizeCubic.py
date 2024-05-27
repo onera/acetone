@@ -37,7 +37,8 @@ class ResizeCubic(Resize):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.cubic_coeff_a) == float or type(self.cubic_coeff_a) == int
+        if type(self.cubic_coeff_a) != float and type(self.cubic_coeff_a) != int:
+            raise TypeError("Error: cubic coeff a type in Resize Cubic (must be int or float)")
     
     def cubic_interpolation_1D(self, input:np.ndarray, f:int, x:int, y:int, s:float):
         col_index = max(0,min(self.input_width-1,y))

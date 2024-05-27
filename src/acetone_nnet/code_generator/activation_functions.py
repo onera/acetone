@@ -75,7 +75,9 @@ class LeakyReLu(ActivationFunctions):
         self.comment = ' and apply rectifier'
         self.alpha = alpha
 
-        assert self.alpha > 0
+        ### Checking value consistency ###
+        if self.alpha < 0:
+            raise ValueError("Error: alpha value in LeakyRelu (alpha < 0)")
     
     def compute(self, z:np.ndarray):
         temp_tensor = z.flatten()
@@ -158,6 +160,10 @@ class Clip(ActivationFunctions):
         self.comment = ' and apply rectifier'
         self.max = max
         self.min = min
+
+        ### Checking value consistency ###
+        if  self.min > self.max:
+            raise ValueError("Error: min and max values in Clip ("+str(self.min)+" > "+str(self.max)+")")
     
     def compute(self, z:np.ndarray):
         return np.clip(z,self.min,self.max)

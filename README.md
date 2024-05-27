@@ -5,6 +5,14 @@ This repo contains the code of the framework presented in the ECRTS'22 paper  ["
 
 This framework generate a C code corresponding to a neural network given as input.
 
+## Package
+
+The corresponding package is named [acetone-nnet](https://pypi.org/project/acetone-nnet/). 
+
+The folder [tests/examples](./tests/examples/) give examples on how to use the main functionnalities of the package (code generation and debug mode)
+
+The folder [tests/check_installation](./tests/check_installation/) give a file with a few quick test checking some main, functionalities of the package, as an quick verification of the installation.
+
 
 ## Code architecture
 

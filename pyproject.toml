@@ -7,7 +7,7 @@ include-package-data = true
 
 [project]
 name = "acetone-nnet"
-version = "0.3.1.dev1"
+version = "0.3.1"
 requires-python = ">=3.10, <3.12"
 
 authors = [

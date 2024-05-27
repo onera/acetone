@@ -57,24 +57,38 @@ class Pooling2D(Layer):
     ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.padding) == str or all(type(pad) == int for pad in self.padding)
-        assert type(self.strides) == int
-        assert type(self.pool_size) == int
-        assert type(self.input_channels) == int
-        assert type(self.input_height) == int
-        assert type(self.input_width) == int
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert isinstance(self.activation_function, ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Pooling (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Pooling (size must be int)")
+        if type(self.padding) != str and any(type(pad) != int for pad in self.padding):
+            raise TypeError("Error: padding type in Pooling (must be str or ints)")
+        if  type(self.strides)!= int:
+            raise TypeError("Error: strides type in Pooling (must be int)")
+        if  type(self.pool_size)!= int:
+            raise TypeError("Error: pool_size type in Pooling (must be int)")
+        if type(self.input_channels) != int:
+            raise TypeError("Error: input channels type in Pooling (must be int)")
+        if type(self.input_height) != int:
+            raise TypeError("Error: input height type in Pooling (must be int)")
+        if type(self.input_width) != int:
+            raise TypeError("Error: input width type in Pooling (must be int)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in Pooling (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Pooling (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Pooling (must be int)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Pooling (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert self.output_height == math.floor((self.input_height + self.pad_bottom + self.pad_top - self.pool_size)/self.strides) + 1
-        assert self.output_width == math.floor((self.input_width + self.pad_left + self.pad_right - self.pool_size)/self.strides) + 1
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Pooling ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if self.output_height != math.floor((self.input_height + self.pad_bottom + self.pad_top - self.pool_size)/self.strides) + 1:
+            raise ValueError("Error: non consistency between the output height and the parameter of the operation in Pooling ("+str(self.output_height)+"!="+str(math.floor((self.input_height + self.pad_bottom + self.pad_top - self.pool_size)/self.strides) + 1)+")")
+        if self.output_width != math.floor((self.input_width + self.pad_left + self.pad_right - self.pool_size)/self.strides) + 1:
+            raise ValueError("Error: non consistency between the output width and the parameter of the operation in Pooling ("+str(self.output_width)+"!="+str(math.floor((self.input_width + self.pad_left + self.pad_right - self.pool_size)/self.strides) + 1)+")")
     
     @abstractmethod    
     def specific_function(self, index:str, input_of_layer:str):

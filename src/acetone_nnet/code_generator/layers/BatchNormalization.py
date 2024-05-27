@@ -45,25 +45,40 @@ class BatchNormalization(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert type(self.epsilon) == float or type(self.epsilon) == int
-        assert type(self.scale) == np.ndarray
-        assert type(self.mean) == np.ndarray 
-        assert type(self.var) == np.ndarray
-        assert type(self.biases) == np.ndarray
-        assert isinstance(self.activation_function, ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in BatchNormalization (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in BatchNormalization (size must be int)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in BatchNormalization (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in BatchNormalization (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in BatchNormalization (must be int)")
+        if  type(self.epsilon) != float and type(self.epsilon) == int:
+            raise TypeError("Error: epsilon type in BatchNormalization (epsilon must be int or float)")
+        if type(self.scale) != np.ndarray:
+            raise TypeError("Error: scale in BatchNormalization (scale must be an numpy array)")
+        if type(self.mean) != np.ndarray:
+            raise TypeError("Error: mean in BatchNormalization (mean must be an numpy array)")
+        if type(self.var) != np.ndarray:
+            raise TypeError("Error: var in BatchNormalization (var must be an numpy array)")
+        if type(self.biases) != np.ndarray:
+            raise TypeError("Error: biases in BatchNormalization (biases must be an numpy array)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in BatchNormalization (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert len(self.scale.shape) == 1 and self.scale.shape[0] == self.output_channels
-        assert len(self.mean.shape) == 1 and self.mean.shape[0] == self.output_channels
-        assert len(self.var.shape) == 1 and self.var.shape[0] == self.output_channels
-        assert len(self.biases.shape) == 1 and self.biases.shape[0] == self.output_channels
-
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in BatchNormalization ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if len(self.scale.shape) != 1 or self.scale.shape[0] != self.output_channels:
+            raise ValueError("Error: non consistency between the scale shape and the output shape in BatchNormalization ("+str(self.scale.shape)+"!="+str(self.output_channels)+")")
+        if len(self.scale.mean) != 1 or self.mean.shape[0] != self.output_channels:
+            raise ValueError("Error: non consistency between the mean shape and the output shape in BatchNormalization ("+str(self.mean.shape)+"!="+str(self.output_channels)+")")
+        if len(self.var.shape) != 1 or self.var.shape[0] != self.output_channels:
+            raise ValueError("Error: non consistency between the var shape and the output shape in BatchNormalization ("+str(self.var.shape)+"!="+str(self.output_channels)+")")
+        if len(self.biases.shape) != 1 or self.biases.shape[0] != self.output_channels:
+            raise ValueError("Error: non consistency between the biases shape and the output shape in BatchNormalization ("+str(self.biases.shape)+"!="+str(self.output_channels)+")")
 
     def generate_inference_code_layer(self):
         #Variable indicating under which name the input tensor is

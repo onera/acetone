@@ -561,7 +561,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         )
 
         min_initializer = acetoneTestCase.create_initializer_tensor(name='min',
-                                                                    tensor_array=np.random.rand(1)*10,
+                                                                    tensor_array=np.random.rand(1),
                                                                     data_type=onnx.TensorProto.FLOAT)
 
         max_initializer = acetoneTestCase.create_initializer_tensor(name='max',

@@ -90,29 +90,54 @@ class Resize(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.input_channels) == int
-        assert type(self.input_height) == int
-        assert type(self.input_width) == int
-        assert type(self.coordinate_transformation_mode) == str
-        assert type(axes) == np.ndarray or type(axes) == list
-        assert type(self.exclude_outside) == int
-        assert type(self.keep_aspect_ratio_policy) == str
-        assert type(self.roi) == np.ndarray or type(self.roi) == list
-        assert type(self.extrapolation_value) == float or type(self.extrapolation_value) == int
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Resize (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Resize (size must be int)")
+        if type(self.input_channels) != int:
+            raise TypeError("Error: input channels type in Resize (must be int)")
+        if type(self.input_height) != int:
+            raise TypeError("Error: input height type in Resize (must be int)")
+        if type(self.input_width) != int:
+            raise TypeError("Error: input width type in Resize (must be int)")
+        if type(self.coordinate_transformation_mode) != str:
+            raise TypeError("Error: coordinate transformation mode type in Resize (must be str)")
+        if type(axes) != np.ndarray and type(axes) != list:
+            raise TypeError("Error: axes type in Resize (must be numpy array or list)")
+        if type(self.exclude_outside) != int:
+            raise TypeError("Error: exclude outside type in Resize (must be int)")
+        if type(self.keep_aspect_ratio_policy) != str:
+            raise TypeError("Error: keep aspect ratio policy type in Resize (must be str)")
+        if type(self.roi) != np.ndarray and type(self.roi) != list:
+            raise TypeError("Error: roi type in Resize (must be numpy array or list)")
+        if type(self.extrapolation_value) != float and type(self.extrapolation_value) != int:
+            raise TypeError("Error: extrapolation value type in Resize (must be int or float)")
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert self.coordinate_transformation_mode in ['half_pixel','half_pixel_symmetric','pytorch_half_pixel','align_corners','asymmetric','tf_crop_and_resize']
-        assert self.keep_aspect_ratio_policy in ['stretch','not_larger','not_smaller']
-        assert self.exclude_outside in [0,1]
-        assert all(axe >=0 and axe < 4 for axe in self.axes)
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Resize ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if self.coordinate_transformation_mode not in ['half_pixel','half_pixel_symmetric','pytorch_half_pixel','align_corners','asymmetric','tf_crop_and_resize']:
+            raise ValueError("Error: coordinate transformation mode value in Resize ("+self.coordinate_transformation_mode+")")
+        if self.keep_aspect_ratio_policy not in ['stretch','not_larger','not_smaller']:
+            raise ValueError("Error: keep aspect ratio policy value in Resize ("+self.keep_aspect_ratio_policy+")")
+        if self.exclude_outside not in [0,1]:
+            raise ValueError("Error: exclude outside value in Resize ("+self.exclude_outside+")")
+        for axe in self.axes:
+            if axe < 0 or axe >= 4:
+                raise ValueError("Error: axe out of bound in Resize ("+str(axe)+"for tensor in 4 dimension with first dimension unused)")
         if self.roi:
-            assert len(self.roi) == 2*len(self.axes) if self.axes else len(self.roi) == 8
-            assert all(0 <= indice and indice <= 1 for indice in self.roi)
+            if self.axes:
+                if len(self.roi) != 2*len(self.axes):
+                    raise ValueError("Error: non consistency between the number of roi and the axes given in Resize("+str(len(self.roi))+"!="+str(len(self.axes))+")")
+            else:
+                if len(self.roi) != 8:
+                    raise ValueError("Error: non consistency between the number of roi given and the size of the tensor in Resize ("+str(len(self.roi))+"!=8)")
+            if any(0 > indice and indice > 1 for indice in self.roi):
+                raise ValueError("Error: roi value is not noramlized in Resize ("+str(self.roi)+")")
         assert all(0 < coeff for coeff in self.scale)
-        
+        for coeff in self.scale:
+            if 0 >= coeff:
+                raise ValueError("Error: scale value in Resize ("+str(coeff)+")")        
 
     @abstractmethod
     def forward_path_layer(self, input:np.ndarray):

@@ -47,21 +47,35 @@ class Gather(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(self.axis) == int
-        assert type(self.indices) == np.ndarray
-        assert type(self.output_channels) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert type(self.input_height) == int
-        assert type(self.input_width) == int
-        assert isinstance(self.activation_function,ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Gather (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Gather (size must be int)")
+        if type(self.axis) != int:
+            raise TypeError("Erro: axis type in Gather (axis must be int)")
+        if type(self.indices) != np.ndarray:
+            raise TypeError("Error: indices in Gather (indices must be an numpy array)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in Gather (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Gather (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Gather (must be int)")
+        if type(self.input_height) != int:
+            raise TypeError("Error: input height type in Gather (must be int)")
+        if type(self.input_width) != int:
+            raise TypeError("Error: input width type in Gather (must be int)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Gather (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert axis in [1,2,3]
-        assert all(indice >= 0 and indice < input_shape[axis] for indice in self.indices.flatten())
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Gather ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if axis not in [1,2,3]:
+            raise ValueError("Error: axis out of bound in Gather ("+str(axis)+"for tensor in 4 dimension with first dimension unused)")
+        for indice in self.indices.flatten():
+            if indice < 0 or indice >= input_shape[self.axis]:
+                raise ValueError("Error: indice out of bound in Gather ("+str(indice)+"out of bound for input of size"+str(input_shape[self.axis])+")")
         
     def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str

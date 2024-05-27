@@ -41,20 +41,31 @@ class MatMul(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert all(type(shape) == int for shape in self.input_shape)
-        assert type(self.weights) == np.ndarray
-        assert type(side) == bool
-        assert isinstance(self.activation_function, ActivationFunctions)
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in MatMul (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in MatMul (size must be int)")
+        if any(type(shape) != int for shape in self.input_shape):
+            raise TypeError("Error: input_shape in MatMul (all dim must be int)")
+        if type(self.weights) != np.ndarray:
+            raise TypeError("Error: weights in MatMul (weights must be an numpy array)")
+        if type(side) != bool:
+            raise TypeError("Error: side type in MatMul (side must be a boolean)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in MatMul (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
         if self.side:
-            assert self.weights.shape[-1] == self.input_shape[-2]
-            assert self.size == self.weights.shape[-2] * self.input_shape[-1]
+            if self.weights.shape[-1] != self.input_shape[-2]:
+                raise ValueError("Error: non consistency between weight shape and input shape in MatMul ("+str(self.weights.shape[-1])+"!="+str(self.input_shape[-2])+")")
+            if self.size != self.weights.shape[-2] * self.input_shape[-1]:
+                raise ValueError("Error: size value in MatMul ("+str(self.size)+" !="+str(self.weights.shape[-2] * self.input_shape[-1])+")")
         else:
-            assert self.weights.shape[-2] == self.input_shape[-1]
-            assert self.size == self.weights.shape[-1] * self.input_shape[-2]
+            if self.weights.shape[-2] != self.input_shape[-1]:
+                raise ValueError("Error: non consistency between weight shape and input shape in MatMul ("+str(self.weights.shape[-2])+"!="+str(self.input_shape[-1])+")")
+            if self.size != self.weights.shape[-1] * self.input_shape[-2]:
+                raise ValueError("Error: size value in MatMul ("+str(self.size)+" !="+str(self.weights.shape[-1] * self.input_shape[-2])+")")
+        
 
     def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str

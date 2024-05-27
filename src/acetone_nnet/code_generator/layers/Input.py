@@ -40,10 +40,14 @@ class InputLayer(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert all(type(dim) == int for dim in self.input_shape[1:])
-        assert self.data_format == 'channels_last' or self.data_format == 'channels_first'
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Input Layer (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Input Layer (size must be int)")
+        if any(type(shape) != int for shape in self.input_shape[1:]):
+            raise TypeError("Error: input_shape in Input Layer (all dim must be int)")
+        if type(self.data_format) != str:
+            raise TypeError("Error: data format type in Input Layer")
 
         ### Checking value consistency ###
         prod = 1
@@ -51,7 +55,10 @@ class InputLayer(Layer):
             if shape != None and shape != 0:
                 prod *= shape
 
-        assert self.size == prod
+        if self.size != prod:
+            raise ValueError("Error: size value in Input Layer ("+str(self.size)+"!="+str(prod)+")")
+        if self.data_format not in ['channels_last','channels_first']:
+            raise ValueError("Error: data format value in Input Layer ("+self.data_format+")")
 
     def generate_inference_code_layer(self):
 

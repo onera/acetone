@@ -60,32 +60,58 @@ class Conv2D(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        assert type(self.idx) == int
-        assert type(self.size) == int
-        assert type(conv_algorithm) == str
-        assert type(self.padding) == str or all(type(pad) == int for pad in self.padding)
-        assert type(self.strides) == int
-        assert type(self.kernel_h) == int
-        assert type(self.kernel_w) == int
-        assert type(self.dilation_rate) == int
-        assert type(self.nb_filters) == int
-        assert type(self.input_channels) == int
-        assert type(self.input_height) == int
-        assert type(self.input_width) == int
-        assert type(self.output_height) == int
-        assert type(self.output_width) == int
-        assert type(self.weights) == np.ndarray
-        assert type(self.biases) == np.ndarray
+        if  type(self.idx)!= int:
+            raise TypeError("Error: idx type in Conv2D (idx must be int)")
+        if  type(self.size)!= int:
+            raise TypeError("Error: size type in Conv2D (size must be int)")
+        if type(conv_algorithm) != str:
+            raise TypeError("Error: conv algorithm type in Conv2D (must be str)")
+        if type(self.padding) != str and any(type(pad) != int for pad in self.padding):
+            raise TypeError("Error: padding type in Conv2D (must be str or ints)")
+        if  type(self.strides)!= int:
+            raise TypeError("Error: strides type in Conv2D (must be int)")
+        if  type(self.kernel_h)!= int:
+            raise TypeError("Error: kernel_h type in Conv2D (must be int)")
+        if  type(self.kernel_w)!= int:
+            raise TypeError("Error: kernel_w type in Conv2D (must be int)")
+        if  type(self.dilation_rate)!= int:
+            raise TypeError("Error: dilation_rate type in Conv2D (must be int)")
+        if  type(self.nb_filters)!= int:
+            raise TypeError("Error: nb_filters type in Conv2D (must be int)")
+        if type(self.input_channels) != int:
+            raise TypeError("Error: input channels type in Conv2D (must be int)")
+        if type(self.input_height) != int:
+            raise TypeError("Error: input height type in Conv2D (must be int)")
+        if type(self.input_width) != int:
+            raise TypeError("Error: input width type in Conv2D (must be int)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in Conv2D (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Conv2D (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Conv2D (must be int)")
+        if type(self.weights) != np.ndarray:
+            raise TypeError("Error: weights in Conv2D (weights must be an numpy array)")
+        if type(self.biases) != np.ndarray:
+            raise TypeError("Error: biases in Conv2D (biases must be an numpy array)")
+        if not isinstance(self.activation_function, ActivationFunctions):
+            raise TypeError("Error: activation function type in Conv2D (activation function must be a sub-classe of acetone_nnet Activation Function)")
 
         ### Checking value consistency ###
-        assert self.size == self.output_channels*self.output_height*self.output_width
-        assert self.weights.shape == (self.input_channels, self.kernel_h, self.kernel_w, self.nb_filters)
-        assert len(self.biases.shape) == 1 and self.biases.shape[0] == self.nb_filters
-        assert self.output_height == math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1)*(self.dilation_rate - 1))/self.strides) + 1
-        assert self.output_width == math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1
-        assert self.conv_algorithm in ['6loops',
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Conv2D ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if self.weights.shape != (self.input_channels, self.kernel_h, self.kernel_w, self.nb_filters):
+            raise ValueError("Error: non consistency between weight shape and operation parameters in Conv2D ("+str(self.weights.shape)+"!="+str((self.input_channels, self.kernel_h, self.kernel_w, self.nb_filters))+")")
+        if len(self.biases.shape) != 1 or self.biases.shape[0] != self.nb_filters:
+            raise ValueError("Error: non consistency between the var shape and the output shape in Conv2D ("+str(self.biases.shape)+"!="+str(self.nb_filters)+")")
+        if self.output_height != math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1)*(self.dilation_rate - 1))/self.strides) + 1:
+            raise ValueError("Error: non consistency between the output height and the parameter of the operation in Conv2D ("+str(self.output_height)+"!="+str(math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1)*(self.dilation_rate - 1))/self.strides) + 1)+")")
+        if self.output_width != math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1:
+            raise ValueError("Error: non consistency between the output width and the parameter of the operation in Conv2D ("+str(self.output_width)+"!="+str(math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1)+")")
+        if self.conv_algorithm not in ['6loops',
                                        'indirect_gemm_nn','indirect_gemm_tn','indirect_gemm_nt','indirect_gemm_tt',
-                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']
+                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']:
+            raise ValueError("Error: conv algorithm value in Conv2D ("+self.conv_algorithm+")")
 
     @abstractmethod
     def generate_inference_code_layer(self):

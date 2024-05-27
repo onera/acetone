@@ -31,10 +31,6 @@ from .code_generator import (
 )
 
 from . import debug_tools
-from .debug_tools import (
-    debug_onnx, debug_keras, 
-    compare_result, extract_outputs_c, extract_outputs_python
-)
 
 from .cli_acetone import cli_acetone
 from .cli_compare import cli_compare
@@ -42,5 +38,5 @@ from .cli_compare import cli_compare
 __all__ = (
     "cli_acetone", "cli_compare",
     code_generator.__all__,
-    debug_tools.__all__
+    debug_tools
 )
