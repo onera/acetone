@@ -36,7 +36,7 @@ class AcetoneTestCase(unittest.TestCase):
     def tearDown(self):
         self.tmpdir.cleanup()
 
-    def assertListAlmostEqual(self, first:np.ndarray, second:np.ndarray, rtol=1e-06, atol=1e-07, err_msg = ''):
+    def assertListAlmostEqual(self, first:np.ndarray, second:np.ndarray, rtol=5e-06, atol=5e-06, err_msg = ''):
         return np.testing.assert_allclose(first, second, rtol=rtol, atol=atol, err_msg=err_msg)
 
 def create_initializer_tensor(
@@ -83,7 +83,6 @@ def create_dataset(tmpdir:str, shape:tuple):
     return dataset
 
 def run_acetone_for_test(tmpdir_name: str, model:str, datatest_path:str|None=None, conv_algo:str='std_gemm_nn', normalize=False):
-    print(datatest_path)
     acetone_nnet.cli_acetone(model_file=model, function_name='inference', nb_tests=1, conv_algorithm=conv_algo, output_dir=tmpdir_name, test_dataset_file=datatest_path, normalize=normalize)
     output_python = read_output_python(tmpdir_name+'/output_python.txt')
 

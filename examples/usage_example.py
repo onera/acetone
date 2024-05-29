@@ -22,8 +22,6 @@
 This file present an example of how to use the package acetone-nnet
 """
 
-CLI =True
-
 #### Importing the package ####
 import acetone_nnet
 

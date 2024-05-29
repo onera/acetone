@@ -18,9 +18,9 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+test_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(test_path + "/tests_inference")
 import acetoneTestCase
 
 import onnx
@@ -30,24 +30,20 @@ class TestSqueezenet(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
     def testSqueezenetONNX(self):
-        model = onnx.load('./tests/models/squeezenet1/squeezenet1.onnx')
+        model = onnx.load(test_path + '/models/squeezenet1/squeezenet1.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         
-        sess = rt.InferenceSession('./tests/models/squeezenet1/squeezenet1.onnx')
+        sess = rt.InferenceSession(test_path + '/models/squeezenet1/squeezenet1.onnx')
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/squeezenet1/squeezenet1.onnx', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/squeezenet1/squeezenet1.onnx', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
     
     def testSqueezenetPython(self):
-        model = onnx.load('./tests/models/squeezenet1/squeezenet1.onnx')
-        testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-    
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/squeezenet1/squeezenet1.onnx', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/squeezenet1/squeezenet1.onnx')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

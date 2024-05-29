@@ -81,6 +81,9 @@ It now returns two list:
 """
 outputs_python, targets_python = generator.compute_inference(output_path_py)
 
+"Make sur that the outputs of python are in the same order as the outputs of the model"
+outputs_python, targets_python = debug.reorder_outputs_python(outputs_python, targets_python)
+
 "If not all the intermediary outputs are required, use the following line"
 #outputs_python, targets_python = debug.extract_outputs_python(generator.compute_inference(output_path_py), targets_indices)
 

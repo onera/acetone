@@ -28,7 +28,7 @@ def cli_acetone(model_file:str, function_name:str, nb_tests:int, conv_algorithm:
 
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    net = CodeGenerator(file = model_file, test_dataset_file = test_dataset_file, function_name = function_name, nb_tests = nb_tests, conv_algorithm = conv_algorithm, normalize = normalize)
+    net = CodeGenerator(file = model_file, test_dataset = test_dataset_file, function_name = function_name, nb_tests = nb_tests, conv_algorithm = conv_algorithm, normalize = normalize)
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)
 

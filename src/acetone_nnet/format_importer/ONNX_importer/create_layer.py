@@ -36,7 +36,6 @@ from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, 
 ###### Utility functions ######
 
 def create_conv2d_obj(algorithm:str, **kwargs):
-       
     if '6loops' in algorithm:
         return Conv2D_6loops(**kwargs)
 
@@ -56,16 +55,25 @@ def create_resize_obj(mode:bytes, **kwargs):
     
     elif mode == b'cubic':
         return ResizeCubic(**kwargs)
+    
+    else:
+        raise ValueError("Error: mode "+mode.decode()+" not implemented")
 
 def create_pad_obj(mode:bytes, **kwargs):
     if mode == b'constant':
         return Constant_Pad(**kwargs)
+    
     elif mode == b'edge':
         return Edge_pad(**kwargs)
+    
     elif mode == b'wrap':
         return Wrap_pad(**kwargs)
+    
     elif mode == b'reflect':
         return Reflect_pad(**kwargs)
+    
+    else:
+        raise ValueError("Error: mode "+mode.decode()+" not implemented")
 
 #Go find the constant named initialzer_name in model(an onnx model)
 def look_for_initializer(initializer_name:str, model:onnx.ModelProto):
@@ -131,7 +139,10 @@ def create_Softmax(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:di
     dict_output[node.output[0]] = idx
     attributs = extract_attribut(node)
     if 'axis' not in attributs:
-        attributs['axis'] = -1
+        if model.opset_import[0].version < 13:
+            attributs['axis'] = 1
+        else:
+            attributs['axis'] = -1
     return Softmax(idx = idx,
                     size = size,
                     axis = attributs['axis'])

@@ -18,10 +18,11 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+test_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(test_path + "/tests_inference")
 import acetoneTestCase
+
 import acetone_nnet
 import onnx
 import onnxruntime as rt
@@ -30,38 +31,34 @@ class TestYolo(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
     def testYoloONNX(self):
-        model = onnx.load('./tests/models/yolo/tinyyolov2-7.onnx')
+        model = onnx.load(test_path + '/models/yolo/tinyyolov2-7.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         
-        sess = rt.InferenceSession('./tests/models/yolo/tinyyolov2-7.onnx')
+        sess = rt.InferenceSession(test_path + '/models/yolo/tinyyolov2-7.onnx')
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/yolo/tinyyolov2-7.onnx', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/yolo/tinyyolov2-7.onnx', self.tmpdir_name+'/dataset.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
     
     def testYoloPython(self):
-        model = onnx.load('./tests/models/yolo/tinyyolov2-7.onnx')
-        testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-    
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/yolo/tinyyolov2-7.onnx', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/yolo/tinyyolov2-7.onnx')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     
     def testYoloONNXPython(self):
-        model = onnx.load('./tests/models/yolo/tinyyolov2-7.onnx')
+        model = onnx.load(test_path + '/models/yolo/tinyyolov2-7.onnx')
         testshape = tuple(model.graph.input[0].type.tensor_type.shape.dim[i].dim_value for i in range(1,len(model.graph.input[0].type.tensor_type.shape.dim)))
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
         
-        sess = rt.InferenceSession('./tests/models/yolo/tinyyolov2-7.onnx')
+        sess = rt.InferenceSession(test_path + '/models/yolo/tinyyolov2-7.onnx')
         input_name = sess.get_inputs()[0].name
         result = sess.run(None,{input_name: dataset})
         onnx_result = result[0].ravel().flatten()
 
-        code_gen = acetone_nnet.CodeGenerator('./tests/models/yolo/tinyyolov2-7.onnx',self.tmpdir_name+'/dataset.txt','inference',1,'std_gemm_nn',False)
+        code_gen = acetone_nnet.CodeGenerator(test_path + '/models/yolo/tinyyolov2-7.onnx',self.tmpdir_name+'/dataset.txt','inference',1,'std_gemm_nn',False)
         acetone_result = code_gen.compute_inference(self.tmpdir_name).flatten()
 
         self.assertListAlmostEqual(list(acetone_result), list(onnx_result))

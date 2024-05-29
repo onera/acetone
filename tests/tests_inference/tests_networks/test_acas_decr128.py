@@ -18,9 +18,9 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+test_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(test_path + "/tests_inference")
 import acetoneTestCase
 
 import keras
@@ -30,21 +30,21 @@ class TestAcasDecr128(acetoneTestCase.AcetoneTestCase):
     """Test for Concatenate Layer"""
 
     def testAcasDecr128Keras(self):
-        model = keras.models.load_model('./tests/models/acas/acas_decr128/acas_decr128.h5')
+        model = keras.models.load_model(test_path + '/models/acas/acas_decr128/acas_decr128.h5')
         testshape = (model.input.shape[1:])
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
 
         keras_result = np.array(model.predict(dataset)).flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_decr128/acas_decr128.h5', self.tmpdir_name+'/dataset.txt')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/acas/acas_decr128/acas_decr128.h5', self.tmpdir_name+'/dataset.txt')
         self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
 
-    """def testAcasDecr128Python(self):
-        model = keras.models.load_model('./tests/models/acas/acas_decr128/acas_decr128.h5')
+    def testAcasDecr128Python(self):
+        model = keras.models.load_model(test_path + '/models/acas/acas_decr128/acas_decr128.h5')
         testshape = (model.input.shape[1:])
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_decr128/acas_decr128.h5', self.tmpdir_name+'/dataset.txt')
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))"""
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/acas/acas_decr128/acas_decr128.h5', self.tmpdir_name+'/dataset.txt')
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
 if __name__ == '__main__':
     acetoneTestCase.main()

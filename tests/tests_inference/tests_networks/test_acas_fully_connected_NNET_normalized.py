@@ -18,9 +18,9 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+test_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(test_path + "/tests_inference")
 import acetoneTestCase
 
 class TestAcas_fully_connected_NNet_normalized(acetoneTestCase.AcetoneTestCase):
@@ -28,15 +28,12 @@ class TestAcas_fully_connected_NNet_normalized(acetoneTestCase.AcetoneTestCase):
 
     def testAcas_fully_connectedNormalizedNNet(self):
         NNet_result = [354.385,364.375,366.455,355.707,363.078]
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet', './tests/models/acas/acas_fully_connected/test_input_acas_fully_connected.txt',normalize=True)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path +'/models/acas/acas_fully_connected/acas_fully_connected.nnet', test_path + '/models/acas/acas_fully_connected/test_input_acas_fully_connected.txt',normalize=True)
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
     def testAcas_fully_connectedNormalizedNNetPython(self):
-        testshape = (5,)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-    
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet', self.tmpdir_name+'/dataset.txt',normalize=True)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path +'/models/acas/acas_fully_connected/acas_fully_connected.nnet', normalize=True)
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

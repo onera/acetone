@@ -18,9 +18,9 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+test_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(test_path + "/tests_inference")
 import acetoneTestCase
 
 class TestAcas_fully_connected_NNet(acetoneTestCase.AcetoneTestCase):
@@ -28,12 +28,13 @@ class TestAcas_fully_connected_NNet(acetoneTestCase.AcetoneTestCase):
 
     def testAcas_fully_connected_NNet(self):
         NNet_result = [-0.0211989,-0.0187142,-0.0187663,-0.0187621,-0.0187605]
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet', './tests/models/acas/acas_fully_connected/test_input_acas_fully_connected.txt')
+        dataset = [0.0,0.0,0.0,0.0,0.0]
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, test_path +'/models/acas/acas_fully_connected/acas_fully_connected.nnet', test_path + "/models/acas/acas_fully_connected/test_input_acas_fully_connected.txt")
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
     def testAcas_fully_connected_NNetPython(self):
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_fully_connected/acas_fully_connected.nnet')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, test_path +'/models/acas/acas_fully_connected/acas_fully_connected.nnet')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

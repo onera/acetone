@@ -49,7 +49,7 @@ def load_nnet(file_to_parse:str, normalize:bool):
     layers = []
     maxRoad = 1
     dict_cst = {}
-    data_type = float
+    data_type = 'float'
     data_type_py = np.float32
 
     with open(file_to_parse) as f:

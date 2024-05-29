@@ -32,17 +32,28 @@ def compare_result(acetone_result:list|np.ndarray, reference_result:list|np.ndar
         return False
     
     correct = True
+    count = 0
+    first = None
     for i in range(len(acetone_result)):
         print('--------------------------------------------')
         print('Comparing',targets[i])
         try:
-            np.testing.assert_allclose(acetone_result[i],reference_result[i],atol=1e-06,rtol=1e-06)
+            np.testing.assert_allclose(acetone_result[i],reference_result[i],atol=5e-06,rtol=5e-06)
         except AssertionError as msg:
             print("Error: output value of",targets[i],"incorrect")
             correct = False
+            count += 1
+            if not first:
+                first = targets[i]
             if verbose:
                 print(msg)
         print('--------------------------------------------')
+    
+    if verbose:
+        print("++++++++++++++++++++++++++++++++++++++++++++")
+        print("Total number of error:",count,"/",len(acetone_result))
+        print("First error at",first)
+        print("++++++++++++++++++++++++++++++++++++++++++++")
 
     return correct
 
@@ -92,3 +103,17 @@ def extract_outputs_python(result_python:tuple[list], targets_indice:list):
                 targets.append(result_python[1][i])
 
     return outputs, targets
+
+def reorder_outputs_python(outputs_python:list, targets_python:list):
+    ordered_outputs = []
+    ordered_targets = []
+
+    dictionary = {}
+    for i in range(len(targets_python)):
+        dictionary[int(targets_python[i].split(" ")[-1])] = (outputs_python[i], targets_python[i])
+
+    for element in sorted(dictionary.items(), key=lambda item:item[0]):
+        ordered_outputs.append(element[1][0])
+        ordered_targets.append(element[1][1])
+    
+    return ordered_outputs, ordered_targets

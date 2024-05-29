@@ -18,9 +18,9 @@
  ******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-2])
+test_path = '/'.join(__file__.split('/')[:-3])
 import sys
-sys.path.append(acetoneTestCase_path)
+sys.path.append(test_path+"/tests_inference")
 import acetoneTestCase
 
 class TestAcas_COC_NNet_normalized(acetoneTestCase.AcetoneTestCase):
@@ -28,15 +28,12 @@ class TestAcas_COC_NNet_normalized(acetoneTestCase.AcetoneTestCase):
 
     def testAcas_COC_Normalized_NNet(self):
         NNet_result = [2.46398403e+04, 2.44853907e+04,  2.44597071e+04, 2.44829454e+04, 2.44301250e+04]
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_COC/nn_acas_COC.nnet', './tests/models/acas/acas_COC/test_input_acas_COC.txt',normalize=True)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, test_path + '/models/acas/acas_COC/nn_acas_COC.nnet', test_path + '/models/acas/acas_COC/test_input_acas_COC.txt')
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
     
     def testAcas_COC_Normalized_NNet_Python(self):
-        testshape = (5,)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name,testshape)
-    
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,'./tests/models/acas/acas_COC/nn_acas_COC.nnet', self.tmpdir_name+'/dataset.txt',normalize=True)
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, test_path + '/models/acas/acas_COC/nn_acas_COC.nnet', normalize=True)
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

@@ -1,6 +1,6 @@
 # Date
 
-This document was last updated on the 21/05/2024.
+This document was last updated on the 29/05/2024.
 
 # Aspect of the DNN
 
@@ -11,9 +11,7 @@ The DNN can be:
 The DNN must be:
 * Feedforward (without back-propagation)
 
-The DNN must have:
-* Only one input
-* Only one output
+The DNN can have multiple inputs or outputs, but only the first input and the output associated with the outmost layer will be taken into account.
 
 # Data format
 

@@ -63,8 +63,8 @@ class Softmax(Layer):
         return pystache.render(template, mustach_hash)
     
     def forward_path_layer(self, input:np.ndarray):
-        if len(input.shape) == 1:
-            input = np.expand_dims(input,0)
+        if len(input.shape) == 3:
+            input = np.expand_dims(input, 0)
             
         exp = np.exp(input, dtype=np.float)
         output = exp/np.sum(exp, keepdims=1, axis=self.axis)
