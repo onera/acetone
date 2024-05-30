@@ -28,7 +28,7 @@ from ...code_generator.layers import (
     Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
     Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
-    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul, Add_Bias, BatchNormalization
+    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul, Add_Bias, BatchNormalization, Transpose
 )
 
 from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm, LeakyReLu
@@ -420,6 +420,19 @@ def create_BatchNorm(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:
                               var = onnx.numpy_helper.to_array(var),
                               activation_function = Linear())
 
+def create_Transpose(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = node.input
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    return Transpose(idx = idx,
+                     size = size,
+                     input_shape = input_shape,
+                     perm = attributs['perm'],
+                     activation_function = Linear())
+
 
 
 ### Pooling layers ###
@@ -686,6 +699,7 @@ layer_type = {"Softmax":create_Softmax,
          "Gather":create_Gather,
          "Gemm":create_Gemm,
          "MatMul":create_MatMul,
+         "Transpose":create_Transpose,
          "MaxPool":create_MaxPool,
          "AveragePool":create_AveragePool,
          "GlobalAveragePool":create_GlobalAveragePool,

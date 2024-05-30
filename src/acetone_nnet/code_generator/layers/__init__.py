@@ -29,6 +29,7 @@ from .Input import InputLayer
 from .MatMul import MatMul
 from .Softmax import Softmax
 from .BatchNormalization import BatchNormalization
+from .Transpose import Transpose
 
 from . import Broadcast_layers
 from .Broadcast_layers import Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract 
@@ -47,7 +48,8 @@ from .Resize_layers import Resize, ResizeCubic, ResizeLinear, ResizeNearest
 
 
 __all__ = (
-    "Add_Bias", "Concatenate", "Dense", "Dot", "Flatten", "Gather", "Gemm", "InputLayer", "MatMul", "Softmax", "BatchNormalization",
+    "Add_Bias", "Concatenate", "Dense", "Dot", "Flatten", "Gather", "Gemm", "InputLayer", "MatMul", 
+    "Softmax", "BatchNormalization", "Transpose",
     Broadcast_layers.__all__,
     Conv_layers.__all__,
     Pad_layers.__all__,

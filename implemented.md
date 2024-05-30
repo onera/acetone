@@ -1,6 +1,6 @@
 # Date
 
-This document was last updated on the 29/05/2024.
+This document was last updated on the 30/05/2024.
 
 # Aspect of the DNN
 
@@ -110,6 +110,7 @@ For each format, the following layers cans be used in the DNN:
 * Resize (3 modes)
 * Shape
 * Sub
+* Transpose
 * Unsqueeze
 
 #### Activation layers implemented as a main layer

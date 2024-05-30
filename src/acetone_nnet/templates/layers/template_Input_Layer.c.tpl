@@ -1,13 +1,13 @@
     // {{name}}_{{idx}}
 {{^channels_last}}
-    // Charging the input in channels_first
+    // Loading the input in channels_first
     for (k = 0; k < {{size}}; ++k)
     {
         output_{{road}}[k] = nn_input[k];
     }
 {{/channels_last}}
 {{#channels_last}}
-    // Charging the input and changing it from channels_last to channels_first format
+    // Loading the input and changing it from channels_last to channels_first format
     for(f = 0; f < {{input_channels}}; ++f)
     {
         for (i = 0; i < {{input_height}}; ++i)
