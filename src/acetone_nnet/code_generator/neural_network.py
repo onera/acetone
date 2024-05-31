@@ -33,7 +33,8 @@ from .. import templates
 from ..format_importer.parser import parser
 
 from .layers import (
-    Dense, Dot, Softmax, Gather, Gemm, MatMul, Concatenate, Pad, Broadcast, BatchNormalization,
+    Dense, Dot, Softmax, Gather, Gemm, MatMul, Concatenate, Pad, 
+    Broadcast, BatchNormalization, GatherElements,
     ResizeLinear, ResizeCubic, ResizeNearest, 
     Conv2D, Conv2D_6loops, Conv2D_indirect_gemm, Conv2D_std_gemm,
     Pooling2D, MaxPooling2D, AveragePooling2D
@@ -369,10 +370,10 @@ class CodeGenerator(ABC):
         mustach_hash['input_size'] = self.layers[0].size
         mustach_hash['output_size'] = self.layers[-1].size
 
-        if any((isinstance(layer, Gather)) for layer in self.layers):
+        if any((isinstance(layer, Gather) or isinstance(layer, GatherElements)) for layer in self.layers):
             mustach_hash['is_gather'] = True
             indices = []
-            for gather in [layer for layer in self.layers if (isinstance(layer,Gather))]:
+            for gather in [layer for layer in self.layers if (isinstance(layer,Gather) or isinstance(layer, GatherElements))]:
                 indices.append({'idx':"{:02d}".format(gather.idx), 'lenght':len(gather.indices.flatten()), 'list':self.flatten_array_orderc(gather.indices)})
             mustach_hash['indices'] = indices
 

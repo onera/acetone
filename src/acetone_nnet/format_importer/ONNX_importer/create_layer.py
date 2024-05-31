@@ -23,12 +23,13 @@ import numpy as np
 import onnx
 
 from ...code_generator.layers import (
-    AveragePooling2D, MaxPooling2D,
+    AveragePooling2D, GatherElements, MaxPooling2D,
     Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm,
     Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
     Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
-    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul, Add_Bias, BatchNormalization, Transpose
+    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul,
+    Add_Bias, BatchNormalization, Transpose
 )
 
 from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm, LeakyReLu
@@ -311,6 +312,26 @@ def create_Gather(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
                     input_shape = input_shape,
                     output_shape = output_shape,
                     activation_function = Linear())
+
+#create a layer Gather
+def create_GatherElements(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = [node.input[0]]
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    indices = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+    for indice in indices.flatten():
+        if indice < 0:
+            indice = input_shape[attributs['axis']] - indice
+    return GatherElements(idx = idx,
+                        size = size,
+                        axis = attributs['axis'],
+                        indices = indices,
+                        input_shape = input_shape,
+                        output_shape = output_shape,
+                        activation_function = Linear())
 
 #create a layer Gemm
 def create_Gemm(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
@@ -697,6 +718,7 @@ layer_type = {"Softmax":create_Softmax,
          "Pad":create_Pad,
          "Concat":create_Concat,
          "Gather":create_Gather,
+         "GatherElements":create_GatherElements,
          "Gemm":create_Gemm,
          "MatMul":create_MatMul,
          "Transpose":create_Transpose,
