@@ -51,7 +51,7 @@ class Concatenate(Layer):
             if any(type(shape) != int for shape in input_shape[1:]):
                 raise TypeError("Error: input_shape in Concatenate (all dim must be int)")
         if type(self.axis) != int:
-            raise TypeError("Erro: axis type in Concatenate (axis must be int)")
+            raise TypeError("Error: axis type in Concatenate (axis must be int)")
         if type(self.output_channels) != int:
             raise TypeError("Error: output channels type in Concatenate (must be int)")
         if type(self.output_height) != int:
@@ -64,7 +64,8 @@ class Concatenate(Layer):
         ### Checking value consistency ###
         if self.size != self.output_channels*self.output_height*self.output_width:
             raise ValueError("Error: size value in Concatenate ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
-        
+        if self.axis not in [1,2,3]:
+            raise ValueError("Error: axis out of bound in Concatenate ("+str(axis)+"for tensor in 4 dimension with first dimension unused)")
         for i in range(len(self.input_shapes)):
             if self.axis != 1 and self.output_channels != self.input_shapes[i][1]:
                 raise ValueError("Error: non consistency between the tensors shapes in Concatenate ("+str(self.input_shapes[i][1:])+"!="+str((self.output_channels,self.output_height,self.output_width))+")")
@@ -73,8 +74,6 @@ class Concatenate(Layer):
             if self.axis != 3 and self.output_width != self.input_shapes[i][3]:
                 raise ValueError("Error: non consistency between the tensors shapes in Concatenate ("+str(self.input_shapes[i][1:])+"!="+str((self.output_channels,self.output_height,self.output_width))+")")
         
-
-
         if self.axis == 1 and self.output_channels != sum([self.input_shapes[i][1] for i in range(len(self.input_shapes))]):
             raise ValueError("Error: non consistency between the tensors shapes and the output shape in Concatenate("+str(sum(self.input_shapes[:][1]))+"!="+str(self.output_channels)+")")
         if self.axis == 2 and self.output_height != sum([self.input_shapes[i][2] for i in range(len(self.input_shapes))]):

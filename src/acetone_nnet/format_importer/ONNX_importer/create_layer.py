@@ -29,7 +29,7 @@ from ...code_generator.layers import (
     Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
     Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul,
-    Add_Bias, BatchNormalization, Transpose
+    Add_Bias, BatchNormalization, Transpose, Tile
 )
 
 from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm, LeakyReLu
@@ -454,6 +454,22 @@ def create_Transpose(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:
                      perm = attributs['perm'],
                      activation_function = Linear())
 
+def create_Tile(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = node.input[0]
+    dict_output[node.output[0]] = idx
+    repeats = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+    repeats = [int(rep) for rep in repeats]
+    if len(repeats) < 4:
+        for i in range(len(repeats),4):
+            repeats.insert(0,1)
+    return Tile(idx = idx,
+                size = size,
+                repeats = repeats,
+                input_shape = input_shape,
+                activation_function = Linear())
 
 
 ### Pooling layers ###
@@ -722,6 +738,7 @@ layer_type = {"Softmax":create_Softmax,
          "Gemm":create_Gemm,
          "MatMul":create_MatMul,
          "Transpose":create_Transpose,
+         "Tile":create_Tile,
          "MaxPool":create_MaxPool,
          "AveragePool":create_AveragePool,
          "GlobalAveragePool":create_GlobalAveragePool,
