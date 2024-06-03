@@ -26,6 +26,7 @@ from .layers import (
     Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm,
     Pad, Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
     Pooling2D, MaxPooling2D, AveragePooling2D,
+    Reduce, ReduceSum, ReduceMax, ReduceProd, ReduceMin, ReduceMean,
     Resize, ResizeCubic, ResizeLinear, ResizeNearest
 )
 

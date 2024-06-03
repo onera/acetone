@@ -34,7 +34,7 @@ from ..format_importer.parser import parser
 
 from .layers import (
     Dense, Dot, Softmax, Gather, Gemm, MatMul, Concatenate, Pad, 
-    Broadcast, BatchNormalization, GatherElements,
+    Broadcast, BatchNormalization, GatherElements, Reduce,
     ResizeLinear, ResizeCubic, ResizeNearest, 
     Conv2D, Conv2D_6loops, Conv2D_indirect_gemm, Conv2D_std_gemm,
     Pooling2D, MaxPooling2D, AveragePooling2D
@@ -407,6 +407,9 @@ class CodeGenerator(ABC):
             
         if any(isinstance(layer, ResizeLinear) for layer in self.layers):
             mustach_hash['is_linear_interpolation'] = True
+        
+        if any(isinstance(layer, Reduce) for layer in self.layers):
+            mustach_hash['is_reduced'] = True
         
         if self.debug_mode:
             mustach_hash['debug_file'] = self.c_files_directory + "debug_file.txt"

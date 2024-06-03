@@ -18,27 +18,22 @@
  ******************************************************************************
 """
 
-from . import code_generator
-from .code_generator import (
-    CodeGenerator, Layer,
-    Add_Bias, Concatenate, Dense, Dot, Flatten, Gather, Gemm, InputLayer, MatMul, 
-    Softmax, BatchNormalization, Transpose, GatherElements, Tile,
-    Add, Average, Broadcast, Divide, Maximum, Minimum, Multiply, Subtract,
-    Conv2D, Conv2D_6loops, Conv2D_gemm, Conv2D_indirect_gemm, Conv2D_std_gemm,
-    Pad, Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
-    Pooling2D, MaxPooling2D, AveragePooling2D,
-    Reduce, ReduceSum, ReduceMax,
-    Resize, ResizeCubic, ResizeLinear, ResizeNearest,
-    ActivationFunctions, Linear, Sigmoid, ReLu, TanH, Exponential, Logarithm, Clip, LeakyReLu
-)
+from .Reduce import Reduce
+import numpy as np
 
-from . import debug_tools
+class ReduceProd(Reduce):
 
-from .cli_acetone import cli_acetone
-from .cli_compare import cli_compare
-
-__all__ = (
-    "cli_acetone", "cli_compare",
-    code_generator.__all__,
-    debug_tools
-)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.name = 'ReduceProd'
+        self.reduce_func = 'Prod'
+    
+    def forward_path_layer(self, input: np.ndarray):
+        input = input.reshape(1,self.input_channels,self.input_height,self.input_width)
+        if self.axes == ():
+            if self.noop_with_empty_axes:
+                return input
+            else:
+                return np.multiply.reduce(input, axis=None, keepdims=self.keepdims)
+        else:
+            return np.multiply.reduce(input, axis=self.axes, keepdims=self.keepdims)

@@ -45,6 +45,9 @@ from .Pad_layers import Pad, Constant_Pad, Edge_pad, Reflect_pad, Wrap_pad
 from . import Pooling_layers
 from .Pooling_layers import Pooling2D, AveragePooling2D, MaxPooling2D
 
+from . import Reduce_layers
+from .Reduce_layers import Reduce, ReduceSum, ReduceMax, ReduceMean, ReduceMin, ReduceProd
+
 from . import Resize_layers
 from .Resize_layers import Resize, ResizeCubic, ResizeLinear, ResizeNearest
 
@@ -56,5 +59,6 @@ __all__ = (
     Conv_layers.__all__,
     Pad_layers.__all__,
     Pooling_layers.__all__,
+    Reduce_layers.__all__,
     Resize_layers.__all__
 )

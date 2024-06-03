@@ -60,6 +60,9 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     int indice_Gather_{{idx}}[{{lenght}}] = {{list}};
     {{/indices}}
 {{/is_gather}}
+{{#is_reduced}}
+    {{data_type}} reduced;
+{{/is_reduced}}
 
 {{{pre_processing}}}
 {{#layers}}

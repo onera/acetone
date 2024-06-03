@@ -28,6 +28,7 @@ from ...code_generator.layers import (
     Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
     Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
+    ReduceSum, ReduceMax, ReduceMin, ReduceMean, ReduceProd,
     Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul,
     Add_Bias, BatchNormalization, Transpose, Tile
 )
@@ -471,6 +472,155 @@ def create_Tile(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict,
                 input_shape = input_shape,
                 activation_function = Linear())
 
+def create_ReduceSum(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = node.input[0]
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    if model.opset_import[0].version < 13:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        attributs['noop_with_empty_axes'] = 0
+        attributs['axes'] = onnx.numpy_helper.to_array(attributs['axes'])
+    else:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        if 'noop_with_empty_axes' not in attributs:
+            attributs['noop_with_empty_axes'] = 0
+        if len(node.input) == 2:
+            attributs['axes'] = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+        else:
+            attributs['axes'] = []
+    
+    return ReduceSum(idx = idx,
+                     size = size,
+                     axis = tuple(attributs['axes']),
+                     keepdims = attributs['keepdims'],
+                     noop_with_empty_axes = attributs['noop_with_empty_axes'],
+                     input_shape = input_shape,
+                     activation_function = Linear())
+
+def create_ReduceMax(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = node.input[0]
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    if model.opset_import[0].version < 18:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        attributs['noop_with_empty_axes'] = 0
+        attributs['axes'] = onnx.numpy_helper.to_array(attributs['axes'])
+    else:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        if 'noop_with_empty_axes' not in attributs:
+            attributs['noop_with_empty_axes'] = 0
+        if len(node.input) == 2:
+            attributs['axes'] = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+        else:
+            attributs['axes'] = []
+    
+    return ReduceMax(idx = idx,
+                     size = size,
+                     axis = tuple(attributs['axes']),
+                     keepdims = attributs['keepdims'],
+                     noop_with_empty_axes = attributs['noop_with_empty_axes'],
+                     input_shape = input_shape,
+                     activation_function = Linear())
+
+def create_ReduceMin(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = node.input[0]
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    if model.opset_import[0].version < 18:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        attributs['noop_with_empty_axes'] = 0
+        attributs['axes'] = onnx.numpy_helper.to_array(attributs['axes'])
+    else:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        if 'noop_with_empty_axes' not in attributs:
+            attributs['noop_with_empty_axes'] = 0
+        if len(node.input) == 2:
+            attributs['axes'] = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+        else:
+            attributs['axes'] = []
+    
+    return ReduceMin(idx = idx,
+                     size = size,
+                     axis = tuple(attributs['axes']),
+                     keepdims = attributs['keepdims'],
+                     noop_with_empty_axes = attributs['noop_with_empty_axes'],
+                     input_shape = input_shape,
+                     activation_function = Linear())
+
+def create_ReduceMean(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = node.input[0]
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    if model.opset_import[0].version < 18:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        attributs['noop_with_empty_axes'] = 0
+        attributs['axes'] = onnx.numpy_helper.to_array(attributs['axes'])
+    else:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        if 'noop_with_empty_axes' not in attributs:
+            attributs['noop_with_empty_axes'] = 0
+        if len(node.input) == 2:
+            attributs['axes'] = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+        else:
+            attributs['axes'] = []
+    
+    return ReduceMean(idx = idx,
+                     size = size,
+                     axis = tuple(attributs['axes']),
+                     keepdims = attributs['keepdims'],
+                     noop_with_empty_axes = attributs['noop_with_empty_axes'],
+                     input_shape = input_shape,
+                     activation_function = Linear())
+
+def create_ReduceProd(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
+    input_shape = get_shape(node.input[0],model)
+    output_shape = get_shape(node.output[0],model)
+    size = find_size(output_shape)
+    dict_input[idx] = node.input[0]
+    dict_output[node.output[0]] = idx
+    attributs = extract_attribut(node)
+    if model.opset_import[0].version < 18:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        attributs['noop_with_empty_axes'] = 0
+        attributs['axes'] = onnx.numpy_helper.to_array(attributs['axes'])
+    else:
+        if 'keepdims' not in attributs:
+            attributs['keepdims'] = 1
+        if 'noop_with_empty_axes' not in attributs:
+            attributs['noop_with_empty_axes'] = 0
+        if len(node.input) == 2:
+            attributs['axes'] = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))
+        else:
+            attributs['axes'] = []
+    
+    return ReduceProd(idx = idx,
+                     size = size,
+                     axis = tuple(attributs['axes']),
+                     keepdims = attributs['keepdims'],
+                     noop_with_empty_axes = attributs['noop_with_empty_axes'],
+                     input_shape = input_shape,
+                     activation_function = Linear())
 
 ### Pooling layers ###
 
@@ -739,6 +889,11 @@ layer_type = {"Softmax":create_Softmax,
          "MatMul":create_MatMul,
          "Transpose":create_Transpose,
          "Tile":create_Tile,
+         "ReduceSum":create_ReduceSum,
+         "ReduceMax":create_ReduceMax,
+         "ReduceMin":create_ReduceMin,
+         "ReduceMean":create_ReduceMean,
+         "ReduceProd":create_ReduceProd,
          "MaxPool":create_MaxPool,
          "AveragePool":create_AveragePool,
          "GlobalAveragePool":create_GlobalAveragePool,
