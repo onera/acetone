@@ -370,6 +370,7 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
             nb_softmax_layers += 1
             current_layer = Softmax(idx = idx+1,
                                     size = l_temp.size,
+                                    output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                     axis = None)
             l_temp.next_layer.append(current_layer)
             current_layer.previous_layer.append(l_temp)

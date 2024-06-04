@@ -289,7 +289,7 @@ def load_json(file_to_parse:str, conv_algorithm:str):
         # Separeted method to generate softmax
         if add_softmax_layer:
             nb_softmax_layers += 1
-            current_layer = Softmax(idx+1, l_temp.size, None)
+            current_layer = Softmax(idx+1, l_temp.size, layer['config']['output_shape'], None)
             l_temp.next_layer.append(current_layer)
             current_layer.previous_layer.append(l_temp)
             l_temp = current_layer

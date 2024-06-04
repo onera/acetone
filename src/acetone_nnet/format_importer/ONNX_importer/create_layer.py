@@ -144,9 +144,12 @@ def create_Softmax(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:di
         if model.opset_import[0].version < 13:
             attributs['axis'] = 1
         else:
-            attributs['axis'] = -1
+            attributs['axis'] = len(output_shape) - 1
+    if attributs['axis'] < 0:
+        attributs['axis'] = len(output_shape) + attributs['axis']
     return Softmax(idx = idx,
                     size = size,
+                    output_shape= output_shape,
                     axis = attributs['axis'])
 
 
@@ -376,45 +379,41 @@ def create_MatMul(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
     if(left_tensor or right_tensor):
         if(right_tensor and not left_tensor):
             #the weigth is the right tensor:  MatMul(W,T)
-            side = True
+            side = 1
             input_shape = get_shape(node.input[1],model)
-            weights = onnx.numpy_helper.to_array(right_tensor)
-            shape = get_shape(node.input[1],model)
             count = 0
+            shape = get_shape(node.input[1],model)
             for i in shape:
                 if i == 1:
                     count += 1
             if count == 3 and input_shape[-1] != 1:
-                weights = np.reshape(weights, (get_shape(node.input[1],model)[-1],1,1,output_shape[-1]))
                 input_shape = [1,1,input_shape[-1],1]
-            else:
-                weights = np.reshape(weights, (get_shape(node.input[1],model)[-2],1,1,output_shape[-2]))
+
+            weights = onnx.numpy_helper.to_array(right_tensor)
+            weights = np.reshape(weights, (input_shape[-2],1,1,output_shape[-2]))
             weights = np.moveaxis(weights, 0,3)
             dict_input[idx] = [node.input[1]]
         if(left_tensor and not right_tensor):
             #the weigth is the right tensor:  MatMul(W,T)
-            side = False
-            weights = onnx.numpy_helper.to_array(left_tensor)
-            weights = np.reshape(weights, (1,1,get_shape(node.input[0],model)[-1],output_shape[-1]))
-            dict_input[idx] = [node.input[0]]
+            side = 0
             input_shape = get_shape(node.input[0],model)
-        return MatMul(idx = idx,
-                        size = size,
-                        input_shape = input_shape,
-                        weights = weights,
-                        side = side,
-                        activation_function = Linear())
+            weights = onnx.numpy_helper.to_array(left_tensor)
+            weights = np.reshape(weights, (output_shape[-1],1,1,input_shape[-1]))
+            weights = np.moveaxis(weights, 0,3)
+            dict_input[idx] = [node.input[0]]
     else:
         dict_input[idx] = node.input
-        input_shapes =[]
+        input_shape =[]
         for input in node.input:
-            input_shapes.append(get_shape(input,model))
+            input_shape.append(get_shape(input,model))
+        side = 2
+        weights = None
         # to check
-        return Dot(idx = idx,
+    return MatMul(idx = idx,
                     size = size,
-                    axis = [-1,-2],
-                    input_shapes = input_shapes,
-                    output_shape = output_shape,
+                    input_shapes = input_shape,
+                    weights = weights,
+                    side = side,
                     activation_function = Linear())
 
 def create_BatchNorm(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):

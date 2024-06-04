@@ -1,25 +1,23 @@
     // {{name}}_{{idx}}{{comment}}
-    for (i = 0; i < {{size}}; ++i)
+    for (f = 0; f < {{output_channels}}; ++f)
     {
-        dotproduct = 0;
-        for (j = 0; j < {{prev_size}}; ++j)
+        for (i = 0; i < {{output_height}}; ++i)
         {
-            {{#side}}
-            dotproduct += weights_{{name}}_{{idx}}[(j + {{prev_size}}*i)] * {{output_str}}[j];
-            {{/side}}
-            {{^side}}
-            dotproduct += {{output_str}}[j] * weights_{{name}}_{{idx}}[(j + {{prev_size}}*i)];
-            {{/side}}
+            for (j = 0; j < {{output_width}}; ++j)
+            {
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = 0;
+                for (k = 0; k < {{shared_dimension}}; ++k)
+                {
+                    tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] += {{output_str_left}}[k + {{shared_dimension}}*(i + {{output_height}}*f)]*{{output_str_right}}[j + {{output_width}}*(k + {{shared_dimension}}*f)];
+                }
+                {{#non_linear}}
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
+                {{/non_linear}}
+                {{#fused_layer}}
+                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
+                {{/fused_layer}}
+            }
         }
-        {{^fused_layer}}
-        tensor_temp[i] = {{{activation_function}}};
-        {{/fused_layer}}
-        {{#fused_layer}}
-            {{^linear}}
-        dotproduct = {{{activation_function}};}
-            {{/linear}}
-        tensor_temp[i] = {{{fused_layer}}};
-        {{/fused_layer}}
     }
     for (k = 0; k < {{size}}; ++k)
     {

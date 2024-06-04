@@ -82,5 +82,104 @@ class TestSoftmax(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
     
+    def testSoftmaxONNX_3D_w(self):
+        testshape = (1,3,10,10)
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3,10,10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3,10,10])
+
+        activation_node = onnx.helper.make_node(
+            op_type="Softmax",
+            inputs=[model_input_name],
+            outputs=[model_output_name],
+            axis = 3
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes = [activation_node],
+            name = 'Conv',
+            inputs = [X],
+            outputs = [Y],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+    
+    def testSoftmaxONNX_3D_h(self):
+        testshape = (1,3,10,10)
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3,10,10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3,10,10])
+
+        activation_node = onnx.helper.make_node(
+            op_type="Softmax",
+            inputs=[model_input_name],
+            outputs=[model_output_name],
+            axis = 2
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes = [activation_node],
+            name = 'Conv',
+            inputs = [X],
+            outputs = [Y],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+
+    def testSoftmaxONNX_3D_c(self):
+        testshape = (1,3,10,10)
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3,10,10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                            onnx.TensorProto.FLOAT,
+                                            [ None,3,10,10])
+
+        activation_node = onnx.helper.make_node(
+            op_type="Softmax",
+            inputs=[model_input_name],
+            outputs=[model_output_name],
+            axis = 1
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes = [activation_node],
+            name = 'Conv',
+            inputs = [X],
+            outputs = [Y],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+    
 if __name__ == '__main__':
     acetoneTestCase.main()

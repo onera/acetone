@@ -24,13 +24,21 @@ import pystache
 
 class Softmax(Layer):
 
-    def __init__(self, idx:int, size:int, axis:int|None):
+    def __init__(self, idx:int, size:int, output_shape:list, axis:int|None):
         
         super().__init__()
         self.idx = idx
         self.size = size
         self.name = 'Softmax'
         self.axis = axis
+        self.output_channels = output_shape[1]
+        self.output_height = output_shape[2]
+        self.output_width = output_shape[3]
+        if self.size in (self.output_channels, self.output_height, self.output_width):
+            self.one_dimension = True
+        else:
+            self.one_dimension = False
+
 
         ####### Checking the instantiation#######
 
@@ -41,6 +49,19 @@ class Softmax(Layer):
             raise TypeError("Error: size type in Softmax (size must be int)")
         if  type(self.axis)!= int and self.axis!=None:
             raise TypeError("Error: axis type in Softmax (axis must be int or None)")
+        if type(self.output_channels) != int:
+            raise TypeError("Error: output channels type in Softmax (must be int)")
+        if type(self.output_height) != int:
+            raise TypeError("Error: output height type in Softmax (must be int)")
+        if type(self.output_width) != int:
+            raise TypeError("Error: output width type in Softmax (must be int)")
+
+        ### Checking value consistency ###
+        if self.size != self.output_channels*self.output_height*self.output_width:
+            raise ValueError("Error: size value in Softmax ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if axis not in [1,2,3] and axis != None:
+            raise ValueError("Error: axis out of bound in Softmax ("+str(axis)+"for tensor in 4 dimension with first dimension unused)")
+        
 
     def generate_inference_code_layer(self):
         output_str = self.previous_layer[0].output_str
@@ -49,9 +70,41 @@ class Softmax(Layer):
 
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['size'] = self.size
         mustach_hash['road'] = self.path
         mustach_hash['output_str'] = output_str
+
+        mustach_hash['1D'] = self.one_dimension
+
+        if self.one_dimension:
+            mustach_hash['size'] = self.size
+        else:
+            mustach_hash['output_channels'] = self.output_channels
+            mustach_hash['output_height'] = self.output_height
+            mustach_hash['output_width'] = self.output_width
+
+            if self.axis == 1:
+                mustach_hash['sum_dimension_1'] = self.output_height
+                mustach_hash['sum_dimension_2'] = self.output_width
+                mustach_hash['reduced_dimension'] = self.output_channels
+                mustach_hash['reduced_position_1'] = 'i + '+str(self.output_width)+'*f'
+                mustach_hash['reduced_position_2'] = 'i + '+str(self.output_width)+'*(f + '+str(self.output_height)+'*j)'
+                mustach_hash['softmax_indice'] = 'j + '+str(self.output_width)+'*i'
+
+            elif self.axis == 2:
+                mustach_hash['sum_dimension_1'] = self.output_channels
+                mustach_hash['sum_dimension_2'] = self.output_width
+                mustach_hash['reduced_dimension'] = self.output_height
+                mustach_hash['reduced_position_1'] = 'i + '+str(self.output_width)+'*f'
+                mustach_hash['reduced_position_2'] = 'i + '+str(self.output_width)+'*(j + '+str(self.output_height)+'*f)'
+                mustach_hash['softmax_indice'] = 'j + '+str(self.output_width)+'*f'
+
+            elif self.axis == 3:
+                mustach_hash['sum_dimension_1'] = self.output_channels
+                mustach_hash['sum_dimension_2'] = self.output_height
+                mustach_hash['reduced_dimension'] = self.output_width
+                mustach_hash['reduced_position_1'] = 'i + '+str(self.output_height)+'*f'
+                mustach_hash['reduced_position_2'] = 'j + '+str(self.output_width)+'*(i + '+str(self.output_height)+'*f)'
+                mustach_hash['softmax_indice'] = 'i + '+str(self.output_height)+'*f'
 
         if (self.fused_layer):
             mustach_hash['fused_layer'] = self.fused_layer.write_activation_str('output_'+str(self.path)+'[j]', self.idx, 'j')
@@ -63,9 +116,9 @@ class Softmax(Layer):
         return pystache.render(template, mustach_hash)
     
     def forward_path_layer(self, input:np.ndarray):
-        if len(input.shape) == 3:
-            input = np.expand_dims(input, 0)
-            
+        if self.axis:
+            input = input.reshape(1,self.output_channels,self.output_height,self.output_width)
+
         exp = np.exp(input, dtype=np.float)
         output = exp/np.sum(exp, keepdims=1, axis=self.axis)
 
