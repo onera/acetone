@@ -412,7 +412,7 @@ class CodeGenerator(ABC):
             mustach_hash['is_reduced'] = True
         
         if self.debug_mode:
-            mustach_hash['debug_file'] = self.c_files_directory + "debug_file.txt"
+            mustach_hash['debug_file'] = self.c_files_directory + "/debug_file.txt"
         
         mustach_hash['layers'] = []
         for layer in self.layers:

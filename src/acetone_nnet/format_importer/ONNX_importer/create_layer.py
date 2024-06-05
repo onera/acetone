@@ -382,12 +382,17 @@ def create_MatMul(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dic
             side = 1
             input_shape = get_shape(node.input[1],model)
             count = 0
-            shape = get_shape(node.input[1],model)
-            for i in shape:
+            for i in input_shape:
                 if i == 1:
                     count += 1
             if count == 3 and input_shape[-1] != 1:
                 input_shape = [1,1,input_shape[-1],1]
+            count = 0
+            for i in output_shape:
+                if i == 1:
+                    count += 1
+            if count == 3 and output_shape[-1] != 1:
+                output_shape = [1,1,output_shape[-1],1]
 
             weights = onnx.numpy_helper.to_array(right_tensor)
             weights = np.reshape(weights, (input_shape[-2],1,1,output_shape[-2]))

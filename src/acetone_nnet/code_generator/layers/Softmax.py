@@ -31,12 +31,13 @@ class Softmax(Layer):
         self.size = size
         self.name = 'Softmax'
         self.axis = axis
-        self.output_channels = output_shape[1]
-        self.output_height = output_shape[2]
-        self.output_width = output_shape[3]
-        if self.size in (self.output_channels, self.output_height, self.output_width):
+
+        if self.size in (output_shape):
             self.one_dimension = True
         else:
+            self.output_channels = output_shape[1]
+            self.output_height = output_shape[2]
+            self.output_width = output_shape[3]
             self.one_dimension = False
 
 
@@ -49,16 +50,18 @@ class Softmax(Layer):
             raise TypeError("Error: size type in Softmax (size must be int)")
         if  type(self.axis)!= int and self.axis!=None:
             raise TypeError("Error: axis type in Softmax (axis must be int or None)")
-        if type(self.output_channels) != int:
-            raise TypeError("Error: output channels type in Softmax (must be int)")
-        if type(self.output_height) != int:
-            raise TypeError("Error: output height type in Softmax (must be int)")
-        if type(self.output_width) != int:
-            raise TypeError("Error: output width type in Softmax (must be int)")
+        if not self.one_dimension:
+            if type(self.output_channels) != int:
+                raise TypeError("Error: output channels type in Softmax (must be int)")
+            if type(self.output_height) != int:
+                raise TypeError("Error: output height type in Softmax (must be int)")
+            if type(self.output_width) != int:
+                raise TypeError("Error: output width type in Softmax (must be int)")
 
         ### Checking value consistency ###
-        if self.size != self.output_channels*self.output_height*self.output_width:
-            raise ValueError("Error: size value in Softmax ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        if not self.one_dimension:
+            if self.size != self.output_channels*self.output_height*self.output_width:
+                raise ValueError("Error: size value in Softmax ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
         if axis not in [1,2,3] and axis != None:
             raise ValueError("Error: axis out of bound in Softmax ("+str(axis)+"for tensor in 4 dimension with first dimension unused)")
         
