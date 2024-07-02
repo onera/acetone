@@ -1,94 +1,123 @@
-"""
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
+"""*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
 
-from ..Layer import Layer
-from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
 
+from ..activation_functions import ActivationFunctions
+from ..Layer import Layer
+
+
 class Dense(Layer):
 
-    def __init__(self, idx:int, size:int, weights:np.ndarray, biases:np.ndarray, activation_function:ActivationFunctions):
-        
+    def __init__(
+        self,
+        idx: int,
+        size: int,
+        weights: np.ndarray,
+        biases: np.ndarray,
+        activation_function: ActivationFunctions,
+    ):
+
         super().__init__()
         self.idx = idx
         self.size = size
-        self.name = 'Dense'
+        self.name = "Dense"
         self.weights = weights
         self.biases = biases
         self.activation_function = activation_function
-        self.local_var = 'dotproduct'
-        
+        self.local_var = "dotproduct"
+
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)
 
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        if  type(self.idx)!= int:
+        if type(self.idx) != int:
             raise TypeError("Error: idx type in Dense (idx must be int)")
-        if  type(self.size)!= int:
+        if type(self.size) != int:
             raise TypeError("Error: size type in Dense (size must be int)")
         if type(self.weights) != np.ndarray:
             raise TypeError("Error: weights in Dense (weights must be an numpy array)")
         if type(self.biases) != np.ndarray:
             raise TypeError("Error: biases in Dense (biases must be an numpy array)")
         if not isinstance(self.activation_function, ActivationFunctions):
-            raise TypeError("Error: activation function type in Dense (activation function must be a sub-classe of acetone_nnet Activation Function)")
+            raise TypeError(
+                "Error: activation function type in Dense (activation function must be a sub-classe of acetone_nnet Activation Function)",
+            )
 
         ### Checking value consistency ###
         if self.size != self.weights.shape[-1]:
-            raise ValueError("Error: non consistency between weight shape and output shape in Dense ("+str(self.size)+"!="+str(self.weights.shape[-1])+")")
+            raise ValueError(
+                "Error: non consistency between weight shape and output shape in Dense ("
+                + str(self.size)
+                + "!="
+                + str(self.weights.shape[-1])
+                + ")",
+            )
         if self.size != self.biases.shape[0]:
-            raise ValueError("Error: non consistency between biases shape and output shape in Dense ("+str(self.size)+"!="+str(self.weights.shape[-1])+")")
+            raise ValueError(
+                "Error: non consistency between biases shape and output shape in Dense ("
+                + str(self.size)
+                + "!="
+                + str(self.weights.shape[-1])
+                + ")",
+            )
 
-        
     def generate_inference_code_layer(self):
-        #Variable indicating under which name the input tensor is
+        # Variable indicating under which name the input tensor is
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
 
-        mustach_hash['name'] = self.name
-        mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['comment'] = self.activation_function.comment
-        mustach_hash['output_str'] = output_str
-        mustach_hash['road'] = self.path
-        mustach_hash['size'] = self.size
+        mustach_hash["name"] = self.name
+        mustach_hash["idx"] = f"{self.idx:02d}"
+        mustach_hash["comment"] = self.activation_function.comment
+        mustach_hash["output_str"] = output_str
+        mustach_hash["road"] = self.path
+        mustach_hash["size"] = self.size
 
-        mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
+        mustach_hash["activation_function"] = (
+            self.activation_function.write_activation_str(self.local_var)
+        )
 
-        mustach_hash['prev_size'] = self.previous_layer[0].size
+        mustach_hash["prev_size"] = self.previous_layer[0].size
 
-        if(self.fused_layer):
-            mustach_hash['fused_layer'] = self.fused_layer.write_activation_str(self.local_var,self.idx,'i')
+        if self.fused_layer:
+            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
+                self.local_var,
+                self.idx,
+                "i",
+            )
 
-            if(self.activation_function.name == 'linear'):
-                mustach_hash['linear'] = True
-        
-        with open(self.template_path+'layers/template_Dense.c.tpl','r') as template_file:
+            if self.activation_function.name == "linear":
+                mustach_hash["linear"] = True
+
+        with open(self.template_path + "/layers/template_Dense.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input:np.ndarray):
+    def forward_path_layer(self, input: np.ndarray):
         input = input.reshape(self.previous_layer[0].size)
-        return self.activation_function.compute(np.dot(input, self.weights) + self.biases)
+        return self.activation_function.compute(
+            np.dot(input, self.weights) + self.biases,
+        )

@@ -1,42 +1,58 @@
+"""*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
-"""
-
-import keras
-from keras import activations
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
-from keras.engine.base_layer import Layer
 
 from itertools import islice
-import numpy as np
 
-from ...graph import graph_interpretor
+import keras
+import numpy as np
+from keras import activations
+from keras.engine.base_layer import Layer
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
 
 from ...code_generator import (
-    AveragePooling2D, MaxPooling2D,
-    Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm,
+    Add,
+    Average,
+    AveragePooling2D,
+    BatchNormalization,
+    Concatenate,
     Constant_Pad,
-    Add, Multiply, Subtract, Maximum, Minimum, Average,
-    Concatenate, InputLayer, Dense, Softmax, Flatten, BatchNormalization,
-    Linear, ReLu, Sigmoid, TanH, LeakyReLu
+    Conv2D_6loops,
+    Conv2D_indirect_gemm,
+    Conv2D_std_gemm,
+    Dense,
+    Flatten,
+    InputLayer,
+    LeakyReLu,
+    Linear,
+    Maximum,
+    MaxPooling2D,
+    Minimum,
+    Multiply,
+    ReLu,
+    Sigmoid,
+    Softmax,
+    Subtract,
+    TanH,
 )
+from ...graph import graph_interpretor
+
 
 def get_layer_size(keras_layer:Layer):
     size = 1
@@ -54,7 +70,7 @@ def get_output_dimensions(output:list, data_format:str):
     else:
         dimensions = output
 
-    if(data_format == 'channels_first'):
+    if(data_format == "channels_first"):
         return dimensions
     elif(len(dimensions) == 4):
         return (dimensions[0],dimensions[3],dimensions[1],dimensions[2])
@@ -66,13 +82,13 @@ def get_input_dimensions(input:list, data_format:str):
         dimensions = input[0]
     else:
         dimensions = input
-    
-    if(data_format == 'channels_last'):
+
+    if(data_format == "channels_last"):
         if(type(dimensions) == list and len(dimensions[0]) == 4):
             dimensions = [(shape[0],shape[3],shape[1],shape[2]) for shape in dimensions]
         elif(type(dimensions) is not list and len(dimensions) == 4):
             dimensions =  (dimensions[0],dimensions[3],dimensions[1],dimensions[2])
-    
+
     return np.array(dimensions)
 
 def create_actv_function_obj(kears_activation_obj):
@@ -90,19 +106,19 @@ def create_actv_function_obj(kears_activation_obj):
             return Linear()
 
 def create_conv2d_obj(algorithm:str, **kwargs):
-       
-    if '6loops' in algorithm:
+
+    if "6loops" in algorithm:
         return Conv2D_6loops(**kwargs)
 
-    elif 'std_gemm' in algorithm:
-        return Conv2D_std_gemm(**kwargs)   
+    elif "std_gemm" in algorithm:
+        return Conv2D_std_gemm(**kwargs)
 
-    elif 'indirect_gemm' in algorithm:
+    elif "indirect_gemm" in algorithm:
         return Conv2D_indirect_gemm(**kwargs)
 
-def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:None|str):
+def load_keras(file_to_parse: Functional|Sequential|str, conv_algorithm:str, debug:None|str):
 
-    if(type(file_to_parse) == str): 
+    if(type(file_to_parse) == str):
         model = keras.models.load_model(file_to_parse)
     else:
         model = file_to_parse
@@ -110,42 +126,42 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
     input_layer_size = 1
     for i in range(1, len(model.input.shape)): #start in idx 1 cause idx 0 represents batch size, so it's None in inference phase
         input_layer_size = input_layer_size * model.input.shape[i]
-    
-    data_format = 'channels_first'
-    if(hasattr(layer, 'data_format') and layer.data_format == 'channels_last' for layer in model.layers):
-        data_format = 'channels_last'
+
+    data_format = "channels_first"
+    if(hasattr(layer, "data_format") and layer.data_format == "channels_last" for layer in model.layers):
+        data_format = "channels_last"
 
     data_type = model.layers[0].dtype
 
-    if data_type == 'float64':
-        data_type = 'double'
+    if data_type == "float64":
+        data_type = "double"
         data_type_py = np.float64
 
-    elif data_type == 'float32':
-        data_type = 'float'
+    elif data_type == "float32":
+        data_type = "float"
         data_type_py = np.float32
 
-    elif data_type == 'int':
-        data_type = 'long int'
+    elif data_type == "int":
+        data_type = "long int"
         data_type_py = np.int32
-    
-    
-    
+
+
+
     layers = []
 
-    if model.layers[0].__class__.__name__ == 'InputLayer':
+    if model.layers[0].__class__.__name__ == "InputLayer":
         l_temp = InputLayer(idx = 0,
                             size = get_layer_size(model.layers[0]),
                             input_shape = get_input_dimensions(model.layers[0].input_shape, data_format),
                             data_format = data_format)
         start = 1
     else:
-        l_temp = InputLayer(idx = 0, 
+        l_temp = InputLayer(idx = 0,
                             size = input_layer_size,
                             input_shape = get_input_dimensions(model.input_shape, data_format),
                             data_format = data_format)
         start = 0
-    
+
     layers.append(l_temp)
 
     nb_softmax_layers = 0
@@ -155,14 +171,14 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
         idx += 1-start
         idx += nb_softmax_layers
 
-        if hasattr(layer_keras, 'activation'):
+        if hasattr(layer_keras, "activation"):
             if layer_keras.activation == keras.activations.softmax:
                 add_softmax_layer = True
-        
-        if layer_keras.__class__.__name__ == 'Dense':
+
+        if layer_keras.__class__.__name__ == "Dense":
             weights = data_type_py(layer_keras.get_weights()[0])
             if(len(weights.shape) < 3):
-                for i in range(3-len(weights.shape)): 
+                for i in range(3-len(weights.shape)):
                     weights = np.expand_dims(weights, axis=-1)
             weights = np.moveaxis(weights, 2, 0)
             if(len(weights.shape) < 4):
@@ -173,11 +189,11 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                                   weights = weights,
                                   biases = biases,
                                   activation_function = create_actv_function_obj(layer_keras.activation))
-            
-        elif layer_keras.__class__.__name__ == 'Conv2D':
+
+        elif layer_keras.__class__.__name__ == "Conv2D":
             weights = data_type_py(layer_keras.get_weights()[0])
             if(len(weights.shape) < 3):
-                for i in range(3-len(weights.shape)): 
+                for i in range(3-len(weights.shape)):
                     weights = np.expand_dims(weights, axis=-1)
             weights = np.moveaxis(weights, 2, 0)
             if(len(weights.shape) < 4):
@@ -198,8 +214,8 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                                               weights = weights,
                                               biases = biases,
                                               activation_function = create_actv_function_obj(layer_keras.activation))
-        
-        elif layer_keras.__class__.__name__ == 'AveragePooling2D':
+
+        elif layer_keras.__class__.__name__ == "AveragePooling2D":
             current_layer = AveragePooling2D(idx = idx,
                                              size = get_layer_size(layer_keras),
                                              padding = layer_keras.padding,
@@ -208,8 +224,8 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                                              input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
                                              output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                              activation_function = Linear())
-            
-        elif layer_keras.__class__.__name__ == 'MaxPooling2D':
+
+        elif layer_keras.__class__.__name__ == "MaxPooling2D":
             current_layer = MaxPooling2D(idx = idx,
                                          size = get_layer_size(layer_keras),
                                          padding = layer_keras.padding,
@@ -218,61 +234,61 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                                          input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
                                          output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                          activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Flatten':
+
+        elif layer_keras.__class__.__name__ == "Flatten":
             current_layer = Flatten(idx = idx,
                                     size = get_layer_size(layer_keras),
                                     input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
                                     data_format= data_format)
-        
-        elif layer_keras.__class__.__name__ == 'Add':
+
+        elif layer_keras.__class__.__name__ == "Add":
             current_layer = Add(idx = idx,
                                 size = get_layer_size(layer_keras),
                                 input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                 output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                 activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Multiply':
+
+        elif layer_keras.__class__.__name__ == "Multiply":
             current_layer = Multiply(idx = idx,
                                      size = get_layer_size(layer_keras),
                                      input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                      output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                      activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Subtract':
+
+        elif layer_keras.__class__.__name__ == "Subtract":
             current_layer = Subtract(idx = idx,
                                      size = get_layer_size(layer_keras),
                                      input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                      output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                      activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Maximum':
+
+        elif layer_keras.__class__.__name__ == "Maximum":
             current_layer = Maximum(idx = idx,
                                     size = get_layer_size(layer_keras),
                                     input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                     output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                     activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Minimum':
+
+        elif layer_keras.__class__.__name__ == "Minimum":
             current_layer = Minimum(idx = idx,
                                     size = get_layer_size(layer_keras),
                                     input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                     output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                     activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Average':
+
+        elif layer_keras.__class__.__name__ == "Average":
             current_layer = Average(idx = idx,
                                     size = get_layer_size(layer_keras),
                                     input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                     output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                     activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Concatenate':
+
+        elif layer_keras.__class__.__name__ == "Concatenate":
             axis = layer_keras.axis
-            if data_format == 'channels_last':
+            if data_format == "channels_last":
                 if axis == 3:
                     axis =1
-                else: 
+                else:
                     axis = axis + 1
             current_layer = Concatenate(idx = idx,
                                         size = get_layer_size(layer_keras),
@@ -280,8 +296,8 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                                         input_shapes = get_input_dimensions(layer_keras.input_shape, data_format),
                                         output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
                                         activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'ZeroPadding2D':
+
+        elif layer_keras.__class__.__name__ == "ZeroPadding2D":
             pads = layer_keras.padding
             if type(pads) == int:
                 pad_top, pad_bottom = pads, pads
@@ -300,9 +316,9 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                                          axes = [],
                                          input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
                                          activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'BatchNormalization':
-            if layers[-1].name == 'Conv2D' and not debug:
+
+        elif layer_keras.__class__.__name__ == "BatchNormalization":
+            if layers[-1].name == "Conv2D" and not debug:
                 scale = data_type_py(layer_keras.get_weights()[0])
                 bias = data_type_py(layer_keras.get_weights()[1])
                 mean = data_type_py(layer_keras.get_weights()[2])
@@ -316,7 +332,7 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                     B = bias[z] - (mean[z]*alpha)
                     weights[:,:,:,z] = alpha*weights[:,:,:,z]
                     biases[z] = alpha*biases[z] + B
-    
+
                 layers[-1].weights = weights
                 layers[-1].biases = biases
 
@@ -331,13 +347,10 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
                                                    mean = data_type_py(layer_keras.get_weights()[2]),
                                                    var = data_type_py(layer_keras.get_weights()[3]),
                                                    activation_function = Linear())
-        
-        elif layer_keras.__class__.__name__ == 'Reshape':
+
+        elif layer_keras.__class__.__name__ == "Reshape" or layer_keras.__class__.__name__ == "Dropout":
             continue
 
-        elif layer_keras.__class__.__name__ == 'Dropout':
-            continue
-        
         else:
             raise TypeError("Error: layer "+layer_keras.__class__.__name__+" not supported\n")
 
@@ -345,24 +358,23 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
             if idx - 1 >= 0:
                 current_layer.previous_layer.append(layers[idx-1])
                 layers[idx-1].next_layer.append(current_layer)
-        else:
-            if(type(layer_keras.input) == list):
-                for input in layer_keras.input:
-                    for k in range(len(model.layers)):
-                        prev_layer = model.layers[k]
-                        if prev_layer.name == input._keras_history.layer.name:
-                            current_layer.previous_layer.append(layers[k])
-                            layers[k].next_layer.append(current_layer)
-                            break
-            else:
+        elif(type(layer_keras.input) == list):
+            for input in layer_keras.input:
                 for k in range(len(model.layers)):
                     prev_layer = model.layers[k]
-                    if prev_layer.name == layer_keras.input._keras_history.layer.name:
+                    if prev_layer.name == input._keras_history.layer.name:
                         current_layer.previous_layer.append(layers[k])
                         layers[k].next_layer.append(current_layer)
                         break
+        else:
+            for k in range(len(model.layers)):
+                prev_layer = model.layers[k]
+                if prev_layer.name == layer_keras.input._keras_history.layer.name:
+                    current_layer.previous_layer.append(layers[k])
+                    layers[k].next_layer.append(current_layer)
+                    break
 
-            
+
         l_temp = current_layer
         layers.append(l_temp)
 
@@ -376,7 +388,7 @@ def load_keras(file_to_parse:Functional|Sequential, conv_algorithm:str, debug:No
             current_layer.previous_layer.append(l_temp)
             l_temp = current_layer
             layers.append(l_temp)
-        
+
     layers, listRoad, maxRoad, dict_cst = graph_interpretor.tri_topo(layers)
     layers = list(map(lambda x:x.find_output_str(dict_cst), layers))
     print("Finished model initialization.")
