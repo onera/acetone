@@ -61,7 +61,7 @@ class CodeGenerator(ABC):
                  file: str | Path | onnx.ModelProto | Functional | Sequential,
                  test_dataset: str | np.ndarray | None = None,
                  function_name: str = "inference",
-                 nb_tests: int | str = None,
+                 nb_tests: int | str = 0,
                  conv_algorithm: str = "std_gemm_nn",
                  normalize: bool | str = False,
                  debug_mode: str | None = None, **kwargs):
@@ -409,27 +409,25 @@ class CodeGenerator(ABC):
         mustach_hash["input_size"] = self.layers[0].size
         mustach_hash["output_size"] = self.layers[-1].size
 
-        if any((isinstance(layer, Gather) or isinstance(layer, GatherElements)) for layer in self.layers):
+        if len(gather_layers := [i for i in self.layers if isinstance(i, Gather | GatherElements)]) > 0:
             mustach_hash["is_gather"] = True
             indices = []
-            for gather in [layer for layer in self.layers if
-                           (isinstance(layer, Gather) or isinstance(layer, GatherElements))]:
-                indices.append({"idx": f"{gather.idx:02d}", "lenght": len(gather.indices.flatten()),
-                                "list": self.flatten_array_orderc(gather.indices)})
+            for gather in gather_layers:
+                indices.append({
+                    "idx": f"{gather.idx:02d}",
+                    "lenght": len(gather.indices.flatten()),
+                    "list": self.flatten_array_orderc(gather.indices),
+                })
             mustach_hash["indices"] = indices
 
         self.l_size_max = 1
-        for layer in (self.layers):
-            if layer.size > self.l_size_max: self.l_size_max = layer.size
+        if len(self.layers) > 0:
+            self.l_size_max = max(i.size for i in self.layers)
 
-        if any((isinstance(layer, Dot) or isinstance(layer, Pooling2D) or isinstance(layer, Conv2D) or isinstance(layer,
-                                                                                                                  Gemm))
-               for layer in self.layers):
+        if any((isinstance(layer, Dot | Pooling2D | Conv2D | Gemm)) for layer in self.layers):
             mustach_hash["p"] = True
 
-        if any((isinstance(layer, Conv2D_6loops) or isinstance(layer, Conv2D_std_gemm) or isinstance(layer,
-                                                                                                     Pooling2D) or isinstance(
-                layer, Gemm)) for layer in self.layers):
+        if any((isinstance(layer, Conv2D_6loops | Conv2D_std_gemm | Pooling2D | Gemm)) for layer in self.layers):
             mustach_hash["hw"] = True
 
         if any((isinstance(layer, Dense) or isinstance(layer, MatMul)) for layer in self.layers):
@@ -445,8 +443,7 @@ class CodeGenerator(ABC):
         if any(isinstance(layer, AveragePooling2D) for layer in self.layers):
             mustach_hash["is_count"] = True
 
-        if any(isinstance(layer, ResizeLinear) or isinstance(layer, ResizeCubic) or isinstance(layer, ResizeNearest) for
-               layer in self.layers):
+        if any(isinstance(layer, ResizeLinear | ResizeCubic | ResizeNearest) for layer in self.layers):
             mustach_hash["is_resize"] = True
 
         if any(isinstance(layer, ResizeCubic) for layer in self.layers):
@@ -470,22 +467,20 @@ class CodeGenerator(ABC):
                 layer_hash["cst"] = True
                 layer_hash["cst_name"] = self.dict_cst[layer]
 
-            if self.debug_mode:
-                if layer.idx in self.debug_target:
-                    layer_hash["debug_layer"] = True
-                    layer_hash["name"] = layer.name
-                    layer_hash["idx"] = layer.idx
-                    layer_hash["to_transpose"] = 0
-                    if ((self.data_format == "channels_last") and (hasattr(layer, "output_channels"))):
-                        layer_hash["to_transpose"] = 1
-                        layer_hash["channels"] = layer.output_channels
-                        layer_hash["height"] = layer.output_height
-                        layer_hash["width"] = layer.output_width
+            if self.debug_mode and layer.idx in self.debug_target:
+                layer_hash["debug_layer"] = True
+                layer_hash["name"] = layer.name
+                layer_hash["idx"] = layer.idx
+                layer_hash["to_transpose"] = 0
+                if (self.data_format == "channels_last") and (hasattr(layer, "output_channels")):
+                    layer_hash["to_transpose"] = 1
+                    layer_hash["channels"] = layer.output_channels
+                    layer_hash["height"] = layer.output_height
+                    layer_hash["width"] = layer.output_width
 
             mustach_hash["layers"].append(layer_hash)
 
-        output_hash = {}
-        output_hash["path"] = self.layers[-1].path
+        output_hash = {"path": self.layers[-1].path}
         if ((self.data_format == "channels_last") and (hasattr(self.layers[-1], "output_channels"))):
             output_hash["output_channels"] = self.layers[-1].output_channels
             output_hash["output_height"] = self.layers[-1].output_height
