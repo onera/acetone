@@ -40,11 +40,13 @@ class Layer(ABC):
         self.name = ""
         self.next_layer: list[Layer] = []
         self.previous_layer: list[Layer] = []
-        self.path = None
-        self.sorted = None
+        self.path: int | None = None
+        self.sorted: int | None = None
         self.output_str = ""
         self.fused_layer = None
-        self.template_path = Path(templates.__file__).parent
+        self.template_path = str(
+            Path(templates.__file__).parent,
+        )  # FIXME Should be a proper path
 
         super().__init__()
 
@@ -118,7 +120,7 @@ class Layer(ABC):
         # dict_cst is the dict linking an layer to the cst in which the must be saved if needed
 
         # either it has to be saved
-        if self in dict_cst:
+        if len(dict_cst) and self in dict_cst:
             output_str = "cst_" + str(dict_cst[self])
         # Or it can directly go to the next layer
         else:
