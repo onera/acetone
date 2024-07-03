@@ -44,8 +44,11 @@ class Layer(ABC):
         self.sorted: int | None = None
         self.output_str = ""
         self.fused_layer = None
-        self.template_path = str(
-            Path(templates.__file__).parent,
+        self.template_path = (
+            str(
+                Path(templates.__file__).parent,
+            )
+            + "/"
         )  # FIXME Should be a proper path
 
         super().__init__()
@@ -55,7 +58,10 @@ class Layer(ABC):
         """Generate computation code for layer."""
 
     @abstractmethod
-    def forward_path_layer(self: Self, inputs: np.ndarray) -> np.ndarray:
+    def forward_path_layer(
+        self: Self,
+        inputs: np.ndarray | list[np.ndarray],
+    ) -> np.ndarray:
         """Compute output of layer."""
 
     @staticmethod
