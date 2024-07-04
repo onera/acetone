@@ -19,6 +19,7 @@
 
 from abc import ABC
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import onnx
@@ -26,9 +27,8 @@ import pystache
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 
-from .. import templates
-from ..format_importer.parser import parser
-from .layers import (
+from acetone_nnet import templates
+from acetone_nnet.code_generator.layers import (
     AveragePooling2D,
     BatchNormalization,
     Broadcast,
@@ -52,6 +52,7 @@ from .layers import (
     ResizeNearest,
     Softmax,
 )
+from acetone_nnet.format_importer.parser import parser
 
 
 class CodeGenerator(ABC):
@@ -95,11 +96,11 @@ class CodeGenerator(ABC):
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        if type(test_dataset) == str:
+        if isinstance(test_dataset, str):
             self.test_dataset_file = test_dataset
             ds = self.load_test_dataset()
             self.test_dataset = ds
-        elif type(test_dataset) == np.ndarray:
+        elif isinstance(test_dataset, np.ndarray):
             self.test_dataset = test_dataset
         else:
             print("creating random dataset")
@@ -132,22 +133,18 @@ class CodeGenerator(ABC):
             raise TypeError(
                 "Error: model type.\n Format must be: path to model, model ONNX or model Keras",
             )
-        if not (
-            type(test_dataset) == str
-            or type(test_dataset) == np.ndarray
-            or test_dataset == None
-        ):
+        if not (isinstance(test_dataset, str | np.ndarray) or test_dataset is None):
             raise TypeError(
                 "Error: test_dataset type.\n Must be: path to dataset text filen, numpy array or None",
             )
-        if not type(self.function_name) == str:
+        if not isinstance(self.function_name, str):
             raise TypeError("Error: function name type.\n Must be a string")
-        if not type(self.conv_algorithm) == str:
+        if not isinstance(self.conv_algorithm, str):
             raise TypeError("Error: conv algorihtm type.\n Must be a string")
-        if not (self.debug_mode == None or type(self.debug_mode) == str):
+        if not (self.debug_mode is None or isinstance(self.debug_mode, str)):
             raise TypeError("Error: debug mode type.\n Must be: string or None")
         if self.debug_mode:
-            assert type(self.debug_target) == list
+            assert isinstance(self.debug_target, list)
 
         ### Checking value consistency ###
         if self.conv_algorithm not in [
@@ -165,13 +162,11 @@ class CodeGenerator(ABC):
                 "Error: conv algorithm value.\n Must be one of: 6loops, indirect_gemm_nn, indirect_gemm_tn, indirect_gemm_nt, indirect_gemm_tt, std_gemm_nn, std_gemm_tn, std_gemm_nt, std_gemm_tt",
             )
 
-        ##### Debug Mode #####
-        if self.debug_mode:
-            if self.debug_mode not in ["keras", "onnx"]:
-                raise ValueError(
-                    "Error: debug mode value.\n Must be one of: keras, onnx",
-                )
-        ##### Debug Mode #####
+        # Debug Mode
+        if self.debug_mode and self.debug_mode not in ["keras", "onnx"]:
+            raise ValueError(
+                "Error: debug mode value.\n Must be one of: keras, onnx",
+            )
 
     def load_debug_target(self, debug_mode: str | None) -> list[int]:
         """Identify list of layers indices to debug."""
@@ -324,8 +319,9 @@ class CodeGenerator(ABC):
             return debug_output, targets
         return nn_output
 
-    def flatten_array_orderc(self, array: np.ndarray):
-
+    @staticmethod
+    def flatten_array_orderc(array: np.ndarray) -> str:
+        """Generate C flat array initializer in C order."""
         flattened_aray = array.flatten(order="C")
         s = "\n        {"
         for i in range(flattened_aray.size):
@@ -335,7 +331,9 @@ class CodeGenerator(ABC):
 
         return s
 
-    def flatten_array(self, array: np.ndarray):
+    @staticmethod
+    def flatten_array(array: np.ndarray) -> str:
+        """Generate C flat array initializer in Fortran order."""
         s = "\n        {"
         shape = array.shape
         if len(shape) < 4:
@@ -352,64 +350,51 @@ class CodeGenerator(ABC):
         return s
 
     def generate_testdataset_files(self, output_dir: Path):
+        """Generate C code for graph test dataset."""
+        # Generate test header file
+        template = (
+            Path(self.template_path) / "template_test_dataset_header.c.tpl"
+        ).read_text()
+        with open(output_dir / "test_dataset.h", "w+") as testdataset_header:
+            testdataset_header.write(
+                pystache.render(
+                    template,
+                    {
+                        "nb_tests": self.nb_tests,
+                        "nb_inputs": self.layers[0].size,
+                        "nb_outputs": self.layers[-1].size,
+                        "data_type": self.data_type,
+                    },
+                ),
+            )
 
-        testdataset_header = open(output_dir / "test_dataset.h", "w+")
-        testdataset_source = open(output_dir / "test_dataset.c", "w+")
-
-        with open(
-            self.template_path + "template_test_dataset_header.c.tpl",
-        ) as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        testdataset_header.write(
-            pystache.render(
-                template,
-                {
-                    "nb_tests": self.nb_tests,
-                    "nb_inputs": self.layers[0].size,
-                    "nb_outputs": self.layers[-1].size,
-                    "data_type": self.data_type,
-                },
-            ),
-        )
-        testdataset_header.close()
-
+        # Generate test source file
         dataset = "{"
-        if self.test_dataset is None:
-            pass
-        else:
-            for j in range(self.test_dataset.shape[0]):
-                dataset += self.flatten_array_orderc(self.test_dataset[j]) + ","
-            dataset = dataset[:-1]
-
+        if self.test_dataset is not None:
+            dataset += ",".join(
+                map(CodeGenerator.flatten_array_orderc, self.test_dataset),
+            )
         dataset += "};\n"
 
-        with open(
-            self.template_path + "template_test_dataset_source.c.tpl",
-        ) as template_file:
-            template = template_file.read()
-        template_file.close()
+        template = (
+            Path(self.template_path) / "template_test_dataset_source.c.tpl"
+        ).read_text()
+        with open(output_dir / "test_dataset.c", "w+") as testdataset_source:
+            testdataset_source.write(
+                pystache.render(
+                    template,
+                    {"data_type": self.data_type, "dataset": dataset},
+                ),
+            )
 
-        testdataset_source.write(
-            pystache.render(
-                template,
-                {"data_type": self.data_type, "dataset": dataset},
-            ),
-        )
-        testdataset_source.close()
+    def generate_main_file(self, output_dir: Path):
+        """Generate entry point C code."""
+        template = (Path(self.template_path) / "template_main_file.c.tpl").read_text()
+        with (output_dir / "main.c").open("a+") as main_file:
+            main_file.write(pystache.render(template, {"data_type": self.data_type}))
 
-    def generate_main_file(self):
-
-        with open(self.template_path + "template_main_file.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        self.main_file.write(pystache.render(template, {"data_type": self.data_type}))
-        self.main_file.close()
-
-    def generate_makefile(self):
-
+    def generate_makefile(self, output_dir: Path):
+        """Generate Makefile build script."""
         header_files = []
         source_files = []
         for filename in self.files_to_gen:
@@ -417,71 +402,57 @@ class CodeGenerator(ABC):
                 source_files.append(filename)
             elif ".h" in filename:
                 header_files.append(filename)
-            else:
-                pass
 
-        with open(self.template_path + "template_Makefile.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
+        template = (Path(self.template_path) / "template_Makefile.tpl").read_text()
 
-        self.makefile.write(
-            pystache.render(
-                template,
-                {
-                    "source_files": " ".join(source_files),
-                    "header_files": " ".join(header_files),
-                    "function_name": self.function_name,
-                },
-            ),
-        )
-        self.makefile.close()
+        with (output_dir / "Makefile").open("a+") as makefile:
+            makefile.write(
+                pystache.render(
+                    template,
+                    {
+                        "source_files": " ".join(source_files),
+                        "header_files": " ".join(header_files),
+                        "function_name": self.function_name,
+                    },
+                ),
+            )
 
-    def generate_c_files(self, c_files_directory: str | Path):
-
+    def generate_c_files(self, c_files_directory: str | Path) -> None:
+        """Generate C code implementation of current graph."""
         # Prepare output directory
         c_files_directory = Path(c_files_directory)
-        if not c_files_directory.exists():
-            c_files_directory.mkdir(exist_ok=True, parents=True)
+        c_files_directory.mkdir(exist_ok=True, parents=True)
 
         for file in self.files_to_gen:
             if (c_files_directory / file).exists():
                 raise FileExistsError(c_files_directory / file)
 
-        self.source_file = open(c_files_directory / "inference.c", "a+")
-        self.header_file = open(c_files_directory / "inference.h", "a+")
-        self.globalvars_file = open(c_files_directory / "global_vars.c", "a+")
-        self.main_file = open(c_files_directory / "main.c", "a+")
-        self.makefile = open(c_files_directory / "Makefile", "a+")
-
         self.generate_function_source_file(c_files_directory)
         print("Generated function source file.")
-        self.generate_function_header_file()
+        self.generate_function_header_file(c_files_directory)
         print("Generated function header file.")
-        self.generate_globalvars_file()
+        self.generate_globalvars_file(c_files_directory)
         print("Generated globalvars .c file.")
-        self.generate_main_file()
+        self.generate_main_file(c_files_directory)
         print("Generated main file.")
-        self.generate_makefile()
+        self.generate_makefile(c_files_directory)
         print("Generated Makefile.")
         self.generate_testdataset_files(c_files_directory)
         print("Generated testdataset files.")
 
     def generate_function_source_file(self, output_dir: Path):
+        """Generate C Code for inference function."""
+        mustach_hash = {
+            "data_type": self.data_type,
+            "input_size": self.layers[0].size,
+            "output_size": self.layers[-1].size,
+        }
 
-        mustach_hash = {}
-
-        mustach_hash["data_type"] = self.data_type
-        mustach_hash["input_size"] = self.layers[0].size
-        mustach_hash["output_size"] = self.layers[-1].size
-
-        if (
-            len(
-                gather_layers := [
-                    i for i in self.layers if isinstance(i, Gather | GatherElements)
-                ],
-            )
-            > 0
-        ):
+        # Tag Gather-type layers
+        if any(isinstance(i, Gather | GatherElements) for i in self.layers):
+            gather_layers = [
+                i for i in self.layers if isinstance(i, Gather | GatherElements)
+            ]
             mustach_hash["is_gather"] = True
             indices = []
             for gather in gather_layers:
@@ -494,47 +465,35 @@ class CodeGenerator(ABC):
                 )
             mustach_hash["indices"] = indices
 
-        self.l_size_max = 1
-        if len(self.layers) > 0:
-            self.l_size_max = max(i.size for i in self.layers)
+        self.l_size_max = max((i.size for i in self.layers), default=1)
 
-        if any(
-            (isinstance(layer, Dot | Pooling2D | Conv2D | Gemm))
-            for layer in self.layers
-        ):
+        if any(isinstance(i, Dot | Pooling2D | Conv2D | Gemm) for i in self.layers):
             mustach_hash["p"] = True
 
         if any(
-            (isinstance(layer, Conv2D_6loops | Conv2D_std_gemm | Pooling2D | Gemm))
-            for layer in self.layers
+            isinstance(i, Conv2D_6loops | Conv2D_std_gemm | Pooling2D | Gemm)
+            for i in self.layers
         ):
             mustach_hash["hw"] = True
 
-        if any(
-            (isinstance(layer, Dense) or isinstance(layer, MatMul))
-            for layer in self.layers
-        ):
+        if any(isinstance(i, Dense | MatMul) for i in self.layers):
             mustach_hash["is_dense"] = True
 
-        if (
-            any(
-                isinstance(layer, Conv2D_6loops)
-                or isinstance(layer, AveragePooling2D)
-                or isinstance(layer, Softmax),
-            )
-            for layer in self.layers
+        if any(
+            isinstance(i, Conv2D_6loops | AveragePooling2D | Softmax)
+            for i in self.layers
         ):
             mustach_hash["is_sum"] = True
 
-        if any(isinstance(layer, MaxPooling2D) for layer in self.layers):
+        if any(isinstance(i, MaxPooling2D) for i in self.layers):
             mustach_hash["is_max"] = True
 
-        if any(isinstance(layer, AveragePooling2D) for layer in self.layers):
+        if any(isinstance(i, AveragePooling2D) for i in self.layers):
             mustach_hash["is_count"] = True
 
         if any(
-            isinstance(layer, ResizeLinear | ResizeCubic | ResizeNearest)
-            for layer in self.layers
+            isinstance(i, ResizeLinear | ResizeCubic | ResizeNearest)
+            for i in self.layers
         ):
             mustach_hash["is_resize"] = True
 
@@ -550,6 +509,7 @@ class CodeGenerator(ABC):
         if self.debug_mode:
             mustach_hash["debug_file"] = output_dir / "debug_file.txt"
 
+        # Generate parameters per layer
         mustach_hash["layers"] = []
         for layer in self.layers:
             layer_hash = {
@@ -577,6 +537,7 @@ class CodeGenerator(ABC):
 
             mustach_hash["layers"].append(layer_hash)
 
+        # Generate code to output graph data
         output_hash = {"path": self.layers[-1].path}
         if (self.data_format == "channels_last") and (
             hasattr(self.layers[-1], "output_channels")
@@ -585,14 +546,11 @@ class CodeGenerator(ABC):
             output_hash["output_height"] = self.layers[-1].output_height
             output_hash["output_width"] = self.layers[-1].output_width
 
-            with open(
-                self.template_path
-                + "memory_layout/template_channels_last_output.c.tpl",
-            ) as template_file:
-                template = template_file.read()
-            template_file.close()
+            template = (
+                Path(self.template_path)
+                / "memory_layout/template_channels_last_output.c.tpl"
+            ).read_text()
             mustach_hash["ouput_str"] = pystache.render(template, output_hash)
-
         else:
             output_hash["output_size"] = self.layers[-1].size
             if self.data_format == "channels_first":
@@ -602,30 +560,27 @@ class CodeGenerator(ABC):
             else:
                 output_hash["comment"] = "Returning the output (output flatten)"
 
-            with open(
-                self.template_path
-                + "memory_layout/template_channels_first_output.c.tpl",
-            ) as template_file:
-                template = template_file.read()
-            template_file.close()
+            template = (
+                Path(self.template_path)
+                / "memory_layout/template_channels_first_output.c.tpl"
+            ).read_text()
             mustach_hash["ouput_str"] = pystache.render(template, output_hash)
-
-        with open(self.template_path + "template_source_file.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
 
         if self.normalize:
             mustach_hash["pre_processing"] = self.Normalizer.write_pre_processing()
             mustach_hash["post_processing"] = self.Normalizer.write_post_processing()
 
-        self.source_file.write(pystache.render(template, mustach_hash))
-        self.source_file.close()
+        # Generate C code
+        template = (Path(self.template_path) / "template_source_file.c.tpl").read_text()
+        with (output_dir / "inference.c").open("a+") as source_file:
+            source_file.write(pystache.render(template, mustach_hash))
 
-    def generate_function_header_file(self):
-
-        mustach_hash = {}
-        mustach_hash["data_type"] = self.data_type
-        mustach_hash["path"] = [i for i in range(self.maxpath)]
+    def generate_function_header_file(self, output_dir: Path):
+        """Generate C Code for graph structure."""
+        mustach_hash = {
+            "data_type": self.data_type,
+            "path": [i for i in range(self.maxpath)],
+        }
 
         self.nb_weights_max = 1
         self.nb_biases_max = 1
@@ -633,9 +588,11 @@ class CodeGenerator(ABC):
         self.patches_size_max = 1
         self.concate_size_max = 0
         for layer in self.layers:
-            if isinstance(layer, Conv2D_std_gemm):
-                if layer.patches_size > self.patches_size_max:
-                    self.patches_size_max = layer.patches_size
+            if (
+                isinstance(layer, Conv2D_std_gemm)
+                and layer.patches_size > self.patches_size_max
+            ):
+                self.patches_size_max = layer.patches_size
             if isinstance(layer, Concatenate):
                 self.patches_size_max = max(self.patches_size_max, layer.size)
 
@@ -671,6 +628,7 @@ class CodeGenerator(ABC):
         ):
             mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
 
+        # Collect layer parameters
         mustach_hash["layers"] = []
         for layer in self.layers:
             to_print = False
@@ -688,11 +646,11 @@ class CodeGenerator(ABC):
                     self.nb_biases_max = layer.nb_biases
                 to_print = True
 
-            if type(layer) is Conv2D_indirect_gemm:
+            if isinstance(layer, Conv2D_indirect_gemm):
                 layer_hash["patches_size"] = layer.patches_size
                 to_print = True
 
-            if type(layer) is BatchNormalization:
+            if isinstance(layer, BatchNormalization):
                 layer_hash["channels"] = layer.output_channels
                 to_print = True
 
@@ -709,19 +667,17 @@ class CodeGenerator(ABC):
                 self.Normalizer.write_normalization_cst_in_header_file()
             )
 
-        with open(self.template_path + "template_header_file.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
+        # Generate header code
+        template = (Path(self.template_path) / "template_header_file.c.tpl").read_text()
+        with (output_dir / "inference.h").open("a+") as header_file:
+            header_file.write(pystache.render(template, mustach_hash))
 
-        self.header_file.write(pystache.render(template, mustach_hash))
-        self.header_file.close()
-
-    def generate_globalvars_file(self):
-
-        mustach_hash = {}
-
-        mustach_hash["data_type"] = self.data_type
-        mustach_hash["path"] = [i for i in range(self.maxpath)]
+    def generate_globalvars_file(self, output_dir: Path):
+        """Generate C Code for layer data."""
+        mustach_hash = {
+            "data_type": self.data_type,
+            "path": [i for i in range(self.maxpath)],
+        }
 
         if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
             mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
@@ -795,17 +751,12 @@ class CodeGenerator(ABC):
             if to_print:
                 mustach_hash["layers"].append(layer_hash)
 
-        with open(
+        template = Path(
             self.template_path + "template_global_var_file.c.tpl",
-        ) as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        self.globalvars_file.write(pystache.render(template, mustach_hash))
-
-        if self.normalize:
-            self.globalvars_file.write(
-                self.Normalizer.write_normalization_cst_in_globalvars_file(),
-            )
-
-        self.globalvars_file.close()
+        ).read_text()
+        with (output_dir / "global_vars.c").open("a+") as globalvars_file:
+            globalvars_file.write(pystache.render(template, mustach_hash))
+            if self.normalize:
+                self.globalvars_file.write(
+                    self.Normalizer.write_normalization_cst_in_globalvars_file(),
+                )
