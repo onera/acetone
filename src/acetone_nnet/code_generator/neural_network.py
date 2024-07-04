@@ -215,10 +215,9 @@ class CodeGenerator(ABC):
         with (Path(c_files_directory) / "output_python.txt").open("w+") as fi:
             for nn_input in self.test_dataset:
 
-                # Debug Mode
-                if self.debug_mode:
-                    debug_output: list[np.ndarray] = []
-                    targets: list[str] = []
+                # Debug Mode output
+                debug_output: list[np.ndarray] = []
+                targets: list[str] = []
 
                 # Prepare graph input
                 if (self.data_format == "channels_last") and (
@@ -240,6 +239,23 @@ class CodeGenerator(ABC):
                     i.idx: {i.idx: nn_input} for i in self.layers
                 }
 
+                def gather_inputs(
+                    target,
+                    target_inputs,
+                ) -> np.ndarray | list[np.ndarray]:
+                    # Prepare inputs for computation
+                    inputs: np.ndarray | list[np.ndarray] = []
+                    if not target.previous_layer:
+                        inputs.append(target_inputs[target.idx][target.idx])
+                    else:
+                        inputs.extend(
+                            [
+                                target_inputs[target.idx][p.idx]
+                                for p in target.previous_layer
+                            ],
+                        )
+                    return inputs if len(inputs) > 1 else inputs[0]
+
                 # Forward computation layer by layer
                 #   (Assumes layers are topologically sorted)
                 for layer in self.layers:
@@ -251,31 +267,15 @@ class CodeGenerator(ABC):
                         raise NotImplementedError
 
                     # Prepare inputs for computation
-                    forward_inputs: np.ndarray | list[np.ndarray] = []
-                    if not layer.previous_layer:
-                        forward_inputs.append(layer_inputs[layer.idx][layer.idx])
-                    else:
-                        forward_inputs.extend(
-                            [
-                                layer_inputs[layer.idx][p.idx]
-                                for p in layer.previous_layer
-                            ],
-                        )
-                    if len(forward_inputs) == 1:
-                        forward_inputs = forward_inputs[0]
+                    forward_inputs = gather_inputs(layer, layer_inputs)
 
                     # Compute layer output
                     layer_output = layer.forward_path_layer(forward_inputs)
                     if layer.fused_layer:
-                        f = layer.fused_layer
-                        # Gather fused layer inputs
-                        fused_inputs = []
-                        for p in f.prior_layers:
-                            fused_inputs.append(layer_inputs[f.idx][p.idx])
-                        if len(fused_inputs) == 1:
-                            fused_inputs = fused_inputs[0]
-                        # Compute fused layer output
-                        layer_output = f.forward_path_layer(fused_inputs)
+                        fused_inputs = gather_inputs(layer.fused_layer, layer_inputs)
+                        layer_output = layer.fused_layer.forward_path_layer(
+                            fused_inputs,
+                        )
 
                     # Write Layer output into successors' input
                     for successor in layer.next_layer:
@@ -314,8 +314,8 @@ class CodeGenerator(ABC):
                 if self.normalize:
                     nn_output = self.Normalizer.post_processing(nn_output)
 
-                for j in range(len(nn_output)):
-                    print(f"{nn_output[j]:.9g}", end=" ", file=fi, flush=True)
+                for n in nn_output:
+                    print(f"{n:.9g}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
 
         print("File output_python.txt generated.")
