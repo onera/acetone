@@ -17,7 +17,6 @@
 ******************************************************************************
 """
 
-import os
 from abc import ABC
 from pathlib import Path
 
@@ -81,7 +80,7 @@ class CodeGenerator(ABC):
                 self.file,
                 self.conv_algorithm,
             )
-        elif self.normalize:
+        else:  # normalise
             l, dtype, dtype_py, data_format, maxpath, dict_cst, Normalizer = parser(
                 self.file,
                 self.conv_algorithm,
@@ -89,7 +88,7 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = Normalizer
 
-        self.layers = l
+        self.layers: list[Any] = l
         self.data_type = dtype
         self.data_type_py = dtype_py
         self.maxpath = maxpath
@@ -174,8 +173,9 @@ class CodeGenerator(ABC):
                 )
         ##### Debug Mode #####
 
-    def load_debug_target(self, debug_mode: str | None):
-        targets = []
+    def load_debug_target(self, debug_mode: str | None) -> list[int]:
+        """Identify list of layers indices to debug."""
+        targets: list[int] = []
         for layer in self.layers[1:]:
             if debug_mode == "keras" and layer.name == "Softmax":
                 targets[-1] = layer.idx
@@ -184,48 +184,43 @@ class CodeGenerator(ABC):
 
         return targets
 
-    def create_test_dataset(self):
-        test_dataset = self.data_type_py(
-            np.random.default_rng(seed=10).random(
-                (self.nb_tests, 1, int(self.layers[0].size)),
-            ),
+    def create_test_dataset(self) -> np.ndarray:
+        """Create random dataset for graph."""
+        return np.random.default_rng(seed=10).random(
+            size=(self.nb_tests, 1, int(self.layers[0].size)),
+            dtype=self.data_type_py,
         )
-        return test_dataset
 
-    def load_test_dataset(self):
+    def load_test_dataset(self) -> np.ndarray:
+        """Load test dataset from file."""
+        test_dataset: list[list[int | float | np.float32]] = []
+        with Path(self.test_dataset_file).open() as f:
+            for i, line in enumerate(f):
+                contents = line[1:-2].split(",")
+                if self.data_type == "int":
+                    test_dataset.append(list(map(int, contents)))
+                elif self.data_type == "double":
+                    test_dataset.append(list(map(float, contents)))
+                elif self.data_type == "float":
+                    test_dataset.append(list(map(np.float32, contents)))
+                if i >= self.nb_tests - 1:
+                    break
+        return np.array(test_dataset)
 
-        test_dataset = []
-        try:
-            with open(self.test_dataset_file) as f:
-                for i, line in enumerate(f):
-                    line = line[1:-2].split(",")
-                    if self.data_type == "int":
-                        line = list(map(int, line))
-                    elif self.data_type == "double":
-                        line = list(map(float, line))
-                    elif self.data_type == "float":
-                        line = list(map(np.float32, line))
-                    test_dataset.append(line)
-                    if i == self.nb_tests - 1:
-                        break
-            test_dataset = np.array(test_dataset)
-            f.close()
-
-        except TypeError:
-            None
-
-        return test_dataset
-
-    def compute_inference(self, c_files_directory: str):
-        with open(os.path.join(c_files_directory, "output_python.txt"), "w+") as fi:
+    def compute_inference(
+        self,
+        c_files_directory: str,
+    ) -> tuple[list, list] | np.ndarray:
+        """Perform inference pass on test dataset."""
+        with (Path(c_files_directory) / "output_python.txt").open("w+") as fi:
             for nn_input in self.test_dataset:
 
-                ##### Debug Mode #####
+                # Debug Mode
                 if self.debug_mode:
-                    debug_output = []
-                    targets = []
-                ##### Debug Mode #####
+                    debug_output: list[np.ndarray] = []
+                    targets: list[str] = []
 
+                # Prepare graph input
                 if (self.data_format == "channels_last") and (
                     len(self.layers[0].input_shape) == 4
                 ):
@@ -235,106 +230,78 @@ class CodeGenerator(ABC):
                         self.layers[0].input_shape[1],
                     )
                     nn_input = np.transpose(np.reshape(nn_input, shape), (2, 0, 1))
-
                 if self.normalize:
                     nn_input = self.Normalizer.pre_processing(nn_input)
-                previous_layer_result = [
-                    nn_input for i in range(self.maxpath)
-                ]  # for the very first layer, it is the neural network input
 
-                to_store = {}  # a dictionnary containing the values to store
+                # Inputs per layer and predecessor
+                # - li[i][j] is an input for i computed from preceding layer j
+                # - li[i][i] is the input for layers with no predecessors
+                layer_inputs: dict[int, dict[int, np.ndarray]] = {
+                    i.idx: {i.idx: nn_input} for i in self.layers
+                }
+
+                # Forward computation layer by layer
+                #   (Assumes layers are topologically sorted)
                 for layer in self.layers:
+                    # Ensure all inputs of layer are ready
+                    if any(
+                        p.idx not in layer_inputs[layer.idx]
+                        for p in layer.previous_layer
+                    ):
+                        raise NotImplementedError
+
+                    # Prepare inputs for computation
+                    forward_inputs: np.ndarray | list[np.ndarray] = []
                     if not layer.previous_layer:
-                        previous_layer_result[layer.path] = layer.forward_path_layer(
-                            previous_layer_result[layer.path],
-                        )  # if the layer is an input layer, it directly take the vaue from it's path
-                    elif len(layer.previous_layer) == 1:
-                        if len(layer.previous_layer[0].next_layer) == 1:
-                            previous_layer_result[layer.path] = (
-                                layer.forward_path_layer(
-                                    previous_layer_result[layer.previous_layer[0].path],
-                                )
-                            )  # if the layer has exactly one previous_layer, it takes the value from it's father's path
-                        else:
-                            previous_layer_result[layer.path] = (
-                                layer.forward_path_layer(
-                                    to_store[layer.previous_layer[0].idx],
-                                )
-                            )  # if the father is stored, we take it from the storage
-                            layer.previous_layer[
-                                0
-                            ].sorted += (
-                                1  # the number of children already "taken care of"
-                            )
-                    else:  # if the layer has multiple ancestors, we take all of their value
-                        prev_layer = []
-                        for prev in layer.previous_layer:
-                            if len(prev.next_layer) == 1:
-                                prev_layer.append(previous_layer_result[prev.path])
-                            else:
-                                prev_layer.append(to_store[prev.idx])
-                                prev.sorted += 1
-                        previous_layer_result[layer.path] = layer.forward_path_layer(
-                            prev_layer,
+                        forward_inputs.append(layer_inputs[layer.idx][layer.idx])
+                    else:
+                        forward_inputs.extend(
+                            [
+                                layer_inputs[layer.idx][p.idx]
+                                for p in layer.previous_layer
+                            ],
                         )
+                    if len(forward_inputs) == 1:
+                        forward_inputs = forward_inputs[0]
 
-                    # After having computed the value of the layer, we check if there is a fused layer.
+                    # Compute layer output
+                    layer_output = layer.forward_path_layer(forward_inputs)
                     if layer.fused_layer:
-                        # If the current layer is the last layer to be updated, the fused layer must be computed
-                        if (
-                            layer.fused_layer.count_updated_prior_layers
-                            == len(layer.fused_layer.prior_layers) - 1
-                        ):
-                            fused = layer.fused_layer
-                            # The layer has multiple ancestors (otherwise, it is treated as an activation function)
-                            prev_layer = []
-                            for prev in fused.prior_layers:
-                                if (
-                                    prev.idx not in to_store
-                                ):  # Taking the value where it is stored
-                                    prev_layer.append(previous_layer_result[prev.path])
-                                else:
-                                    prev_layer.append(to_store[prev.idx])
-                                    prev.sorted += 1
-                            previous_layer_result[layer.path] = (
-                                fused.forward_path_layer(prev_layer)
-                            )
-                        # Else, we notify the fused layer that another one of its ancestors have been computed
-                        else:
-                            layer.fused_layer.count_updated_prior_layers += 1
+                        f = layer.fused_layer
+                        # Gather fused layer inputs
+                        fused_inputs = []
+                        for p in f.prior_layers:
+                            fused_inputs.append(layer_inputs[f.idx][p.idx])
+                        if len(fused_inputs) == 1:
+                            fused_inputs = fused_inputs[0]
+                        # Compute fused layer output
+                        layer_output = f.forward_path_layer(fused_inputs)
 
-                    if (
-                        len(layer.next_layer) > 1
-                    ):  # if the layer has more than one child, it needs to be stored
-                        to_store[layer.idx] = previous_layer_result[layer.path]
+                    # Write Layer output into successors' input
+                    for successor in layer.next_layer:
+                        layer_inputs[successor.idx][layer.idx] = layer_output
 
-                    for prev in layer.previous_layer:
-                        if (prev.sorted == len(prev.next_layer)) and (
-                            prev in to_store
-                        ):  # if all the children of the parent layer are "taken care of", we "forget" the parent's value ( *2 because of the creation of the dict in graph.to_save)
-                            to_store.pop(prev.idx)
+                    # Cleanup layer inputs
+                    del layer_inputs[layer.idx]
 
-                    ##### Debug Mode #####
-                    if self.debug_mode:
+                    # Debug Mode
+                    if self.debug_mode and layer.name != "Input_layer":
                         # Add the inference result of the layer to debug_output
-                        if layer.name != "Input_layer":
-                            if layer.idx in self.debug_target:
-                                debug_output.append(previous_layer_result[layer.path])
-                                if (self.data_format == "channels_last") and hasattr(
-                                    layer,
-                                    "output_channels",
-                                ):
-                                    debug_output[-1] = np.transpose(
-                                        debug_output[-1],
-                                        (1, 2, 0),
-                                    )
-                                debug_output[-1] = debug_output[-1].flatten()
+                        if layer.idx in self.debug_target:
+                            debug_output.append(layer_output)
+                            if (self.data_format == "channels_last") and hasattr(
+                                layer,
+                                "output_channels",
+                            ):
+                                debug_output[-1] = np.transpose(
+                                    debug_output[-1],
+                                    (1, 2, 0),
+                                )
+                            debug_output[-1] = debug_output[-1].flatten()
 
-                            targets.append(str(layer.name) + " " + str(layer.idx))
-                    ##### Debug Mode #####
+                        targets.append(str(layer.name) + " " + str(layer.idx))
 
-                nn_output = previous_layer_result[layer.path]
-                # print(nn_output) # write to file instead
+                nn_output = layer_output
 
                 # Write results in text files to compare prediction.
                 if (self.data_format == "channels_last") and hasattr(
@@ -349,17 +316,13 @@ class CodeGenerator(ABC):
 
                 for j in range(len(nn_output)):
                     print(f"{nn_output[j]:.9g}", end=" ", file=fi, flush=True)
-                    # print(decimal.Decimal(nn_output[j]), end=' ', file=fi, flush=True)
                 print(" ", file=fi)
-
-        fi.close()
 
         print("File output_python.txt generated.")
 
         if self.debug_mode:
             return debug_output, targets
-        else:
-            return nn_output
+        return nn_output
 
     def flatten_array_orderc(self, array: np.ndarray):
 
