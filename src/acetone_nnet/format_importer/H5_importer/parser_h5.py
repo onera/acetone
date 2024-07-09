@@ -33,9 +33,7 @@ from ...code_generator import (
     BatchNormalization,
     Concatenate,
     Constant_Pad,
-    Conv2D_6loops,
-    Conv2D_indirect_gemm,
-    Conv2D_std_gemm,
+    Conv2D,
     Dense,
     Flatten,
     InputLayer,
@@ -104,17 +102,6 @@ def create_actv_function_obj(kears_activation_obj):
             return LeakyReLu(0.2)
         elif kears_activation_obj == activations.softmax:
             return Linear()
-
-def create_conv2d_obj(algorithm:str, **kwargs):
-
-    if "6loops" in algorithm:
-        return Conv2D_6loops(**kwargs)
-
-    elif "std_gemm" in algorithm:
-        return Conv2D_std_gemm(**kwargs)
-
-    elif "indirect_gemm" in algorithm:
-        return Conv2D_indirect_gemm(**kwargs)
 
 def load_keras(file_to_parse: Functional|Sequential|str, conv_algorithm:str, debug:None|str):
 
@@ -199,21 +186,20 @@ def load_keras(file_to_parse: Functional|Sequential|str, conv_algorithm:str, deb
             if(len(weights.shape) < 4):
                 weights = np.expand_dims(weights, axis=0)
             biases = data_type_py(layer_keras.get_weights()[1])
-            current_layer = create_conv2d_obj(algorithm = conv_algorithm,
-                                              conv_algorithm = conv_algorithm,
-                                              idx = idx,
-                                              size = get_layer_size(layer_keras),
-                                              padding = layer_keras.padding,
-                                              strides = layer_keras.strides[0],
-                                              kernel_h = layer_keras.kernel_size[0],
-                                              kernel_w = layer_keras.kernel_size[1],
-                                              dilation_rate = layer_keras.dilation_rate[0],
-                                              nb_filters = layer_keras.filters,
-                                              input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
-                                              output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
-                                              weights = weights,
-                                              biases = biases,
-                                              activation_function = create_actv_function_obj(layer_keras.activation))
+            current_layer = Conv2D(conv_algorithm = conv_algorithm,
+                                    idx = idx,
+                                    size = get_layer_size(layer_keras),
+                                    padding = layer_keras.padding,
+                                    strides = layer_keras.strides[0],
+                                    kernel_h = layer_keras.kernel_size[0],
+                                    kernel_w = layer_keras.kernel_size[1],
+                                    dilation_rate = layer_keras.dilation_rate[0],
+                                    nb_filters = layer_keras.filters,
+                                    input_shape = get_input_dimensions(layer_keras.input_shape, data_format),
+                                    output_shape = get_output_dimensions(layer_keras.output_shape, data_format),
+                                    weights = weights,
+                                    biases = biases,
+                                    activation_function = create_actv_function_obj(layer_keras.activation))
 
         elif layer_keras.__class__.__name__ == "AveragePooling2D":
             current_layer = AveragePooling2D(idx = idx,

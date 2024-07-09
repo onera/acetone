@@ -53,7 +53,7 @@ from acetone_nnet.code_generator.layers import (
     Softmax,
 )
 from acetone_nnet.format_importer.parser import parser
-
+from acetone_nnet.versioning.versioning import versioning
 
 class CodeGenerator(ABC):
 
@@ -90,6 +90,12 @@ class CodeGenerator(ABC):
             self.Normalizer = Normalizer
 
         self.layers: list[Any] = l
+        version = {}
+        for i in range(len(self.layers)):
+            if self.layers[i].name == "Conv2D":
+                version[i] = "indirect_gemm_nn"
+        self.layers = versioning(self.layers, version)
+        
         self.data_type = dtype
         self.data_type_py = dtype_py
         self.maxpath = maxpath

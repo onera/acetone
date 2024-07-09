@@ -36,11 +36,11 @@ class TestLenet5(acetoneTestCase.AcetoneTestCase):
 
         keras_result = np.array(model.predict(dataset)).flatten()
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/lenet5/lenet5_trained/lenet5_trained.h5', self.tmpdir_name+'/dataset.txt')
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
+        self.assertListAlmostEqual(acetone_result[0], keras_result)
 
     def testLenet5Python(self):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,test_path + '/models/lenet5/lenet5_trained/lenet5_trained.h5')
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+        self.assertListAlmostEqual(acetone_result[0],acetone_result[1])
 
 if __name__ == '__main__':
     acetoneTestCase.main()

@@ -29,7 +29,7 @@ from ...code_generator.layers import (
     Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
     ReduceSum, ReduceMax, ReduceMin, ReduceMean, ReduceProd,
-    Concatenate, InputLayer, Softmax,  Dot, Gather, Gemm, MatMul,
+    Concatenate, InputLayer, Softmax, Gather, Gemm, MatMul,
     Add_Bias, BatchNormalization, Transpose, Tile
 )
 
@@ -59,7 +59,7 @@ def create_resize_obj(mode:bytes, **kwargs):
         return ResizeCubic(**kwargs)
     
     else:
-        raise ValueError("Error: mode "+mode.decode()+" not implemented")
+        raise ValueError("Error: resize mode "+mode.decode()+" not implemented")
 
 def create_pad_obj(mode:bytes, **kwargs):
     if mode == b'constant':
@@ -75,7 +75,7 @@ def create_pad_obj(mode:bytes, **kwargs):
         return Reflect_pad(**kwargs)
     
     else:
-        raise ValueError("Error: mode "+mode.decode()+" not implemented")
+        raise ValueError("Error: pad mode "+mode.decode()+" not implemented")
 
 #Go find the constant named initialzer_name in model(an onnx model)
 def look_for_initializer(initializer_name:str, model:onnx.ModelProto):
