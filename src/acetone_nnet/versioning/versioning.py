@@ -1,0 +1,50 @@
+"""Generic layer versioning manager.
+
+*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
+"""
+
+from ..code_generator import Layer
+from .version_implementation.conv_implementation import Conv2D_implementation
+
+
+def versioning(
+        layers: list[Layer],
+        version : dict[int,str]
+) -> list[Layer]:
+    """Check layers and change the layer version if needed"""
+    implemented = {
+        "Conv2D": Conv2D_implementation
+    }
+
+    keys = list(version.keys())
+    for i in keys:
+        layer = layers[i]
+
+        layer = implemented[layer.name](layer,version[i])
+        layer.path = layers[i].path
+        layer.next_layer = layers[i].next_layer
+        layer.previous_layer = layers[i].previous_layer
+        layer.sorted = layers[i].sorted
+        layer.output_str = layers[i].output_str
+        layer.fused_layer = layers[i].fused_layer
+
+        layers[i] = layer
+    
+    return layers
+
