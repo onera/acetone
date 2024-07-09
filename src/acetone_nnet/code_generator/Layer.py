@@ -67,8 +67,7 @@ class Layer(ABC):
     @staticmethod
     def count_elements_array(array: np.ndarray) -> int:
         """Count elements in numpy array."""
-        return array.size
-        # Or return reduce(mul, array.shape, 1)
+        return np.multiply.reduce(array=array.shape)
 
     @staticmethod
     def compute_padding(

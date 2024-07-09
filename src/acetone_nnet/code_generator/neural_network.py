@@ -520,7 +520,7 @@ class CodeGenerator(ABC):
 
             if self.dict_cst and layer in self.dict_cst:
                 layer_hash["cst"] = True
-                layer_hash["cst_name"] = self.dict_cst[layer]
+                layer_hash["cst_name"] = self.dict_cst[layer.idx]
 
             if self.debug_mode and layer.idx in self.debug_target:
                 layer_hash["debug_layer"] = True
@@ -604,11 +604,11 @@ class CodeGenerator(ABC):
         mustach_hash["cst"] = []
         written = {}
         for layer in self.dict_cst:
-            if self.dict_cst[layer] not in written:
-                written[self.dict_cst[layer]] = layer.size
+            if self.dict_cst[layer.idx] not in written:
+                written[self.dict_cst[layer.idx]] = layer.size
             else:
-                written[self.dict_cst[layer]] = max(
-                    written[self.dict_cst[layer]],
+                written[self.dict_cst[layer.idx]] = max(
+                    written[self.dict_cst[layer.idx]],
                     layer.size,
                 )
 
@@ -687,11 +687,11 @@ class CodeGenerator(ABC):
         mustach_hash["cst"] = []
         written = {}
         for layer in self.dict_cst:
-            if self.dict_cst[layer] not in written:
-                written[self.dict_cst[layer]] = layer.size
+            if self.dict_cst[layer.idx] not in written:
+                written[self.dict_cst[layer.idx]] = layer.size
             else:
-                written[self.dict_cst[layer]] = max(
-                    written[self.dict_cst[layer]],
+                written[self.dict_cst[layer.idx]] = max(
+                    written[self.dict_cst[layer.idx]],
                     layer.size,
                 )
 

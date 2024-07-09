@@ -89,17 +89,18 @@ def update_path(layer: Layer, paths: dict[int, bool]) -> None:
             layer.next_layer[0].path = layer.path
             given = True
         # Allocate paths to other children
-        for nxt_layer in layer.next_layer[1:]:
-            if len(nxt_layer.previous_layer) == 1 and not given:
-                # Allocate path to child with a single parent, if available
-                nxt_layer.path = layer.path
-                given = True
-            elif nxt_layer.path is not None:
-                # if the layer already has a path, we do nothing
-                pass
-            else:
-                # in any other case, the next layer receive a new path
-                allocate_path_to_layer(nxt_layer, paths)
+        if len(layer.next_layer) > 1:
+            for nxt_layer in layer.next_layer[1:]:
+                if len(nxt_layer.previous_layer) == 1 and not given:
+                    # Allocate path to child with a single parent, if available
+                    nxt_layer.path = layer.path
+                    given = True
+                elif nxt_layer.path is not None:
+                    # if the layer already has a path, we do nothing
+                    pass
+                else:
+                    # in any other case, the next layer receive a new path
+                    allocate_path_to_layer(nxt_layer, paths)
 
     # Close path if not allocated to child
     if not given:
@@ -119,7 +120,7 @@ def to_save(layer: Layer, dict_cst: dict[int, int]) -> None:
     if len(layer.next_layer) > 1:
         # if the layer has more than one child, it must be stored.
         if len(dict_cst) == 0:
-            dict_cst[layer] = 1  # if the dict is empty, we create the first cst
+            dict_cst[layer.idx] = 1  # if the dict is empty, we create the first cst
 
         else:
             given = False
@@ -130,8 +131,8 @@ def to_save(layer: Layer, dict_cst: dict[int, int]) -> None:
                 # if the layer is complete, we can re-use the same constant
                 if past_layer.sorted == len(past_layer.next_layer):
                     past_layer.sorted = 0
-                    dict_cst[layer] = dict_cst[past_layer]
+                    dict_cst[layer.idx] = dict_cst[past_layer]
                     given = True
                     break
             if not given:  # if no constant have been attributed, we create a new one
-                dict_cst[layer] = list(dict_cst.values())[-1] + 1
+                dict_cst[layer.idx] = list(dict_cst.values())[-1] + 1
