@@ -1,133 +1,137 @@
-"""
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
+"""Topological sort for Graph.
+
+*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
 
-from ..code_generator.Layer import Layer
+from acetone_nnet.code_generator.Layer import Layer
 
-#Sort the graph (list of nodes) based on the topological sort
-def tri_topo(dnn:list):
-    list_path = []
-    #The sorted list to be returned
-    list_layers = []
-    #the dict stating which layers need to go in a constant
-    dict_cst = {}
+
+def tri_topo(dnn: list):
+    """Sort the graph (list of nodes) topologically."""
+    paths: dict[int, bool] = {}  # Available paths per id
+    # The sorted layer list
+    sorted_layers: list[Layer] = []
+    # the dict stating which layers need to go in a constant
+    dict_cst: dict[int, int] = {}
     for layer in dnn:
-        #If the node isn't sorted, we sort it
-        if layer.sorted == None:
-            parcours_prof_topo(list_layers, layer)
-    for layer in list_layers:
-        updatepath(layer,list_path)
-        to_save(layer,dict_cst)
-    max_path = list_path[-2] + 1
-    return list_layers, list_path, max_path, dict_cst
+        # If the node isn't sorted, we sort it
+        if layer.sorted is None:
+            parcours_prof_topo(sorted_layers, layer)
+    for layer in sorted_layers:
+        update_path(layer, paths)
+        # FIXME Assess what to_save is supposed to do
+        #   to_save(layer, dict_cst)
+    # Convert paths
+    max_path = max(paths.keys()) + 1
+    list_path: list[int] = []
+    for path, available in paths.items():
+        list_path.append(path)
+        list_path.append(1 if available else 0)
+    return sorted_layers, list_path, max_path, dict_cst
 
-#Compute the sorting of a node
-def parcours_prof_topo(list_layers:list, layer:Layer):
-    #The node is currently being sorted
+
+def parcours_prof_topo(sorted_layers: list[Layer], layer: Layer) -> None:
+    """Sort layer in list of sorted layers."""
+    # The node is currently being sorted
     layer.sorted = 1
     for nxt_layer in layer.next_layer:
-        #The next_layer need to be found and sorted before the current node
-        if nxt_layer.sorted == None:
-            parcours_prof_topo(list_layers, nxt_layer)
-    #The node is sorted
+        # The next_layer need to be found and sorted before the current node
+        if nxt_layer.sorted is None:
+            parcours_prof_topo(sorted_layers, nxt_layer)
+    # The node is sorted
     layer.sorted = 0
-    #And is added to the list of sorted nodes
-    list_layers.insert(0,layer)
+    # And is added to the list of sorted nodes
+    sorted_layers.insert(0, layer)
 
 
-#The function to open a new path
-def setNewpath(layer:Layer, listCurrentpaths:list):
-    #if the list isn't in the right format, it return -1
-    if(len(listCurrentpaths)%2!=0):
-        print("Error: listCurrentpaths must be in format:[name_path, is_path_closed, ...]")
-        return -1
+def allocate_path_to_layer(layer: Layer, paths: dict[int, bool]) -> None:
+    """Allocate a new or closed path to layer."""
+    # Check if there is a previously closed path available
+    for path, available in paths.items():
+        if available:
+            layer.path = path
+            paths[path] = False
+            break
     else:
-        N = len(listCurrentpaths)//2
-        #check if there is a previously closed path avialable 
-        for i in range(N):
-            #is the path is closed, we open it 
-            if (listCurrentpaths[2*i+1]==1):
-                layer.path = listCurrentpaths[2*i]
-                listCurrentpaths[2*i+1] = 0
-                break
-        #if there is no path at all, we create the first one
-        if(N == 0):
-            listCurrentpaths.append(0)
-            listCurrentpaths.append(0)
-            layer.path = 0
-        #if no previously closed path can fit are avialable, we create a new one
-        elif(layer.path == None):
-            listCurrentpaths.append(listCurrentpaths[-2]+1)
-            listCurrentpaths.append(0)
-            layer.path = listCurrentpaths[-2]
-        
-#give a layer the right path    
-def updatepath(layer:Layer, listCurrentpaths:list):
-    if(layer.previous_layer == []):
-        #if the layer has no previous one, we creat a new path
-        setNewpath(layer,listCurrentpaths)
+        # If there is no available path, we create a new one
+        path = len(paths)
+        paths[path] = False
+        layer.path = path
 
+
+def update_path(layer: Layer, paths: dict[int, bool]) -> None:
+    """Assign path to layer."""
+    if len(layer.previous_layer) == 0:
+        # if the layer has no previous one, we create a new path
+        allocate_path_to_layer(layer, paths)
+
+    # Every subsequent layer needs to have a path
     given = False
-    #every next_layer need to have a path 
-    for nxt_layer in layer.next_layer:
-        if ((len(nxt_layer.previous_layer)==1) and (not given)):
-            #if the next layer only have one prev_layer, and the path hadn't already be given, it receive the same path
-            nxt_layer.path = layer.path
+    if len(layer.next_layer) > 0:
+        # Allocate the path to the first child, if pathless
+        if layer.next_layer[0].path is None:
+            layer.next_layer[0].path = layer.path
             given = True
-        elif(nxt_layer.path != None):
-            #if the layer already has a path, we do nothing
-            pass
-        elif(nxt_layer == layer.next_layer[0]):
-            #by convention, if it's the first child amongst other, it receive the same path as the father
-            nxt_layer.path = layer.path
-            given = True
-        else:
-            #in any other case, the next layer receive a new path
-            setNewpath(nxt_layer,listCurrentpaths)
-    
-    #if the path isn't given, it is closed
-    if (given == False):
-        listCurrentpaths[layer.path*2 + 1] = 1
+        # Allocate paths to other children
+        for nxt_layer in layer.next_layer[1:]:
+            if len(nxt_layer.previous_layer) == 1 and not given:
+                # Allocate path to child with a single parent, if available
+                nxt_layer.path = layer.path
+                given = True
+            elif nxt_layer.path is not None:
+                # if the layer already has a path, we do nothing
+                pass
+            else:
+                # in any other case, the next layer receive a new path
+                allocate_path_to_layer(nxt_layer, paths)
 
-#Function creating the dict {idx_layer:idx_cst} saying if a layer must be stored
-def to_save(layer:Layer, dict_cst:dict):
+    # Close path if not allocated to child
+    if not given:
+        if layer.path is None:
+            msg = "Layer has no path"
+            raise AssertionError(msg)
+        paths[layer.path] = True
+
+
+def to_save(layer: Layer, dict_cst: dict[int, int]) -> None:
+    """Create the dict {idx_layer:idx_cst} saying if a layer must be stored."""
     for parent in layer.previous_layer:
-        if(parent in dict_cst):
-            #if the previous_layer are in the dict, we add one to the number of next_layer already "taken care of"
-            parent.sorted+=1
+        if parent in dict_cst:
+            # if the previous_layer are in the dict, we add one to the number of next_layer already "taken care of"
+            parent.sorted += 1
 
-    if((len(layer.next_layer)>1)):
-        #if the layer has more than one child, it must be stored.
-        if(len(dict_cst) == 0):
-            dict_cst[layer] = 1 #if the dict is empty, we create the first cst
+    if len(layer.next_layer) > 1:
+        # if the layer has more than one child, it must be stored.
+        if len(dict_cst) == 0:
+            dict_cst[layer] = 1  # if the dict is empty, we create the first cst
 
         else:
             given = False
-            #Going through the dict, starting from the end (the opened cst are at the end of the dict)
-            for i in range(len(dict_cst)-1,-1,-1): 
-                #extracting the layer at the i-th position 
-                past_layer = list(dict_cst.keys())[i] 
-                #if the layer is complete, we can re-use the same constant
-                if (past_layer.sorted == len(past_layer.next_layer)):  
+            # Going through the dict, starting from the end (the opened cst are at the end of the dict)
+            for i in range(len(dict_cst) - 1, -1, -1):
+                # extracting the layer at the i-th position
+                past_layer = list(dict_cst.keys())[i]
+                # if the layer is complete, we can re-use the same constant
+                if past_layer.sorted == len(past_layer.next_layer):
                     past_layer.sorted = 0
                     dict_cst[layer] = dict_cst[past_layer]
                     given = True
                     break
-            if not given:# if no constant have been attributed, we create a new one
+            if not given:  # if no constant have been attributed, we create a new one
                 dict_cst[layer] = list(dict_cst.values())[-1] + 1

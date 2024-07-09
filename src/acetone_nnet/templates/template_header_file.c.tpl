@@ -3,17 +3,17 @@
 
 {{#path}}
 // output list for path {{.}}
-{{data_type}} output_{{.}}[{{path_size}}];
+extern {{data_type}} output_{{.}}[{{path_size}}];
 {{/path}}
 
 {{#cst}}
     {{#name}}
-{{data_type}} cst_{{name}}[{{size}}];
+extern {{data_type}} cst_{{name}}[{{size}}];
     {{/name}}
 {{/cst}}
 
 {{#temp_size}}
-{{data_type}} tensor_temp[{{temp_size}}];
+extern {{data_type}} tensor_temp[{{temp_size}}];
 
 {{/temp_size}}
 {{#layers}}
