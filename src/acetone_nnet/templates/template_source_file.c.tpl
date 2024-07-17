@@ -2,11 +2,29 @@
 #include <math.h>
 #include "inference.h"
 
+{{#time}}
+#include <time.h>
+#include "MMU.h"
+#include "PMH.h"
+
+unsigned long long int start, end, difference;
+
+#define counter_id 0x1
+#define event_id 0x11
+{{/time}}
+
 int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[{{input_size}}]){
     {{#debug_file}}
     FILE *fp = fopen("{{debug_file}}", "w+");
 
     {{/debug_file}}
+    {{#time}}
+    difference = 0;
+    select_evt_counter(counter_id);
+    event_tracker(counter_id);
+    enable_evt_coutner(counter_id);
+
+    {{/time}}
     int f;
     int i;
     int j;
@@ -66,7 +84,16 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 
 {{{pre_processing}}}
 {{#layers}}
+{{#time}}
+    reset_evt_counter(0);
+    start = read_evt_counter();
+{{/time}}
 {{{inference_function}}}
+{{#time}}
+    end = read_evt_counter();
+    difference = difference + end - start;
+    printf("time {{name}} {{idx}}: %llu\n",end-start);
+{{/time}}
 {{#debug_layer}}
     fprintf(fp, "{{name}} {{idx}} {{to_transpose}} {{channels}} {{height}} {{width}}\n");
     for (k = 0; k < {{size}}; ++k)

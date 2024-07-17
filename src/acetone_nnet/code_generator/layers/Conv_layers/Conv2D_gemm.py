@@ -19,7 +19,6 @@
 """
 
 from .Conv2D import Conv2D
-import numpy as np
 import pystache
 
 class Conv2D_gemm(Conv2D):
@@ -41,6 +40,7 @@ class Conv2D_gemm(Conv2D):
         mustach_hash = {}
 
         mustach_hash['direct'] = direct
+        mustach_hash['strides'] = self.strides
         mustach_hash['name'] = self.name
         mustach_hash['idx'] = "{:02d}".format(self.idx)
         mustach_hash['m'] = m

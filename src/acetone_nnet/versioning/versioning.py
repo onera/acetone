@@ -33,18 +33,20 @@ def versioning(
     }
 
     keys = list(version.keys())
-    for i in keys:
-        layer = layers[i]
+    for idx in keys:
+        for j in range(len(layers)):
+            if layers[j].idx == idx:
+                layer = layers[j]
 
-        layer = implemented[layer.name](layer,version[i])
-        layer.path = layers[i].path
-        layer.next_layer = layers[i].next_layer
-        layer.previous_layer = layers[i].previous_layer
-        layer.sorted = layers[i].sorted
-        layer.output_str = layers[i].output_str
-        layer.fused_layer = layers[i].fused_layer
+                layer = implemented[layer.name](layer,version[idx])
+                layer.path = layers[j].path
+                layer.next_layer = layers[j].next_layer
+                layer.previous_layer = layers[j].previous_layer
+                layer.sorted = layers[j].sorted
+                layer.output_str = layers[j].output_str
+                layer.fused_layer = layers[j].fused_layer
 
-        layers[i] = layer
+                layers[j] = layer
     
     return layers
 

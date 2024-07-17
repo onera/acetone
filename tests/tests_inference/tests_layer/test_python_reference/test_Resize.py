@@ -21,7 +21,10 @@ import numpy as np
 import onnx
 import onnxruntime as rt
 
-from tests.tests_inference import acetoneTestCase
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+import sys
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 
 class TestResize(acetoneTestCase.AcetoneTestCase):

@@ -36,7 +36,7 @@ def tri_topo(dnn: list):
     for layer in sorted_layers:
         update_path(layer, paths)
         # FIXME Assess what to_save is supposed to do
-        #   to_save(layer, dict_cst)
+        to_save(layer, dict_cst, sorted_layers)
     # Convert paths
     max_path = max(paths.keys()) + 1
     list_path: list[int] = []
@@ -110,10 +110,10 @@ def update_path(layer: Layer, paths: dict[int, bool]) -> None:
         paths[layer.path] = True
 
 
-def to_save(layer: Layer, dict_cst: dict[int, int]) -> None:
+def to_save(layer: Layer, dict_cst: dict[int, int], sorted_layers:list[Layer]) -> None:
     """Create the dict {idx_layer:idx_cst} saying if a layer must be stored."""
     for parent in layer.previous_layer:
-        if parent in dict_cst:
+        if parent.idx in dict_cst:
             # if the previous_layer are in the dict, we add one to the number of next_layer already "taken care of"
             parent.sorted += 1
 
@@ -127,11 +127,12 @@ def to_save(layer: Layer, dict_cst: dict[int, int]) -> None:
             # Going through the dict, starting from the end (the opened cst are at the end of the dict)
             for i in range(len(dict_cst) - 1, -1, -1):
                 # extracting the layer at the i-th position
-                past_layer = list(dict_cst.keys())[i]
+                idx = list(dict_cst.keys())[i]
+                past_layer = sorted_layers[idx]
                 # if the layer is complete, we can re-use the same constant
                 if past_layer.sorted == len(past_layer.next_layer):
                     past_layer.sorted = 0
-                    dict_cst[layer.idx] = dict_cst[past_layer]
+                    dict_cst[layer.idx] = dict_cst[past_layer.idx]
                     given = True
                     break
             if not given:  # if no constant have been attributed, we create a new one

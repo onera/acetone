@@ -24,7 +24,7 @@ import onnx
 
 from ...code_generator.layers import (
     AveragePooling2D, GatherElements, MaxPooling2D,
-    Conv2D_6loops, Conv2D_std_gemm, Conv2D_indirect_gemm,
+    Conv2D,
     Edge_pad, Wrap_pad, Reflect_pad, Constant_Pad,
     Add, Multiply, Subtract, Divide, Maximum, Minimum, Average,
     ResizeCubic, ResizeLinear, ResizeNearest,
@@ -36,17 +36,6 @@ from ...code_generator.layers import (
 from ...code_generator.activation_functions import Linear, ReLu, Sigmoid, TanH, Clip, Exponential, Logarithm, LeakyReLu
 
 ###### Utility functions ######
-
-def create_conv2d_obj(algorithm:str, **kwargs):
-    if '6loops' in algorithm:
-        return Conv2D_6loops(**kwargs)
-
-    elif 'std_gemm' in algorithm:
-        return Conv2D_std_gemm(**kwargs)   
-
-    elif 'indirect_gemm' in algorithm:
-        return Conv2D_indirect_gemm(**kwargs)
-        
 
 def create_resize_obj(mode:bytes, **kwargs):
     if mode == b'nearest':
@@ -178,21 +167,20 @@ def create_Conv(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict,
     else:
         biases = np.zeros(output_shape[1])
         
-    return create_conv2d_obj(algorithm=conv_algorithm,
-                                conv_algorithm=conv_algorithm,
-                                idx= idx,
-                                size= size,
-                                padding= attributs['auto_pad'],
-                                strides= attributs['strides'][0],
-                                kernel_h= attributs['kernel_shape'][0], 
-                                kernel_w= attributs['kernel_shape'][1], 
-                                dilation_rate= attributs['dilations'][0], 
-                                nb_filters= initializers[0].dims[0],
-                                input_shape= input_shape, 
-                                output_shape= output_shape,
-                                weights= np.moveaxis(onnx.numpy_helper.to_array(initializers[0]), 0,3),
-                                biases= biases,
-                                activation_function= Linear())
+    return Conv2D(conv_algorithm=conv_algorithm,
+                    idx= idx,
+                    size= size,
+                    padding= attributs['auto_pad'],
+                    strides= attributs['strides'][0],
+                    kernel_h= attributs['kernel_shape'][0], 
+                    kernel_w= attributs['kernel_shape'][1], 
+                    dilation_rate= attributs['dilations'][0], 
+                    nb_filters= initializers[0].dims[0],
+                    input_shape= input_shape, 
+                    output_shape= output_shape,
+                    weights= np.moveaxis(onnx.numpy_helper.to_array(initializers[0]), 0,3),
+                    biases= biases,
+                    activation_function= Linear())
     
 
 #Create a layer Concat

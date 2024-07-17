@@ -125,8 +125,8 @@ class Layer(ABC):
         # dict_cst is the dict linking an layer to the cst in which the must be saved if needed
 
         # either it has to be saved
-        if len(dict_cst) and self in dict_cst:
-            output_str = "cst_" + str(dict_cst[self])
+        if len(dict_cst) and self.idx in dict_cst:
+            output_str = "cst_" + str(dict_cst[self.idx])
         # Or it can directly go to the next layer
         else:
             output_str = "output_" + str(self.path)

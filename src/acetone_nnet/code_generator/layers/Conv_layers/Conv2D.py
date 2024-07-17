@@ -113,8 +113,8 @@ class Conv2D(Layer):
                                        'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']:
             raise ValueError("Error: conv algorithm value in Conv2D ("+self.conv_algorithm+")")
 
-    @abstractmethod
     def generate_inference_code_layer(self):
+        print("merde")
         pass
 
     def forward_path_layer(self, input:np.ndarray):

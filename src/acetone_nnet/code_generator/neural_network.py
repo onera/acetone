@@ -93,9 +93,10 @@ class CodeGenerator(ABC):
         version = {}
         for i in range(len(self.layers)):
             if self.layers[i].name == "Conv2D":
-                version[i] = "indirect_gemm_nn"
-        self.layers = versioning(self.layers, version)
+                version[self.layers[i].idx] = "indirect_gemm_nn"
         
+        self.layers = versioning(self.layers, version)
+            
         self.data_type = dtype
         self.data_type_py = dtype_py
         self.maxpath = maxpath
@@ -169,9 +170,9 @@ class CodeGenerator(ABC):
             )
 
         # Debug Mode
-        if self.debug_mode and self.debug_mode not in ["keras", "onnx"]:
+        if self.debug_mode and self.debug_mode not in ["keras", "onnx", "time"]:
             raise ValueError(
-                "Error: debug mode value.\n Must be one of: keras, onnx",
+                "Error: debug mode value.\n Must be one of: keras, onnx, time",
             )
 
     def load_debug_target(self, debug_mode: str | None) -> list[int]:
@@ -512,7 +513,7 @@ class CodeGenerator(ABC):
         if any(isinstance(layer, Reduce) for layer in self.layers):
             mustach_hash["is_reduced"] = True
 
-        if self.debug_mode:
+        if self.debug_mode in ["onnx", "keras"]:
             mustach_hash["debug_file"] = output_dir / "debug_file.txt"
 
         # Generate parameters per layer
@@ -524,11 +525,11 @@ class CodeGenerator(ABC):
                 "size": layer.size,
             }
 
-            if self.dict_cst and layer in self.dict_cst:
+            if self.dict_cst and layer.idx in self.dict_cst:
                 layer_hash["cst"] = True
                 layer_hash["cst_name"] = self.dict_cst[layer.idx]
 
-            if self.debug_mode and layer.idx in self.debug_target:
+            if self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target:
                 layer_hash["debug_layer"] = True
                 layer_hash["name"] = layer.name
                 layer_hash["idx"] = layer.idx
@@ -540,6 +541,10 @@ class CodeGenerator(ABC):
                     layer_hash["channels"] = layer.output_channels
                     layer_hash["height"] = layer.output_height
                     layer_hash["width"] = layer.output_width
+            
+            if self.debug_mode in ["time"]:
+                layer_hash["name"] = layer.name
+                layer_hash["idx"] = layer.idx
 
             mustach_hash["layers"].append(layer_hash)
 
@@ -609,12 +614,17 @@ class CodeGenerator(ABC):
 
         mustach_hash["cst"] = []
         written = {}
-        for layer in self.dict_cst:
-            if self.dict_cst[layer.idx] not in written:
-                written[self.dict_cst[layer.idx]] = layer.size
+        for idx in self.dict_cst:
+            for l in self.layers:
+                if l.idx == idx:
+                    layer = l
+                    break
+
+            if self.dict_cst[idx] not in written:
+                written[self.dict_cst[idx]] = layer.size
             else:
-                written[self.dict_cst[layer.idx]] = max(
-                    written[self.dict_cst[layer.idx]],
+                written[self.dict_cst[idx]] = max(
+                    written[self.dict_cst[idx]],
                     layer.size,
                 )
 
@@ -692,12 +702,17 @@ class CodeGenerator(ABC):
 
         mustach_hash["cst"] = []
         written = {}
-        for layer in self.dict_cst:
-            if self.dict_cst[layer.idx] not in written:
-                written[self.dict_cst[layer.idx]] = layer.size
+        for idx in self.dict_cst:
+            for l in self.layers:
+                if l.idx == idx:
+                    layer = l
+                    break
+
+            if self.dict_cst[idx] not in written:
+                written[self.dict_cst[idx]] = layer.size
             else:
-                written[self.dict_cst[layer.idx]] = max(
-                    written[self.dict_cst[layer.idx]],
+                written[self.dict_cst[idx]] = max(
+                    written[self.dict_cst[idx]],
                     layer.size,
                 )
 

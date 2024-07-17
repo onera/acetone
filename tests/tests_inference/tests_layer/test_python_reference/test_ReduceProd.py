@@ -23,7 +23,10 @@ import numpy as np
 import onnx
 import onnxruntime as rt
 
-from tests.tests_inference import acetoneTestCase
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+import sys
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 
 class TestReduceProd(acetoneTestCase.AcetoneTestCase):
@@ -511,18 +514,10 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
             [None, 3, 10, 10],
         )
 
-        axes_name = "axes"
-        axes = np.array([])
-        axes_initializer = acetoneTestCase.create_initializer_tensor(
-            name=axes_name,
-            tensor_array=axes,
-            data_type=onnx.TensorProto.INT64,
-        )
-
         ReduceProd_node = onnx.helper.make_node(
             name="ReduceProd",
             op_type="ReduceProd",
-            inputs=[model_input_name, axes_name],
+            inputs=[model_input_name],
             outputs=[model_output_name],
             keepdims=1,
             noop_with_empty_axes=1,
@@ -533,7 +528,7 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
             name="ReduceProd",
             inputs=[X],
             outputs=[Y],
-            initializer=[axes_initializer],
+            initializer=[],
         )
 
         model = onnx.helper.make_model(graph)

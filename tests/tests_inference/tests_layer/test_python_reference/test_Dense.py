@@ -22,7 +22,10 @@ import numpy as np
 import tensorflow as tf
 from keras.layers import Dense, Input
 
-from tests.tests_inference import acetoneTestCase
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+import sys
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
 
 tf.keras.backend.set_floatx("float32")
 

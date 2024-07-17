@@ -37,7 +37,7 @@ class Conv2D_indirect_gemm(Conv2D_gemm):
             start_idx = np.arange(self.kernel_h)[:,None]*self.input_w_padded + np.arange(self.kernel_w)
             c=self.input_h_padded*self.input_w_padded*np.arange(self.input_channels)
             start_idx=(c[:,None]+start_idx.ravel()).reshape((-1,self.kernel_h,self.kernel_w))
-            offset_idx = np.arange(self.output_height, step=self.strides)[:,None]*self.input_w_padded + np.arange(self.output_width, step=self.strides)
+            offset_idx = np.arange(self.output_height*self.strides, step=self.strides)[:,None]*self.input_w_padded + np.arange(self.output_width*self.strides, step=self.strides)
             idx_padded_input = (start_idx.ravel()[:,None] + offset_idx.ravel()).flatten()
 
             idx_of_zeros = []
@@ -51,53 +51,60 @@ class Conv2D_indirect_gemm(Conv2D_gemm):
             
             idx_padded_input = np.where(np.isin(idx_padded_input, idx_of_zeros), np.nan, idx_padded_input)
             _, idx_padded_input = np.unique(idx_padded_input, return_inverse=True) 
-            self.ppatches=np.where(idx_padded_input==self.input_shape, np.nan, idx_padded_input)
+            self.ppatches=np.where(idx_padded_input==self.input_channels*self.input_height*self.input_width, np.nan, idx_padded_input)
 
         else:
             start_idx = np.arange(self.kernel_h)[:,None]*self.input_width + np.arange(self.kernel_w)
             c=self.input_height*self.input_width*np.arange(self.input_channels)
             start_idx=(c[:,None]+start_idx.ravel()).reshape((-1,self.kernel_h,self.kernel_w))
-            offset_idx = np.arange(self.output_height, step=self.strides)[:,None]*self.input_width + np.arange(self.output_width, step=self.strides)
+            offset_idx = np.arange(self.output_height*self.strides, step=self.strides)[:,None]*self.input_width + np.arange(self.output_width*self.strides, step=self.strides)
             self.ppatches = (start_idx.ravel()[:,None] + offset_idx.ravel()).flatten()
             
-        if ('gemm_nt' or 'gemm_tt') in self.conv_algorithm:
+        if ("gemm_nt" or "gemm_tt") in self.conv_algorithm:
             self.ppatches = self.ppatches.reshape((self.patches_height, self.patches_width)).transpose().flatten()  
   
         
         output_str = self.previous_layer[0].output_str
         
-        s = '\n        {'
+        s = "\n        {"
         for i in range(len(self.ppatches)):
             if np.isnan(self.ppatches[i]):
-                s += '&zero, '
+                s += "&zero, "
             else:
-                s += '&'+output_str+'[' + str(int(self.ppatches[i])) + '], '
+                s += "&"+output_str+"[" + str(int(self.ppatches[i])) + "], "
+            
+        print(self.name,self.idx,"patches size:",self.ppatches.shape)
 
         s=s[:-2]
-        s+='}'
+        s+="}"
 
         return s
 
     def generate_inference_code_layer(self):
-
         mustach_hash = {}
 
-        mustach_hash['name'] = self.name
-        mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['comment'] = self.activation_function.comment
-        mustach_hash['road'] = self.path
-        mustach_hash['size'] = self.size
+        mustach_hash["name"] = self.name
+        mustach_hash["idx"] = "{:02d}".format(self.idx)
+        mustach_hash["comment"] = self.activation_function.comment
+        mustach_hash["road"] = self.path
+        mustach_hash["size"] = self.size
 
-        mustach_hash['activation_function'] = self.activation_function.write_activation_str(self.local_var)
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.local_var)
 
-        gemm_code = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width, self.patches_height, 'weights_' + self.name + '_' + str("{:02d}".format(self.idx)), 'ppatches_' + self.name + '_' + str("{:02d}".format(self.idx)), "output_"+str(self.path), True)
-        mustach_hash['gemm_code'] = gemm_code
+        gemm_code = self.algo_gemm_mapping[self.conv_algorithm](
+            self.nb_filters, 
+            self.patches_width, 
+            self.patches_height, 
+            "weights_" + self.name + "_" + str("{:02d}".format(self.idx)), 
+            "ppatches_" + self.name + "_" + str("{:02d}".format(self.idx)), 
+            "output_"+str(self.path), True)
+        mustach_hash["gemm_code"] = gemm_code
 
-        if('cst' not in self.previous_layer[0].output_str):
-            mustach_hash['cst'] = True
-            mustach_hash['prev_size'] = self.input_channels*self.input_height*self.input_width
+        if("cst" not in self.previous_layer[0].output_str):
+            mustach_hash["cst"] = True
+            mustach_hash["prev_size"] = self.input_channels*self.input_height*self.input_width
             
-        with open(self.template_path+'layers/Conv/template_Conv_indirect_gemm.c.tpl', 'r') as template_file:
+        with open(self.template_path+"layers/Conv/template_Conv_indirect_gemm.c.tpl", "r") as template_file:
             template = template_file.read()
         template_file.close()        
         

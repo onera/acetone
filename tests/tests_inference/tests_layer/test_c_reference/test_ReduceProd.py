@@ -439,7 +439,7 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
         ReduceProd_node = onnx.helper.make_node(
             name = 'ReduceProd',
             op_type = 'ReduceProd',
-            inputs = [model_input_name,axes_name],
+            inputs = [model_input_name],
             outputs = [model_output_name],
             keepdims = 1,
             noop_with_empty_axes = 1,
@@ -450,7 +450,7 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
             name = 'ReduceProd',
             inputs = [X],
             outputs = [Y],
-            initializer = [axes_initializer],
+            initializer = [],
         )
 
         model = onnx.helper.make_model(graph)
