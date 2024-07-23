@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Test suite for ONNX Importer on ACAS model.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -26,7 +28,7 @@ from tests.tests_importer import importerTestCase
 
 
 class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
-    """Test for squeezenet"""
+    """Test for ACAS Fully Connected."""
 
     def test_AcasFullyConnected(self):
         model_path = (

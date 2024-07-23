@@ -1,39 +1,46 @@
-"""
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
+"""Test suite for Broadcast-able layers on Keras importer.
+
+*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
 
-importerTestCase_path = '/'.join(__file__.split('/')[:-2])
-import sys
-sys.path.append(importerTestCase_path)
-import importerTestCase
-
-import tensorflow as tf
 import keras
-from keras.layers import Input, Conv2D, Multiply,Maximum,Minimum,Average,Add,Subtract
+import tensorflow as tf
+from keras.layers import (
+    Add,
+    Average,
+    Conv2D,
+    Input,
+    Maximum,
+    Minimum,
+    Multiply,
+    Subtract,
+)
+
+from tests.tests_importer import importerTestCase
 
 tf.keras.backend.set_floatx('float32')
 
 
 class TestBroadcast(importerTestCase.ImporterTestCase):
-    """Test for Broadcast Layer"""
+    """Test for Broadcast Layer."""
     
-    def test_Add(self):
+    def test_add(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
@@ -50,7 +57,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         
         self.assert_List_Layers_equals(list_layers, reference)
     
-    def test_Multiply(self):
+    def test_multiply(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
@@ -67,7 +74,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         
         self.assert_List_Layers_equals(list_layers, reference)
     
-    def test_Subtract(self):
+    def test_subtract(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
@@ -84,7 +91,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         
         self.assert_List_Layers_equals(list_layers, reference)
     
-    def test_Average(self):
+    def test_average(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
@@ -101,7 +108,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         
         self.assert_List_Layers_equals(list_layers, reference)
     
-    def test_Maximum(self):
+    def test_maximum(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
@@ -118,7 +125,7 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         
         self.assert_List_Layers_equals(list_layers, reference)
     
-    def test_Minimum(self):
+    def test_minimum(self):
         testshape = (10,10,3)
         filters = 3
         kernel_size = (3, 3)
@@ -134,7 +141,3 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
         
         self.assert_List_Layers_equals(list_layers, reference)
-
-
-if __name__ == '__main__':
-    importerTestCase.main()
