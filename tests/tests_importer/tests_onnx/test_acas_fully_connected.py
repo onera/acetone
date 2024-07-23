@@ -32,7 +32,7 @@ class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
 
     def test_AcasFullyConnected(self):
         model_path = (
-            MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
+                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
         )
         model = onnx.load_model(model_path)
 
@@ -43,8 +43,7 @@ class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
 
     def test_AcasFullyConnectedNormalized(self):
         model_path = (
-            "/".join(__file__.split("/")[:-3])
-            + "/models/acas/acas_fully_connected/acas_fully_connected_normalized.onnx"
+                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected_normalized.onnx"
         )
         model = onnx.load_model(model_path)
 
@@ -52,7 +51,3 @@ class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
         list_layers = self.import_layers(model_path).layers
 
         self.assert_List_Layers_equals(list_layers, reference)
-
-
-if __name__ == "__main__":
-    importerTestCase.main()
