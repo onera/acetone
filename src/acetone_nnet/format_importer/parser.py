@@ -29,8 +29,12 @@ from .NNET_importer.parser_NNET import load_nnet
 from .ONNX_importer.parser_ONNX import load_onnx
 
 
-def parser(file_to_parse: str | Path | onnx.ModelProto | Functional | Sequential, conv_algorithm: str,
-            debug: None | str = None, *, normalize: bool = False):
+def parser(
+        file_to_parse: str | Path | onnx.ModelProto | Functional | Sequential,
+        debug: None | str = None,
+        *,
+        normalize: bool = False,
+):
     if isinstance(file_to_parse, str | Path):
         # Retrieve extension for file path
         if isinstance(file_to_parse, str):
@@ -42,28 +46,29 @@ def parser(file_to_parse: str | Path | onnx.ModelProto | Functional | Sequential
 
         if "json" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
-            return load_json(str(file_to_parse), conv_algorithm)
+            return load_json(str(file_to_parse))
 
         if "onnx" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
-            return load_onnx(str(file_to_parse), conv_algorithm, debug)
+            return load_onnx(str(file_to_parse), debug)
 
         if "h5" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
-            return load_keras(str(file_to_parse), conv_algorithm, debug)
+            return load_keras(str(file_to_parse), debug)
 
         if "nnet" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
             return load_nnet(str(file_to_parse), normalize)
 
         print(f"\nError: model description . {extension[-4:]} not supported")
-        raise TypeError("Error: model description ." + extension[-4:] + " not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
+        raise TypeError("Error: model description ." + extension[
+                                                       -4:] + " not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
 
-    if type(file_to_parse) == onnx.ModelProto:
-        return load_onnx(file_to_parse, conv_algorithm, debug)
+    if type(file_to_parse) is onnx.ModelProto:
+        return load_onnx(file_to_parse, debug)
 
-    if type(file_to_parse) == Functional or type(file_to_parse) == Sequential:
-        return load_keras(file_to_parse, conv_algorithm, debug)
+    elif type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
+        return load_keras(file_to_parse, debug)
 
     print("\nError: model description .", type(file_to_parse), "not supported")
     raise TypeError("Error: model description .", type(file_to_parse),

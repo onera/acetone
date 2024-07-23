@@ -143,7 +143,7 @@ def create_Softmax(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:di
 
 
 #Create a layer Conv
-def create_Conv(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto, conv_algorithm:str):
+def create_Conv(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict, model:onnx.ModelProto):
     input_shape = get_shape(node.input[0],model)
     output_shape = get_shape(node.output[0],model)
     size = find_size(output_shape)
@@ -167,7 +167,7 @@ def create_Conv(node:onnx.NodeProto, idx:int, dict_input:dict, dict_output:dict,
     else:
         biases = np.zeros(output_shape[1])
         
-    return Conv2D(conv_algorithm=conv_algorithm,
+    return Conv2D(conv_algorithm="specs",
                     idx= idx,
                     size= size,
                     padding= attributs['auto_pad'],
@@ -953,7 +953,7 @@ def fuse_Clip(node:onnx.NodeProto, dict_output:dict, model:onnx.ModelProto, laye
         min = onnx.numpy_helper.to_array(look_for_initializer(node.input[1],model))[0]
     if(node.input[2]):
         max = onnx.numpy_helper.to_array(look_for_initializer(node.input[2],model))[0]
-    layers[dict_output[node.input[0]]].activation_function = Clip(max=max,min=min)
+    layers[dict_output[node.input[0]]].activation_function = Clip(max_value=max, min_value=min)
     bypass(node,dict_output,model)
 
 #Fuse the activation layer LeakyRelu with the prior layer

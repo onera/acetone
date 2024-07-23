@@ -26,11 +26,12 @@ from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
 
 
-class TestAcas_COC_ONNX(acetoneTestCase.AcetoneTestCase):
-    """Inference test for the ACAS COC Model"""
+class TestAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
+    """Inference test for ACAS COC, ONNX model."""
 
     @unittest.expectedFailure
-    def testAcas_COC_ONNX(self):
+    def test_acas_coc_onnx(self) -> None:
+        """Tests Acas COC, ONNX model, compare between onnx et C code."""
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"
         model = onnx.load(model_path)
         testshape = tuple(
@@ -48,33 +49,18 @@ class TestAcas_COC_ONNX(acetoneTestCase.AcetoneTestCase):
             model_path,
             self.tmpdir_name + "/dataset.txt",
         )
+        self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
-        print("Compare")
-        print(list(acetone_result[0]))
-        print("to")
-        print(list(onnx_result))
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testAcas_COC_ONNX_Python(self):
+    def test_acas_coc_onnx_python(self) -> None:
+        """Tests Acas COC, ONNX model, compare between python et C code."""
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"
-        model = onnx.load(model_path)
-        testshape = tuple(
-            model.graph.input[0].type.tensor_type.shape.dim[i].dim_value
-            for i in range(len(model.graph.input[0].type.tensor_type.shape.dim))
-        )
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
         acetone_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
-            self.tmpdir_name + "/dataset.txt",
         )
 
-        print("Compare")
-        print(list(acetone_result[0]))
-        print("to")
-        print(list(acetone_result[1]))
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
 
 
 if __name__ == "__main__":

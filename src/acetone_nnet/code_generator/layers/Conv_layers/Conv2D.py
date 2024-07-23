@@ -110,7 +110,8 @@ class Conv2D(Layer):
             raise ValueError("Error: non consistency between the output width and the parameter of the operation in Conv2D ("+str(self.output_width)+"!="+str(math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1)+")")
         if self.conv_algorithm not in ['6loops',
                                        'indirect_gemm_nn','indirect_gemm_tn','indirect_gemm_nt','indirect_gemm_tt',
-                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']:
+                                       "std_gemm_nn",'std_gemm_tn','std_gemm_nt','std_gemm_',
+                                       "specs"]:
             raise ValueError("Error: conv algorithm value in Conv2D ("+self.conv_algorithm+")")
 
     def generate_inference_code_layer(self):

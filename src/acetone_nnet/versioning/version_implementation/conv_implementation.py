@@ -23,90 +23,92 @@ from ...code_generator import (
     Conv2D,
     Conv2D_6loops,
     Conv2D_indirect_gemm,
-    Conv2D_std_gemm
+    Conv2D_std_gemm,
 )
+
 
 def Conv2D_implementation(
         old_layer: Conv2D,
-        version: str
+        version: str,
 ) -> Conv2D:
-    """Create the layer associated to the required implementation"""
+    """Create the layer associated to the required implementation."""
     implemented = {
         "6loops": Conv2D_6loops_implementation,
         "indirect_gemm": Conv2D_indirect_gemm_implementation,
-        "std_gemm": Conv2D_std_gemm_implementation
+        "std_gemm": Conv2D_std_gemm_implementation,
     }
 
     conv_algo = version
     if version != "6loops":
         version = version[:-3]
-    
-    return implemented[version](old_layer, conv_algo)
 
+    return implemented[version](old_layer, conv_algo)
 
 
 def Conv2D_6loops_implementation(
         old_layer: Conv2D,
-        conv_algo: str
+        conv_algo: str,
 ) -> Conv2D_6loops:
-    """Create a Conv2D_6loops layer using the attributs of old_layer"""
+    """Create a Conv2D_6loops layer using the attributes of old_layer."""
     return Conv2D_6loops(
-        idx= old_layer.idx,
-        conv_algorithm= conv_algo,
-        size= old_layer.size,
-        padding= old_layer.padding,
-        strides= old_layer.strides,
-        kernel_h= old_layer.kernel_h,
-        kernel_w= old_layer.kernel_w,
-        dilation_rate= old_layer.dilation_rate,
-        nb_filters= old_layer.nb_filters,
-        input_shape= [1,old_layer.input_channels,old_layer.input_height,old_layer.input_width],
-        output_shape= [1,old_layer.output_channels,old_layer.output_height,old_layer.output_width],
-        weights= old_layer.weights,
-        biases= old_layer.biases,
-        activation_function= old_layer.activation_function
+        idx=old_layer.idx,
+        conv_algorithm=conv_algo,
+        size=old_layer.size,
+        padding=old_layer.padding,
+        strides=old_layer.strides,
+        kernel_h=old_layer.kernel_h,
+        kernel_w=old_layer.kernel_w,
+        dilation_rate=old_layer.dilation_rate,
+        nb_filters=old_layer.nb_filters,
+        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
+        output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
+        weights=old_layer.weights,
+        biases=old_layer.biases,
+        activation_function=old_layer.activation_function,
     )
+
 
 def Conv2D_indirect_gemm_implementation(
         old_layer: Conv2D,
-        conv_algo: str
+        conv_algo: str,
 ) -> Conv2D_indirect_gemm:
-    """Create a Conv2D_indirect_gemm layer using the attributs of old_layer"""
+    """Create a Conv2D_indirect_gemm layer using the attributes of old_layer."""
     return Conv2D_indirect_gemm(
-        idx= old_layer.idx,
-        conv_algorithm= conv_algo,
-        size= old_layer.size,
-        padding= old_layer.padding,
-        strides= old_layer.strides,
-        kernel_h= old_layer.kernel_h,
-        kernel_w= old_layer.kernel_w,
-        dilation_rate= old_layer.dilation_rate,
-        nb_filters= old_layer.nb_filters,
-        input_shape= [1,old_layer.input_channels,old_layer.input_height,old_layer.input_width],
-        output_shape= [1,old_layer.output_channels,old_layer.output_height,old_layer.output_width],
-        weights= old_layer.weights,
-        biases= old_layer.biases,
-        activation_function= old_layer.activation_function
+        idx=old_layer.idx,
+        conv_algorithm=conv_algo,
+        size=old_layer.size,
+        padding=old_layer.padding,
+        strides=old_layer.strides,
+        kernel_h=old_layer.kernel_h,
+        kernel_w=old_layer.kernel_w,
+        dilation_rate=old_layer.dilation_rate,
+        nb_filters=old_layer.nb_filters,
+        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
+        output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
+        weights=old_layer.weights,
+        biases=old_layer.biases,
+        activation_function=old_layer.activation_function,
     )
+
 
 def Conv2D_std_gemm_implementation(
         old_layer: Conv2D,
-        conv_algo: str
+        conv_algo: str,
 ) -> Conv2D_std_gemm:
-    """Create a Conv2D_std_gemm layer using the attributs of old_layer"""
+    """Create a Conv2D_std_gemm layer using the attributes of old_layer."""
     return Conv2D_std_gemm(
-        idx= old_layer.idx,
-        conv_algorithm= conv_algo,
-        size= old_layer.size,
-        padding= old_layer.padding,
-        strides= old_layer.strides,
-        kernel_h= old_layer.kernel_h,
-        kernel_w= old_layer.kernel_w,
-        dilation_rate= old_layer.dilation_rate,
-        nb_filters= old_layer.nb_filters,
-        input_shape= [1,old_layer.input_channels,old_layer.input_height,old_layer.input_width],
-        output_shape= [1,old_layer.output_channels,old_layer.output_height,old_layer.output_width],
-        weights= old_layer.weights,
-        biases= old_layer.biases,
-        activation_function= old_layer.activation_function
+        idx=old_layer.idx,
+        conv_algorithm=conv_algo,
+        size=old_layer.size,
+        padding=old_layer.padding,
+        strides=old_layer.strides,
+        kernel_h=old_layer.kernel_h,
+        kernel_w=old_layer.kernel_w,
+        dilation_rate=old_layer.dilation_rate,
+        nb_filters=old_layer.nb_filters,
+        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
+        output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
+        weights=old_layer.weights,
+        biases=old_layer.biases,
+        activation_function=old_layer.activation_function,
     )

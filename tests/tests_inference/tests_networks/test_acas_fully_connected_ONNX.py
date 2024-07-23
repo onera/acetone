@@ -24,12 +24,13 @@ from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
 
 
-class TestAcas_fully_connected_ONNX(acetoneTestCase.AcetoneTestCase):
-    """Test for Concatenate Layer"""
+class TestAcasFullyConnectedONNX(acetoneTestCase.AcetoneTestCase):
+    """Inference test for ACAS fully connected, ONNX model."""
 
-    def testAcas_fully_connected_ONNX(self):
+    def test_acas_fully_connected_onnx(self) -> None:
+        """Tests Acas fully connected, ONNX model, compare between onnx et C code."""
         model_path = (
-            MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
+                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
         )
         model = onnx.load(model_path)
         testshape = tuple(
@@ -50,18 +51,19 @@ class TestAcas_fully_connected_ONNX(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name + "/dataset.txt",
         )
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+        self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
-    def testAcas_fully_connected_ONNXPython(self):
+    def test_acas_fully_connected_onnx_python(self) -> None:
+        """Tests Acas fully connected, ONNX model, compare between python et C code."""
         model_path = (
-            MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
+                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
         )
         acetone_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
         )
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
 
 
 if __name__ == "__main__":

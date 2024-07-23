@@ -106,6 +106,11 @@ For each format, the following layers cans be used in the DNN:
 * Min
 * Mul
 * Pad (4 modes)
+* ReduceMax
+* ReduceMean
+* ReduceMin
+* ReduceProd
+* ReduceSum
 * Reshape
 * Resize (3 modes)
 * Shape

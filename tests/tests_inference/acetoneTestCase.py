@@ -28,22 +28,25 @@ import onnx
 
 
 class AcetoneTestCase(unittest.TestCase):
+    """TestCase class for inference tests."""
 
-    def setUp(self):
+    def setUp(self) -> None:
+        """Create a temp_dir."""
         self.tmpdir = tempfile.TemporaryDirectory()
         self.tmpdir_name = self.tmpdir.name
 
-    def tearDown(self):
+    def tearDown(self) -> None:
+        """Destroy a temp_dir."""
         self.tmpdir.cleanup()
 
     def assertListAlmostEqual(
-        self,
-        first: np.ndarray,
-        second: np.ndarray,
-        rtol=5e-06,
-        atol=5e-06,
-        err_msg="",
-    ):
+            self,
+            first: np.ndarray,
+            second: np.ndarray,
+            rtol: float = 5e-06,
+            atol: float = 5e-06,
+            err_msg: str = "",
+    ) -> None:
         return np.testing.assert_allclose(
             first,
             second,
@@ -54,23 +57,21 @@ class AcetoneTestCase(unittest.TestCase):
 
 
 def create_initializer_tensor(
-    name: str,
-    tensor_array: np.ndarray,
-    data_type: onnx.TensorProto = onnx.TensorProto.FLOAT,
+        name: str,
+        tensor_array: np.ndarray,
+        data_type: onnx.TensorProto = onnx.TensorProto.FLOAT,
 ) -> onnx.TensorProto:
-
-    # (TensorProto)
-    initializer_tensor = onnx.helper.make_tensor(
+    """Create a TensorProto."""
+    return onnx.helper.make_tensor(
         name=name,
         data_type=data_type,
         dims=tensor_array.shape,
         vals=tensor_array.flatten().tolist(),
     )
 
-    return initializer_tensor
 
-
-def read_output_c(path_to_output: str):
+def read_output_c(path_to_output: str) -> np.ndarray:
+    """Read the output file of the C code."""
     with open(path_to_output) as f:
         line = f.readline()
         line = line[:-2].split(" ")
@@ -80,7 +81,8 @@ def read_output_c(path_to_output: str):
     return line
 
 
-def read_output_python(path_to_output: str):
+def read_output_python(path_to_output: str) -> np.ndarray:
+    """Read the output file of the python code."""
     with open(path_to_output) as f:
         line = f.readline()
         line = line[:-3].split(" ")
@@ -91,7 +93,8 @@ def read_output_python(path_to_output: str):
 
 
 def create_dataset(tmpdir: str, shape: tuple):
-    dataset = np.float32(np.random.default_rng(seed=10).random((1,) + shape))
+    """Create a random dataset."""
+    dataset = np.float32(np.random.default_rng(seed=10).random((1, *shape)))
     with open(tmpdir + "/dataset.txt", "w") as filehandle:
         row = (dataset[0]).flatten(order="C")
         json.dump(row.tolist(), filehandle)
@@ -101,12 +104,13 @@ def create_dataset(tmpdir: str, shape: tuple):
 
 
 def run_acetone_for_test(
-    tmpdir_name: str,
-    model: str,
-    datatest_path: str | None = None,
-    conv_algo: str = "std_gemm_nn",
-    normalize=False,
-):
+        tmpdir_name: str,
+        model: str,
+        datatest_path: str | np.ndarray | None = None,
+        conv_algo: str = "std_gemm_nn",
+        normalize=False,
+) -> (np.ndarray, np.ndarray):
+    """Generate the code and compute the inference result."""
     acetone_nnet.cli_acetone(
         model_file=model,
         function_name="inference",

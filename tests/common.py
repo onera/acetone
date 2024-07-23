@@ -1,5 +1,4 @@
-"""Common features used by all tests.
-"""
+"""Common features used by all tests."""
 
 from pathlib import Path
 

@@ -26,9 +26,10 @@ from tests.tests_importer import importerTestCase
 
 
 class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
-    """Test for squeezenet"""
+    """Tests for acas fully connected models."""
 
-    def test_AcasFullyConnected(self):
+    def test_acas_fully_connected(self) -> None:
+        """Test for acas fully connected models without normalized input."""
         model_path = (
             MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
         )
@@ -37,9 +38,10 @@ class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_AcasFullyConnectedNormalized(self):
+    def test_acas_fully_connected_normalized(self) -> None:
+        """Test for acas fully connected models with normalized input."""
         model_path = (
             "/".join(__file__.split("/")[:-3])
             + "/models/acas/acas_fully_connected/acas_fully_connected_normalized.onnx"
@@ -49,7 +51,7 @@ class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
 
 if __name__ == "__main__":

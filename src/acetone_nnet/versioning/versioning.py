@@ -25,11 +25,11 @@ from .version_implementation.conv_implementation import Conv2D_implementation
 
 def versioning(
         layers: list[Layer],
-        version : dict[int,str]
+        version: dict[int, str],
 ) -> list[Layer]:
-    """Check layers and change the layer version if needed"""
+    """Check layers and change the layer version if needed."""
     implemented = {
-        "Conv2D": Conv2D_implementation
+        "Conv2D": Conv2D_implementation,
     }
 
     keys = list(version.keys())
@@ -38,7 +38,7 @@ def versioning(
             if layers[j].idx == idx:
                 layer = layers[j]
 
-                layer = implemented[layer.name](layer,version[idx])
+                layer = implemented[layer.name](layer, version[idx])
                 layer.path = layers[j].path
                 layer.next_layer = layers[j].next_layer
                 layer.previous_layer = layers[j].previous_layer
@@ -47,6 +47,5 @@ def versioning(
                 layer.fused_layer = layers[j].fused_layer
 
                 layers[j] = layer
-    
-    return layers
 
+    return layers

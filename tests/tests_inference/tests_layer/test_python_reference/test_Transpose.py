@@ -22,10 +22,7 @@ import onnx
 import onnxruntime as rt
 import tensorflow as tf
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
-import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
+from tests.tests_inference import acetoneTestCase
 
 tf.keras.backend.set_floatx("float32")
 

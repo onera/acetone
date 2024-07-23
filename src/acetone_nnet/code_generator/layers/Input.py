@@ -20,12 +20,12 @@
 import numpy as np
 import pystache
 
-from ..Layer import Layer
+from acetone_nnet.code_generator.Layer import Layer
 
 
 class InputLayer(Layer):
 
-    def __init__(self, idx: int, size: int, input_shape: list, data_format: str):
+    def __init__(self, idx: int, size: int, input_shape: np.ndarray, data_format: str):
 
         super().__init__()
         self.idx = idx
@@ -53,7 +53,7 @@ class InputLayer(Layer):
         ### Checking value consistency ###
         prod = 1
         for shape in self.input_shape:
-            if shape != None and shape != 0:
+            if shape not in (None, 0):
                 prod *= shape
 
         if self.size != prod:

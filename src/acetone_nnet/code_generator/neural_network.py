@@ -14,7 +14,7 @@
 *
 * You should have received a copy of the GNU Lesser General Public License along with this program ;
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
-******************************************************************************
+******************************************************************************.
 """
 
 from abc import ABC
@@ -55,55 +55,49 @@ from acetone_nnet.code_generator.layers import (
 from acetone_nnet.format_importer.parser import parser
 from acetone_nnet.versioning.versioning import versioning
 
+
 class CodeGenerator(ABC):
 
     def __init__(
-        self,
-        file: str | Path | onnx.ModelProto | Functional | Sequential,
-        test_dataset: str | np.ndarray | None = None,
-        function_name: str = "inference",
-        nb_tests: int | str = 0,
-        conv_algorithm: str = "std_gemm_nn",
-        normalize: bool | str = False,
-        debug_mode: str | None = None,
-        **kwargs,
+            self,
+            file: str | Path | onnx.ModelProto | Functional | Sequential,
+            test_dataset: str | np.ndarray | Path | None = None,
+            function_name: str = "inference",
+            nb_tests: int | str = 0,
+            versions: dict[int, str] | dict[str, str] | None = None,
+            normalize: bool | str = False,
+            debug_mode: str | None = None,
+            **kwargs,
     ):
 
         self.file = file
         self.function_name = function_name
         self.nb_tests = int(nb_tests)
-        self.conv_algorithm = conv_algorithm
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
 
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
-                self.file,
-                self.conv_algorithm,
+                file_to_parse=self.file,
             )
         else:  # normalise
             l, dtype, dtype_py, data_format, maxpath, dict_cst, Normalizer = parser(
-                self.file,
-                self.conv_algorithm,
+                file_to_parse=self.file,
                 normalize=self.normalize,
             )
             self.Normalizer = Normalizer
 
         self.layers: list[Any] = l
-        version = {}
-        for i in range(len(self.layers)):
-            if self.layers[i].name == "Conv2D":
-                version[self.layers[i].idx] = "indirect_gemm_nn"
-        
-        self.layers = versioning(self.layers, version)
-            
+        self.versions = self.create_dict_versions(versions)
+        self.layers = versioning(self.layers, self.versions)
+
         self.data_type = dtype
         self.data_type_py = dtype_py
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        if isinstance(test_dataset, str):
+        if isinstance(test_dataset, str | Path):
             self.test_dataset_file = test_dataset
             ds = self.load_test_dataset()
             self.test_dataset = ds
@@ -134,46 +128,47 @@ class CodeGenerator(ABC):
 
         ### Checking argument type ###
         if not isinstance(
-            self.file,
-            str | Path | onnx.ModelProto | Functional | Sequential,
+                self.file,
+                str | Path | onnx.ModelProto | Functional | Sequential,
         ):
             raise TypeError(
                 "Error: model type.\n Format must be: path to model, model ONNX or model Keras",
             )
-        if not (isinstance(test_dataset, str | np.ndarray) or test_dataset is None):
+        if not (isinstance(test_dataset, str | np.ndarray | Path) or test_dataset is None):
             raise TypeError(
-                "Error: test_dataset type.\n Must be: path to dataset text filen, numpy array or None",
+                "Error: test_dataset type.\n Must be: path to dataset text file, numpy array or None",
             )
         if not isinstance(self.function_name, str):
             raise TypeError("Error: function name type.\n Must be a string")
-        if not isinstance(self.conv_algorithm, str):
-            raise TypeError("Error: conv algorihtm type.\n Must be a string")
         if not (self.debug_mode is None or isinstance(self.debug_mode, str)):
             raise TypeError("Error: debug mode type.\n Must be: string or None")
-        if self.debug_mode:
-            assert isinstance(self.debug_target, list)
 
         ### Checking value consistency ###
-        if self.conv_algorithm not in [
-            "6loops",
-            "indirect_gemm_nn",
-            "indirect_gemm_tn",
-            "indirect_gemm_nt",
-            "indirect_gemm_tt",
-            "std_gemm_nn",
-            "std_gemm_tn",
-            "std_gemm_nt",
-            "std_gemm_tt",
-        ]:
-            raise ValueError(
-                "Error: conv algorithm value.\n Must be one of: 6loops, indirect_gemm_nn, indirect_gemm_tn, indirect_gemm_nt, indirect_gemm_tt, std_gemm_nn, std_gemm_tn, std_gemm_nt, std_gemm_tt",
-            )
 
         # Debug Mode
         if self.debug_mode and self.debug_mode not in ["keras", "onnx", "time"]:
             raise ValueError(
                 "Error: debug mode value.\n Must be one of: keras, onnx, time",
             )
+
+    def create_dict_versions(
+            self,
+            versions: dict[int, str] | dict[str, str] | None,
+    ) -> dict[int, str]:
+        """Create the dictionary used for the versioning."""
+        out_dict = {}
+        if versions is None:
+            for layer in self.layers:
+                if layer.name == "Conv2D":
+                    out_dict[layer.idx] = "std_gemm_nn"
+        elif type(next(iter(versions))) is int:
+            out_dict = versions
+        else:
+            for layer in self.layers:
+                if layer.name in versions:
+                    out_dict[layer.idx] = versions[layer.name]
+
+        return out_dict
 
     def load_debug_target(self, debug_mode: str | None) -> list[int]:
         """Identify list of layers indices to debug."""
@@ -210,8 +205,8 @@ class CodeGenerator(ABC):
         return np.array(test_dataset)
 
     def compute_inference(
-        self,
-        c_files_directory: str,
+            self,
+            c_files_directory: str,
     ) -> tuple[list, list] | np.ndarray:
         """Perform inference pass on test dataset."""
         with (Path(c_files_directory) / "output_python.txt").open("w+") as fi:
@@ -223,7 +218,7 @@ class CodeGenerator(ABC):
 
                 # Prepare graph input
                 if (self.data_format == "channels_last") and (
-                    len(self.layers[0].input_shape) == 4
+                        len(self.layers[0].input_shape) == 4
                 ):
                     shape = (
                         self.layers[0].input_shape[2],
@@ -242,8 +237,8 @@ class CodeGenerator(ABC):
                 }
 
                 def gather_inputs(
-                    target,
-                    target_inputs,
+                        target,
+                        target_inputs,
                 ) -> np.ndarray | list[np.ndarray]:
                     # Prepare inputs for computation
                     inputs: np.ndarray | list[np.ndarray] = []
@@ -263,8 +258,8 @@ class CodeGenerator(ABC):
                 for layer in self.layers:
                     # Ensure all inputs of layer are ready
                     if any(
-                        p.idx not in layer_inputs[layer.idx]
-                        for p in layer.previous_layer
+                            p.idx not in layer_inputs[layer.idx]
+                            for p in layer.previous_layer
                     ):
                         raise NotImplementedError
 
@@ -292,8 +287,8 @@ class CodeGenerator(ABC):
                         if layer.idx in self.debug_target:
                             debug_output.append(layer_output)
                             if (self.data_format == "channels_last") and hasattr(
-                                layer,
-                                "output_channels",
+                                    layer,
+                                    "output_channels",
                             ):
                                 debug_output[-1] = np.transpose(
                                     debug_output[-1],
@@ -307,8 +302,8 @@ class CodeGenerator(ABC):
 
                 # Write results in text files to compare prediction.
                 if (self.data_format == "channels_last") and hasattr(
-                    layer,
-                    "output_channels",
+                        layer,
+                        "output_channels",
                 ):
                     nn_output = np.transpose(nn_output, (1, 2, 0))
                 nn_output = np.reshape(nn_output, -1)
@@ -360,7 +355,7 @@ class CodeGenerator(ABC):
         """Generate C code for graph test dataset."""
         # Generate test header file
         template = (
-            Path(self.template_path) / "template_test_dataset_header.c.tpl"
+                Path(self.template_path) / "template_test_dataset_header.c.tpl"
         ).read_text()
         with open(output_dir / "test_dataset.h", "w+") as testdataset_header:
             testdataset_header.write(
@@ -384,7 +379,7 @@ class CodeGenerator(ABC):
         dataset += "};\n"
 
         template = (
-            Path(self.template_path) / "template_test_dataset_source.c.tpl"
+                Path(self.template_path) / "template_test_dataset_source.c.tpl"
         ).read_text()
         with open(output_dir / "test_dataset.c", "w+") as testdataset_source:
             testdataset_source.write(
@@ -478,8 +473,8 @@ class CodeGenerator(ABC):
             mustach_hash["p"] = True
 
         if any(
-            isinstance(i, Conv2D_6loops | Conv2D_std_gemm | Pooling2D | Gemm)
-            for i in self.layers
+                isinstance(i, Conv2D_6loops | Conv2D_std_gemm | Pooling2D | Gemm)
+                for i in self.layers
         ):
             mustach_hash["hw"] = True
 
@@ -487,8 +482,8 @@ class CodeGenerator(ABC):
             mustach_hash["is_dense"] = True
 
         if any(
-            isinstance(i, Conv2D_6loops | AveragePooling2D | Softmax)
-            for i in self.layers
+                isinstance(i, Conv2D_6loops | AveragePooling2D | Softmax)
+                for i in self.layers
         ):
             mustach_hash["is_sum"] = True
 
@@ -499,8 +494,8 @@ class CodeGenerator(ABC):
             mustach_hash["is_count"] = True
 
         if any(
-            isinstance(i, ResizeLinear | ResizeCubic | ResizeNearest)
-            for i in self.layers
+                isinstance(i, ResizeLinear | ResizeCubic | ResizeNearest)
+                for i in self.layers
         ):
             mustach_hash["is_resize"] = True
 
@@ -515,6 +510,9 @@ class CodeGenerator(ABC):
 
         if self.debug_mode in ["onnx", "keras"]:
             mustach_hash["debug_file"] = output_dir / "debug_file.txt"
+
+        if self.debug_mode in ["time"]:
+            mustach_hash["time"] = True
 
         # Generate parameters per layer
         mustach_hash["layers"] = []
@@ -535,14 +533,15 @@ class CodeGenerator(ABC):
                 layer_hash["idx"] = layer.idx
                 layer_hash["to_transpose"] = 0
                 if (self.data_format == "channels_last") and (
-                    hasattr(layer, "output_channels")
+                        hasattr(layer, "output_channels")
                 ):
                     layer_hash["to_transpose"] = 1
                     layer_hash["channels"] = layer.output_channels
                     layer_hash["height"] = layer.output_height
                     layer_hash["width"] = layer.output_width
-            
+
             if self.debug_mode in ["time"]:
+                layer_hash["time"] = True
                 layer_hash["name"] = layer.name
                 layer_hash["idx"] = layer.idx
 
@@ -551,15 +550,15 @@ class CodeGenerator(ABC):
         # Generate code to output graph data
         output_hash = {"path": self.layers[-1].path}
         if (self.data_format == "channels_last") and (
-            hasattr(self.layers[-1], "output_channels")
+                hasattr(self.layers[-1], "output_channels")
         ):
             output_hash["output_channels"] = self.layers[-1].output_channels
             output_hash["output_height"] = self.layers[-1].output_height
             output_hash["output_width"] = self.layers[-1].output_width
 
             template = (
-                Path(self.template_path)
-                / "memory_layout/template_channels_last_output.c.tpl"
+                    Path(self.template_path)
+                    / "memory_layout/template_channels_last_output.c.tpl"
             ).read_text()
             mustach_hash["ouput_str"] = pystache.render(template, output_hash)
         else:
@@ -572,8 +571,8 @@ class CodeGenerator(ABC):
                 output_hash["comment"] = "Returning the output (output flatten)"
 
             template = (
-                Path(self.template_path)
-                / "memory_layout/template_channels_first_output.c.tpl"
+                    Path(self.template_path)
+                    / "memory_layout/template_channels_first_output.c.tpl"
             ).read_text()
             mustach_hash["ouput_str"] = pystache.render(template, output_hash)
 
@@ -590,7 +589,7 @@ class CodeGenerator(ABC):
         """Generate C Code for graph structure."""
         mustach_hash = {
             "data_type": self.data_type,
-            "path": [i for i in range(self.maxpath)],
+            "path": list(range(self.maxpath)),
         }
 
         self.nb_weights_max = 1
@@ -600,8 +599,8 @@ class CodeGenerator(ABC):
         self.concate_size_max = 0
         for layer in self.layers:
             if (
-                isinstance(layer, Conv2D_std_gemm)
-                and layer.patches_size > self.patches_size_max
+                    isinstance(layer, Conv2D_std_gemm)
+                    and layer.patches_size > self.patches_size_max
             ):
                 self.patches_size_max = layer.patches_size
             if isinstance(layer, Concatenate):
@@ -632,15 +631,15 @@ class CodeGenerator(ABC):
             mustach_hash["cst"].append({"name": cst, "size": written[cst]})
 
         if (
-            any(
-                isinstance(layer, Concatenate)
-                or any(isinstance(layer, Conv2D))
-                or any(isinstance(layer, Dense))
-                or any(issubclass(layer, Broadcast))
-                or any(isinstance(layer, Gather))
-                or any(isinstance(layer, Pad)),
-            )
-            for layer in self.layers
+                any(
+                    isinstance(layer, Concatenate)
+                    or any(isinstance(layer, Conv2D))
+                    or any(isinstance(layer, Dense))
+                    or any(issubclass(layer, Broadcast))
+                    or any(isinstance(layer, Gather))
+                    or any(isinstance(layer, Pad)),
+                )
+                for layer in self.layers
         ):
             mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
 
@@ -670,10 +669,9 @@ class CodeGenerator(ABC):
                 layer_hash["channels"] = layer.output_channels
                 to_print = True
 
-            if issubclass(type(layer), Broadcast):
-                if layer.constant is not None:
-                    layer_hash["constant_size"] = layer.constant_size
-                    to_print = True
+            if issubclass(type(layer), Broadcast) and layer.constant is not None:
+                layer_hash["constant_size"] = layer.constant_size
+                to_print = True
 
             if to_print:
                 mustach_hash["layers"].append(layer_hash)
@@ -692,7 +690,7 @@ class CodeGenerator(ABC):
         """Generate C Code for layer data."""
         mustach_hash = {
             "data_type": self.data_type,
-            "path": [i for i in range(self.maxpath)],
+            "path": list(range(self.maxpath)),
         }
 
         if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
@@ -720,15 +718,15 @@ class CodeGenerator(ABC):
             mustach_hash["cst"].append({"name": cst, "size": written[cst]})
 
         if (
-            any(
-                isinstance(layer, Concatenate)
-                or any(isinstance(layer, Conv2D))
-                or any(isinstance(layer, Dense))
-                or any(issubclass(layer, Broadcast))
-                or any(isinstance(layer, Gather))
-                or any(isinstance(layer, Pad)),
-            )
-            for layer in self.layers
+                any(
+                    isinstance(layer, Concatenate)
+                    or any(isinstance(layer, Conv2D))
+                    or any(isinstance(layer, Dense))
+                    or any(issubclass(layer, Broadcast))
+                    or any(isinstance(layer, Gather))
+                    or any(isinstance(layer, Pad)),
+                )
+                for layer in self.layers
         ):
             mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
 
@@ -763,11 +761,10 @@ class CodeGenerator(ABC):
                 layer_hash["scale"] = self.flatten_array_orderc(layer.scale)
                 to_print = True
 
-            if issubclass(type(layer), Broadcast):
-                if layer.constant is not None:
-                    layer_hash["constant"] = self.flatten_array_orderc(layer.constant)
-                    layer_hash["constant_size"] = layer.constant_size
-                    to_print = True
+            if issubclass(type(layer), Broadcast) and layer.constant is not None:
+                layer_hash["constant"] = self.flatten_array_orderc(layer.constant)
+                layer_hash["constant_size"] = layer.constant_size
+                to_print = True
 
             if to_print:
                 mustach_hash["layers"].append(layer_hash)
@@ -778,6 +775,6 @@ class CodeGenerator(ABC):
         with (output_dir / "global_vars.c").open("a+") as globalvars_file:
             globalvars_file.write(pystache.render(template, mustach_hash))
             if self.normalize:
-                self.globalvars_file.write(
+                globalvars_file.write(
                     self.Normalizer.write_normalization_cst_in_globalvars_file(),
                 )

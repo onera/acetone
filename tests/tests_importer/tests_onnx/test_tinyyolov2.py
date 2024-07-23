@@ -1,40 +1,45 @@
+"""*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
-"""
-importerTestCase_path = '/'.join(__file__.split('/')[:-2])
-import sys
-sys.path.append(importerTestCase_path)
-import importerTestCase
 
 import onnx
 
-class TestTinyYolov2(importerTestCase.ImporterTestCase):
-    """Test for tiny yolo v2"""
+from tests.common import MODELS_DIR
 
-    def test_tinyyolo(self):
-        model_path = '/'.join(__file__.split('/')[:-3])+'/models/yolo/tinyyolov2-7.onnx'
+# FIXME Where do tests go?
+from tests.tests_importer import importerTestCase
+
+
+class TestTinyYolov2(importerTestCase.ImporterTestCase):
+    """Test for tiny yolo v2."""
+
+    def test_tinyyolo(self) -> None:
+        """Test tiny yolo v2."""
+        model_path = (
+                MODELS_DIR / "yolo" / "tinyyolov2-7.onnx"
+        )
         model = onnx.load_model(model_path)
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
 
-if __name__ == '__main__':
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
     importerTestCase.main()

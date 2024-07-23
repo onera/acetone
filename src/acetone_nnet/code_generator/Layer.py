@@ -45,10 +45,10 @@ class Layer(ABC):
         self.output_str = ""
         self.fused_layer = None
         self.template_path = (
-            str(
-                Path(templates.__file__).parent,
-            )
-            + "/"
+                str(
+                    Path(templates.__file__).parent,
+                )
+                + "/"
         )  # FIXME Should be a proper path
 
         super().__init__()
@@ -59,8 +59,8 @@ class Layer(ABC):
 
     @abstractmethod
     def forward_path_layer(
-        self: Self,
-        inputs: np.ndarray | list[np.ndarray],
+            self: Self,
+            inputs: np.ndarray | list[np.ndarray],
     ) -> np.ndarray:
         """Compute output of layer."""
 
@@ -71,13 +71,13 @@ class Layer(ABC):
 
     @staticmethod
     def compute_padding(
-        padding: str | list,
-        in_height: int,
-        in_width: int,
-        kernel_h: int,
-        kernel_w: int,
-        strides: int,
-        dilation_rate: int = 1,
+            padding: str | list,
+            in_height: int,
+            in_width: int,
+            kernel_h: int,
+            kernel_w: int,
+            strides: int,
+            dilation_rate: int = 1,
     ) -> tuple[int, int, int, int]:
         """Compute required padding given input and kernel dimensions."""
         pad_right, pad_left, pad_bottom, pad_top = 0, 0, 0, 0
@@ -120,10 +120,12 @@ class Layer(ABC):
 
         return pad_right, pad_left, pad_bottom, pad_top
 
-    # Give to the layer an string saying were the output will be saved (either in a 'cst' or in an 'output_road')
+    # Give to the layer a string saying were the output will be saved
+    # (either in a 'cst' or in an 'output_road')
     def find_output_str(self: Self, dict_cst: dict):
-        # dict_cst is the dict linking an layer to the cst in which the must be saved if needed
-
+        """Give to the layer a string saying were the output will be saved."""
+        # dict_cst is the dict linking a layer to it's cst
+        # This cst represent where the output must be saved if needed
         # either it has to be saved
         if len(dict_cst) and self.idx in dict_cst:
             output_str = "cst_" + str(dict_cst[self.idx])
@@ -132,3 +134,26 @@ class Layer(ABC):
             output_str = "output_" + str(self.path)
         self.output_str = output_str
         return self
+
+    def __eq__(
+            self,
+            other,
+    ) -> bool:
+        """Eq method for layers."""
+        # compare two layers and say if they are equals
+        if type(self) is not type(other):
+            return False
+        else:
+
+            keys = list(self.__dict__.keys())
+            for key in keys:
+                if (key in ("previous_layer", "next_layer")
+                        or type(self.__dict__[key]) is dict):
+                    continue
+
+                if type(self.__dict__[key]) is np.ndarray:
+                    if (other.__dict__[key] != self.__dict__[key]).any():
+                        return False
+                elif other.__dict__[key] != self.__dict__[key]:
+                    return False
+        return True
