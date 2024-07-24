@@ -1,4 +1,4 @@
-"""Test suite for ONNX Importer on ACAS model.
+"""Test suite for ACAS model on ONNX importer.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from tests.tests_importer import importerTestCase
 class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
     """Test for ACAS Fully Connected."""
 
-    def test_AcasFullyConnected(self):
+    def test_acas_fully_connected(self):
         model_path = (
                 MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
         )
@@ -41,7 +41,7 @@ class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
 
         self.assert_List_Layers_equals(list_layers, reference)
 
-    def test_AcasFullyConnectedNormalized(self):
+    def test_acas_fully_connected_normalized(self):
         model_path = (
                 MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected_normalized.onnx"
         )
