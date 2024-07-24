@@ -21,10 +21,7 @@ import numpy as np
 import onnx
 import onnxruntime as rt
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
-import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
+from tests.tests_inference import acetoneTestCase
 
 
 class TestGatherElements(acetoneTestCase.AcetoneTestCase):
@@ -89,6 +86,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -151,6 +149,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -213,6 +212,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 

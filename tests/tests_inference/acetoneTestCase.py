@@ -106,6 +106,8 @@ def run_acetone_for_test(
     datatest_path: str | None = None,
     conv_algo: str = "std_gemm_nn",
     normalize=False,
+    run_generated=True,
+    run_reference=True,
 ):
     acetone_nnet.cli_acetone(
         model_file=model,
@@ -116,20 +118,27 @@ def run_acetone_for_test(
         test_dataset_file=datatest_path,
         normalize=normalize,
     )
-    output_python = read_output_python(tmpdir_name + "/output_python.txt").flatten()
 
-    cmd = ["make", "-C", tmpdir_name, "all"]
-    result = subprocess.run(cmd, check=False).returncode
-    if result != 0:
-        print("\nC code compilation failed")
-        return np.array([]), output_python
+    if run_reference:
+        output_python = read_output_python(tmpdir_name + "/output_python.txt").flatten()
+    else:
+        output_python = None
 
-    cmd = [tmpdir_name + "/inference", tmpdir_name + "/output_c.txt"]
-    result = subprocess.run(cmd, check=False).returncode
-    if result != 0:
-        print("\nC code inference failed")
-        return np.array([]), output_python
+    if run_generated:
+        cmd = ["make", "-C", tmpdir_name, "all"]
+        result = subprocess.run(cmd, check=False).returncode
+        if result != 0:
+            print("\nC code compilation failed")
+            return np.array([]), output_python
 
-    output_c = read_output_c(tmpdir_name + "/output_c.txt").flatten()
+        cmd = [tmpdir_name + "/inference", tmpdir_name + "/output_c.txt"]
+        result = subprocess.run(cmd, check=False).returncode
+        if result != 0:
+            print("\nC code inference failed")
+            return np.array([]), output_python
+
+        output_c = read_output_c(tmpdir_name + "/output_c.txt").flatten()
+    else:
+        output_c = None
 
     return output_c, output_python

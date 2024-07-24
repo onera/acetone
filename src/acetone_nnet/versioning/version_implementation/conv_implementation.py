@@ -103,20 +103,21 @@ Conv2DVariant = Callable[[Conv2D, str], Conv2D]
 class Conv2DFactory:
     """Build Conv2D implementation layers."""
 
-    def __init__(self):
-        self.variants: dict[str, Conv2DVariant] = {
+    def __init__(self) -> None:
+        """Build default convolution layer factory."""
+        self.implementations: dict[str | None, Conv2DVariant] = {
             None: Conv2D_6loops_implementation,
             "6loops": Conv2D_6loops_implementation,
             "indirect_gemm": Conv2D_indirect_gemm_implementation,
             "std_gemm": Conv2D_std_gemm_implementation,
         }
 
-    def register_variant(self, name: str, variant: Conv2DVariant) -> None:
+    def register_implementation(self, name: str, variant: Conv2DVariant) -> None:
         """Register a new Conv2D variant."""
-        if name in self.variants:
+        if name in self.implementations:
             msg = f"Convolution variant {name} already exists."
             raise KeyError(msg)
-        self.variants[name] = variant
+        self.implementations[name] = variant
 
     def __call__(self, layer: Conv2D, version: str) -> Conv2D:
         """Create a Convolution implementation layer for the required implementation."""
@@ -124,7 +125,7 @@ class Conv2DFactory:
         if version != "6loops":
             version = version[:-3]
 
-        return self.variants[version](layer, conv_algo)
+        return self.implementations[version](layer, conv_algo)
 
 
 conv2d_factory = Conv2DFactory()

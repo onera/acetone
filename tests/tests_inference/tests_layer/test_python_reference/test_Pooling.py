@@ -24,10 +24,7 @@ import onnxruntime as rt
 import tensorflow as tf
 from keras.layers import AveragePooling2D, Input, MaxPooling2D
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
-import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
+from tests.tests_inference import acetoneTestCase
 
 tf.keras.backend.set_floatx("float32")
 
@@ -56,6 +53,7 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 
@@ -82,6 +80,7 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 
@@ -132,6 +131,7 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))
@@ -178,6 +178,7 @@ class TestPooling(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))

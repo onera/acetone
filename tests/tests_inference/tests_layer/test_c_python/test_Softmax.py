@@ -1,65 +1,58 @@
-"""
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
+"""*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
-import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
-
-import tensorflow as tf
 import keras
-from keras.layers import Input, Dense
-
 import onnx
-import numpy as np
+import tensorflow as tf
+from keras.layers import Dense, Input
 
-tf.keras.backend.set_floatx('float32')
+from tests.tests_inference import acetoneTestCase
+
+tf.keras.backend.set_floatx("float32")
 
 
 class TestSoftmax(acetoneTestCase.AcetoneTestCase):
     """Test for Softmax Layer"""
 
-    
     def test_Softmax(self):
-        testshape = (1,1,16)
+        testshape = (1, 1, 16)
         units = 8
 
         input = Input(testshape)
-        out = Dense(units, activation='softmax', bias_initializer='he_normal')(input)
+        out = Dense(units, activation="softmax", bias_initializer="he_normal")(input)
 
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.h5')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5")
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
-    
+
     def testSoftmaxONNX(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,1, 1, 56])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 1, 1, 56])
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(model_output_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,1, 1, 56])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 1, 1, 56])
 
         activation_node = onnx.helper.make_node(
             op_type="Softmax",
@@ -68,118 +61,119 @@ class TestSoftmax(acetoneTestCase.AcetoneTestCase):
         )
 
         graph = onnx.helper.make_graph(
-            nodes = [activation_node],
-            name = 'Conv',
-            inputs = [X],
-            outputs = [Y],
+            nodes=[activation_node],
+            name="Conv",
+            inputs=[X],
+            outputs=[Y],
         )
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
-    
+
     def testSoftmaxONNX_3D_w(self):
-        testshape = (1,3,10,10)
+        testshape = (1, 3, 10, 10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,3,10,10])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(model_output_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,3,10,10])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
 
         activation_node = onnx.helper.make_node(
             op_type="Softmax",
             inputs=[model_input_name],
             outputs=[model_output_name],
-            axis = 3
+            axis=3,
         )
 
         graph = onnx.helper.make_graph(
-            nodes = [activation_node],
-            name = 'Conv',
-            inputs = [X],
-            outputs = [Y],
+            nodes=[activation_node],
+            name="Conv",
+            inputs=[X],
+            outputs=[Y],
         )
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
 
         self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
-    
+
     def testSoftmaxONNX_3D_h(self):
-        testshape = (1,3,10,10)
+        testshape = (1, 3, 10, 10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,3,10,10])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(model_output_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,3,10,10])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
 
         activation_node = onnx.helper.make_node(
             op_type="Softmax",
             inputs=[model_input_name],
             outputs=[model_output_name],
-            axis = 2
+            axis=2,
         )
 
         graph = onnx.helper.make_graph(
-            nodes = [activation_node],
-            name = 'Conv',
-            inputs = [X],
-            outputs = [Y],
+            nodes=[activation_node],
+            name="Conv",
+            inputs=[X],
+            outputs=[Y],
         )
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
 
         self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
 
     def testSoftmaxONNX_3D_c(self):
-        testshape = (1,3,10,10)
+        testshape = (1, 3, 10, 10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,3,10,10])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(model_output_name,
-                                            onnx.TensorProto.FLOAT,
-                                            [ None,3,10,10])
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
 
         activation_node = onnx.helper.make_node(
             op_type="Softmax",
             inputs=[model_input_name],
             outputs=[model_output_name],
-            axis = 1
+            axis=1,
         )
 
         graph = onnx.helper.make_graph(
-            nodes = [activation_node],
-            name = 'Conv',
-            inputs = [X],
-            outputs = [Y],
+            nodes=[activation_node],
+            name="Conv",
+            inputs=[X],
+            outputs=[Y],
         )
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        onnx.save(model,self.tmpdir_name+'/model.onnx' )
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,self.tmpdir_name+'/model.onnx')
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
 
         self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     acetoneTestCase.main()

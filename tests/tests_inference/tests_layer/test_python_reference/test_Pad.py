@@ -21,10 +21,7 @@ import keras
 import numpy as np
 from keras.layers import Input, ZeroPadding2D
 
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
-import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
+from tests.tests_inference import acetoneTestCase
 
 
 class TestPad(acetoneTestCase.AcetoneTestCase):
@@ -44,6 +41,7 @@ class TestPad(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 
