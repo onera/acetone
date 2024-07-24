@@ -1,8 +1,9 @@
-from cuda_convolution_naive import (
+from pystache import TemplateSpec
+
+from .cuda_convolution_naive import (
     CudaConvolutionNaiveCall,
     CudaConvolutionNaiveDefinition,
 )
-from pystache import TemplateSpec
 
 # Map operation types to known variants
 # Each variant is defined by its unique name and a list of templates

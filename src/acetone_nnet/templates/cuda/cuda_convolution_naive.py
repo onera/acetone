@@ -1,13 +1,15 @@
-from typing import Self
+from pystache import TemplateSpec
 
 from acetone_nnet import Conv2D
-from pystache import TemplateSpec
+from acetone_nnet.versioning.version_implementation.conv_implementation import (
+    conv2d_factory,
+)
 
 
 class CudaConvolutionParameters:
     """Common parameters for CUDA-based convolution."""
 
-    def __init__(self: Self, layer: Conv2D) -> None:
+    def __init__(self, layer: Conv2D) -> None:
         """Initialise Convolution template from layer."""
         self.layer = layer
 
@@ -111,3 +113,23 @@ class CudaConvolutionNaiveCall(CudaConvolutionParameters, TemplateSpec):
     """Naive CUDA-based convolution function call template."""
 
     template_extension = "cpp"
+
+
+class CudaConvolutionNaive(Conv2D):
+    def __init__(self, layer: Conv2D):
+        self.layer = layer
+
+    # FIXME Oh, god why. Let's define a cleaner proxy
+    def __getattr__(self, item):
+        return self.layer.__getattribute__(item)
+
+    def generate_inference_code_layer(self) -> str:
+        raise NotImplementedError
+
+
+# FIXME Find a more module-level way, doing it on import causes issues with unused imports
+def register_cuda_convolution_naive():
+    conv2d_factory.register_implementation(
+        "cuda/naive",
+        lambda i, _: CudaConvolutionNaive(i),
+    )
