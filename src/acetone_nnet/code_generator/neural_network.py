@@ -53,6 +53,7 @@ from acetone_nnet.code_generator.layers import (
     Softmax,
 )
 from acetone_nnet.format_importer.parser import parser
+from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
 from acetone_nnet.versioning.versioning import versioning
 
 class CodeGenerator(ABC):
@@ -79,12 +80,12 @@ class CodeGenerator(ABC):
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
                 self.file,
-                self.conv_algorithm,
+                self.conv_algorithm, # TODO Remove this
             )
         else:  # normalise
             l, dtype, dtype_py, data_format, maxpath, dict_cst, Normalizer = parser(
                 self.file,
-                self.conv_algorithm,
+                self.conv_algorithm, # TODO Remove this
                 normalize=self.normalize,
             )
             self.Normalizer = Normalizer
@@ -93,7 +94,7 @@ class CodeGenerator(ABC):
         version = {}
         for i in range(len(self.layers)):
             if self.layers[i].name == "Conv2D":
-                version[self.layers[i].idx] = "indirect_gemm_nn"
+                version[self.layers[i].idx] = self.conv_algorithm
         
         self.layers = versioning(self.layers, version)
             
@@ -154,17 +155,7 @@ class CodeGenerator(ABC):
             assert isinstance(self.debug_target, list)
 
         ### Checking value consistency ###
-        if self.conv_algorithm not in [
-            "6loops",
-            "indirect_gemm_nn",
-            "indirect_gemm_tn",
-            "indirect_gemm_nt",
-            "indirect_gemm_tt",
-            "std_gemm_nn",
-            "std_gemm_tn",
-            "std_gemm_nt",
-            "std_gemm_tt",
-        ]:
+        if self.conv_algorithm not in conv2d_factory.list_implementations:
             raise ValueError(
                 "Error: conv algorithm value.\n Must be one of: 6loops, indirect_gemm_nn, indirect_gemm_tn, indirect_gemm_nt, indirect_gemm_tt, std_gemm_nn, std_gemm_tn, std_gemm_nt, std_gemm_tt",
             )

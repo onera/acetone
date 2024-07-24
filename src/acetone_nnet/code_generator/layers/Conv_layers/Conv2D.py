@@ -17,7 +17,7 @@
  * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
  ******************************************************************************
 """
-
+from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
 from ...Layer import Layer
 from ...activation_functions import ActivationFunctions
 import numpy as np
@@ -108,9 +108,7 @@ class Conv2D(Layer):
             raise ValueError("Error: non consistency between the output height and the parameter of the operation in Conv2D ("+str(self.output_height)+"!="+str(math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1)*(self.dilation_rate - 1))/self.strides) + 1)+")")
         if self.output_width != math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1:
             raise ValueError("Error: non consistency between the output width and the parameter of the operation in Conv2D ("+str(self.output_width)+"!="+str(math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1)*(self.dilation_rate - 1))/self.strides) + 1)+")")
-        if self.conv_algorithm not in ['6loops',
-                                       'indirect_gemm_nn','indirect_gemm_tn','indirect_gemm_nt','indirect_gemm_tt',
-                                       'std_gemm_nn','std_gemm_tn','std_gemm_nt','std_gemm_']:
+        if self.conv_algorithm not in conv2d_factory.list_implementations:
             raise ValueError("Error: conv algorithm value in Conv2D ("+self.conv_algorithm+")")
 
     def generate_inference_code_layer(self):
