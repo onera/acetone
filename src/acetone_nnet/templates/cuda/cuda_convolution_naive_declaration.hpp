@@ -13,6 +13,7 @@
  * @param input
  * @param output
  */
+__inline__
 template <typename T>
 void perform_convolution(
     const size_t channel_count,
@@ -51,18 +52,7 @@ void perform_convolution(
                     }
                 }
                 output[j + output_shape[1] * (i + output_shape[0] * f)] = sum + biases[f];
-// TODO Manage the activation function
-//                sum += biases[f];
-//                {{^fused_layer}}
-//                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
-//                {{/fused_layer}}
-//                {{#fused_layer}}
-//                    {{^linear}}
-//                sum = {{{activation_function}}};
-//                    {{/linear}}
-//                {{/fused_layer}}
             }
         }
     }
-
 }

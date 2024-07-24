@@ -11,6 +11,14 @@ class CudaConvolutionParameters:
         """Initialise Convolution template from layer."""
         self.layer = layer
 
+    def layer_id(self) -> int:
+        """Return layer unique identifier."""
+        return self.layer.idx
+
+    def layer_name(self) -> str:
+        """Return layer name."""
+        return self.layer.name
+
     def kernel_height(self) -> int:
         """Return kernel height."""
         return self.layer.kernel_h
@@ -80,6 +88,16 @@ class CudaConvolutionParameters:
     def input_var_name(self) -> str:
         """Return C variable name for input tensor."""
         return self.layer.previous_layer[0].output_str
+
+    def tensor_type(self) -> str:
+        """Return C input and output tensor type."""
+        # FIXME This needs to come from the code generator
+        return "float"
+
+    def activation_function_src(self) -> str:
+        """Return C code for activation function."""
+        # FIXME The C temporary variable name should be a template parameter
+        return self.layer.activation_function.write_activation_str("output[k]")
 
 
 class CudaConvolutionNaiveDefinition(CudaConvolutionParameters, TemplateSpec):
