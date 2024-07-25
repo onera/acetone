@@ -1,4 +1,4 @@
-from pystache import TemplateSpec
+from pystache import TemplateSpec, render
 
 from acetone_nnet import Conv2D
 from acetone_nnet.versioning.version_implementation.conv_implementation import (
@@ -102,13 +102,6 @@ class CudaConvolutionParameters:
         return self.layer.activation_function.write_activation_str("output[k]")
 
 
-class CudaConvolutionNaiveDefinition(CudaConvolutionParameters, TemplateSpec):
-    """Naive CUDA-based convolution function declaration template."""
-
-    # TODO Pass template to pystache.render
-    template_extension = "hpp"
-
-
 class CudaConvolutionNaiveCall(CudaConvolutionParameters, TemplateSpec):
     """Naive CUDA-based convolution function call template."""
 
@@ -116,6 +109,8 @@ class CudaConvolutionNaiveCall(CudaConvolutionParameters, TemplateSpec):
 
 
 class CudaConvolutionNaive(Conv2D):
+    """Code generator for CUDA naive convolution implementation."""
+
     def __init__(self, layer: Conv2D):
         self.layer = layer
 
@@ -124,11 +119,11 @@ class CudaConvolutionNaive(Conv2D):
         return self.layer.__getattribute__(item)
 
     def generate_inference_code_layer(self) -> str:
-        raise NotImplementedError
+        return render(CudaConvolutionNaiveCall(self.layer))
 
 
 # FIXME Find a more module-level way, doing it on import causes issues with unused imports
-def register_cuda_convolution_naive():
+def register_cuda_convolution_naive() -> None:
     conv2d_factory.register_implementation(
         "cuda/naive",
         lambda i, _: CudaConvolutionNaive(i),
