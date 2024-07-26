@@ -19,8 +19,9 @@
 ******************************************************************************
 """
 
-from ..code_generator import Layer
-from .version_implementation.conv_implementation import Conv2D_implementation
+from acetone_nnet.code_generator import Layer
+
+from .version_implementation.conv_implementation import conv2d_implementation
 
 
 def versioning(
@@ -29,7 +30,7 @@ def versioning(
 ) -> list[Layer]:
     """Check layers and change the layer version if needed."""
     implemented = {
-        "Conv2D": Conv2D_implementation,
+        "Conv2D": conv2d_implementation,
     }
 
     keys = list(version.keys())

@@ -247,7 +247,6 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
     def test_conv_non_uniform_pads(self):
-        testshape = (1, 3, 10, 10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(
             model_input_name,
@@ -310,6 +309,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
+            conv_algo="6loops",
         )
 
         self.assertListAlmostEqual(acetone_result[1], acetone_result[0])

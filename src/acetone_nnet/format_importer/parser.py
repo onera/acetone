@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""General parser ofr ACETONE.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -20,6 +22,7 @@
 from pathlib import Path
 
 import onnx
+from acetone_nnet.code_generator import Layer
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 
@@ -34,7 +37,8 @@ def parser(
         debug: None | str = None,
         *,
         normalize: bool = False,
-):
+) -> (list[Layer], str, type, str, int, dict[int, int]):
+    """Load a model and return the corresponding ACETONE representation."""
     if isinstance(file_to_parse, str | Path):
         # Retrieve extension for file path
         if isinstance(file_to_parse, str):
@@ -50,7 +54,7 @@ def parser(
 
         if "onnx" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
-            return load_onnx(str(file_to_parse), debug)
+            return load_onnx(file_to_parse, debug)
 
         if "h5" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
@@ -67,7 +71,7 @@ def parser(
     if type(file_to_parse) is onnx.ModelProto:
         return load_onnx(file_to_parse, debug)
 
-    elif type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
+    if type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
         return load_keras(file_to_parse, debug)
 
     print("\nError: model description .", type(file_to_parse), "not supported")

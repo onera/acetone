@@ -19,7 +19,7 @@
 ******************************************************************************
 """
 
-from ...code_generator import (
+from acetone_nnet.code_generator import (
     Conv2D,
     Conv2D_6loops,
     Conv2D_indirect_gemm,
@@ -27,15 +27,15 @@ from ...code_generator import (
 )
 
 
-def Conv2D_implementation(
+def conv2d_implementation(
         old_layer: Conv2D,
         version: str,
 ) -> Conv2D:
     """Create the layer associated to the required implementation."""
     implemented = {
-        "6loops": Conv2D_6loops_implementation,
-        "indirect_gemm": Conv2D_indirect_gemm_implementation,
-        "std_gemm": Conv2D_std_gemm_implementation,
+        "6loops": conv2d_6loops_implementation,
+        "indirect_gemm": conv2d_indirect_gemm_implementation,
+        "std_gemm": conv2d_std_gemm_implementation,
     }
 
     conv_algo = version
@@ -45,7 +45,7 @@ def Conv2D_implementation(
     return implemented[version](old_layer, conv_algo)
 
 
-def Conv2D_6loops_implementation(
+def conv2d_6loops_implementation(
         old_layer: Conv2D,
         conv_algo: str,
 ) -> Conv2D_6loops:
@@ -68,7 +68,7 @@ def Conv2D_6loops_implementation(
     )
 
 
-def Conv2D_indirect_gemm_implementation(
+def conv2d_indirect_gemm_implementation(
         old_layer: Conv2D,
         conv_algo: str,
 ) -> Conv2D_indirect_gemm:
@@ -91,7 +91,7 @@ def Conv2D_indirect_gemm_implementation(
     )
 
 
-def Conv2D_std_gemm_implementation(
+def conv2d_std_gemm_implementation(
         old_layer: Conv2D,
         conv_algo: str,
 ) -> Conv2D_std_gemm:

@@ -122,7 +122,7 @@ class Layer(ABC):
 
     # Give to the layer a string saying were the output will be saved
     # (either in a 'cst' or in an 'output_road')
-    def find_output_str(self: Self, dict_cst: dict):
+    def find_output_str(self: Self, dict_cst: dict) -> Self:
         """Give to the layer a string saying were the output will be saved."""
         # dict_cst is the dict linking a layer to it's cst
         # This cst represent where the output must be saved if needed
@@ -136,24 +136,23 @@ class Layer(ABC):
         return self
 
     def __eq__(
-            self,
-            other,
+            self: Self,
+            other: object,
     ) -> bool:
         """Eq method for layers."""
         # compare two layers and say if they are equals
         if type(self) is not type(other):
             return False
-        else:
 
-            keys = list(self.__dict__.keys())
-            for key in keys:
-                if (key in ("previous_layer", "next_layer")
-                        or type(self.__dict__[key]) is dict):
-                    continue
+        keys = list(self.__dict__.keys())
+        for key in keys:
+            if (key in ("previous_layer", "next_layer")
+                    or type(self.__dict__[key]) is dict):
+                continue
 
-                if type(self.__dict__[key]) is np.ndarray:
-                    if (other.__dict__[key] != self.__dict__[key]).any():
-                        return False
-                elif other.__dict__[key] != self.__dict__[key]:
+            if type(self.__dict__[key]) is np.ndarray:
+                if (other.__dict__[key] != self.__dict__[key]).any():
                     return False
+            elif other.__dict__[key] != self.__dict__[key]:
+                return False
         return True

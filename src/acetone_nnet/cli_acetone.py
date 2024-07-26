@@ -23,8 +23,16 @@ import pathlib
 from .code_generator.neural_network import CodeGenerator
 
 
-def cli_acetone(model_file: str, function_name: str, nb_tests: int, conv_algorithm: str, output_dir: str,
-                test_dataset_file: str | None = None, normalize: bool = False):
+def cli_acetone(
+        model_file: str,
+        function_name: str,
+        nb_tests: int,
+        conv_algorithm: str,
+        output_dir: str,
+        test_dataset_file: str | None = None,
+        normalize: bool = False,
+) -> None:
+    """Generate code with ACETONE."""
     print("C CODE GENERATOR FOR NEURAL NETWORKS")
 
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -38,17 +46,46 @@ def cli_acetone(model_file: str, function_name: str, nb_tests: int, conv_algorit
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="C code generator for neural networks")
 
-    parser.add_argument("model_file", help="Input file that describes the neural network model")
-    parser.add_argument("function_name", help="Name of the generated function")
-    parser.add_argument("nb_tests", help="Number of inferences process to run")
-    parser.add_argument("conv_algorithm",
-                        help="Algorithm to be used in convolutional layer. Default is indirect im2col with GeMM")
-    parser.add_argument("output_dir", help="Output directory where generated files will be written")
-    parser.add_argument("test_dataset_file", nargs="?", default=None, help="Input file that contains test data")
-    parser.add_argument("normalize", nargs="?", default=False,
-                        help="Boolean saying if the inputs and outputs needs to be normalized. Only used when the file is in NNET representation")
+    parser.add_argument(
+        "model_file",
+        help="Input file that describes the neural network model",
+    )
+    parser.add_argument(
+        "function_name",
+        help="Name of the generated function",
+    )
+    parser.add_argument(
+        "nb_tests",
+        help="Number of inferences process to run",
+    )
+    parser.add_argument(
+        "conv_algorithm",
+        help="Algorithm to be used in convolutional layer. Default is indirect im2col with GeMM",
+    )
+    parser.add_argument(
+        "output_dir",
+        help="Output directory where generated files will be written",
+    )
+    parser.add_argument(
+        "test_dataset_file",
+        nargs="?",
+        default=None,
+        help="Input file that contains test data",
+    )
+    parser.add_argument(
+        "normalize",
+        nargs="?",
+        default=False,
+        help="Boolean saying if the inputs and outputs needs to be normalized. Only used when the file is in NNET representation",
+    )
 
     args = parser.parse_args()
 
-    cli_acetone(args.model_file, args.function_name, args.nb_tests, args.conv_algorithm, args.output_dir,
-                args.test_dataset_file, args.normalize)
+    cli_acetone(args.model_file,
+                args.function_name,
+                args.nb_tests,
+                args.conv_algorithm,
+                args.output_dir,
+                args.test_dataset_file,
+                args.normalize,
+                )

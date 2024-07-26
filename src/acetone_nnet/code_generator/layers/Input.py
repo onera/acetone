@@ -25,7 +25,7 @@ from acetone_nnet.code_generator.Layer import Layer
 
 class InputLayer(Layer):
 
-    def __init__(self, idx: int, size: int, input_shape: np.ndarray, data_format: str):
+    def __init__(self, idx: int, size: int, input_shape: np.ndarray|list, data_format: str):
 
         super().__init__()
         self.idx = idx

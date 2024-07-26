@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Parser to JSON files.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -19,7 +21,9 @@
 
 import json
 from itertools import islice
+from pathlib import Path
 
+import acetone_nnet
 import numpy as np
 from acetone_nnet.code_generator import (
     Add,
@@ -32,6 +36,7 @@ from acetone_nnet.code_generator import (
     Dense,
     Flatten,
     InputLayer,
+    Layer,
     LeakyReLu,
     Linear,
     Maximum,
@@ -50,34 +55,43 @@ from acetone_nnet.code_generator import (
 from acetone_nnet.graph import graph_interpretor
 
 
-def create_actv_function_obj(activation_str: str):
+def create_actv_function_obj(activation_str: str) -> acetone_nnet.ActivationFunctions:
+    """Create an activation function."""
     if activation_str == "sigmoid":
         return Sigmoid()
-    elif activation_str == "relu":
+    if activation_str == "relu":
         return ReLu()
-    elif activation_str == "tanh":
+    if activation_str == "tanh":
         return TanH()
-    elif activation_str == "linear":
+    if activation_str == "linear":
         return Linear()
-    elif activation_str == "leaky_relu":
+    if activation_str == "leaky_relu":
         return LeakyReLu(0.2)
-    else:
-        raise TypeError("Activation layer "+activation_str+" not implemented")
+    raise TypeError("Activation layer " + activation_str + " not implemented")
 
 
-def create_resize_obj(mode: str, **kwargs):
+def create_resize_obj(
+        mode: str,
+        **kwargs: object,
+) -> ResizeCubic | ResizeLinear | ResizeNearest:
+    """Create a Resize layer."""
     if mode == "bicubic":
         return ResizeCubic(**kwargs)
 
-    elif mode == "bilinear":
+    if mode == "bilinear":
         return ResizeLinear(**kwargs)
 
-    else:
+    if mode == "nearest":
         return ResizeNearest(**kwargs)
 
+    raise ValueError("Error: resize mode " + mode + " not implemented")
 
-def load_json(file_to_parse: str):
-    file = open(file_to_parse)
+
+def load_json(
+        file_to_parse: str | Path,
+) -> (list[Layer], str, type, str, int, dict[int, int]):
+    """Load an JSON model and return the corresponding ACETONE representation."""
+    file = Path.open(Path(file_to_parse))
     model = json.load(file)
     data_format = model["config"]["data_format"]
 
@@ -97,8 +111,11 @@ def load_json(file_to_parse: str):
 
     layers = []
 
-    l_temp = InputLayer(0, model["config"]["layers"][0]["config"]["size"],
-                        model["config"]["layers"][0]["config"]["input_shape"], data_format)
+    l_temp = InputLayer(0,
+                        model["config"]["layers"][0]["config"]["size"],
+                        model["config"]["layers"][0]["config"]["input_shape"],
+                        data_format,
+                        )
 
     layers.append(l_temp)
 

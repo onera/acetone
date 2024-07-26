@@ -220,6 +220,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            conv_algo="6loops",
         )
 
         self.assertListAlmostEqual(acetone_result[0], onnx_result)

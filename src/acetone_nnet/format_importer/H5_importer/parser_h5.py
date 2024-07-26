@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Parser to H5 files.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -19,6 +21,7 @@
 
 from itertools import islice
 
+import acetone_nnet
 import keras
 import numpy as np
 from acetone_nnet.code_generator import (
@@ -51,7 +54,8 @@ from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 
 
-def get_layer_size(keras_layer: Layer):
+def get_layer_size(keras_layer: Layer) -> int:
+    """Calculate the size of a layer."""
     size = 1
     if type(keras_layer.output_shape) is list:
         for dim in keras_layer.output_shape[0][1:]:
@@ -62,55 +66,72 @@ def get_layer_size(keras_layer: Layer):
     return size
 
 
-def get_output_dimensions(output: list, data_format: str):
+def get_output_dimensions(
+        output: list,
+        data_format: str,
+) -> list:
+    """Get the shape of the layer's output."""
     dimensions = output[0] if type(output) is list else output
 
     if data_format == "channels_first":
         return dimensions
-    elif len(dimensions) == 4:
-        return dimensions[0], dimensions[3], dimensions[1], dimensions[2]
-    else:
-        return dimensions
+    if len(dimensions) == 4:
+        return [dimensions[0], dimensions[3], dimensions[1], dimensions[2]]
+    return dimensions
 
 
-def get_input_dimensions(input: list, data_format: str):
-    dimensions = input[0] if type(input) is list and len(input) == 1 else input
+def get_input_dimensions(
+        input_shape: list,
+        data_format: str,
+) -> np.ndarray:
+    """Get the shape of the layer's output."""
+    dimensions = input_shape[0] if type(input_shape) is list and len(input_shape) == 1 \
+        else input_shape
 
     if data_format == "channels_last":
         if type(dimensions) is list and len(dimensions[0]) == 4:
-            dimensions = [(shape[0], shape[3], shape[1], shape[2]) for shape in dimensions]
+            dimensions = [(shape[0], shape[3], shape[1], shape[2])
+                          for shape in dimensions]
         elif type(dimensions) is not list and len(dimensions) == 4:
             dimensions = (dimensions[0], dimensions[3], dimensions[1], dimensions[2])
 
     return np.array(dimensions)
 
 
-def create_actv_function_obj(keras_activation_obj:activations):
+def create_actv_function_obj(
+        keras_activation_obj: activations,
+) -> acetone_nnet.ActivationFunctions:
+    """Create an activation function."""
     if keras_activation_obj == activations.sigmoid:
         return Sigmoid()
-    elif keras_activation_obj == activations.relu:
+    if keras_activation_obj == activations.relu:
         return ReLu()
-    elif keras_activation_obj == activations.tanh:
+    if keras_activation_obj == activations.tanh:
         return TanH()
-    elif keras_activation_obj == activations.linear:
+    if keras_activation_obj == activations.linear:
         return Linear()
-    elif keras_activation_obj == activations.leaky_relu:
+    if keras_activation_obj == activations.leaky_relu:
         return LeakyReLu(0.2)
-    elif keras_activation_obj == activations.softmax:
+    if keras_activation_obj == activations.softmax:
         return Linear()
-    else:
-        raise TypeError("Activation layer",keras_activation_obj.__name__,"not implemented")
+
+    msg = "Activation layer"
+    raise TypeError(msg, keras_activation_obj.__name__, "not implemented")
 
 
-def load_keras(file_to_parse: Functional | Sequential | str, debug: None | str):
+def load_keras(
+        file_to_parse: Functional | Sequential | str,
+        debug: None | str,
+) -> (list[Layer], str, type, str, int, dict[int, int]):
+    """Load an H5 model and return the corresponding ACETONE representation."""
     if type(file_to_parse) is str:
         model = keras.models.load_model(file_to_parse)
     else:
         model = file_to_parse
 
     input_layer_size = 1
-    for i in range(1,
-                   len(model.input.shape)):  #start in idx 1 cause idx 0 represents batch size, so it's None in inference phase
+    for i in range(1, len(model.input.shape)):
+        # start in idx 1 cause idx 0 represents batch size, so it's None in inference phase
         input_layer_size = input_layer_size * model.input.shape[i]
 
     data_format = "channels_first"
@@ -161,11 +182,11 @@ def load_keras(file_to_parse: Functional | Sequential | str, debug: None | str):
 
         if layer_keras.__class__.__name__ == "Dense":
             weights = data_type_py(layer_keras.get_weights()[0])
-            if (len(weights.shape) < 3):
-                for i in range(3 - len(weights.shape)):
+            if len(weights.shape) < 3:
+                for _i in range(3 - len(weights.shape)):
                     weights = np.expand_dims(weights, axis=-1)
             weights = np.moveaxis(weights, 2, 0)
-            if (len(weights.shape) < 4):
+            if len(weights.shape) < 4:
                 weights = np.expand_dims(weights, axis=0)
             biases = data_type_py(layer_keras.get_weights()[1])
             current_layer = Dense(idx=idx,
@@ -176,11 +197,11 @@ def load_keras(file_to_parse: Functional | Sequential | str, debug: None | str):
 
         elif layer_keras.__class__.__name__ == "Conv2D":
             weights = data_type_py(layer_keras.get_weights()[0])
-            if (len(weights.shape) < 3):
-                for i in range(3 - len(weights.shape)):
+            if len(weights.shape) < 3:
+                for _i in range(3 - len(weights.shape)):
                     weights = np.expand_dims(weights, axis=-1)
             weights = np.moveaxis(weights, 2, 0)
-            if (len(weights.shape) < 4):
+            if len(weights.shape) < 4:
                 weights = np.expand_dims(weights, axis=0)
             biases = data_type_py(layer_keras.get_weights()[1])
             current_layer = Conv2D(conv_algorithm="specs",
@@ -269,10 +290,7 @@ def load_keras(file_to_parse: Functional | Sequential | str, debug: None | str):
         elif layer_keras.__class__.__name__ == "Concatenate":
             axis = layer_keras.axis
             if data_format == "channels_last":
-                if axis == 3:
-                    axis = 1
-                else:
-                    axis = axis + 1
+                axis = 1 if axis == 3 else axis + 1
             current_layer = Concatenate(idx=idx,
                                         size=get_layer_size(layer_keras),
                                         axis=axis,
@@ -282,10 +300,10 @@ def load_keras(file_to_parse: Functional | Sequential | str, debug: None | str):
 
         elif layer_keras.__class__.__name__ == "ZeroPadding2D":
             pads = layer_keras.padding
-            if type(pads) == int:
+            if type(pads) is int:
                 pad_top, pad_bottom = pads, pads
                 pad_left, pad_right = pads, pads
-            elif type(pads[0]) == int:
+            elif type(pads[0]) is int:
                 pad_top, pad_bottom = pads[0], pads[0]
                 pad_left, pad_right = pads[1], pads[1]
             else:
@@ -332,17 +350,17 @@ def load_keras(file_to_parse: Functional | Sequential | str, debug: None | str):
                                                    var=data_type_py(layer_keras.get_weights()[3]),
                                                    activation_function=Linear())
 
-        elif layer_keras.__class__.__name__ == "Reshape" or layer_keras.__class__.__name__ == "Dropout":
+        elif layer_keras.__class__.__name__ in ("Reshape", "Dropout"):
             continue
 
         else:
             raise TypeError("Error: layer " + layer_keras.__class__.__name__ + " not supported\n")
 
-        if type(model) == keras.Sequential:
+        if type(model) is keras.Sequential:
             if idx - 1 >= 0:
                 current_layer.previous_layer.append(layers[idx - 1])
                 layers[idx - 1].next_layer.append(current_layer)
-        elif (type(layer_keras.input) == list):
+        elif type(layer_keras.input) is list:
             for input in layer_keras.input:
                 for k in range(len(model.layers)):
                     prev_layer = model.layers[k]
@@ -372,7 +390,7 @@ def load_keras(file_to_parse: Functional | Sequential | str, debug: None | str):
             l_temp = current_layer
             layers.append(l_temp)
 
-    layers, listRoad, maxRoad, dict_cst = graph_interpretor.tri_topo(layers)
-    layers = list(map(lambda x: x.find_output_str(dict_cst), layers))
+    layers, list_road, max_road, dict_cst = graph_interpretor.tri_topo(layers)
+    layers = [x.find_output_str(dict_cst) for x in layers]
     print("Finished model initialization.")
-    return layers, data_type, data_type_py, data_format, maxRoad, dict_cst
+    return layers, data_type, data_type_py, data_format, max_road, dict_cst
