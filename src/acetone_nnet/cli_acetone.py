@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Generate C Code from a model description.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -37,8 +39,12 @@ def cli_acetone(
 
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
-    net = CodeGenerator(file=model_file, test_dataset=test_dataset_file, function_name=function_name, nb_tests=nb_tests,
-                        versions={"Conv2D": conv_algorithm}, normalize=normalize)
+    net = CodeGenerator(file=model_file,
+                        test_dataset=test_dataset_file,
+                        function_name=function_name,
+                        nb_tests=nb_tests,
+                        versions={"Conv2D": conv_algorithm},
+                        normalize=normalize)
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)
 

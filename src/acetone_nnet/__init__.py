@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Init file.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -23,7 +25,7 @@ from .cli_compare import cli_compare
 from .code_generator import (
     ActivationFunctions,
     Add,
-    Add_Bias,
+    AddBias,
     Average,
     AveragePooling2D,
     BatchNormalization,
@@ -31,16 +33,16 @@ from .code_generator import (
     Clip,
     CodeGenerator,
     Concatenate,
-    Constant_Pad,
+    ConstantPad,
     Conv2D,
-    Conv2D_6loops,
-    Conv2D_gemm,
-    Conv2D_indirect_gemm,
-    Conv2D_std_gemm,
+    Conv2D6loops,
+    Conv2DGemm,
+    Conv2DIndirectGemm,
+    Conv2DStdGemm,
     Dense,
     Divide,
     Dot,
-    Edge_pad,
+    EdgePad,
     Exponential,
     Flatten,
     Gather,
@@ -61,7 +63,7 @@ from .code_generator import (
     Reduce,
     ReduceMax,
     ReduceSum,
-    Reflect_pad,
+    ReflectPad,
     ReLu,
     Resize,
     ResizeCubic,
@@ -79,5 +81,5 @@ from .code_generator import (
 __all__ = (
     "cli_acetone", "cli_compare",
     code_generator.__all__,
-    debug_tools,
+    debug_tools.__all__,
 )

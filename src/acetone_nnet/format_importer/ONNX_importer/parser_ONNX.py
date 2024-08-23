@@ -64,8 +64,7 @@ def load_onnx(
 ) -> (list[Layer], str, type, str, int, dict[int, int]):
     """Load an ONNX model and return the corresponding ACETONE representation."""
     # Loading the model and adding value_info if it's not already in it
-    model = onnx.load(file_to_parse) \
-        if type(file_to_parse) is str | Path else file_to_parse
+    model = onnx.load(file_to_parse) if type(file_to_parse) in (str, Path) else file_to_parse
 
     if not model.graph.value_info:
         model = onnx.shape_inference.infer_shapes(model)

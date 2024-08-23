@@ -21,16 +21,16 @@
 
 from itertools import islice
 
-import acetone_nnet
 import keras
 import numpy as np
 from acetone_nnet.code_generator import (
+    ActivationFunctions,
     Add,
     Average,
     AveragePooling2D,
     BatchNormalization,
     Concatenate,
-    Constant_Pad,
+    ConstantPad,
     Conv2D,
     Dense,
     Flatten,
@@ -81,7 +81,7 @@ def get_output_dimensions(
 
 
 def get_input_dimensions(
-        input_shape: list,
+        input_shape: list | np.ndarray,
         data_format: str,
 ) -> np.ndarray:
     """Get the shape of the layer's output."""
@@ -100,7 +100,7 @@ def get_input_dimensions(
 
 def create_actv_function_obj(
         keras_activation_obj: activations,
-) -> acetone_nnet.ActivationFunctions:
+) -> ActivationFunctions:
     """Create an activation function."""
     if keras_activation_obj == activations.sigmoid:
         return Sigmoid()
@@ -151,6 +151,9 @@ def load_keras(
     elif data_type == "int":
         data_type = "long int"
         data_type_py = np.int32
+
+    else:
+        raise TypeError("Type " + data_type + " not implemented")
 
     layers = []
 
@@ -310,13 +313,13 @@ def load_keras(
                 pad_top, pad_bottom = pads[0][0], pads[0][1]
                 pad_left, pad_right = pads[1][0], pads[1][1]
             pads = [0, 0, pad_top, pad_left, 0, 0, pad_bottom, pad_right]
-            current_layer = Constant_Pad(idx=idx,
-                                         size=get_layer_size(layer_keras),
-                                         pads=pads,
-                                         constant_value=0,
-                                         axes=[],
-                                         input_shape=get_input_dimensions(layer_keras.input_shape, data_format),
-                                         activation_function=Linear())
+            current_layer = ConstantPad(idx=idx,
+                                        size=get_layer_size(layer_keras),
+                                        pads=pads,
+                                        constant_value=0,
+                                        axes=[],
+                                        input_shape=get_input_dimensions(layer_keras.input_shape, data_format),
+                                        activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "BatchNormalization":
             if layers[-1].name == "Conv2D" and not debug:

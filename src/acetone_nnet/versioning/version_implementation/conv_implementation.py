@@ -21,9 +21,9 @@
 
 from acetone_nnet.code_generator import (
     Conv2D,
-    Conv2D_6loops,
-    Conv2D_indirect_gemm,
-    Conv2D_std_gemm,
+    Conv2D6loops,
+    Conv2DIndirectGemm,
+    Conv2DStdGemm,
 )
 
 
@@ -48,9 +48,9 @@ def conv2d_implementation(
 def conv2d_6loops_implementation(
         old_layer: Conv2D,
         conv_algo: str,
-) -> Conv2D_6loops:
+) -> Conv2D6loops:
     """Create a Conv2D_6loops layer using the attributes of old_layer."""
-    return Conv2D_6loops(
+    return Conv2D6loops(
         idx=old_layer.idx,
         conv_algorithm=conv_algo,
         size=old_layer.size,
@@ -71,9 +71,9 @@ def conv2d_6loops_implementation(
 def conv2d_indirect_gemm_implementation(
         old_layer: Conv2D,
         conv_algo: str,
-) -> Conv2D_indirect_gemm:
+) -> Conv2DIndirectGemm:
     """Create a Conv2D_indirect_gemm layer using the attributes of old_layer."""
-    return Conv2D_indirect_gemm(
+    return Conv2DIndirectGemm(
         idx=old_layer.idx,
         conv_algorithm=conv_algo,
         size=old_layer.size,
@@ -94,9 +94,9 @@ def conv2d_indirect_gemm_implementation(
 def conv2d_std_gemm_implementation(
         old_layer: Conv2D,
         conv_algo: str,
-) -> Conv2D_std_gemm:
+) -> Conv2DStdGemm:
     """Create a Conv2D_std_gemm layer using the attributes of old_layer."""
-    return Conv2D_std_gemm(
+    return Conv2DStdGemm(
         idx=old_layer.idx,
         conv_algorithm=conv_algo,
         size=old_layer.size,

@@ -51,20 +51,20 @@ l2 = acetone_nnet.Dense(idx=1,
 
 #Convolution layer
 print('Convolution Layer')
-l3 = acetone_nnet.Conv2D_6loops(idx=2,
-                                conv_algorithm='6loops',
-                                size=300,
-                                padding=[1,1,1,1],
-                                strides=1,
-                                kernel_h=3,
-                                kernel_w=3,
-                                dilation_rate=1,
-                                nb_filters=3,
-                                input_shape=[1,3,10,10],
-                                output_shape=[1,3,10,10],
-                                weights=np.random.random((3,3,3,3)),
-                                biases=np.random.random(3),
-                                activation_function=acetone_nnet.Linear())
+l3 = acetone_nnet.Conv2D6loops(idx=2,
+                               conv_algorithm='6loops',
+                               size=300,
+                               padding=[1,1,1,1],
+                               strides=1,
+                               kernel_h=3,
+                               kernel_w=3,
+                               dilation_rate=1,
+                               nb_filters=3,
+                               input_shape=[1,3,10,10],
+                               output_shape=[1,3,10,10],
+                               weights=np.random.random((3,3,3,3)),
+                               biases=np.random.random(3),
+                               activation_function=acetone_nnet.Linear())
 
 #MaxPooling
 print('MaxPooling Layer')

@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Instantiation of layers object for ONNX.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -32,15 +34,15 @@ from acetone_nnet.code_generator.activation_functions import (
 )
 from acetone_nnet.code_generator.layers import (
     Add,
-    Add_Bias,
+    AddBias,
     Average,
     AveragePooling2D,
     BatchNormalization,
     Concatenate,
-    Constant_Pad,
+    ConstantPad,
     Conv2D,
     Divide,
-    Edge_pad,
+    EdgePad,
     Gather,
     GatherElements,
     Gemm,
@@ -55,7 +57,7 @@ from acetone_nnet.code_generator.layers import (
     ReduceMin,
     ReduceProd,
     ReduceSum,
-    Reflect_pad,
+    ReflectPad,
     ResizeCubic,
     ResizeLinear,
     ResizeNearest,
@@ -89,19 +91,19 @@ def create_resize_obj(
 def create_pad_obj(
         mode: bytes,
         **kwargs: object,
-) -> Constant_Pad | Edge_pad | Wrap_pad | Reflect_pad:
+) -> ConstantPad | EdgePad | Wrap_pad | ReflectPad:
     """Create a Pad layer."""
     if mode == b"constant":
-        return Constant_Pad(**kwargs)
+        return ConstantPad(**kwargs)
 
     if mode == b"edge":
-        return Edge_pad(**kwargs)
+        return EdgePad(**kwargs)
 
     if mode == b"wrap":
         return Wrap_pad(**kwargs)
 
     if mode == b"reflect":
-        return Reflect_pad(**kwargs)
+        return ReflectPad(**kwargs)
 
     raise ValueError("Error: pad mode " + mode.decode() + " not implemented")
 
@@ -374,7 +376,7 @@ def create_pad(
         dict_input: dict,
         dict_output: dict,
         model: onnx.ModelProto,
-) -> Constant_Pad | Edge_pad | Wrap_pad | Reflect_pad:
+) -> ConstantPad | EdgePad | Wrap_pad | ReflectPad:
     """Create a Pad layer."""
     input_shape = get_shape(node.input[0], model)
     output_shape = get_shape(node.output[0], model)
@@ -995,7 +997,7 @@ def create_global_average_pool(
 
 ### Broadcasts layers ###
 
-# create a layer Add_Bias
+# create a layer AddBias
 ##### UNUSED #####
 def create_add_bias(
         node: onnx.NodeProto,
@@ -1003,7 +1005,7 @@ def create_add_bias(
         dict_input: dict,
         dict_output: dict,
         model: onnx.ModelProto,
-) -> Add_Bias:
+) -> AddBias:
     """Create an AddBias layer."""
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
@@ -1018,7 +1020,7 @@ def create_add_bias(
         biases = onnx.numpy_helper.to_array(left_tensor)
         dict_input[idx] = [node.input[0]]
 
-    return Add_Bias(
+    return AddBias(
         idx=idx,
         size=size,
         biases=biases,

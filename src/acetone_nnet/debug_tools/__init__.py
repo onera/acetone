@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Init file.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE

@@ -23,15 +23,15 @@ import json
 from itertools import islice
 from pathlib import Path
 
-import acetone_nnet
 import numpy as np
 from acetone_nnet.code_generator import (
+    ActivationFunctions,
     Add,
     Average,
     AveragePooling2D,
     BatchNormalization,
     Concatenate,
-    Constant_Pad,
+    ConstantPad,
     Conv2D,
     Dense,
     Flatten,
@@ -55,7 +55,7 @@ from acetone_nnet.code_generator import (
 from acetone_nnet.graph import graph_interpretor
 
 
-def create_actv_function_obj(activation_str: str) -> acetone_nnet.ActivationFunctions:
+def create_actv_function_obj(activation_str: str) -> ActivationFunctions:
     """Create an activation function."""
     if activation_str == "sigmoid":
         return Sigmoid()
@@ -245,13 +245,13 @@ def load_json(
                     pad_left, pad_right = pads[1][0], pads[1][1]
                 pads = [0, 0, pad_top, pad_left, 0, 0, pad_bottom, pad_right]
 
-            current_layer = Constant_Pad(idx=layer["config"]["idx"],
-                                         size=layer["config"]["size"],
-                                         pads=pads,
-                                         constant_value=0,
-                                         axes=[],
-                                         input_shape=layer["config"]["input_shape"],
-                                         activation_function=Linear())
+            current_layer = ConstantPad(idx=layer["config"]["idx"],
+                                        size=layer["config"]["size"],
+                                        pads=pads,
+                                        constant_value=0,
+                                        axes=[],
+                                        input_shape=layer["config"]["input_shape"],
+                                        activation_function=Linear())
 
         elif layer["class_name"] == "BatchNormalization":
             if layers[-1].name == "Conv2D":

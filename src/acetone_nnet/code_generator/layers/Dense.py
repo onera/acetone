@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Dense layer type definition.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -19,22 +21,24 @@
 
 import numpy as np
 import pystache
+from typing_extensions import Self
 
-from ..activation_functions import ActivationFunctions
-from ..Layer import Layer
+from acetone_nnet.code_generator.activation_functions import ActivationFunctions
+from acetone_nnet.code_generator.Layer import Layer
 
 
 class Dense(Layer):
+    """Dense layer class."""
 
     def __init__(
-        self,
-        idx: int,
-        size: int,
-        weights: np.ndarray,
-        biases: np.ndarray,
-        activation_function: ActivationFunctions,
-    ):
-
+            self: Self,
+            idx: int,
+            size: int,
+            weights: np.ndarray,
+            biases: np.ndarray,
+            activation_function: ActivationFunctions,
+    ) -> None:
+        """Build a Dense layer."""
         super().__init__()
         self.idx = idx
         self.size = size
@@ -50,38 +54,41 @@ class Dense(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        if type(self.idx) != int:
-            raise TypeError("Error: idx type in Dense (idx must be int)")
-        if type(self.size) != int:
-            raise TypeError("Error: size type in Dense (size must be int)")
-        if type(self.weights) != np.ndarray:
-            raise TypeError("Error: weights in Dense (weights must be an numpy array)")
-        if type(self.biases) != np.ndarray:
-            raise TypeError("Error: biases in Dense (biases must be an numpy array)")
+        msg = ""
+        if type(self.idx) is not int:
+            msg += "Error: idx type in Dense (idx must be int)"
+            msg += "\n"
+        if type(self.size) is not int:
+            msg += "Error: size type in Dense (size must be int)"
+            msg += "\n"
+        if type(self.weights) is not np.ndarray:
+            msg += "Error: weights in Dense (weights must be an numpy array)"
+            msg += "\n"
+        if type(self.biases) is not np.ndarray:
+            msg += "Error: biases in Dense (biases must be an numpy array)"
+            msg += "\n"
         if not isinstance(self.activation_function, ActivationFunctions):
-            raise TypeError(
-                "Error: activation function type in Dense (activation function must be a sub-classe of acetone_nnet Activation Function)",
-            )
+            msg += ("Error: activation function type in Dense "
+                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
+            msg += "\n"
+        if msg:
+            raise TypeError(msg)
 
         ### Checking value consistency ###
+        msg = ""
         if self.size != self.weights.shape[-1]:
-            raise ValueError(
-                "Error: non consistency between weight shape and output shape in Dense ("
-                + str(self.size)
-                + "!="
-                + str(self.weights.shape[-1])
-                + ")",
-            )
+            msg += (f"Error: non consistency between weight shape and output shape in Dense "
+                    f"({self.size}!={self.weights.shape[-1]})")
+            msg += "\n"
         if self.size != self.biases.shape[0]:
-            raise ValueError(
-                "Error: non consistency between biases shape and output shape in Dense ("
-                + str(self.size)
-                + "!="
-                + str(self.weights.shape[-1])
-                + ")",
-            )
+            msg += (f"Error: non consistency between biases shape and output shape in Dense "
+                    f"({self.size}!={self.weights.shape[-1]})")
+            msg += "\n"
+        if msg:
+            raise ValueError(msg)
 
-    def generate_inference_code_layer(self):
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
         # Variable indicating under which name the input tensor is
         output_str = self.previous_layer[0].output_str
 
@@ -116,8 +123,12 @@ class Dense(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input: np.ndarray):
-        input = input.reshape(self.previous_layer[0].size)
+    def forward_path_layer(
+            self: Self,
+            input_array: np.ndarray,
+    ) -> np.ndarray:
+        """Compute output of layer."""
+        input_array = input_array.reshape(self.previous_layer[0].size)
         return self.activation_function.compute(
-            np.dot(input, self.weights) + self.biases,
+            np.dot(input_array, self.weights) + self.biases,
         )

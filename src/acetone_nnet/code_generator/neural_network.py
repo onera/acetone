@@ -37,9 +37,9 @@ from acetone_nnet.code_generator.layers import (
     Broadcast,
     Concatenate,
     Conv2D,
-    Conv2D_6loops,
-    Conv2D_indirect_gemm,
-    Conv2D_std_gemm,
+    Conv2D6loops,
+    Conv2DIndirectGemm,
+    Conv2DStdGemm,
     Dense,
     Dot,
     Gather,
@@ -494,7 +494,7 @@ class CodeGenerator(ABC):
             mustach_hash["p"] = True
 
         if any(
-                isinstance(i, Conv2D_6loops | Conv2D_std_gemm | Pooling2D | Gemm)
+                isinstance(i, Conv2D6loops | Conv2DStdGemm | Pooling2D | Gemm)
                 for i in self.layers
         ):
             mustach_hash["hw"] = True
@@ -503,7 +503,7 @@ class CodeGenerator(ABC):
             mustach_hash["is_dense"] = True
 
         if any(
-                isinstance(i, Conv2D_6loops | AveragePooling2D | Softmax)
+                isinstance(i, Conv2D6loops | AveragePooling2D | Softmax)
                 for i in self.layers
         ):
             mustach_hash["is_sum"] = True
@@ -623,14 +623,14 @@ class CodeGenerator(ABC):
         self.concate_size_max = 0
         for layer in self.layers:
             if (
-                    isinstance(layer, Conv2D_std_gemm)
+                    isinstance(layer, Conv2DStdGemm)
                     and layer.patches_size > self.patches_size_max
             ):
                 self.patches_size_max = layer.patches_size
             if isinstance(layer, Concatenate):
                 self.patches_size_max = max(self.patches_size_max, layer.size)
 
-        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
+        if any(isinstance(layer, Conv2DStdGemm) for layer in self.layers):
             mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
         else:
             mustach_hash["path_size"] = self.l_size_max
@@ -655,8 +655,8 @@ class CodeGenerator(ABC):
             mustach_hash["cst"].append({"name": cst, "size": written[cst]})
 
         if (
-                any(isinstance(layer, Concatenate | Conv2D | Dense | Gather)
-                    or issubclass(layer, Broadcast | Pad) for layer in self.layers)
+                any(isinstance(layer, Concatenate | Conv2D | Dense | Gather | Broadcast | Pad | Gemm)
+                    for layer in self.layers)
         ):
             mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
 
@@ -678,7 +678,7 @@ class CodeGenerator(ABC):
                     self.nb_biases_max = layer.nb_biases
                 to_print = True
 
-            if isinstance(layer, Conv2D_indirect_gemm):
+            if isinstance(layer, Conv2DIndirectGemm):
                 layer_hash["patches_size"] = layer.patches_size
                 to_print = True
 
@@ -713,7 +713,7 @@ class CodeGenerator(ABC):
             "path": list(range(self.maxpath)),
         }
 
-        if any(isinstance(layer, Conv2D_std_gemm) for layer in self.layers):
+        if any(isinstance(layer, Conv2DStdGemm) for layer in self.layers):
             mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
         else:
             mustach_hash["path_size"] = self.l_size_max
@@ -738,12 +738,12 @@ class CodeGenerator(ABC):
             mustach_hash["cst"].append({"name": cst, "size": written[cst]})
 
         if (
-                any(isinstance(layer, Concatenate | Conv2D | Dense | Gather)
-                    or issubclass(layer, Broadcast | Pad) for layer in self.layers)
+                any(isinstance(layer, Concatenate | Conv2D | Dense | Gather | Broadcast | Pad | Gemm)
+                    for layer in self.layers)
         ):
             mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
 
-        if any(isinstance(layer, Conv2D_indirect_gemm) for layer in self.layers):
+        if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
 
         mustach_hash["layers"] = []
@@ -762,7 +762,7 @@ class CodeGenerator(ABC):
                 layer_hash["biases"] = self.flatten_array_orderc(layer.biases)
                 to_print = True
 
-            if type(layer) is Conv2D_indirect_gemm:
+            if type(layer) is Conv2DIndirectGemm:
                 layer_hash["patches_size"] = layer.patches_size
                 layer_hash["patches"] = layer.create_ppatches()
                 to_print = True
