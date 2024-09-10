@@ -1,11 +1,9 @@
 // Convolution kernel for layer {{layer_id}}
 {
-
     /**
-     * @brief Naive convolution implementation
-     * @tparam T input and output type
-     */
-    template <typename T>
+    * @brief Naive convolution implementation
+    */
+    typedef {{tensor_type}} T;
     struct _convolution_operation
     {
         /**
@@ -63,20 +61,19 @@
                 }
             }
         }
-    }
-
+    };
 
     size_t kernel_shape[2] = { {{kernel_height}}, {{kernel_width}} };
     size_t input_shape[2]  = { {{input_height}},  {{input_width}}  };
     size_t output_shape[2] = { {{output_height}}, {{output_width}} };
+    size_t padding[2] = { {{padding_top}}, {{padding_left}} };
 
-    {{tensor_type}} padding[2] = { {{padding_top}}, {{padding_left}} };
-    {{tensor_type}} kernels[] = {{kernel_var_name}};
-    {{tensor_type}} input[] = {{input_var_name}};
-    {{tensor_type}} biases[] = {{biases_var_name}};
+    {{tensor_type}}* kernels = {{kernel_var_name}};
+    {{tensor_type}}* input = {{input_var_name}};
+    {{tensor_type}}* biases = {{biases_var_name}};
     {{tensor_type}} output[{{output_size}}];
 
-    _convolution_operation<{{tensor_type}}.call(
+    _convolution_operation::call(
         {{channel_count}},
         {{kernel_count}},
         kernel_shape,

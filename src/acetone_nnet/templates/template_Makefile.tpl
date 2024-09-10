@@ -1,10 +1,22 @@
-CC = gcc
-CFLAGS = -g -w -lm
+CC = {{compiler}}
 
-SRC = {{source_files}}
-HEADERS = {{header_files}}
+CFLAGS =
+{{#compiler_flags}}
+CFLAGS += {{.}}
+{{/compiler_flags}}
+
+SRC =
+{{#source_files}}
+SRC += {{.}}
+{{/source_files}}
+
+HEADERS =
+{{#header_files}}
+HEADERS += {{.}}
+{{/header_files}}
+
 OBJ = $(SRC:.cc=.o) $(HEADERS)
-EXEC = {{function_name}}
+EXEC = {{executable_name}}
 
 all: $(EXEC)
 

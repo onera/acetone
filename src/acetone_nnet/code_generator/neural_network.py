@@ -53,6 +53,7 @@ from acetone_nnet.code_generator.layers import (
     Softmax,
 )
 from acetone_nnet.format_importer.parser import parser
+from acetone_nnet.templates.template_makefile import TemplateMakefile
 from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
 from acetone_nnet.versioning.versioning import versioning
 
@@ -116,7 +117,7 @@ class CodeGenerator(ABC):
             self.test_dataset = ds
 
         self.files_to_gen = [
-            "inference.c",
+            "inference.cpp",
             "inference.h",
             "global_vars.c",
             "main.c",
@@ -391,7 +392,7 @@ class CodeGenerator(ABC):
         with (output_dir / "main.c").open("a+") as main_file:
             main_file.write(pystache.render(template, {"data_type": self.data_type}))
 
-    def generate_makefile(self, output_dir: Path):
+    def generate_makefile(self, output_dir: Path) -> None:
         """Generate Makefile build script."""
         header_files = []
         source_files = []
@@ -401,19 +402,18 @@ class CodeGenerator(ABC):
             elif ".h" in filename:
                 header_files.append(filename)
 
-        template = (Path(self.template_path) / "template_Makefile.tpl").read_text()
+        # Configure Makefile template
+        template = TemplateMakefile(
+            self.function_name,
+            compiler="gcc",
+            compiler_flags=["-g", "-w", "-lm"],
+            header_files=header_files,
+            source_files=source_files,
+        )
 
+        # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
-            makefile.write(
-                pystache.render(
-                    template,
-                    {
-                        "source_files": " ".join(source_files),
-                        "header_files": " ".join(header_files),
-                        "function_name": self.function_name,
-                    },
-                ),
-            )
+            makefile.write(pystache.render(template))
 
     def generate_c_files(self, c_files_directory: str | Path) -> None:
         """Generate C code implementation of current graph."""
@@ -574,7 +574,7 @@ class CodeGenerator(ABC):
 
         # Generate C code
         template = (Path(self.template_path) / "template_source_file.c.tpl").read_text()
-        with (output_dir / "inference.c").open("a+") as source_file:
+        with (output_dir / "inference.cpp").open("a+") as source_file:
             source_file.write(pystache.render(template, mustach_hash))
 
     def generate_function_header_file(self, output_dir: Path):

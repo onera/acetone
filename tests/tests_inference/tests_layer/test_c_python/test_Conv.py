@@ -247,7 +247,9 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
     def test_conv_cuda_naive(self):
-        from acetone_nnet.templates.cuda.cuda_convolution_naive import register_cuda_convolution_naive
+        from acetone_nnet.templates.cuda.cuda_convolution_naive import (
+            register_cuda_convolution_naive,
+        )
         register_cuda_convolution_naive()
 
         testshape = (10, 10, 3)
