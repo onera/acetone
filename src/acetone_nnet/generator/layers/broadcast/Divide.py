@@ -41,7 +41,6 @@ class Divide(Broadcast):
             constant = np.ones(1)
         else:
             constant = np.reshape(self.constant, self.input_shapes[-1][1:])
-            self.input_shapes = np.delete(self.input_shapes, -1, axis=0)
         if len(self.previous_layer) > 1:
             output = np.copy(input_arrays[0]).reshape(self.input_shapes[0][1:])
             for i in range(1, len(input_arrays)):

@@ -1094,11 +1094,11 @@ def create_div(
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    if not constant.all():
+    if not constant.all(): # FIXME It seems like a test is missing here on the values of constant
         if len(constant.shape) < constant_length:
             for _i in range(4 - len(constant.shape)):
                 constant = np.expand_dims(constant, axis=0)
-        input_shapes.append(constant.shape)
+    input_shapes.append(constant.shape)
     input_shapes = np.array(input_shapes)
     return Divide(
         idx=idx,
@@ -1138,7 +1138,7 @@ def create_mul(
         if len(constant.shape) < constant_length:
             for _i in range(4 - len(constant.shape)):
                 constant = np.expand_dims(constant, axis=0)
-        input_shapes.append(list(constant.shape))
+    input_shapes.append(list(constant.shape))
     input_shapes = np.array(input_shapes)
     return Multiply(
         idx=idx,
@@ -1178,7 +1178,7 @@ def create_sub(
         if len(constant.shape) < constant_lenght:
             for _i in range(4 - len(constant.shape)):
                 constant = np.expand_dims(constant, axis=0)
-        input_shapes.append(constant.shape)
+    input_shapes.append(constant.shape)
     input_shapes = np.array(input_shapes)
     return Subtract(
         idx=idx,
