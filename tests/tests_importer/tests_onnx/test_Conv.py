@@ -134,8 +134,9 @@ class TestConv(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="6loops").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="6loops").layers
+        versions = {"Conv2D": "6loops"}
+        reference = self.import_layers(model, versions=versions).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", versions=versions).layers
 
         self.assert_list_layers_equals(list_layers, reference)
 
@@ -190,8 +191,9 @@ class TestConv(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        versions = {"Conv2D": "indirect_gemm_nn"}
+        reference = self.import_layers(model, versions=versions).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", versions=versions).layers
 
         self.assert_list_layers_equals(list_layers, reference)
 
