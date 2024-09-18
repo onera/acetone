@@ -20,7 +20,7 @@
 """
 from typing import Callable
 
-from acetone_nnet.code_generator import Layer
+from acetone_nnet.generator import Layer
 from acetone_nnet.versioning.version_implementation.conv_implementation import (
     conv2d_factory,
 )

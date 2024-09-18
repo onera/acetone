@@ -20,7 +20,7 @@
 """
 from collections.abc import Callable
 
-from acetone_nnet.code_generator.layers.Conv_layers import Conv2D
+from acetone_nnet.generator.layers.convolution import Conv2D
 
 Conv2DVariant = Callable[[Conv2D, str], Conv2D]
 

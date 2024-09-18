@@ -19,10 +19,10 @@
 ******************************************************************************
 """
 
-from . import code_generator, debug_tools
+from . import generator, debug
 from .cli_acetone import cli_acetone
 from .cli_compare import cli_compare
-from .code_generator import (
+from .generator import (
     ActivationFunctions,
     Add,
     AddBias,
@@ -80,6 +80,6 @@ from .code_generator import (
 
 __all__ = (
     "cli_acetone", "cli_compare",
-    code_generator.__all__,
-    debug_tools.__all__,
+    generator.__all__,
+    debug.__all__,
 )
