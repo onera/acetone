@@ -21,8 +21,8 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     {{#time}}
     difference = 0;
     select_evt_counter(counter_id);
-    event_tracker(counter_id);
-    enable_evt_coutner(counter_id);
+    event_track(counter_id);
+    enable_evt_counter(counter_id);
 
     {{/time}}
     int f;
@@ -114,7 +114,18 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     {{/cst}}
 {{/layers}}
 
+{{#time}}
+    reset_evt_counter(0);
+    start = read_evt_counter();
+{{/time}}
 {{{ouput_str}}}
+{{#time}}
+    end = read_evt_counter();
+    difference = difference + end - start;
+    printf("time output: %llu\n",end-start);
+    printf("\ntime total time: %llu\n",difference);
+{{/time}}
+
 
 {{{post_processing}}}
     return 0;

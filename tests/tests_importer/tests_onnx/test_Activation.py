@@ -1,6 +1,4 @@
-"""Test suite for Activation layers for ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -22,13 +20,15 @@
 import numpy as np
 import onnx
 
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 
 class TestActivation(importerTestCase.ImporterTestCase):
-    """Test for Activation Layer."""
+    """Test for activation layers."""
 
-    def test_relu(self):
+    def test_relu(self) -> None:
+        """Test for Relu."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -89,9 +89,10 @@ class TestActivation(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_sigmoid(self):
+    def test_sigmoid(self) -> None:
+        """Test for Sigmoid."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -152,9 +153,10 @@ class TestActivation(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_leaky_reLu(self):
+    def test_leaky_relu(self) -> None:
+        """Test for Leaky Relu."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -215,9 +217,10 @@ class TestActivation(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_tanh(self):
+    def test_tanh(self) -> None:
+        """Test for TanH."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -278,9 +281,10 @@ class TestActivation(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_exp(self):
+    def test_exp(self) -> None:
+        """Test for Exp."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -341,9 +345,10 @@ class TestActivation(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_log(self):
+    def testlog(self) -> None:
+        """Test for Log."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -404,9 +409,10 @@ class TestActivation(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_clip(self):
+    def test_clip(self) -> None:
+        """Test for Clip."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -475,4 +481,8 @@ class TestActivation(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

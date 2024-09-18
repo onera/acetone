@@ -1,6 +1,4 @@
-"""Test suite for ACAS model on ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -28,26 +26,33 @@ from tests.tests_importer import importerTestCase
 
 
 class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
-    """Test for ACAS Fully Connected."""
+    """Tests for acas fully connected models."""
 
-    def test_acas_fully_connected(self):
+    def test_acas_fully_connected(self) -> None:
+        """Test for acas fully connected models without normalized input."""
         model_path = (
-                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
+            MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
         )
         model = onnx.load_model(model_path)
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_acas_fully_connected_normalized(self):
+    def test_acas_fully_connected_normalized(self) -> None:
+        """Test for acas fully connected models with normalized input."""
         model_path = (
-                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected_normalized.onnx"
+            "/".join(__file__.split("/")[:-3])
+            + "/models/acas/acas_fully_connected/acas_fully_connected_normalized.onnx"
         )
         model = onnx.load_model(model_path)
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

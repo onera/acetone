@@ -47,7 +47,6 @@ class Conv2DFactory:
 
     def __call__(self, layer: Conv2D, version: str) -> Conv2D:
         """Create a Convolution implementation layer for the required implementation."""
-
         if version not in self.implementations:
             msg = f"Unknown convolution variant {version}."
             raise KeyError(msg)

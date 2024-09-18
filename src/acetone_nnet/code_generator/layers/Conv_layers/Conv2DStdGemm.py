@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Convolution direct gemm implementation type definition.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -16,19 +18,20 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
 import pystache
+from typing_extensions import Self
 
-from acetone_nnet.code_generator.layers.Conv_layers import Conv2D
-from acetone_nnet.versioning.version_implementation.conv_implementation import (
-    conv2d_factory,
-)
-
-from .Conv2D_gemm import Conv2D_gemm
+from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
+from . import Conv2D
+from .Conv2DGemm import Conv2DGemm
 
 
-class Conv2D_std_gemm(Conv2D_gemm):
+class Conv2DStdGemm(Conv2DGemm):
+    """Implements Conv2D using direct im2col (or im2row) and GeMM."""
 
-    def __init__(self, **kwargs):
+    def __init__(self: Self, **kwargs: int) -> None:
+        """Build a Convolution layer with direct gemm implementation."""
         super().__init__(**kwargs)
 
         self.algo_patch_building_mapping = {"gemm_nn": self.write_im2col,
@@ -36,9 +39,10 @@ class Conv2D_std_gemm(Conv2D_gemm):
                                             "gemm_tn": self.write_im2col,
                                             "gemm_tt": self.write_im2row}
 
-    def write_im2col(self):
+    def write_im2col(self: Self) -> str:
+        """Generate im to col code."""
         output_str = self.previous_layer[0].output_str
-        if ("output" in output_str):
+        if "output" in output_str:
             output_str = "tensor_temp"
 
         mustach_hash = {}
@@ -63,10 +67,10 @@ class Conv2D_std_gemm(Conv2D_gemm):
 
         return pystache.render(template, mustach_hash)
 
-    def write_im2row(self):
-
+    def write_im2row(self: Self) -> None:
+        """Generate im to row code."""
         output_str = self.previous_layer[0].output_str
-        if ("output" in output_str):
+        if "output" in output_str:
             output_str = "tensor_temp"
 
         mustach_hash = {}
@@ -91,8 +95,8 @@ class Conv2D_std_gemm(Conv2D_gemm):
 
         return pystache.render(template, mustach_hash)
 
-    def generate_inference_code_layer(self):
-
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
@@ -103,30 +107,31 @@ class Conv2D_std_gemm(Conv2D_gemm):
 
         mustach_hash["patch_building_code"] = self.algo_patch_building_mapping[self.conv_algorithm]()
         mustach_hash["patches_size"] = self.nb_filters * self.patches_width
-        mustach_hash["gemm_code"] = self.algo_gemm_mapping[self.conv_algorithm](self.nb_filters, self.patches_width,
-                                                                                self.patches_height,
-                                                                                "weights_" + self.name + "_" + str(
-                                                                                    f"{self.idx:02d}"),
-                                                                                "output_" + str(self.path),
-                                                                                "tensor_temp", False)
+        mustach_hash["gemm_code"] = self.algo_gemm_mapping[self.conv_algorithm](
+            self.nb_filters, self.patches_width,
+            self.patches_height,
+            f"weights_{self.name}_{self.idx:02d}",
+            f"output_{self.path}",
+            "tensor_temp",
+            False)
 
-        if ("cst" not in self.previous_layer[0].output_str):
+        if "cst" not in self.previous_layer[0].output_str:
             mustach_hash["cst"] = True
             mustach_hash["input_size"] = self.input_channels * self.input_height * self.input_width
 
         with open(self.template_path + "layers/Conv/template_Conv_std_gemm.c.tpl") as template_file:
-            tempalte = template_file.read()
+            template = template_file.read()
         template_file.close()
 
-        return pystache.render(tempalte, mustach_hash)
+        return pystache.render(template, mustach_hash)
 
 
-def Conv2D_std_gemm_implementation(
+def conv2d_std_gemm_implementation(
         old_layer: Conv2D,
         conv_algo: str,
-) -> Conv2D_std_gemm:
-    """Create a Conv2D_std_gemm layer using the attributs of old_layer."""
-    return Conv2D_std_gemm(
+) -> Conv2DStdGemm:
+    """Create a Conv2D_std_gemm layer using the attributes of old_layer."""
+    return Conv2DStdGemm(
         idx=old_layer.idx,
         conv_algorithm=conv_algo,
         size=old_layer.size,
@@ -144,7 +149,7 @@ def Conv2D_std_gemm_implementation(
     )
 
 
-conv2d_factory.register_implementation("std_gemm_nn", Conv2D_std_gemm_implementation)
-conv2d_factory.register_implementation("std_gemm_tn", Conv2D_std_gemm_implementation)
-conv2d_factory.register_implementation("std_gemm_nt", Conv2D_std_gemm_implementation)
-conv2d_factory.register_implementation("std_gemm_tt", Conv2D_std_gemm_implementation)
+conv2d_factory.register_implementation("std_gemm_nn", conv2d_std_gemm_implementation)
+conv2d_factory.register_implementation("std_gemm_tn", conv2d_std_gemm_implementation)
+conv2d_factory.register_implementation("std_gemm_nt", conv2d_std_gemm_implementation)
+conv2d_factory.register_implementation("std_gemm_tt", conv2d_std_gemm_implementation)

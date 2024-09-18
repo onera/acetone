@@ -1,6 +1,4 @@
-"""Test suite for Convolution layer in Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -25,59 +23,87 @@ from keras.layers import Conv2D, Input
 
 from tests.tests_importer import importerTestCase
 
-tf.keras.backend.set_floatx('float32')
+tf.keras.backend.set_floatx("float32")
 
 
 class TestConv(importerTestCase.ImporterTestCase):
     """Test for Conv Layer."""
 
-    def test_conv_naive(self):
-        testshape = (10, 10, 3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        inp = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal',
-                     padding='same', data_format='channels_last')(inp)
-
-        model = keras.Model(inp, out)
-        model.save(self.tmpdir_name + '/model.h5')
-
-        reference = self.import_layers(model, '6loops').layers
-        list_layers = self.import_layers(self.tmpdir_name + '/model.h5', '6loops').layers
-
-        self.assert_List_Layers_equals(list_layers, reference)
-
-    def test_conv_indirect_gemm(self):
+    def test_conv_6loops(self) -> None:
+        """Test Conv2D with 6 loops implementation."""
         testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal',
-                     padding='same', data_format='channels_last')(input)
+        out = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation=None,
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
 
         model = keras.Model(input, out)
-        model.save(self.tmpdir_name + '/model.h5')
+        model.save(self.tmpdir_name + "/model.h5")
 
-        reference = self.import_layers(model, 'indirect_gemm_nn').layers
-        list_layers = self.import_layers(self.tmpdir_name + '/model.h5', 'indirect_gemm_nn').layers
+        reference = self.import_layers(model,
+                                       {"Conv2D": "6loops"}).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5",
+                                         {"Conv2D": "6loops"}).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_conv_std_gemm(self):
+    def test_conv_indirect_gemm(self) -> None:
+        """Test Conv2D with indirect_gemm implementation."""
         testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
-        inp = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal',
-                     padding='same', data_format='channels_last')(inp)
+        input = Input(testshape)
+        out = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation=None,
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
 
-        model = keras.Model(inp, out)
-        model.save(self.tmpdir_name + '/model.h5')
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
-        reference = self.import_layers(model, 'std_gemm_nn').layers
-        list_layers = self.import_layers(self.tmpdir_name + '/model.h5', 'std_gemm_nn').layers
+        reference = self.import_layers(model,
+                                       {"Conv2D": "indirect_gemm_nn"}).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5",
+                                         {"Conv2D": "indirect_gemm_nn"}).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+    def test_conv_std_gemm(self) -> None:
+        """Test Conv2D with std_gemm implementation."""
+        testshape = (10, 10, 3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        out = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation=None,
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
+
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
+
+        reference = self.import_layers(model,
+                                       {"Conv2D": "std_gemm_nn"}).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5",
+                                         {"Conv2D": "std_gemm_nn"}).layers
+
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

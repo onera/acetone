@@ -1,6 +1,4 @@
-"""Test suite for Concatenate layers in Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -25,25 +23,42 @@ from keras.layers import Concatenate, Conv2D, Input
 
 from tests.tests_importer import importerTestCase
 
-tf.keras.backend.set_floatx('float32')
+tf.keras.backend.set_floatx("float32")
 
 
 class TestConcatenate(importerTestCase.ImporterTestCase):
     """Test for Concatenate Layer."""
 
-    def test_concatenate(self):
-        testshape = (10,10,3)
+    def test_concatenate(self) -> None:
+        """Test Concatenate layer."""
+        testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
-        inp = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(inp)
-        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(inp)
-        out = Concatenate(axis = 2)([x1,x2])
-        model = keras.Model(inp,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        input = Input(testshape)
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        x2 = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation=None,
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
+        out = Concatenate(axis=2)([x1, x2])
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

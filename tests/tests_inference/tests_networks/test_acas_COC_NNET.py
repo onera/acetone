@@ -16,29 +16,45 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+import numpy as np
 
-test_path = "/".join(__file__.split("/")[:-3])
-import sys
-
-sys.path.append(test_path+"/tests_inference")
-import acetoneTestCase
-
+from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
 
 
-class TestAcas_COC_NNet(acetoneTestCase.AcetoneTestCase):
-    """Test for Concatenate Layer"""
+class TestAcasCOCNNet(acetoneTestCase.AcetoneTestCase):
+    """Inference test for Acas COC, NNet model."""
 
-    def testAcas_COC_NNet(self):
-        NNet_result = [2.45578096e+04, 2.44936744e+04, 2.44764976e+04, 2.44966370e+04, 2.44581565e+04]
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, test_path + "/models/acas/acas_COC/nn_acas_COC.nnet", test_path + "/models/acas/acas_COC/test_input_acas_COC.txt")
+    def test_acas_coc_nnet(self) -> None:
+        """Tests Acas COC, NNet model, compare between NNet et C code."""
+        nnet_result = [2.45578096e+04,
+                       2.44936744e+04,
+                       2.44764976e+04,
+                       2.44966370e+04,
+                       2.44581565e+04]
+        nnet_result = np.array(nnet_result)
+        model_path = (
+                MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.nnet"
+        )
+        dataset_path = (
+                MODELS_DIR / "acas" / "acas_COC" / "test_input_acas_COC.txt"
+        )
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,
+                                                              model_path,
+                                                              dataset_path)
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(NNet_result))
+        self.assertListAlmostEqual(acetone_result[0], nnet_result)
 
-    def testAcas_COC_NNet_Python(self):
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, test_path + "/models/acas/acas_COC/nn_acas_COC.nnet")
+    def test_acas_coc_nnet_python(self) -> None:
+        """Tests Acas COC, NNet model, compare between python et C code."""
+        model_path = (
+                MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.nnet"
+        )
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,
+                                                              model_path)
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+
 
 if __name__ == "__main__":
     acetoneTestCase.main()

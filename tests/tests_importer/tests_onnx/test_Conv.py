@@ -1,6 +1,4 @@
-"""Test suite for Convolution layer on ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -22,13 +20,15 @@
 import numpy as np
 import onnx
 
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 
 class TestConv(importerTestCase.ImporterTestCase):
     """Test for Conv Layer."""
 
-    def test_conv_std_gemm(self):
+    def test_conv_std_gemm(self) -> None:
+        """Test for conv Layer, std_gemm implementation."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -81,9 +81,10 @@ class TestConv(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_conv_naive(self):
+    def test_conv_6loops(self) -> None:
+        """Test for conv Layer, 6loops implementation."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -136,9 +137,10 @@ class TestConv(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model, conv_algorithm="6loops").layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="6loops").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_conv_indirect_gemm(self):
+    def test_conv_indirect_gemm(self) -> None:
+        """Test for conv Layer, indirect_gemm implementation."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -191,4 +193,8 @@ class TestConv(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

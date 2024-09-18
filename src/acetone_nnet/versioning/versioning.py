@@ -18,7 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from collections.abc import Callable
+from typing import Callable
 
 from acetone_nnet.code_generator import Layer
 from acetone_nnet.versioning.version_implementation.conv_implementation import (

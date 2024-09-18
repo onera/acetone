@@ -1,6 +1,4 @@
-"""Test suite for SqueezeNet model on ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -22,13 +20,16 @@
 import onnx
 
 from tests.common import MODELS_DIR
+
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 
-class TestSqueezeNet(importerTestCase.ImporterTestCase):
-    """Test for SqueezeNet."""
+class TestSqueezenet(importerTestCase.ImporterTestCase):
+    """Test for squeezenet."""
 
-    def test_squeeze_net(self):
+    def test_squeezenet(self) -> None:
+        """Test Squeezenet model."""
         model_path = (
                 MODELS_DIR / "squeezenet1" / "squeezenet1.onnx"
         )
@@ -37,4 +38,8 @@ class TestSqueezeNet(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

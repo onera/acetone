@@ -1,35 +1,52 @@
-"""
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
+"""BatchNormalization layer type definition.
+
+*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
 
-from ..Layer import Layer
-from ..activation_functions import ActivationFunctions
 import numpy as np
 import pystache
+from typing_extensions import Self
+
+from acetone_nnet.code_generator.activation_functions import ActivationFunctions
+from acetone_nnet.code_generator.Layer import Layer
+
 
 class BatchNormalization(Layer):
+    """BatchNormalization layer class."""
 
-    def __init__(self, idx:int, size:int, input_shape:list, epsilon:float|int, scale:np.ndarray, biases:np.ndarray, mean:np.ndarray, var:np.ndarray, activation_function:ActivationFunctions):
+    def __init__(
+            self: Self,
+            idx: int,
+            size: int,
+            input_shape: list,
+            epsilon: float,
+            scale: np.ndarray,
+            biases: np.ndarray,
+            mean: np.ndarray,
+            var: np.ndarray,
+            activation_function: ActivationFunctions,
+    ) -> None:
+        """Build a BatchNormalization layer."""
         super().__init__()
         self.idx = idx
         self.size = size
-        self.name = 'BatchNormalization'
+        self.name = "BatchNormalization"
         self.output_channels = input_shape[1]
         self.output_height = input_shape[2]
         self.output_width = input_shape[3]
@@ -45,69 +62,107 @@ class BatchNormalization(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        if  type(self.idx)!= int:
-            raise TypeError("Error: idx type in BatchNormalization (idx must be int)")
-        if  type(self.size)!= int:
-            raise TypeError("Error: size type in BatchNormalization (size must be int)")
-        if type(self.output_channels) != int:
-            raise TypeError("Error: output channels type in BatchNormalization (must be int)")
-        if type(self.output_height) != int:
-            raise TypeError("Error: output height type in BatchNormalization (must be int)")
-        if type(self.output_width) != int:
-            raise TypeError("Error: output width type in BatchNormalization (must be int)")
-        if  type(self.epsilon) != float and type(self.epsilon) == int:
-            raise TypeError("Error: epsilon type in BatchNormalization (epsilon must be int or float)")
-        if type(self.scale) != np.ndarray:
-            raise TypeError("Error: scale in BatchNormalization (scale must be an numpy array)")
-        if type(self.mean) != np.ndarray:
-            raise TypeError("Error: mean in BatchNormalization (mean must be an numpy array)")
-        if type(self.var) != np.ndarray:
-            raise TypeError("Error: var in BatchNormalization (var must be an numpy array)")
-        if type(self.biases) != np.ndarray:
-            raise TypeError("Error: biases in BatchNormalization (biases must be an numpy array)")
+        msg = ""
+        if type(self.idx) is not int:
+            msg += "Error: idx type in BatchNormalization (idx must be int)"
+            msg += "\n"
+        if type(self.size) is not int:
+            msg += "Error: size type in BatchNormalization (size must be int)"
+            msg += "\n"
+        if type(self.output_channels) is not int:
+            msg += "Error: output channels type in BatchNormalization (must be int)"
+            msg += "\n"
+        if type(self.output_height) is not int:
+            msg += "Error: output height type in BatchNormalization (must be int)"
+            msg += "\n"
+        if type(self.output_width) is not int:
+            msg += "Error: output width type in BatchNormalization (must be int)"
+            msg += "\n"
+        if type(self.epsilon) is not float and type(self.epsilon) is int:
+            msg += "Error: epsilon type in BatchNormalization (epsilon must be int or float)"
+            msg += "\n"
+        if type(self.scale) is not np.ndarray:
+            msg += "Error: scale in BatchNormalization (scale must be an numpy array)"
+            msg += "\n"
+        if type(self.mean) is not np.ndarray:
+            msg += "Error: mean in BatchNormalization (mean must be an numpy array)"
+            msg += "\n"
+        if type(self.var) is not np.ndarray:
+            msg += "Error: var in BatchNormalization (var must be an numpy array)"
+            msg += "\n"
+        if type(self.biases) is not np.ndarray:
+            msg += "Error: biases in BatchNormalization (biases must be an numpy array)"
+            msg += "\n"
         if not isinstance(self.activation_function, ActivationFunctions):
-            raise TypeError("Error: activation function type in BatchNormalization (activation function must be a sub-classe of acetone_nnet Activation Function)")
+            msg += ("Error: activation function type in BatchNormalization "
+                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
+            msg += "\n"
+        if msg:
+            raise TypeError(msg)
 
         ### Checking value consistency ###
-        if self.size != self.output_channels*self.output_height*self.output_width:
-            raise ValueError("Error: size value in BatchNormalization ("+str(self.size)+"!="+str(self.output_channels*self.output_height*self.output_width)+")")
+        msg = ""
+        if self.size != self.output_channels * self.output_height * self.output_width:
+            msg += (f"Error: size value in BatchNormalization "
+                    f"({self.size}!={self.output_channels * self.output_height * self.output_width})")
+            msg += "\n"
         if len(self.scale.shape) != 1 or self.scale.shape[0] != self.output_channels:
-            raise ValueError("Error: non consistency between the scale shape and the output shape in BatchNormalization ("+str(self.scale.shape)+"!="+str(self.output_channels)+")")
+            msg += (f"Error: non consistency between the scale shape and the output shape in BatchNormalization "
+                    f"({self.scale.shape}!={self.output_channels})")
+            msg += "\n"
         if len(self.scale.mean) != 1 or self.mean.shape[0] != self.output_channels:
-            raise ValueError("Error: non consistency between the mean shape and the output shape in BatchNormalization ("+str(self.mean.shape)+"!="+str(self.output_channels)+")")
+            msg += (f"Error: non consistency between the mean shape and the output shape in BatchNormalization "
+                    f"({self.mean.shape}!={self.output_channels})")
+            msg += "\n"
         if len(self.var.shape) != 1 or self.var.shape[0] != self.output_channels:
-            raise ValueError("Error: non consistency between the var shape and the output shape in BatchNormalization ("+str(self.var.shape)+"!="+str(self.output_channels)+")")
+            msg += (f"Error: non consistency between the var shape and the output shape in BatchNormalization"
+                    f" ({self.var.shape}!={self.output_channels})")
+            msg += "\n"
         if len(self.biases.shape) != 1 or self.biases.shape[0] != self.output_channels:
-            raise ValueError("Error: non consistency between the biases shape and the output shape in BatchNormalization ("+str(self.biases.shape)+"!="+str(self.output_channels)+")")
+            msg += (f"Error: non consistency between the biases shape and the output shape in BatchNormalization "
+                    f"({self.biases.shape}!={self.output_channels})")
+            msg += "\n"
+        if msg:
+            raise ValueError(msg)
 
-    def generate_inference_code_layer(self):
-        #Variable indicating under which name the input tensor is
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
+        # Variable indicating under which name the input tensor is
         output_str = self.previous_layer[0].output_str
 
         mustach_hash = {}
 
-        mustach_hash['name'] = self.name
-        mustach_hash['idx'] = "{:02d}".format(self.idx)
-        mustach_hash['comment'] = self.activation_function.comment
-        mustach_hash['output_str'] = output_str
-        mustach_hash['path'] = self.path
-        
-        if(self.activation_function.name != 'linear'):
-            mustach_hash['activation_function'] = self.activation_function.write_activation_str('output_'+str(self.path)+'[k + '+str(self.output_height*self.output_width)+'*f]')
+        mustach_hash["name"] = self.name
+        mustach_hash["idx"] = f"{self.idx:02d}"
+        mustach_hash["comment"] = self.activation_function.comment
+        mustach_hash["output_str"] = output_str
+        mustach_hash["path"] = self.path
 
-        mustach_hash['input_channels'] = self.output_channels
-        mustach_hash['channel_size'] = self.output_height*self.output_width
-        mustach_hash['epsilon'] = self.epsilon
+        if self.activation_function.name != "linear":
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str(
+                f"output_{self.path}[k + {self.output_height * self.output_width}*f]")
 
-        with open(self.template_path+'layers/template_BatchNormalization.c.tpl','r') as template_file:
+        mustach_hash["input_channels"] = self.output_channels
+        mustach_hash["channel_size"] = self.output_height * self.output_width
+        mustach_hash["epsilon"] = self.epsilon
+
+        with open(self.template_path + "layers/template_BatchNormalization.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input:np.ndarray):
-        input = np.reshape(input, (self.output_channels, self.output_height, self.output_width))
+    def forward_path_layer(
+            self: Self,
+            input_array: np.ndarray,
+    ) -> np.ndarray:
+        """Compute output of layer."""
+        input_array = np.reshape(
+            input_array,
+            (self.output_channels, self.output_height, self.output_width),
+        )
         output = []
         for i in range(self.output_channels):
-            output.append((input[i] - self.mean[i])/np.sqrt(self.var[i] + self.epsilon)*self.scale[i] + self.biases[i])
+            output.append(
+                (input_array[i] - self.mean[i]) / np.sqrt(self.var[i] + self.epsilon) * self.scale[i] + self.biases[i])
         return np.array(output)

@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Convolution indirect gemm implementation type definition.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -16,25 +18,26 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
 import numpy as np
 import pystache
+from typing_extensions import Self
 
-from acetone_nnet.code_generator.layers.Conv_layers import Conv2D
-from acetone_nnet.versioning.version_implementation.conv_implementation import (
-    conv2d_factory,
-)
-
-from .Conv2D_gemm import Conv2D_gemm
+from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
+from . import Conv2D
+from .Conv2DGemm import Conv2DGemm
 
 
-class Conv2D_indirect_gemm(Conv2D_gemm):
-    """Implements Conv2D using indirect im2col (or im2row) and GeMM"""
+class Conv2DIndirectGemm(Conv2DGemm):
+    """Implements Conv2D using indirect im2col (or im2row) and GeMM."""
 
-    def __init__(self, **kwargs):
+    def __init__(self: Self, **kwargs: int) -> None:
+        """Build a Convolution layer with indirect gemm implementation."""
         super().__init__(**kwargs)
 
-    def create_ppatches(self):
-        if (self.pad_right or self.pad_left or self.pad_bottom or self.pad_top):
+    def create_ppatches(self: Self) -> str:
+        """Generate the new matrix to multiply in the Gemm algorithm."""
+        if self.pad_right or self.pad_left or self.pad_bottom or self.pad_top:
             self.input_h_padded = self.input_height + self.pad_top + self.pad_bottom
             self.input_w_padded = self.input_width + self.pad_left + self.pad_right
 
@@ -53,7 +56,7 @@ class Conv2D_indirect_gemm(Conv2D_gemm):
             for c in range(self.input_channels):
                 for i in range(self.input_h_padded):
                     for j in range(self.input_w_padded):
-                        if (np.isin(i, i_zeros) or np.isin(j, j_zeros)):
+                        if np.isin(i, i_zeros) or np.isin(j, j_zeros):
                             idx_of_zeros.append(j + self.input_w_padded * (i + self.input_h_padded * c))
 
             idx_padded_input = np.where(np.isin(idx_padded_input, idx_of_zeros), np.nan, idx_padded_input)
@@ -69,7 +72,7 @@ class Conv2D_indirect_gemm(Conv2D_gemm):
                          None] * self.input_width + np.arange(self.output_width * self.strides, step=self.strides)
             self.ppatches = (start_idx.ravel()[:, None] + offset_idx.ravel()).flatten()
 
-        if ("gemm_nt" or "gemm_tt") in self.conv_algorithm:
+        if "gemm_nt" in self.conv_algorithm or "gemm_tt" in self.conv_algorithm:
             self.ppatches = self.ppatches.reshape((self.patches_height, self.patches_width)).transpose().flatten()
 
         output_str = self.previous_layer[0].output_str
@@ -88,7 +91,8 @@ class Conv2D_indirect_gemm(Conv2D_gemm):
 
         return s
 
-    def generate_inference_code_layer(self):
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
@@ -103,14 +107,15 @@ class Conv2D_indirect_gemm(Conv2D_gemm):
             self.nb_filters,
             self.patches_width,
             self.patches_height,
-            "weights_" + self.name + "_" + str(f"{self.idx:02d}"),
-            "ppatches_" + self.name + "_" + str(f"{self.idx:02d}"),
-            "output_" + str(self.path), True)
+            f"weights_{self.name}_{self.idx:02d}",
+            f"ppatches_{self.name}_{self.idx:02d}",
+            f"output_{self.path}",
+            True)
         mustach_hash["gemm_code"] = gemm_code
 
-        if ("cst" not in self.previous_layer[0].output_str):
+        if "cst" not in self.previous_layer[0].output_str:
             mustach_hash["cst"] = True
-            mustach_hash["prev_size"] = self.input_channels * self.input_height * self.input_width
+        mustach_hash["prev_size"] = self.input_channels * self.input_height * self.input_width
 
         with open(self.template_path + "layers/Conv/template_Conv_indirect_gemm.c.tpl") as template_file:
             template = template_file.read()
@@ -119,12 +124,12 @@ class Conv2D_indirect_gemm(Conv2D_gemm):
         return pystache.render(template, mustach_hash)
 
 
-def Conv2D_indirect_gemm_implementation(
+def conv2d_indirect_gemm_implementation(
         old_layer: Conv2D,
         conv_algo: str,
-) -> Conv2D_indirect_gemm:
-    """Create a Conv2D_indirect_gemm layer using the attributs of old_layer."""
-    return Conv2D_indirect_gemm(
+) -> Conv2DIndirectGemm:
+    """Create a Conv2D_indirect_gemm layer using the attributes of old_layer."""
+    return Conv2DIndirectGemm(
         idx=old_layer.idx,
         conv_algorithm=conv_algo,
         size=old_layer.size,
@@ -142,7 +147,7 @@ def Conv2D_indirect_gemm_implementation(
     )
 
 
-conv2d_factory.register_implementation("indirect_gemm_nn", Conv2D_indirect_gemm_implementation)
-conv2d_factory.register_implementation("indirect_gemm_tn", Conv2D_indirect_gemm_implementation)
-conv2d_factory.register_implementation("indirect_gemm_nt", Conv2D_indirect_gemm_implementation)
-conv2d_factory.register_implementation("indirect_gemm_tt", Conv2D_indirect_gemm_implementation)
+conv2d_factory.register_implementation("indirect_gemm_nn", conv2d_indirect_gemm_implementation)
+conv2d_factory.register_implementation("indirect_gemm_tn", conv2d_indirect_gemm_implementation)
+conv2d_factory.register_implementation("indirect_gemm_nt", conv2d_indirect_gemm_implementation)
+conv2d_factory.register_implementation("indirect_gemm_tt", conv2d_indirect_gemm_implementation)

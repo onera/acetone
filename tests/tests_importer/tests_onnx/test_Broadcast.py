@@ -1,6 +1,4 @@
-"""Test suite for Broadcast layer on ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -22,13 +20,15 @@
 import numpy as np
 import onnx
 
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 
 class TestBroadcast(importerTestCase.ImporterTestCase):
-    """Test for Broadcast Layer."""
+    """Test for Broadcast Layers."""
 
-    def test_add(self):
+    def test_add(self) -> None:
+        """Test for Add."""
         model_input_name = "X"
         model_input_channels = 1
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -130,9 +130,10 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_sub(self):
+    def test_sub(self) -> None:
+        """Test for Sub."""
         model_input_name = "X"
         model_input_channels = 1
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -235,9 +236,10 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_mul(self):
+    def test_mul(self) -> None:
+        """Test for Mul."""
         model_input_name = "X"
         model_input_channels = 1
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -340,9 +342,10 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_div(self):
+    def test_div(self) -> None:
+        """Test for Div."""
         model_input_name = "X"
         model_input_channels = 1
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -445,9 +448,10 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_max(self):
+    def test_max(self) -> None:
+        """Test for Max."""
         model_input_name = "X"
         model_input_channels = 1
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -550,9 +554,10 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_min(self):
+    def test_min(self) -> None:
+        """Test for Min."""
         model_input_name = "X"
         model_input_channels = 1
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -655,4 +660,8 @@ class TestBroadcast(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

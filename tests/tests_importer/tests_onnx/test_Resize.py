@@ -1,6 +1,4 @@
-"""Test suite for Resize Layer on ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -22,13 +20,15 @@
 import numpy as np
 import onnx
 
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 
 class TestResize(importerTestCase.ImporterTestCase):
     """Test for Resize Layer."""
 
-    def test_resize_nearest(self):
+    def test_resize_nearest(self) -> None:
+        """Test resize layer on config nearest."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -73,12 +73,13 @@ class TestResize(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_resize_linear(self):
+    def test_resize_linear(self) -> None:
+        """Test resize layer on config linear."""
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -123,12 +124,13 @@ class TestResize(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_resize_cubic(self):
+    def test_resize_cubic(self) -> None:
+        """Test resize layer on config cubic."""
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -173,7 +175,11 @@ class TestResize(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

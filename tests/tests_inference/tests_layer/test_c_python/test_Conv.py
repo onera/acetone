@@ -246,11 +246,45 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
+
     def test_conv_cuda_naive(self):
         from acetone_nnet.templates.cuda.cuda_convolution_naive import (
             register_cuda_convolution_naive,
         )
-        register_cuda_convolution_naive()
+        register_cuda_convolution_naive()    def test_conv_non_uniform_pads(self):
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name,
+            onnx.TensorProto.FLOAT,
+            [None, 3, 10, 10],
+        )
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name,
+            onnx.TensorProto.FLOAT,
+            [None, 5, 6, 4],
+        )
+        conv1_in_channels = 3
+        conv1_out_channels = 5
+        conv1_kernel_shape = (7, 7)
+        conv1_W = np.random.rand(
+            conv1_out_channels,
+            conv1_in_channels,
+            *conv1_kernel_shape,
+        ).astype(np.float32)
+        conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
+        conv1_W_initializer_tensor_name = "Conv1_W"
+        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_W_initializer_tensor_name,
+            tensor_array=conv1_W,
+            data_type=onnx.TensorProto.FLOAT,
+        )
+        conv1_B_initializer_tensor_name = "Conv1_B"
+        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_B_initializer_tensor_name,
+            tensor_array=conv1_B,
+            data_type=onnx.TensorProto.FLOAT,
+        )
 
         testshape = (10, 10, 3)
         filters = 3

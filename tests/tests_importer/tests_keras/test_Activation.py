@@ -1,6 +1,4 @@
-"""Test suite for Activation layers on Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -31,72 +29,98 @@ tf.keras.backend.set_floatx("float32")
 class TestActivation(importerTestCase.ImporterTestCase):
     """Test for Activation Layers."""
 
-    def test_relu(self):
+    def test_relu(self) -> None:
+        """Test for Relu."""
         testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="relu", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(input)
+        out = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation="relu",
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
 
         model = keras.Model(input, out)
         model.save(self.tmpdir_name + "/model.h5")
 
-        reference = self.import_layers(model, "std_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.h5", "std_gemm_nn").layers
-        self.assert_List_Layers_equals(list_layers, reference)
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_leaky_relu(self):
+    def test_leaky_relu(self) -> None:
+        """Test for Leaky Relu."""
         testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="leaky_relu", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(input)
+        out = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation="leaky_relu",
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
 
         model = keras.Model(input, out)
         model.save(self.tmpdir_name + "/model.h5")
 
-        reference = self.import_layers(model, "std_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.h5", "std_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-
-    def test_sigmoid(self):
+    def test_sigmoid(self) -> None:
+        """Test for Sigmoid."""
         testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="sigmoid", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(input)
+        out = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation="sigmoid",
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
 
         model = keras.Model(input, out)
         model.save(self.tmpdir_name + "/model.h5")
 
-        reference = self.import_layers(model, "std_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.h5", "std_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-
-    def test_tanh(self):
+    def test_tanh(self) -> None:
+        """Test for TanH."""
         testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
-        inp = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="tanh", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(inp)
+        input = Input(testshape)
+        out = Conv2D(filters=filters,
+                     kernel_size=kernel_size,
+                     activation="tanh",
+                     bias_initializer="he_normal",
+                     padding="same",
+                     data_format="channels_last",
+                     )(input)
 
-        model = keras.Model(inp, out)
+        model = keras.Model(input, out)
         model.save(self.tmpdir_name + "/model.h5")
 
-        reference = self.import_layers(model, "std_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.h5", "std_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

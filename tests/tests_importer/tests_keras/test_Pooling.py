@@ -1,6 +1,4 @@
-"""Test suite for Pooling layer on Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -29,37 +27,43 @@ tf.keras.backend.set_floatx("float32")
 
 
 class TestPooling(importerTestCase.ImporterTestCase):
-    """Test for Pooling Layer."""
+    """Test for Pooling Layers."""
 
-    def test_max_pooling(self):
+    def test_max_pooling(self) -> None:
+        """Test Max Pooling layer."""
         testshape = (10, 10, 3)
         pool_size = (3, 3)
         strides = (1, 1)
 
-        inp = Input(testshape)
-        out = MaxPooling2D(pool_size=pool_size, strides=strides, padding="valid", data_format="channels_last")(inp)
+        input = Input(testshape)
+        out = MaxPooling2D(pool_size=pool_size, strides=strides, padding="valid", data_format="channels_last")(input)
 
-        model = keras.Model(inp, out)
+        model = keras.Model(input, out)
         model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_average_pooling2D(self):
+    def test_average_pooling2D(self) -> None:
+        """Test Average Pooling layer."""
         testshape = (10, 10, 3)
         pool_size = (3, 3)
         strides = (1, 1)
 
-        inp = Input(testshape)
+        input = Input(testshape)
         out = AveragePooling2D(pool_size=pool_size, strides=strides, padding="valid", data_format="channels_last")(
-            inp)
+            input)
 
-        model = keras.Model(inp, out)
+        model = keras.Model(input, out)
         model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

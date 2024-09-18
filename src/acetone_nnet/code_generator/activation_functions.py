@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Activation Layers type definition.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -20,56 +22,92 @@
 from abc import abstractmethod
 
 import numpy as np
+from typing_extensions import Self
 
 
 class ActivationFunctions:
-    def __init__(self):
+    """Abstract class for activation functions."""
+
+    def __init__(self: Self) -> None:
+        """Initiate an activation function."""
+        self.name = None
         self.name = ""
         self.comment = ""
 
     @abstractmethod
-    def compute(self, z: np.ndarray):
-        pass
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
 
     @abstractmethod
-    def write_activation_str(self, local_var: str):
-        pass
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+
+    def __eq__(
+            self: Self,
+            other,
+    ) -> bool:
+        """Eq method for layers."""
+        if type(self) is type(other):
+            keys = list(self.__dict__.keys())
+            for key in keys:
+                if (key in ("previous_layer", "next_layer")
+                        or type(self.__dict__[key]) is dict):
+                    continue
+
+                if type(self.__dict__[key]) is np.ndarray:
+                    if (other.__dict__[key] != self.__dict__[key]).any():
+                        return False
+                elif other.__dict__[key] != self.__dict__[key]:
+                    return False
+        # compare two layers and say if they are equals
+        else:
+            return False
+        return True
 
 
 class Sigmoid(ActivationFunctions):
+    """Sigmoid layer."""
 
-    def __init__(self):
+    def __init__(self: Self) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "sigmoid"
         self.comment = " and apply sigmoid function"
         # self.layer_type
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         return 1 / (1 + np.exp(-z))
 
-    def write_activation_str(self, local_var: str):
-        return f"1 / (1 + exp(-{local_var}))"
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        return "1 / (1 + exp(-" + local_var + "))"
 
 
 class ReLu(ActivationFunctions):
+    """ReLu layer."""
 
-    def __init__(self):
+    def __init__(self: Self) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "relu"
         self.comment = " and apply rectifier"
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         return np.maximum(0, z)
 
-    def write_activation_str(self, local_var: str):
-        s = local_var + " > 0 ? " + local_var + " : 0"  # output = condition ? value_if_true : value_if_false
-
-        return s
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        # output = condition ? value_if_true : value_if_false
+        return local_var + " > 0 ? " + local_var + " : 0"
 
 
 class LeakyReLu(ActivationFunctions):
+    """LeakyReLu layer."""
 
-    def __init__(self, alpha: float):
+    def __init__(self: Self, alpha: float) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "leakyrelu"
         self.comment = " and apply rectifier"
@@ -77,99 +115,120 @@ class LeakyReLu(ActivationFunctions):
 
         ### Checking value consistency ###
         if self.alpha < 0:
-            raise ValueError("Error: alpha value in LeakyRelu (alpha < 0)")
+            msg = "Error: alpha value in LeakyRelu (alpha < 0)"
+            raise ValueError(msg)
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         temp_tensor = z.flatten()
         for i in range(len(temp_tensor)):
-            if (temp_tensor[i] < 0):
+            if temp_tensor[i] < 0:
                 temp_tensor[i] = self.alpha * temp_tensor[i]
         return temp_tensor.reshape(z.shape)
 
-    def write_activation_str(self, local_var: str):
-
-        s = local_var + " > 0 ? " + local_var + " : " + str(
-            self.alpha) + "*" + local_var  # output = condition ? value_if_true : value_if_false
-
-        return s
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        # output = condition ? value_if_true : value_if_false
+        return f"{local_var} > 0 ? {local_var} : {self.alpha!s}*{local_var}"
 
 
 class TanH(ActivationFunctions):
-    def __init__(self):
+    """TanH layer."""
+
+    def __init__(self: Self) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "hyperb_tan"
         self.comment = " and apply hyperbolic tangent function"
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
 
-    def write_activation_str(self, local_var: str):
-        s = "(exp(" + local_var + ")-exp(-" + local_var + "))/(exp(" + local_var + ")+exp(-" + local_var + "))"
-
-        return s
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        s = "(exp(" + local_var + ")-exp(-" + local_var + "))/"
+        return s + "(exp(" + local_var + ")+exp(-" + local_var + "))"
 
 
 class Linear(ActivationFunctions):
-    def __init__(self):
+    """Linear layer."""
+
+    def __init__(self: Self) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "linear"
         self.comment = ""
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         return z
 
-    def write_activation_str(self, local_var: str):
-        s = local_var
-
-        return s
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        return local_var
 
 
 class Exponential(ActivationFunctions):
-    def __init__(self):
+    """Exponential layer."""
+
+    def __init__(self: Self) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "Exponential"
         self.comment = " and apply exponential function"
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         return np.exp(z)
 
-    def write_activation_str(self, local_var: str):
-        s = "exp(" + local_var + ")"
-
-        return s
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        return "exp(" + local_var + ")"
 
 
 class Logarithm(ActivationFunctions):
-    def __init__(self):
+    """Logarithm layer."""
+
+    def __init__(self: Self) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "Logarithm"
         self.comment = " and apply logarithm function"
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         return np.log(z)
 
-    def write_activation_str(self, local_var: str):
-        s = "log(" + local_var + ")"
-
-        return s
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        return "log(" + local_var + ")"
 
 
 class Clip(ActivationFunctions):
-    def __init__(self, max: float | int, min: float | int):
+    """Clip layer."""
+
+    def __init__(self: Self, max_value: float, min_value: float) -> None:
+        """Initiate the class."""
         super().__init__()
         self.name = "Clip"
         self.comment = " and apply rectifier"
-        self.max = max
-        self.min = min
+        self.max = max_value
+        self.min = min_value
 
         ### Checking value consistency ###
         if self.min > self.max:
-            raise ValueError("Error: min and max values in Clip (" + str(self.min) + " > " + str(self.max) + ")")
+            raise ValueError("Error: min and max values in Clip ("
+                             + str(self.min) + " > " + str(self.max) + ")")
 
-    def compute(self, z: np.ndarray):
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
         return np.clip(z, self.min, self.max)
 
-    def write_activation_str(self, local_var):
-        s = local_var + " > " + str(self.max) + " ? " + str(self.max) + " : (" + local_var + " < " + str(
-            self.min) + " ? " + str(self.min) + " : " + local_var + ")"
-        return s
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        # output = condition ? value_if_true : value_if_false
+        # output = input > max ? max : (input < min ? min : input)
+        return (local_var + " > " + str(self.max) + " ? " + str(self.max) + " : ("
+                + local_var + " < " + str(self.min) + " ? " + str(self.min) + " : "
+                + local_var + ")")

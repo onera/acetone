@@ -1,4 +1,6 @@
-"""*******************************************************************************
+"""Input Layer type definition.
+
+*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -17,16 +19,25 @@
 ******************************************************************************
 """
 
+
 import numpy as np
 import pystache
+from typing_extensions import Self
 
-from ..Layer import Layer
+from acetone_nnet.code_generator.Layer import Layer
 
 
 class InputLayer(Layer):
+    """Input layer class."""
 
-    def __init__(self, idx: int, size: int, input_shape: list, data_format: str):
-
+    def __init__(
+            self: Self,
+            idx: int,
+            size: int,
+            input_shape: np.ndarray | list,
+            data_format: str,
+    ) -> None:
+        """Build a Input layer."""
         super().__init__()
         self.idx = idx
         self.size = size
@@ -41,36 +52,40 @@ class InputLayer(Layer):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        if type(self.idx) != int:
-            raise TypeError("Error: idx type in Input Layer (idx must be int)")
-        if type(self.size) != int:
-            raise TypeError("Error: size type in Input Layer (size must be int)")
-        if any(type(shape) != int for shape in self.input_shape[1:]):
-            raise TypeError("Error: input_shape in Input Layer (all dim must be int)")
-        if type(self.data_format) != str:
-            raise TypeError("Error: data format type in Input Layer")
+        msg = ""
+        if type(self.idx) is not int:
+            msg += "Error: idx type in Input Layer (idx must be int)"
+            msg += "\n"
+        if type(self.size) is not int:
+            msg += "Error: size type in Input Layer (size must be int)"
+            msg += "\n"
+        if any(type(shape) is not int for shape in self.input_shape[1:]):
+            msg += "Error: input_shape in Input Layer (all dim must be int)"
+            msg += "\n"
+        if type(self.data_format) is not str:
+            msg += "Error: data format type in Input Layer"
+            msg += "\n"
+        if msg:
+            raise TypeError(msg)
 
         ### Checking value consistency ###
+        msg = ""
         prod = 1
         for shape in self.input_shape:
-            if shape != None and shape != 0:
+            if shape not in (None, 0):
                 prod *= shape
 
         if self.size != prod:
-            raise ValueError(
-                "Error: size value in Input Layer ("
-                + str(self.size)
-                + "!="
-                + str(prod)
-                + ")",
-            )
+            msg += f"Error: size value in Input Layer ({self.size}!={prod})"
+            msg += "\n"
         if self.data_format not in ["channels_last", "channels_first"]:
-            raise ValueError(
-                "Error: data format value in Input Layer (" + self.data_format + ")",
-            )
+            msg += f"Error: data format value in Input Layer ({self.data_format})"
+            msg += "\n"
+        if msg:
+            raise ValueError(msg)
 
-    def generate_inference_code_layer(self):
-
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
@@ -86,13 +101,16 @@ class InputLayer(Layer):
             mustach_hash["size"] = self.size
 
         with open(
-            self.template_path + "/layers/template_Input_Layer.c.tpl",
+                self.template_path + "/layers/template_Input_Layer.c.tpl",
         ) as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(self, input: np.ndarray):
-
-        return input
+    def forward_path_layer(
+            self: Self,
+            input_array: np.ndarray,
+    ) -> np.ndarray:
+        """Compute output of layer."""
+        return input_array

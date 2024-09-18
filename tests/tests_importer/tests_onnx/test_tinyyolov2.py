@@ -1,6 +1,4 @@
-"""Test suite for TinyYoloV2 model on ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -18,15 +16,20 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from tests.common import MODELS_DIR
-from tests.tests_importer import importerTestCase
 
 import onnx
+
+from tests.common import MODELS_DIR
+
+# FIXME Where do tests go?
+from tests.tests_importer import importerTestCase
+
 
 class TestTinyYolov2(importerTestCase.ImporterTestCase):
     """Test for tiny yolo v2."""
 
-    def test_tinyyolo(self):
+    def test_tinyyolo(self) -> None:
+        """Test tiny yolo v2."""
         model_path = (
                 MODELS_DIR / "yolo" / "tinyyolov2-7.onnx"
         )
@@ -34,6 +37,9 @@ class TestTinyYolov2(importerTestCase.ImporterTestCase):
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
 
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

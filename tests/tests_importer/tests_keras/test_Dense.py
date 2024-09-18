@@ -1,6 +1,4 @@
-"""Test suite for Dense layer on Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -19,35 +17,36 @@
 ******************************************************************************
 """
 
+import keras
+import tensorflow as tf
+from keras.layers import Dense, Input
+
 from tests.tests_importer import importerTestCase
 
-import tensorflow as tf
-import keras
-from keras.layers import Input, Dense
-
-tf.keras.backend.set_floatx('float32')
+tf.keras.backend.set_floatx("float32")
 
 
 class TestDense(importerTestCase.ImporterTestCase):
-    """Test for Dense Layer"""
+    """Test for Dense Layer."""
 
-    def test_Dense1(self):
-        testshape = (1,1,16)
+    def test_dense1(self) -> None:
+        """Test pour dense layer."""
+        testshape = (1, 1, 16)
         units = 8
 
         input = Input(testshape)
-        out = Dense(units, activation=None, bias_initializer='he_normal')(input)
+        out = Dense(units, activation=None, bias_initializer="he_normal")(input)
 
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
 
-        code_gen = self.import_layers(self.tmpdir_name+'/model.h5')
+        code_gen = self.import_layers(self.tmpdir_name + "/model.h5")
         list_layers = code_gen.layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     importerTestCase.main()

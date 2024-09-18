@@ -1,6 +1,4 @@
-"""Test suite for Decr128 model on Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -23,15 +21,18 @@ import keras
 import tensorflow as tf
 
 from tests.common import MODELS_DIR
+
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 tf.keras.backend.set_floatx("float32")
 
 
 class TestDecr128(importerTestCase.ImporterTestCase):
-    """Test for Decr128 model."""
+    """Test for Acas decr 128 model."""
 
-    def test_decr128(self):
+    def test_decr128(self) -> None:
+        """Test acas decr128."""
         model_path = (
                 MODELS_DIR / "acas" / "acas_decr128" / "acas_decr128.h5"
         )
@@ -40,4 +41,8 @@ class TestDecr128(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

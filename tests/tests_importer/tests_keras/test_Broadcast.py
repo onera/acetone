@@ -1,6 +1,4 @@
-"""Test suite for Broadcast-able layers on Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -34,110 +32,192 @@ from keras.layers import (
 
 from tests.tests_importer import importerTestCase
 
-tf.keras.backend.set_floatx('float32')
+tf.keras.backend.set_floatx("float32")
 
 
 class TestBroadcast(importerTestCase.ImporterTestCase):
-    """Test for Broadcast Layer."""
-    
-    def test_add(self):
-        testshape = (10,10,3)
+    """Test for Broadcast Layers."""
+
+    def test_add(self) -> None:
+        """Test Add layer."""
+        testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        out = Add()([x1,x2])
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        x2 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        out = Add()([x1, x2])
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
-    
-    def test_multiply(self):
-        testshape = (10,10,3)
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
+
+        self.assert_list_layers_equals(list_layers, reference)
+
+    def test_multiply(self) -> None:
+        """Test Multiply layer."""
+        testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        out = Multiply()([x1,x2])
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        x2 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        out = Multiply()([x1, x2])
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
-    
-    def test_subtract(self):
-        testshape = (10,10,3)
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
+
+        self.assert_list_layers_equals(list_layers, reference)
+
+    def test_subtract(self) -> None:
+        """Test Subtract layer."""
+        testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        out = Subtract()([x1,x2])
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        x2 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        out = Subtract()([x1, x2])
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
-    
-    def test_average(self):
-        testshape = (10,10,3)
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
+
+        self.assert_list_layers_equals(list_layers, reference)
+
+    def test_average(self) -> None:
+        """Test Average layer."""
+        testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        out = Average()([x1,x2])
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        x2 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        out = Average()([x1, x2])
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
-    
-    def test_maximum(self):
-        testshape = (10,10,3)
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
+
+        self.assert_list_layers_equals(list_layers, reference)
+
+    def test_maximum(self) -> None:
+        """Test maximum layer."""
+        testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        out = Maximum()([x1,x2])
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        x2 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        out = Maximum()([x1, x2])
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
-    
-    def test_minimum(self):
-        testshape = (10,10,3)
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
+
+        self.assert_list_layers_equals(list_layers, reference)
+
+    def test_minimum(self) -> None:
+        """Test minimum layer."""
+        testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        x2 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer='he_normal', padding='same',data_format='channels_last')(input)
-        out = Minimum()([x1,x2])
-        model = keras.Model(input,out)
-        model.save(self.tmpdir_name+'/model.h5')
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        x2 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
+        out = Minimum()([x1, x2])
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
-        list_layers = self.import_layers(self.tmpdir_name+'/model.h5').layers
-        
-        self.assert_List_Layers_equals(list_layers, reference)
+        list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
+
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

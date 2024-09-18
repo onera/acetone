@@ -12,8 +12,8 @@
                     {
                         for (w = 0; w < {{kernel_w}}; ++w)
                         {
-                            int ii = i*{{strides}} + h*{{dilation_rate}} - {{pad_left}};
-                            int jj = j*{{strides}} + w*{{dilation_rate}} - {{pad_top}};
+                            int ii = i*{{strides}} + h*{{dilation_rate}} - {{pad_top}};
+                            int jj = j*{{strides}} + w*{{dilation_rate}} - {{pad_left}};
 
                             if (ii >= 0 && ii < {{input_height}} && jj >= 0 && jj < {{input_width}})
                                 sum += {{output_str}}[jj + {{input_width}}*(ii + {{input_height}}*p)] * weights_{{name}}_{{idx}}[w + {{kernel_w}}*(h + {{kernel_h}}*(p + {{input_channels}}*f))];

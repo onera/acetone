@@ -1,6 +1,4 @@
-"""Test suite for Gemm layer on ONNX importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -22,13 +20,15 @@
 import numpy as np
 import onnx
 
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 
 class TestGemm(importerTestCase.ImporterTestCase):
     """Test for Gemm Layer."""
 
-    def test_gemm_nn(self):
+    def test_gemm_nn(self) -> None:
+        """Test Gemm layer for config nn."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -73,12 +73,13 @@ class TestGemm(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_gemm_nt(self):
+    def test_gemm_nt(self) -> None:
+        """Test Gemm layer for config nt."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -123,12 +124,13 @@ class TestGemm(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_gemm_tn(self):
+    def test_gemm_tn(self) -> None:
+        """Test Gemm layer for config tn."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -173,12 +175,13 @@ class TestGemm(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
 
-    def test_gemm_tt(self):
+    def test_gemm_tt(self) -> None:
+        """Test Gemm layer for config tt."""
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -223,7 +226,11 @@ class TestGemm(importerTestCase.ImporterTestCase):
         onnx.checker.check_model(model)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
 
-        reference = self.import_layers(model, conv_algorithm="indirect_gemm_nn").layers
-        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx", conv_algorithm="indirect_gemm_nn").layers
+        reference = self.import_layers(model).layers
+        list_layers = self.import_layers(self.tmpdir_name + "/model.onnx").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

@@ -22,7 +22,7 @@
 from acetone_nnet.code_generator.Layer import Layer
 
 
-def tri_topo(dnn: list):
+def tri_topo(dnn: list) -> (list[Layer], list[int], int, dict[int, int]):
     """Sort the graph (list of nodes) topologically."""
     paths: dict[int, bool] = {}  # Available paths per id
     # The sorted layer list
@@ -110,7 +110,7 @@ def update_path(layer: Layer, paths: dict[int, bool]) -> None:
         paths[layer.path] = True
 
 
-def to_save(layer: Layer, dict_cst: dict[int, int], sorted_layers:list[Layer]) -> None:
+def to_save(layer: Layer, dict_cst: dict[int, int], sorted_layers: list[Layer]) -> None:
     """Create the dict {idx_layer:idx_cst} saying if a layer must be stored."""
     for parent in layer.previous_layer:
         if parent.idx in dict_cst:

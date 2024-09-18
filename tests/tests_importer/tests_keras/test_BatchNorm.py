@@ -1,6 +1,4 @@
-"""Test suite for Batch normalisation layer on Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -29,22 +27,32 @@ tf.keras.backend.set_floatx("float32")
 
 
 class TestCBatchNormalization(importerTestCase.ImporterTestCase):
-    """Test for BatchNorm Layer."""
+    """Test for  BatchNorm Layer."""
 
-    def test_batch_normalisation(self):
+    def test_batchnorm(self) -> None:
+        """Test BatchNorm."""
         testshape = (10, 10, 3)
         filters = 3
         kernel_size = (3, 3)
 
-        inp = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer="he_normal",
-                    padding="same", data_format="channels_last")(inp)
+        input = Input(testshape)
+        x1 = Conv2D(filters=filters,
+                    kernel_size=kernel_size,
+                    activation=None,
+                    bias_initializer="he_normal",
+                    padding="same",
+                    data_format="channels_last",
+                    )(input)
         out = BatchNormalization()(x1)
 
-        model = keras.Model(inp, out)
+        model = keras.Model(input, out)
         model.save(self.tmpdir_name + "/model.h5")
 
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(self.tmpdir_name + "/model.h5").layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()

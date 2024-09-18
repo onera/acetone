@@ -1,6 +1,4 @@
-"""Test suite for LeNet5 model on Keras importer.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -18,19 +16,23 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
 import keras
 import tensorflow as tf
 
 from tests.common import MODELS_DIR
+
+# FIXME Where do tests go?
 from tests.tests_importer import importerTestCase
 
 tf.keras.backend.set_floatx("float32")
 
 
 class TestLenet5(importerTestCase.ImporterTestCase):
-    """Test for LeNet5 Model."""
+    """Test for Lenet5 model."""
 
-    def test_lenet5(self):
+    def test_lenet5(self) -> None:
+        """Test lenet5."""
         model_path = (
                 MODELS_DIR / "lenet5" / "lenet5_trained" / "lenet5_trained.h5"
         )
@@ -39,4 +41,8 @@ class TestLenet5(importerTestCase.ImporterTestCase):
         reference = self.import_layers(model).layers
         list_layers = self.import_layers(model_path).layers
 
-        self.assert_List_Layers_equals(list_layers, reference)
+        self.assert_list_layers_equals(list_layers, reference)
+
+
+if __name__ == "__main__":
+    importerTestCase.main()
