@@ -98,18 +98,19 @@ class Pad(Layer):
             raise TypeError(msg)
 
         ### Checking value consistency ###
-        msg = ""
         if self.size != self.output_channels * self.output_height * self.output_width:
-            msg += (f"Error: size value in Pad "
-                    f"({self.size}!={self.output_channels * self.output_height * self.output_width})")
-        msg += "\n"
+            msg = (
+                f"Error: size value in Pad "
+                f"({self.size}!={self.output_channels * self.output_height * self.output_width})"
+            )
+            raise ValueError(msg)
         for axe in self.axes:
             if axe < 0 or axe >= 4:
-                msg += (f"Error: axe out of bound in Pad "
-                        f"({axe}for tensor in 4 dimension with first dimension unused)")
-            msg += "\n"
-        if msg:
-            raise ValueError(msg)
+                msg = (
+                    f"Error: axe out of bound in Pad "
+                    f"({axe}for tensor in 4 dimension with first dimension unused)"
+                )
+                raise ValueError(msg)
 
     def forward_path_layer(
             self: Self,
@@ -121,7 +122,7 @@ class Pad(Layer):
         pad_width = [(self.pads[i], self.pads[i + nb_dim]) for i in
                      range(1, nb_dim)]  # Constructing the pads accordingly to the numpy nomenclature
         return self.activation_function.compute(
-            np.pad(input_array, pad_width=pad_width, mode=self.mode, constant_values=self.constant_value ),
+            np.pad(input_array, pad_width=pad_width, mode=self.mode, constant_values=self.constant_value),
         )
 
     @abstractmethod
