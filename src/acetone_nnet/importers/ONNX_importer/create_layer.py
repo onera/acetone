@@ -424,10 +424,10 @@ def create_gather(
     dict_output[node.output[0]] = idx
     attributes = extract_attributes(node)
     indices = onnx.numpy_helper.to_array(look_for_initializer(node.input[1], model))
-    for i in range(len(indices.flatten())):
-        indices = indices.flatten()[i]
-        if indices < 0:
-            indices = input_shape[attributes["axis"]] - indices
+    # Adjust indices to positive values from [-s, s-1] to [0, s]
+    for i in np.ndindex(indices.shape):
+        if indices[i] < 0:
+            indices[i] = input_shape[attributes["axis"]] - abs(indices[i])
     return Gather(
         idx=idx,
         size=size,
@@ -455,10 +455,10 @@ def create_gather_elements(
     dict_output[node.output[0]] = idx
     attributes = extract_attributes(node)
     indices = onnx.numpy_helper.to_array(look_for_initializer(node.input[1], model))
-    for i in range(len(indices.flatten())):
-        indices = indices.flatten()[i]
-        if indices < 0:
-            indices = input_shape[attributes["axis"]] - indices
+    # Adjust indices to positive values from [-s, s-1] to [0, s]
+    for i in np.ndindex(indices.shape):
+        if indices[i] < 0:
+            indices[i] = input_shape[attributes["axis"]] - abs(indices[i])
     return GatherElements(
         idx=idx,
         size=size,
