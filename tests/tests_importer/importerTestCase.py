@@ -57,7 +57,7 @@ class ImporterTestCase(unittest.TestCase):
             self,
             file: str | onnx.ModelProto | Functional | Sequential,
             versions: dict[int, str] | dict[str, str] | None = None,
-    ) -> acetone_nnet.code_generator.CodeGenerator:
+    ) -> acetone_nnet.generator.CodeGenerator:
         """Create the CodeGenerator object from the file."""
         return acetone_nnet.CodeGenerator(file=file,
                                           test_dataset_file=None,
