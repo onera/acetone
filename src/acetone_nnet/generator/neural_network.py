@@ -57,7 +57,6 @@ from acetone_nnet.generator.layers import (
 )
 from acetone_nnet.importers.parser import parser
 from acetone_nnet.templates.template_makefile import TemplateMakefile
-from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
 from acetone_nnet.versioning.versioning import versioning
 
 
