@@ -77,7 +77,6 @@ class CodeGenerator(ABC):
         """Initialize the class."""
         self.file = file
         self.function_name = function_name
-        self.nb_tests = int(nb_tests)
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
 
@@ -97,21 +96,16 @@ class CodeGenerator(ABC):
         self.layers = versioning(self.layers, self.versions)
 
         self.data_type = dtype
-        self.data_type_py = dtype_py
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        if isinstance(test_dataset, str | Path):
-            self.test_dataset_file = test_dataset
-            ds = self.load_test_dataset()
-            self.test_dataset = ds
-        elif isinstance(test_dataset, np.ndarray):
-            self.test_dataset = test_dataset
-        else:
-            print("creating random dataset")
-            ds = self.create_test_dataset()
-            self.test_dataset = ds
+        self.nb_tests = int(nb_tests)
+        self.test_dataset = self._initialise_dataset(
+            test_dataset,
+            int(nb_tests),
+            dtype_py,
+        )
 
         self.files_to_gen = [
             "inference.cpp",
@@ -155,6 +149,7 @@ class CodeGenerator(ABC):
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
 
+    # FIXME Unify default layer selection between this and the versioning module.
     def _select_layers_implementation(
             self: Self,
             versions: dict[int, str] | dict[str, str] | None,
@@ -206,26 +201,47 @@ class CodeGenerator(ABC):
 
         return targets
 
-    def create_test_dataset(self: Self) -> np.ndarray:
-        """Create random dataset for graph."""
-        return np.random.default_rng(seed=10).random(
-            size=(self.nb_tests, 1, int(self.layers[0].size)),
-            dtype=self.data_type_py,
-        )
+    def _initialise_dataset(
+            self: Self,
+            dataset_or_path: np.ndarray | str | Path | None,
+            nb_tests: int,
+            data_type: np.dtype,
+    ) -> np.ndarray:
+        """Initialise dataset for model randomly or from existing data."""
+        match dataset_or_path:
+            case None:
+                # Create random dataset for graph.
+                d = np.random.default_rng(seed=10).random(
+                    size=(nb_tests, 1, int(self.layers[0].size)),
+                    dtype=data_type,
+                )
+            case np.ndarray() as dataset:
+                d = dataset
+            case Path() | str() as path:
+                d = self._load_dataset(Path(path), data_type, nb_tests)
+            case _:
+                raise ValueError
+        return d
 
-    def load_test_dataset(self: Self) -> np.ndarray:
-        """Load test dataset from file."""
-        test_dataset: list[list[int | float | np.float32]] = []
-        with Path(self.test_dataset_file).open() as f:
+    def _load_dataset(
+            self: Self,
+            path: Path,
+            dtype: np.dtype,
+            nb_tests: int,
+    ) -> np.ndarray:
+        """Load a dataset from file.
+
+        Each line of the file holds a separate array formatted as a comma-separated list
+        of values surrounded by [ and ] delimiters.
+
+        """
+        test_dataset: list[list[np.number]] = []
+        with path.open() as f:
+            # FIXME This returns at least one array of values even if nb_tests is 0.
             for i, line in enumerate(f):
                 contents = line[1:-2].split(",")
-                if self.data_type == "int":
-                    test_dataset.append(list(map(int, contents)))
-                elif self.data_type == "double":
-                    test_dataset.append(list(map(float, contents)))
-                elif self.data_type == "float":
-                    test_dataset.append(list(map(np.float32, contents)))
-                if i >= self.nb_tests - 1:
+                test_dataset.append(list(map(dtype, contents)))
+                if i >= nb_tests - 1:
                     break
         return np.array(test_dataset)
 
