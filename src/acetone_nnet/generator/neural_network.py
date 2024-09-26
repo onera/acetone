@@ -93,7 +93,7 @@ class CodeGenerator(ABC):
             self.Normalizer = normalizer
 
         self.layers: list[Any] = l
-        self.versions = self.create_dict_versions(versions)
+        self.versions = self._select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
 
         self.data_type = dtype
@@ -155,24 +155,42 @@ class CodeGenerator(ABC):
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
 
-    def create_dict_versions(
+    def _select_layers_implementation(
             self: Self,
             versions: dict[int, str] | dict[str, str] | None,
     ) -> dict[int, str]:
-        """Create the dictionary used for the versioning."""
-        out_dict = {}
-        if versions is None:
-            for layer in self.layers:
-                if layer.name == "Conv2D":
-                    out_dict[layer.idx] = "std_gemm_nn"
-        elif type(next(iter(versions))) is int:
-            out_dict = versions
-        else:
-            for layer in self.layers:
-                if layer.name in versions:
-                    out_dict[layer.idx] = versions[layer.name]
+        """Create the dictionary used for the versioning.
 
-        return out_dict
+        Parameters
+        ----------
+        versions: dict or None
+            Name of selected implementation per layer, or per layer type. If
+            None, the default implementation will be used for each layer type.
+
+        Returns
+        -------
+        dict
+            Name of selected implementation for each layer, if not the default one.
+
+        """
+        selected_implementations = {}
+        default_implementations = {
+            "Conv2D": "std_gemm_nn",
+        }
+        if versions is None:
+            # Select the default implementation per layer type, if specified
+            for layer in self.layers:
+                d = default_implementations.get(layer.name, None)
+                if d is not None:
+                    selected_implementations[layer.idx] = d
+        else:
+            # Select the implementation based in priority on layer id, or type
+            for layer in self.layers:
+                for k in [layer.idx, layer.name]:
+                    if k in versions:
+                        selected_implementations[layer.idx] = versions[k]
+                        break
+        return selected_implementations
 
     def load_debug_target(
             self: Self,
