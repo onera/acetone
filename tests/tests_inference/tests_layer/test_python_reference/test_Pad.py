@@ -41,6 +41,7 @@ class TestPad(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 

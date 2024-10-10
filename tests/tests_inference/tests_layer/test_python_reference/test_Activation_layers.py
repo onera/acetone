@@ -47,6 +47,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 
@@ -75,6 +76,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 
@@ -103,6 +105,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 
@@ -131,6 +134,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
 
@@ -215,6 +219,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(acetone_result[1]), list(onnx_result))
@@ -298,6 +303,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(acetone_result[1]), list(onnx_result))
@@ -382,6 +388,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(acetone_result[1]), list(onnx_result))
@@ -465,6 +472,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(acetone_result[1]), list(onnx_result))
@@ -548,6 +556,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         for i, (r, s) in enumerate(zip(acetone_result[1], onnx_result, strict=False)):
@@ -639,6 +648,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(acetone_result[1]), list(onnx_result))
@@ -739,6 +749,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(acetone_result[1]), list(onnx_result))

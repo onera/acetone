@@ -18,97 +18,40 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+from collections.abc import Callable
 
-from acetone_nnet.code_generator import (
-    Conv2D,
-    Conv2D6loops,
-    Conv2DIndirectGemm,
-    Conv2DStdGemm,
-)
+from acetone_nnet.generator.layers.convolution import Conv2D
+
+Conv2DVariant = Callable[[Conv2D, str], Conv2D]
 
 
-def conv2d_implementation(
-        old_layer: Conv2D,
-        version: str,
-) -> Conv2D:
-    """Create the layer associated to the required implementation."""
-    implemented = {
-        "6loops": conv2d_6loops_implementation,
-        "indirect_gemm": conv2d_indirect_gemm_implementation,
-        "std_gemm": conv2d_std_gemm_implementation,
-    }
+class Conv2DFactory:
+    """Build Conv2D implementation layers."""
 
-    conv_algo = version
-    if version != "6loops":
-        version = version[:-3]
+    def __init__(self) -> None:
+        """Build default convolution layer factory."""
+        self.implementations: dict[str | None, Conv2DVariant] = {
+        }
 
-    return implemented[version](old_layer, conv_algo)
+    @property
+    def list_implementations(self) -> list[str]:
+        """Return known convolution implementations."""
+        return [i for i in self.implementations if i is not None]
 
+    def register_implementation(self, name: str, variant: Conv2DVariant) -> None:
+        """Register a new Conv2D variant."""
+        if name in self.implementations:
+            msg = f"Convolution variant {name} already exists."
+            raise KeyError(msg)
+        self.implementations[name] = variant
 
-def conv2d_6loops_implementation(
-        old_layer: Conv2D,
-        conv_algo: str,
-) -> Conv2D6loops:
-    """Create a Conv2D_6loops layer using the attributes of old_layer."""
-    return Conv2D6loops(
-        idx=old_layer.idx,
-        conv_algorithm=conv_algo,
-        size=old_layer.size,
-        padding=old_layer.padding,
-        strides=old_layer.strides,
-        kernel_h=old_layer.kernel_h,
-        kernel_w=old_layer.kernel_w,
-        dilation_rate=old_layer.dilation_rate,
-        nb_filters=old_layer.nb_filters,
-        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
-        output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
-        weights=old_layer.weights,
-        biases=old_layer.biases,
-        activation_function=old_layer.activation_function,
-    )
+    def __call__(self, layer: Conv2D, version: str) -> Conv2D:
+        """Create a Convolution implementation layer for the required implementation."""
+        if version not in self.implementations:
+            msg = f"Unknown convolution variant {version}."
+            raise KeyError(msg)
+
+        return self.implementations[version](layer, version)
 
 
-def conv2d_indirect_gemm_implementation(
-        old_layer: Conv2D,
-        conv_algo: str,
-) -> Conv2DIndirectGemm:
-    """Create a Conv2D_indirect_gemm layer using the attributes of old_layer."""
-    return Conv2DIndirectGemm(
-        idx=old_layer.idx,
-        conv_algorithm=conv_algo,
-        size=old_layer.size,
-        padding=old_layer.padding,
-        strides=old_layer.strides,
-        kernel_h=old_layer.kernel_h,
-        kernel_w=old_layer.kernel_w,
-        dilation_rate=old_layer.dilation_rate,
-        nb_filters=old_layer.nb_filters,
-        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
-        output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
-        weights=old_layer.weights,
-        biases=old_layer.biases,
-        activation_function=old_layer.activation_function,
-    )
-
-
-def conv2d_std_gemm_implementation(
-        old_layer: Conv2D,
-        conv_algo: str,
-) -> Conv2DStdGemm:
-    """Create a Conv2D_std_gemm layer using the attributes of old_layer."""
-    return Conv2DStdGemm(
-        idx=old_layer.idx,
-        conv_algorithm=conv_algo,
-        size=old_layer.size,
-        padding=old_layer.padding,
-        strides=old_layer.strides,
-        kernel_h=old_layer.kernel_h,
-        kernel_w=old_layer.kernel_w,
-        dilation_rate=old_layer.dilation_rate,
-        nb_filters=old_layer.nb_filters,
-        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
-        output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
-        weights=old_layer.weights,
-        biases=old_layer.biases,
-        activation_function=old_layer.activation_function,
-    )
+conv2d_factory = Conv2DFactory()

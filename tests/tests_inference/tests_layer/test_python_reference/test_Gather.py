@@ -79,6 +79,7 @@ class TestGather(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(list(acetone_result[1]), onnx_result)
 
@@ -134,6 +135,7 @@ class TestGather(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(list(acetone_result[1]), onnx_result)
 

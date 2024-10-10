@@ -43,8 +43,7 @@ class TestAcasFullyConnected(importerTestCase.ImporterTestCase):
     def test_acas_fully_connected_normalized(self) -> None:
         """Test for acas fully connected models with normalized input."""
         model_path = (
-            "/".join(__file__.split("/")[:-3])
-            + "/models/acas/acas_fully_connected/acas_fully_connected_normalized.onnx"
+                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected_normalized.onnx"
         )
         model = onnx.load_model(model_path)
 

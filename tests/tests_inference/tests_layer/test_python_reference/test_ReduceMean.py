@@ -84,6 +84,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -142,6 +143,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -200,6 +202,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -258,6 +261,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -316,6 +320,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -374,6 +379,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -432,6 +438,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -481,6 +488,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 
@@ -533,6 +541,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
 

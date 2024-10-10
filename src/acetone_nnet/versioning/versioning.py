@@ -18,10 +18,14 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+from typing import Callable
 
-from acetone_nnet.code_generator import Layer
+from acetone_nnet.generator import Layer
+from acetone_nnet.versioning.version_implementation.conv_implementation import (
+    conv2d_factory,
+)
 
-from .version_implementation.conv_implementation import conv2d_implementation
+LayerFactory = Callable[[Layer, str], Layer]
 
 
 def versioning(
@@ -29,8 +33,8 @@ def versioning(
         version: dict[int, str],
 ) -> list[Layer]:
     """Check layers and change the layer version if needed."""
-    implemented = {
-        "Conv2D": conv2d_implementation,
+    implemented: dict[str, LayerFactory] = {
+        "Conv2D": conv2d_factory,
     }
 
     keys = list(version.keys())

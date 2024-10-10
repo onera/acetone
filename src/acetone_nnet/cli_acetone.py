@@ -22,7 +22,7 @@
 import argparse
 import pathlib
 
-from .code_generator.neural_network import CodeGenerator
+from .generator.neural_network import CodeGenerator
 
 
 def cli_acetone(

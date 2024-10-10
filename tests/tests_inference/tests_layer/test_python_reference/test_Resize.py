@@ -89,6 +89,7 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(list(acetone_result[1]), onnx_result)
 
@@ -154,6 +155,7 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         self.assertListAlmostEqual(list(acetone_result[1]), onnx_result)
 
@@ -219,6 +221,7 @@ class TestResize(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         with open(self.tmpdir_name + "/output_onnx.txt", "w") as f:
             print(onnx_result, file=f)

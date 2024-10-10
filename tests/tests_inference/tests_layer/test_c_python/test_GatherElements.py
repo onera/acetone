@@ -17,6 +17,12 @@
 ******************************************************************************
 """
 
+from tests.tests_inference import acetoneTestCase
+acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
+import sys
+sys.path.append(acetoneTestCase_path)
+import acetoneTestCase
+
 import numpy as np
 import onnx
 

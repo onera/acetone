@@ -56,9 +56,10 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
             conv_algo="6loops",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
-        self.assertListAlmostEqual(list(acetone_result[1]), keras_result)
+        self.assertListAlmostEqual(np.array(acetone_result[1]), keras_result)
 
     def testConv_indirect_gemm_nn(self):
         testshape = (10, 10, 3)
@@ -84,6 +85,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
             conv_algo="indirect_gemm_nn",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(list(acetone_result[1]), keras_result)
@@ -111,6 +113,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.h5",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
         keras_result = np.array(model.predict(dataset)).flatten()
         self.assertListAlmostEqual(list(acetone_result[1]), keras_result)
@@ -186,6 +189,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(acetone_result[1], onnx_result)
@@ -262,6 +266,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
             conv_algo="6loops",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(acetone_result[1], onnx_result)

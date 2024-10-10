@@ -79,6 +79,7 @@ class TestTranspose(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))
@@ -132,6 +133,7 @@ class TestTranspose(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))
@@ -185,6 +187,7 @@ class TestTranspose(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))
@@ -238,6 +241,7 @@ class TestTranspose(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))
@@ -291,6 +295,7 @@ class TestTranspose(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))
@@ -344,6 +349,7 @@ class TestTranspose(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             self.tmpdir_name + "/model.onnx",
             self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
         )
 
         self.assertListAlmostEqual(list(list(acetone_result[1])), list(onnx_result))
