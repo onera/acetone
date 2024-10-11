@@ -29,7 +29,6 @@ from tests.tests_inference import acetoneTestCase
 class TestAcasCOCONNXNormalized(acetoneTestCase.AcetoneTestCase):
     """Inference test for ACAS COC, ONNX model with normalization."""
 
-    @unittest.expectedFailure
     def test_acas_coc_normalized_onnx(self) -> None:
         """Tests Acas COC, ONNX model with normalisation, compare between onnx et C code."""
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC_normalized.onnx"
