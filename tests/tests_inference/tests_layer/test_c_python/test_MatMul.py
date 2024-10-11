@@ -24,6 +24,8 @@ sys.path.append(acetoneTestCase_path)
 import acetoneTestCase
 
 import tensorflow as tf
+import onnx
+import numpy as np
 
 from tests.tests_inference import acetoneTestCase
 

@@ -688,11 +688,8 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash["cst"].append({"name": cst, "size": written[cst]})
 
-        if (
-                any(isinstance(layer, Concatenate | Conv2D | Dense | Gather | Broadcast | Pad | Gemm)
-                    for layer in self.layers)
-        ):
-            mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
+        # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
+        mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
 
         # Collect layer parameters
         mustach_hash["layers"] = []
@@ -771,11 +768,8 @@ class CodeGenerator(ABC):
         for cst in written:
             mustach_hash["cst"].append({"name": cst, "size": written[cst]})
 
-        if (
-                any(isinstance(layer, Concatenate | Conv2D | Dense | Gather | Broadcast | Pad | Gemm)
-                    for layer in self.layers)
-        ):
-            mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
+        # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
+        mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
 
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
