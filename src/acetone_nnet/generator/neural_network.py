@@ -108,7 +108,7 @@ class CodeGenerator(ABC):
         )
 
         self.files_to_gen = [
-            "inference.cpp",
+            "inference.c",
             "inference.h",
             "global_vars.c",
             "main.c",
@@ -637,7 +637,7 @@ class CodeGenerator(ABC):
 
         # Generate C code
         template = (Path(self.template_path) / "template_source_file.c.tpl").read_text()
-        with (output_dir / "inference.cpp").open("a+") as source_file:
+        with (output_dir / "inference.c").open("a+") as source_file:
             source_file.write(pystache.render(template, mustach_hash))
 
     def generate_function_header_file(
