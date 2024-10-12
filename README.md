@@ -47,6 +47,10 @@ git clone https://github.com/onera/acetone.git
 
 Then install the packages listed in [`requirements.txt`](./requirements.txt)
 
+```commandline
+pip install --editable .[dev]
+```
+
 ```
 pip install -r acetone/requirements.txt
 ```
