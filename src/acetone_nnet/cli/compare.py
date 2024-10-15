@@ -87,7 +87,10 @@ def compare_files(
     line_comparison = True
 
     for line_f1, line_f2, line_counter in zip(
-        f1, f2, range(nb_tests + 1), strict=False,
+        f1,
+        f2,
+        range(nb_tests + 1),
+        strict=False,
     ):
         float_comparison, max_diff_line = compare_lines(line_f1, line_f2, precision)
         line_comparison = float_comparison & line_comparison
@@ -121,7 +124,7 @@ def cli_compare(
 def acetone_compare() -> None:
     """Compare two text file containing inference output(s)."""
     parser = argparse.ArgumentParser(
-        description="Program to verify the semantic preservation of ",
+        description=acetone_compare.__doc__,
     )
 
     parser.add_argument(
