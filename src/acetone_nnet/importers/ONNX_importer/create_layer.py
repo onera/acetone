@@ -235,7 +235,10 @@ def create_conv(
     if "group" not in attributes:
         attributes["group"] = 1
     if ("auto_pad" not in attributes) or (attributes["auto_pad"].decode() == "NOTSET"):
-        attributes["auto_pad"] = attributes["pads"]
+        if "pads" not in attributes:
+            attributes["auto_pad"] = "VALID"
+        else:
+            attributes["auto_pad"] = attributes["pads"]
     else:
         attributes["auto_pad"] = attributes["auto_pad"].decode()
     if "strides" not in attributes:
@@ -917,7 +920,10 @@ def create_max_pool(
     if "dilations" not in attributes:
         attributes["dilations"] = [1]
     if ("auto_pad" not in attributes) or (attributes["auto_pad"].decode() == "NOTSET"):
-        attributes["auto_pad"] = attributes["pads"]
+        if "pads" not in attributes:
+            attributes["auto_pad"] = "VALID"
+        else:
+            attributes["auto_pad"] = attributes["pads"]
     else:
         attributes["auto_pad"] = attributes["auto_pad"].decode()
     if "strides" not in attributes:
@@ -952,7 +958,10 @@ def create_average_pool(
     if "dilations" not in attributes:
         attributes["dilations"] = [1]
     if ("auto_pad" not in attributes) or (attributes["auto_pad"].decode() == "NOTSET"):
-        attributes["auto_pad"] = attributes["pads"]
+        if "pads" not in attributes:
+            attributes["auto_pad"] = "VALID"
+        else:
+            attributes["auto_pad"] = attributes["pads"]
     else:
         attributes["auto_pad"] = attributes["auto_pad"].decode()
     if "strides" not in attributes:
