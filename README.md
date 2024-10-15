@@ -9,9 +9,11 @@ This framework generate a C code corresponding to a neural network given as inpu
 
 The corresponding package is named [acetone-nnet](https://pypi.org/project/acetone-nnet/). 
 
-The folder [tests/examples](./tests/examples/) give examples on how to use the main functionnalities of the package (code generation and debug mode)
+The folder [tests/](./tests/) give examples on how to use the main functionalities of the package (code generation and 
+debug mode).
 
-The folder [tests/check_installation](./tests/check_installation/) give a file with a few quick test checking some main, functionalities of the package, as an quick verification of the installation.
+The folder [tests/check_installation](./tests/check_installation/) provides a sample script with a few quick checks and 
+samples for the main functionalities of the package. It provides a quick verification of the installation.
 
 
 ## Code architecture
@@ -31,7 +33,7 @@ The [src](./src/) folder contains the backend code of ACETONE.
 
 ### User mode
 
-Install le package using `pip`
+Install the package using `pip`
 ```
 pip install acetone-nnet
 ```
@@ -39,21 +41,34 @@ pip install acetone-nnet
 
 ### Development Mode
 
-Clone the GitHub repo on your computer
+The following commands are general guidelines, your mileage, workflow or
+preferences might vary. 
 
-```
+Clone the GitHub repo on your computer:
+```commandline
 git clone https://github.com/onera/acetone.git
 ```
 
-Then install the packages listed in [`requirements.txt`](./requirements.txt)
+Create a virtual environment for the project:
+```commandline
+python3 -m venv venv
+```
 
+Activate the virtual environment, this will be required for all work using the project:
+```commandline
+source venv/bin/activate
+```
+
+Then install the packages listed in [`requirements.txt`](./requirements.txt):
+```commandline
+pip install -r acetone/requirements.txt
+```
+
+Install the package in edit mode, ensuring all changes to the source are available in the installed package:
 ```commandline
 pip install --editable .[dev]
 ```
 
-```
-pip install -r acetone/requirements.txt
-```
 
 
 ## Code Generation
