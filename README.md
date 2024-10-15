@@ -153,3 +153,5 @@ Please refer to the [`implemented.md`](./implemented.md) file to see the current
 The project is under the GNU Lesser General Public License as published by the Free Software Foundation ; either version 3 of  the License or (at your option) any later version.
 
 See LICENSE for details.
+
+![Logo Institut de Recherche en Informatique de Toulouse](logos/Logo_IRIT.png)
