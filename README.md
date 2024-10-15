@@ -84,7 +84,10 @@ In the *acetone* directory
 python3 tests/models/lenet5/lenet5_example/initial_setup.py
 ```
 
-This script defines a neural network with a Lenet-5 architecture using the framework Keras. It then save the model in *.h5* and *.json* files. The later one is created using a specific function, developped by us, to write the keras model in ACETONE's format. The scripts also creates a random input to test the neural network. Finally, the scripts saves and prints, as a reference, the output of the inference done by the Keras framework.
+This script defines a neural network with a Lenet-5 architecture using the Keras framework. It then save the model in 
+`.h5` and `.json` files. The latter one is created using a specific function, developed by us, to write the keras model 
+in ACETONE's format. The scripts also creates a random input to test the neural network. Finally, the scripts saves and 
+prints, as a reference, the output of the inference done by the Keras framework.
 
 ### Generating the C code with ACETONE package
 

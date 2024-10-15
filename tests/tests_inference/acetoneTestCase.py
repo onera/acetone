@@ -25,7 +25,7 @@ import unittest
 import numpy as np
 import onnx
 
-from acetone_nnet.bin.bin_acetone import cli_acetone
+from acetone_nnet.cli.generate import cli_acetone
 
 
 class AcetoneTestCase(unittest.TestCase):

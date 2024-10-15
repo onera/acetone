@@ -20,7 +20,6 @@
 """
 
 from . import debug, generator
-from .bin.bin_acetone import cli_acetone, cli_compare
 from .generator import (
     ActivationFunctions,
     Add,
@@ -78,7 +77,7 @@ from .generator import (
 )
 
 __all__ = (
-    "cli_acetone", "cli_compare",
+    "cli_compare",
     generator.__all__,
     debug.__all__,
 )

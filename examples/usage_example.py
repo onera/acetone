@@ -18,7 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from acetone_nnet.bin.bin_acetone import cli_acetone
+from acetone_nnet.cli.generate import cli_acetone
 
 """
 This file present an example of how to use the package acetone-nnet

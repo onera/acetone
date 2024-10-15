@@ -61,8 +61,8 @@ acetone_nnet = ["templates/**.tpl",
     "templates/layers/Conv/*.tpl"]
 
 [project.scripts]
-acetone_generate = "acetone_nnet.bin.bin_acetone:acetone_generate"
-acetone_compare = "acetone_nnet.bin.bin_acetone:acetone_compare"
+acetone_generate = "acetone_nnet.cli.generate:acetone_generate"
+acetone_compare = "acetone_nnet.cli.compare:acetone_compare"
 
 [project.urls]
 Repository = "https://github.com/onera/acetone/"
