@@ -18,6 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+from acetone_nnet.bin.bin_acetone import cli_acetone
 
 """
 This file present an example of how to use the package acetone-nnet
@@ -49,7 +50,7 @@ test_dataset = None  # Replace by the path to the dataset on which the test must
 normalize = False  # Turn to True if the input model is in format NNet and the normalization option is turned on
 
 # The function while generate the C code and the output of the Python inference is the directory output_path
-acetone_nnet.cli_acetone(model_file=model_path,
+cli_acetone(model_file=model_path,
                          function_name=function_name,
                          nb_tests=nb_tests,
                          conv_algorithm=conv_algorithm,

@@ -9,8 +9,8 @@ This framework generate a C code corresponding to a neural network given as inpu
 
 The corresponding package is named [acetone-nnet](https://pypi.org/project/acetone-nnet/). 
 
-The folder [tests/](./tests/) give examples on how to use the main functionalities of the package (code generation and 
-debug mode).
+The folder [examples/](./examples/) provides examples on how to use the main functionalities of the package (code 
+generation and debug mode).
 
 The folder [tests/check_installation](./tests/check_installation/) provides a sample script with a few quick checks and 
 samples for the main functionalities of the package. It provides a quick verification of the installation.
@@ -92,7 +92,7 @@ Then, generate the C code with ACETONE.
 
 * Call ACETONE with the following arguments:
   * The file describing the model
-  * The name of the function to generate (here 'lenet5')
+  * The name of the inference function to generate (here 'lenet5')
   * The number of test to run (here 1)
   * The algorithm used for the convolution layer ('6loops','indirect_gemm_'+TYPE, 'std_gemm_'+TYPE, with TYPE being amongst 'nn','nt',    'tn','tt')
   * The directory in which the code will be generated

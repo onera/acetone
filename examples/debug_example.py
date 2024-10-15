@@ -1,22 +1,22 @@
 """Example file to use the debug mode.
 
- *******************************************************************************
- * ACETONE: Predictable programming framework for ML applications in safety-critical systems
- * Copyright (c) 2022. ONERA
- * This file is part of ACETONE
- *
- * ACETONE is free software ;
- * you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation ;
- * either version 3 of  the License, or (at your option) any later version.
- *
- * ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License along with this program ;
- * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
- ******************************************************************************
+*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
 """
 
 """
@@ -25,17 +25,18 @@ The example is using the Onnx debug mode. The process is the same whith Keras.
 """
 
 #### Importing the package ####
-import acetone_nnet
-import acetone_nnet.debug_tools as debug
 import numpy as np
+
+import acetone_nnet
+from acetone_nnet import debug
 
 #### Defining the variables ####
 
-target_model = ''  # Replace by the path to the model, or by the model in Onnx (or Keras) (model created/loaded by using their package Python)
+target_model = ""  # Replace by the path to the model, or by the model in Onnx (or Keras) (model created/loaded by using their package Python)
 dataset = []  # Replace par a numpy array containing the dataset on which to run the debug process (only 1 test)
 debug_target = np.array([])  # Replace by a list containing the name of the output to extract. If void, all the intermediate values will be gathered
 to_save = False  # Set to True if the new model must be saved
-path = ''  # If to_save is True, the model while be save in path (must be a file name)
+path = ""  # If to_save is True, the model while be save in path (must be a file name)
 # Only for onnx debug
 otpimize_inputs = False  # Set to True if the initializers treated as inputs are to be fixed (all inputs except the first one will be removed, according to Onnx recommandations)
 
@@ -54,15 +55,15 @@ model, targets_indices, outputs_onnx = debug.debug_onnx(target_model=target_mode
 
 #### Instantiating a 'CodeGenerator' element ####
 # Defining the constants to use
-model_path = ''  # Replace by the path to the model whose code you want to generate, or directly by the model to parse (either Onnx or Keras model, created using their python package)
+model_path = ""  # Replace by the path to the model whose code you want to generate, or directly by the model to parse (either Onnx or Keras model, created using their python package)
 test_dataset = None  # Replace by the path to the dataset on which the test must be done, or by a numpy array containing the dataset. If None, the generator while create a random dataset
-function_name = ''  # Replace by the name you want to give to the generated function (default is 'inference')
+function_name = ""  # Replace by the name you want to give to the generated function (default is 'inference')
 nb_tests = 1  # Don't change this value
-conv_algorithm = 'std_gemm_nn'  # Replace by the implementation of the Conv algorithm you desire
+conv_algorithm = "std_gemm_nn"  # Replace by the implementation of the Conv algorithm you desire
 normalize = False  # Turn to True if the input model is in format NNet and the normalization option is turned on
-output_path_c = ''  # Replace by the path to directory in which the code C while be generated (must be an already existing folder)
-output_path_py = ''  # Replace by the path to directory in which the output python while be generated (must be an already existing folder)
-debug_mode = 'onnx'  # If the generation must be done in debug mode, replace by the name of the format ('keras' or 'onnx')
+output_path_c = ""  # Replace by the path to directory in which the code C while be generated (must be an already existing folder)
+output_path_py = ""  # Replace by the path to directory in which the output python while be generated (must be an already existing folder)
+debug_mode = "onnx"  # If the generation must be done in debug mode, replace by the name of the format ('keras' or 'onnx')
 
 # Instantiating a 'CodeGenerator' element
 generator = acetone_nnet.CodeGenerator(file=model_path,

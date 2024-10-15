@@ -22,9 +22,10 @@ import subprocess
 import tempfile
 import unittest
 
-import acetone_nnet
 import numpy as np
 import onnx
+
+from acetone_nnet.bin.bin_acetone import cli_acetone
 
 
 class AcetoneTestCase(unittest.TestCase):
@@ -112,7 +113,7 @@ def run_acetone_for_test(
     run_generated=True,
     run_reference=True,
 ):
-    acetone_nnet.cli_acetone(
+    cli_acetone(
         model_file=model,
         function_name="inference",
         nb_tests=1,

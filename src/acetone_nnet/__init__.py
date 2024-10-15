@@ -19,9 +19,8 @@
 ******************************************************************************
 """
 
-from . import generator, debug
-from .cli_acetone import cli_acetone
-from .cli_compare import cli_compare
+from . import debug, generator
+from .bin.bin_acetone import cli_acetone, cli_compare
 from .generator import (
     ActivationFunctions,
     Add,

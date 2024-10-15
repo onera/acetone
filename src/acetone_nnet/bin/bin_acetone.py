@@ -21,50 +21,191 @@
 
 import argparse
 
-from acetone_nnet.cli_acetone import cli_acetone
-from acetone_nnet.cli_compare import cli_compare
+def cli_acetone(
+        model_file: str,
+        function_name: str,
+        nb_tests: int,
+        conv_algorithm: str,
+        output_dir: str,
+        test_dataset_file: str | None = None,
+        normalize: bool = False,
+) -> None:
+    """Generate code with ACETONE."""
+    print("C CODE GENERATOR FOR NEURAL NETWORKS")
+
+    pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    net = CodeGenerator(file=model_file,
+                        test_dataset=test_dataset_file,
+                        function_name=function_name,
+                        nb_tests=nb_tests,
+                        versions={"Conv2D": conv_algorithm},
+                        normalize=normalize)
+    net.generate_c_files(output_dir)
+    net.compute_inference(output_dir)
 
 
 def acetone_generate() -> None:
     """Generate C code from the model description file."""
     parser = argparse.ArgumentParser(description="C code generator for neural networks")
 
-    parser.add_argument("model_file", help="Input file that describes the neural network model")
+    parser.add_argument(
+        "model_file", help="Input file that describes the neural network model",
+    )
     parser.add_argument("function_name", help="Name of the generated function")
     parser.add_argument("nb_tests", help="Number of inferences process to run")
-    parser.add_argument("conv_algorithm",
-                        help="Algorithm to be used in convolutional layer. Default is indirect im2col with GeMM")
-    parser.add_argument("output_dir", help="Output directory where generated files will be written")
-    parser.add_argument("test_dataset_file", nargs="?", default=None, help="Input file that contains test data")
-    parser.add_argument("normalize", nargs="?", default=False,
-                        help="Boolean saying if the inputs and outputs needs to be normalized. Only used when the file is in NNET representation")
+    parser.add_argument(
+        "conv_algorithm",
+        help="Algorithm to be used in convolutional layer. Default is indirect im2col with GeMM",
+    )
+    parser.add_argument(
+        "output_dir", help="Output directory where generated files will be written",
+    )
+    parser.add_argument(
+        "test_dataset_file",
+        nargs="?",
+        default=None,
+        help="Input file that contains test data",
+    )
+    parser.add_argument(
+        "normalize",
+        nargs="?",
+        default=False,
+        help="Boolean saying if the inputs and outputs needs to be normalized. Only used when the file is in NNET representation",
+    )
 
     args = parser.parse_args()
 
-    cli_acetone(model_file=args.model_file,
-                function_name=args.function_name,
-                nb_tests=args.nb_tests,
-                conv_algorithm=args.conv_algorithm,
-                output_dir=args.output_dir,
-                test_dataset_file=args.test_dataset_file,
-                normalize=args.normalize)
+    cli_acetone(
+        model_file=args.model_file,
+        function_name=args.function_name,
+        nb_tests=args.nb_tests,
+        conv_algorithm=args.conv_algorithm,
+        output_dir=args.output_dir,
+        test_dataset_file=args.test_dataset_file,
+        normalize=args.normalize,
+    )
 
 
 def acetone_compare() -> None:
     """Compare two text file containing inference output(s)."""
-    parser = argparse.ArgumentParser(description="Program to verify the semantic preservation of ")
+    parser = argparse.ArgumentParser(
+        description="Program to verify the semantic preservation of ",
+    )
 
-    parser.add_argument("reference_file",
-                        help="File with the inference output of the reference machine learning framework")
-    parser.add_argument("c_file", help="File with the inference output of the studied machine learning framework")
+    parser.add_argument(
+        "reference_file",
+        help="File with the inference output of the reference machine learning framework",
+    )
+    parser.add_argument(
+        "c_file",
+        help="File with the inference output of the studied machine learning framework",
+    )
     parser.add_argument("nb_tests", help="Number of inferences process to compare")
-    parser.add_argument("--precision", help="Precision of the data studied. Default is float32")
+    parser.add_argument(
+        "--precision", help="Precision of the data studied. Default is float32",
+    )
 
     args = parser.parse_args()
 
     precision = args.precision if args.precision else "float"
 
-    cli_compare(reference_file=args.reference_file,
-                c_file=args.c_file,
-                nb_tests=args.nb_tests,
-                precision=precision)
+    cli_compare(
+        reference_file=args.reference_file,
+        c_file=args.c_file,
+        nb_tests=args.nb_tests,
+        precision=precision,
+    )
+
+# Source document for floating comparison
+# https://floating-point-gui.de/errors/comparison/
+
+
+def compare_floats(a: float, b: float, epsilon: float = (128 * sys.float_info.epsilon),
+                   abs_th: float = sys.float_info.min) -> (bool, float):
+    """Compare a-b to abs_th."""
+    diff = abs(a - b)
+    if a == b:
+        return True, diff
+
+    norm = min((abs(a) + abs(b)), sys.float_info.max)
+    if diff < max(abs_th, epsilon * norm):
+        return True, diff
+
+    return False, diff
+
+
+def preprocess_line(line: list, precision: str) -> list:
+    """Cast a list of str to a list of float."""
+    line = line.split(" ")
+    line[:] = [x for x in line if x.strip()]
+    if precision == "double":
+        line = list(map(np.float64, line))
+    elif precision == "float":
+        line = list(map(np.float32, line))
+    return line
+
+
+def compare_lines(line_f1: list, line_f2: list, precision: str) -> (bool, float):
+    """Compare two lines element wise using compare_floats."""
+    line_f1 = preprocess_line(line_f1, precision)
+    line_f2 = preprocess_line(line_f2, precision)
+    max_diff = 0
+    length = len(line_f1)
+    line_comparison = True
+
+    for j in range(length):
+        float_comparison, diff = compare_floats(line_f1[j], line_f2[j])
+        line_comparison = float_comparison & line_comparison
+        if diff > max_diff:
+            max_diff = diff
+
+    if line_comparison:
+        return True, max_diff
+
+    return False, max_diff
+
+
+def compare_files(
+        file1: str,
+        file2: str,
+        nb_tests: int,
+        precision: str,
+) -> (bool, float):
+    """Compare two files line wise using compare_lines."""
+    f1 = Path.open(Path(file1))
+    f2 = Path.open(Path(file2))
+
+    max_diff_file = 0
+    line_comparison = True
+
+    for (line_f1, line_f2, line_counter) \
+            in zip(f1, f2, range(nb_tests + 1), strict=False):
+        float_comparison, max_diff_line = compare_lines(line_f1, line_f2, precision)
+        line_comparison = float_comparison & line_comparison
+
+        if max_diff_line > max_diff_file:
+            max_diff_file = max_diff_line
+
+        if line_counter == int(nb_tests):
+            break
+
+    f1.close()
+    f2.close()
+
+    if line_comparison:
+        return True, max_diff_file
+
+    return False, max_diff_file
+
+
+def cli_compare(
+        reference_file: str,
+        c_file: str,
+        nb_tests: int,
+        precision: str,
+) -> None:
+    """Compare two files."""
+    _, max_diff_file = compare_files(reference_file, c_file, nb_tests, precision)
+
+    print(f"   Max absolute error for {nb_tests} test(s): {max_diff_file}")
