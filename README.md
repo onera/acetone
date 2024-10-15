@@ -154,4 +154,4 @@ The project is under the GNU Lesser General Public License as published by the F
 
 See LICENSE for details.
 
-![Logo Institut de Recherche en Informatique de Toulouse](logos/Logo_IRIT.png =250x)
+<img src="logos/Logo_IRIT.png" width=25% height=25% alt="Logo Institut de Recherche en Informatique de Toulouse">
