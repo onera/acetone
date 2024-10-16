@@ -15,7 +15,7 @@ HEADERS =
 HEADERS += {{.}}
 {{/header_files}}
 
-OBJ = $(SRC:.cc=.o) $(HEADERS)
+OBJ = $(SRC:.c=.o) $(HEADERS)
 EXEC = {{executable_name}}
 
 all: $(EXEC)
@@ -24,4 +24,4 @@ $(EXEC): $(OBJ)
 	$(CC) $(LDFLAGS)  -o $@ $(OBJ) $(LBLIBS) $(CFLAGS)
 
 clean:
-	rm $(EXEC)
+	rm $(EXEC) *.o
