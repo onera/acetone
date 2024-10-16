@@ -26,6 +26,8 @@ from typing import Any
 import numpy as np
 import onnx
 import pystache
+import json
+
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 from typing_extensions import Self
@@ -239,7 +241,8 @@ class CodeGenerator(ABC):
         with path.open() as f:
             # FIXME This returns at least one array of values even if nb_tests is 0.
             for i, line in enumerate(f):
-                contents = line[1:-2].split(",")
+                contents = json.loads(line)
+                contents = [float.fromhex(f) for f in contents]
                 test_dataset.append(list(map(dtype, contents)))
                 if i >= nb_tests - 1:
                     break
@@ -368,7 +371,7 @@ class CodeGenerator(ABC):
         flattened_aray = array.flatten(order="C")
         s = "\n        {"
         for i in range(flattened_aray.size):
-            s += str(flattened_aray[i]) + ", "
+            s += float.hex(float(flattened_aray[i])).replace('0000000p','p')  + ", "
         s = s[:-2]
         s += "}"
 
@@ -387,7 +390,7 @@ class CodeGenerator(ABC):
             for k in range(shape[0]):
                 for f in range(shape[1]):
                     for i in range(shape[2]):
-                        s += str(array[k, f, i, j]) + ", "
+                        s += str(float.hex(float(array[k, f, i, j])).replace('0000000p','p') ) + ", "
         s = s[:-2]
         s += "}"
         return s
