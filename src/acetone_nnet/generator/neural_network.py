@@ -361,7 +361,9 @@ class CodeGenerator(ABC):
 
                 if self.normalize:
                     nn_output = self.Normalizer.post_processing(nn_output)
-                out_string = ' '.join([float(n).hex().replace('0000000p','p') for n in nn_output])
+                out_string = " ".join(
+                    [float(n).hex().replace("0000000p", "p") for n in nn_output]
+                )
                 print(f"{out_string}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
 
@@ -569,11 +571,6 @@ class CodeGenerator(ABC):
         if any(isinstance(i, Dot | Pooling2D | Conv2D | Gemm) for i in self.layers):
             mustach_hash["p"] = True
 
-        print("type 6loops ", type(Conv2D6loops))
-        print("type stdgemm ", type(Conv2DStdGemm))
-        print("type gemm target ", type(Conv2DGemmTarget))
-        print("type pooling 2D ", type(Pooling2D))
-        print("type gemm ", type(Gemm))
         if any(
             isinstance(
                 i,
