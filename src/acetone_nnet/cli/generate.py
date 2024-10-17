@@ -31,14 +31,15 @@ def cli_acetone(
     function_name: str,
     nb_tests: int,
     output_dir: str,
-    test_dataset_file: str | None = None,
     conv_algorithm: str = "std_gemm_nn",
+    target: str = "generic",
+    test_dataset_file: str | None = None,
     *,
     normalize: bool = False,
 ) -> None:
     """Generate code with ACETONE."""
     logging.info("C CODE GENERATOR FOR NEURAL NETWORKS")
-
+    print(target, " selected")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     net = CodeGenerator(
@@ -47,6 +48,7 @@ def cli_acetone(
         function_name=function_name,
         nb_tests=nb_tests,
         normalize=normalize,
+        target=target,
         versions={"Conv2D": conv_algorithm},
     )
     net.generate_c_files(output_dir)
@@ -100,6 +102,12 @@ def acetone_generate() -> None:
         default="std_gemm_nn",
     )
 
+    parser.add_argument(
+        "--target",
+        help="Target implementation name, default is generic",
+        default="generic",
+    )
+
     args = parser.parse_args()
 
     cli_acetone(
@@ -107,9 +115,10 @@ def acetone_generate() -> None:
         function_name=args.function,
         output_dir=args.output,
         nb_tests=args.dataset_size,
+        conv_algorithm=args.conv,
+        target=args.target,
         test_dataset_file=args.dataset,
         normalize=args.normalize,
-        conv_algorithm=args.conv,
     )
 
 
