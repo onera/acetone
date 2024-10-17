@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include "inference.h"
+#include "target.h"
 
 {{#time}}
 #include <time.h>

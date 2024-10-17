@@ -42,6 +42,7 @@ from acetone_nnet.generator.layers import (
     Conv2D6loops,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
+    Conv2DGemmTarget,
     Dense,
     Dot,
     Gather,
@@ -121,6 +122,8 @@ class CodeGenerator(ABC):
             "target.c",
             "target.h",
         ]
+
+        self.target = target
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -514,9 +517,25 @@ class CodeGenerator(ABC):
 
     def generate_target_file(self: Self, output_dir: Path) -> None:
         print("Generation of target file")
+        mustach_hash = {}
+        # mustach_hash[self.target] = True
+        # Generate C code
+        template = (
+            Path(self.template_path) / self.target / "template_target_file.c.tpl"
+        ).read_text()
+        with (output_dir / "target.c").open("a+") as source_file:
+            source_file.write(pystache.render(template, mustach_hash))
 
     def generate_target_header_file(self: Self, output_dir: Path) -> None:
         print("Generation of target header file")
+        mustach_hash = {}
+        # mustach_hash[self.target] = True
+        # Generate C code
+        template = (
+            Path(self.template_path) / self.target / "template_target_file.h.tpl"
+        ).read_text()
+        with (output_dir / "target.h").open("a+") as source_file:
+            source_file.write(pystache.render(template, mustach_hash))
 
     def generate_function_source_file(
         self: Self,
@@ -551,8 +570,16 @@ class CodeGenerator(ABC):
         if any(isinstance(i, Dot | Pooling2D | Conv2D | Gemm) for i in self.layers):
             mustach_hash["p"] = True
 
+        print("type 6loops ", type(Conv2D6loops))
+        print("type stdgemm ", type(Conv2DStdGemm))
+        print("type gemm target ", type(Conv2DGemmTarget))
+        print("type pooling 2D ", type(Pooling2D))
+        print("type gemm ", type(Gemm))
         if any(
-            isinstance(i, Conv2D6loops | Conv2DStdGemm | Pooling2D | Gemm)
+            isinstance(
+                i,
+                Conv2D6loops | Conv2DStdGemm | Conv2DGemmTarget | Pooling2D | Gemm,
+            )
             for i in self.layers
         ):
             mustach_hash["hw"] = True
@@ -681,14 +708,16 @@ class CodeGenerator(ABC):
         self.concate_size_max = 0
         for layer in self.layers:
             if (
-                isinstance(layer, Conv2DStdGemm)
+                isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget)
                 and layer.patches_size > self.patches_size_max
             ):
                 self.patches_size_max = layer.patches_size
             if isinstance(layer, Concatenate):
                 self.patches_size_max = max(self.patches_size_max, layer.size)
 
-        if any(isinstance(layer, Conv2DStdGemm) for layer in self.layers):
+        if any(
+            isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget) for layer in self.layers
+        ):
             mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
         else:
             mustach_hash["path_size"] = self.l_size_max
@@ -768,7 +797,9 @@ class CodeGenerator(ABC):
             "path": list(range(self.maxpath)),
         }
 
-        if any(isinstance(layer, Conv2DStdGemm) for layer in self.layers):
+        if any(
+            isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget) for layer in self.layers
+        ):
             mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
         else:
             mustach_hash["path_size"] = self.l_size_max

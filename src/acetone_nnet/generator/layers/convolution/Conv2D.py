@@ -18,7 +18,10 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
+
+from acetone_nnet.versioning.version_implementation.conv_implementation import (
+    conv2d_factory,
+)
 import math
 
 import numpy as np
@@ -32,21 +35,21 @@ class Conv2D(Layer):
     """Convolution layer class."""
 
     def __init__(
-            self: Self,
-            idx: int,
-            conv_algorithm: str,
-            size: int,
-            padding: str | np.ndarray,
-            strides: int,
-            kernel_h: int,
-            kernel_w: int,
-            dilation_rate: int,
-            nb_filters: int,
-            input_shape: list[int],
-            output_shape: list[int],
-            weights: np.ndarray,
-            biases: np.ndarray,
-            activation_function: ActivationFunctions,
+        self: Self,
+        idx: int,
+        conv_algorithm: str,
+        size: int,
+        padding: str | np.ndarray,
+        strides: int,
+        kernel_h: int,
+        kernel_w: int,
+        dilation_rate: int,
+        nb_filters: int,
+        input_shape: list[int],
+        output_shape: list[int],
+        weights: np.ndarray,
+        biases: np.ndarray,
+        activation_function: ActivationFunctions,
     ) -> None:
         """Build a Conv2D layer."""
         super().__init__()
@@ -77,14 +80,17 @@ class Conv2D(Layer):
 
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)
-        self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(
-            self.padding,
-            self.input_height,
-            self.input_width,
-            self.kernel_h,
-            self.kernel_w,
-            self.strides,
-            self.dilation_rate)
+        self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = (
+            self.compute_padding(
+                self.padding,
+                self.input_height,
+                self.input_width,
+                self.kernel_h,
+                self.kernel_w,
+                self.strides,
+                self.dilation_rate,
+            )
+        )
 
         ####### Checking the instantiation#######
 
@@ -99,7 +105,9 @@ class Conv2D(Layer):
         if type(conv_algorithm) is not str:
             msg += "Error: conv algorithm type in Conv2D (must be str)"
             msg += "\n"
-        if type(self.padding) is not str and any(type(pad) is not int for pad in self.padding):
+        if type(self.padding) is not str and any(
+            type(pad) is not int for pad in self.padding
+        ):
             msg += "Error: padding type in Conv2D (must be str or ints)"
             msg += "\n"
         if type(self.strides) is not int:
@@ -142,8 +150,10 @@ class Conv2D(Layer):
             msg += "Error: biases in Conv2D (biases must be an numpy array)"
             msg += "\n"
         if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Conv2D "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
+            msg += (
+                "Error: activation function type in Conv2D "
+                "(activation function must be a sub-classe of acetone_nnet Activation Function)"
+            )
             msg += "\n"
         if msg:
             raise TypeError(msg)
@@ -151,37 +161,79 @@ class Conv2D(Layer):
         ### Checking value consistency ###
         msg = ""
         if self.size != self.output_channels * self.output_height * self.output_width:
-            msg += (f"Error: size value in Conv2D "
-                    f"({self.size}!={self.output_channels * self.output_height * self.output_width})")
+            msg += (
+                f"Error: size value in Conv2D "
+                f"({self.size}!={self.output_channels * self.output_height * self.output_width})"
+            )
             msg += "\n"
-        if self.weights.shape != (self.input_channels, self.kernel_h, self.kernel_w, self.nb_filters):
-            msg += (f"Error: non consistency between weight shape and operation parameters in Conv2D "
-                    f"({self.weights.shape}!=({self.input_channels}, {self.kernel_h}, {self.kernel_w}, {self.nb_filters}))")
+        if self.weights.shape != (
+            self.input_channels,
+            self.kernel_h,
+            self.kernel_w,
+            self.nb_filters,
+        ):
+            msg += (
+                f"Error: non consistency between weight shape and operation parameters in Conv2D "
+                f"({self.weights.shape}!=({self.input_channels}, {self.kernel_h}, {self.kernel_w}, {self.nb_filters}))"
+            )
             msg += "\n"
         if len(self.biases.shape) != 1 or self.biases.shape[0] != self.nb_filters:
-            msg += (f"Error: non consistency between the var shape and the output shape in Conv2D "
-                    f"({self.biases.shape}!={self.nb_filters})")
+            msg += (
+                f"Error: non consistency between the var shape and the output shape in Conv2D "
+                f"({self.biases.shape}!={self.nb_filters})"
+            )
             msg += "\n"
-        if self.output_height != math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (
-                self.kernel_h - 1) * (self.dilation_rate - 1)) / self.strides) + 1:
-            msg += (f"Error: non consistency between the output height and the parameter of the operation in Conv2D "
-                    f"({self.output_height}!={math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1) * (self.dilation_rate - 1)) / self.strides) + 1})")
+        if (
+            self.output_height
+            != math.floor(
+                (
+                    self.input_height
+                    + self.pad_bottom
+                    + self.pad_top
+                    - self.kernel_h
+                    - (self.kernel_h - 1) * (self.dilation_rate - 1)
+                )
+                / self.strides
+            )
+            + 1
+        ):
+            msg += (
+                f"Error: non consistency between the output height and the parameter of the operation in Conv2D "
+                f"({self.output_height}!={math.floor((self.input_height + self.pad_bottom + self.pad_top - self.kernel_h - (self.kernel_h - 1) * (self.dilation_rate - 1)) / self.strides) + 1})"
+            )
             msg += "\n"
-        if self.output_width != math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (
-                self.kernel_w - 1) * (self.dilation_rate - 1)) / self.strides) + 1:
-            msg += (f"Error: non consistency between the output width and the parameter of the operation in Conv2D "
-                    f"({self.output_width}!={math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1) * (self.dilation_rate - 1)) / self.strides) + 1})")
+        if (
+            self.output_width
+            != math.floor(
+                (
+                    self.input_width
+                    + self.pad_left
+                    + self.pad_right
+                    - self.kernel_w
+                    - (self.kernel_w - 1) * (self.dilation_rate - 1)
+                )
+                / self.strides
+            )
+            + 1
+        ):
+            msg += (
+                f"Error: non consistency between the output width and the parameter of the operation in Conv2D "
+                f"({self.output_width}!={math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1) * (self.dilation_rate - 1)) / self.strides) + 1})"
+            )
             msg += "\n"
-        if self.conv_algorithm not in ["6loops",
-                                       "indirect_gemm_nn",
-                                       "indirect_gemm_tn",
-                                       "indirect_gemm_nt",
-                                       "indirect_gemm_tt",
-                                       "std_gemm_nn",
-                                       "std_gemm_tn",
-                                       "std_gemm_nt",
-                                       "std_gemm_",
-                                       "specs"]:
+        if self.conv_algorithm not in [
+            "6loops",
+            "indirect_gemm_nn",
+            "indirect_gemm_tn",
+            "indirect_gemm_nt",
+            "indirect_gemm_tt",
+            "std_gemm_nn",
+            "std_gemm_tn",
+            "std_gemm_nt",
+            "std_gemm_",
+            "specs",
+            "gemm_target",
+        ]:
             msg += f"Error: conv algorithm value in Conv2D ({self.conv_algorithm})"
             msg += "\n"
         if msg:
@@ -191,34 +243,45 @@ class Conv2D(Layer):
         """Generate computation code for layer."""
 
     def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
+        self: Self,
+        input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""
         # Conv for chw
-        input_array = input_array.reshape(self.input_channels, self.input_height, self.input_width)
+        input_array = input_array.reshape(
+            self.input_channels, self.input_height, self.input_width
+        )
 
         output = np.zeros((self.nb_filters, self.output_height, self.output_width))
         print(self.weights.shape)
 
         if self.pad_right or self.pad_left or self.pad_top or self.pad_bottom:
-            input_padded = np.zeros((self.input_channels, self.input_height + self.pad_top + self.pad_bottom,
-                                     self.input_width + self.pad_left + self.pad_right))
+            input_padded = np.zeros(
+                (
+                    self.input_channels,
+                    self.input_height + self.pad_top + self.pad_bottom,
+                    self.input_width + self.pad_left + self.pad_right,
+                )
+            )
 
             border_right = None if self.pad_right == 0 else -self.pad_right
             border_bottom = None if self.pad_bottom == 0 else -self.pad_bottom
-            input_padded[:, self.pad_top:border_bottom, self.pad_left:border_right] = input_array
+            input_padded[
+                :, self.pad_top : border_bottom, self.pad_left : border_right
+            ] = input_array
         else:
             input_padded = input_array
 
         for f in range(self.nb_filters):
             for i in range(self.output_height):
                 for j in range(self.output_width):
-                    w = (self.weights[:, :, :, f] *
-                         input_padded[
+                    w = (
+                        self.weights[:, :, :, f]
+                        * input_padded[
                             :,
-                            i * self.strides: i * self.strides + self.kernel_h,
-                            j * self.strides: j * self.strides + self.kernel_w
-                        ])
+                            i * self.strides : i * self.strides + self.kernel_h,
+                            j * self.strides : j * self.strides + self.kernel_w,
+                        ]
+                    )
                     output[f, i, j] = np.sum(w) + self.biases[f]
         return self.activation_function.compute(output)
