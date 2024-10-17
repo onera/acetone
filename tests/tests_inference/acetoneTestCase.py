@@ -21,6 +21,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import onnx
@@ -107,7 +108,7 @@ def create_dataset(tmpdir: str, shape: tuple):
 
 def run_acetone_for_test(
     tmpdir_name: str,
-    model: str,
+    model: str | Path,
     datatest_path: str | np.ndarray | None = None,
     conv_algo: str = "std_gemm_nn",
     normalize=False,

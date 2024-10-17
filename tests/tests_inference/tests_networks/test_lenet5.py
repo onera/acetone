@@ -35,22 +35,13 @@ class TestLenet5(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
         keras_result = np.array(model.predict(dataset)).flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(
+        acetone_result, python_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
             self.tmpdir_name + "/dataset.txt",
         )
-        self.assertListAlmostEqual(acetone_result[0], keras_result)
-
-    def test_lenet5_python(self) -> None:
-        """Test lenet5 model, compare between python et C code."""
-        model_path = MODELS_DIR / "lenet5" / "lenet5_trained" / "lenet5_trained.h5"
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(
-            self.tmpdir_name,
-            model_path,
-        )
-        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+        self.assertListAlmostEqual(acetone_result, keras_result)
+        self.assertListAlmostEqual(python_result, keras_result)
 
 
 if __name__ == "__main__":
