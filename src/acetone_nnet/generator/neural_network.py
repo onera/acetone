@@ -119,11 +119,12 @@ class CodeGenerator(ABC):
             "Makefile",
             "test_dataset.h",
             "test_dataset.c",
-            "target.c",
-            "target.h",
         ]
 
         self.target = target
+        if self.target != "generic":
+            self.files_to_gen.append("target.c")
+            self.files_to_gen.append("target.h")
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -511,10 +512,11 @@ class CodeGenerator(ABC):
         print("Generated Makefile.")
         self.generate_testdataset_files(c_files_directory)
         print("Generated testdataset files.")
-        self.generate_target_file(c_files_directory)
-        print("Generated target file.")
-        self.generate_target_header_file(c_files_directory)
-        print("Generated target header file.")
+        if self.target != "generic":
+            self.generate_target_file(c_files_directory)
+            print("Generated target file.")
+            self.generate_target_header_file(c_files_directory)
+            print("Generated target header file.")
 
     def generate_target_file(self: Self, output_dir: Path) -> None:
         print("Generation of target file")
@@ -548,6 +550,9 @@ class CodeGenerator(ABC):
             "input_size": self.layers[0].size,
             "output_size": self.layers[-1].size,
         }
+
+        if self.target != "generic":
+            mustach_hash["target_specific"] = True
 
         # Tag Gather-type layers
         if any(isinstance(i, Gather | GatherElements) for i in self.layers):
