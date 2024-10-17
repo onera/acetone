@@ -354,9 +354,8 @@ class CodeGenerator(ABC):
 
                 if self.normalize:
                     nn_output = self.Normalizer.post_processing(nn_output)
-
-                for n in nn_output:
-                    print(f"{float.hex(n)}", end=" ", file=fi, flush=True)
+                out_string = ' '.join([float(n).hex().replace('0000000p','p') for n in nn_output])
+                print(f"{out_string}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
 
         print("File output_python.txt generated.")
