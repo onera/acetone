@@ -35,23 +35,13 @@ class TestAcasDecr128(acetoneTestCase.AcetoneTestCase):
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
         keras_result = np.array(model.predict(dataset)).flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(
+        acetone_result, python_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
             self.tmpdir_name + "/dataset.txt",
         )
-        self.assertListAlmostEqual(acetone_result[0], keras_result)
-
-    def test_acas_decr128_python(self) -> None:
-        """Test acas decr128 model, compare between python et C code."""
-        model_path = MODELS_DIR / "acas" / "acas_decr128" / "acas_decr128.h5"
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(
-            self.tmpdir_name,
-            model_path,
-        )
-        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
-
+        self.assertListAlmostEqual(acetone_result, keras_result)
+        self.assertListAlmostEqual(python_result, keras_result)
 
 if __name__ == "__main__":
     acetoneTestCase.main()

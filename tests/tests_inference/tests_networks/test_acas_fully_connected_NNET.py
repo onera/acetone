@@ -36,26 +36,14 @@ class TestAcasFullyConnectedNNet(acetoneTestCase.AcetoneTestCase):
         dataset_path = (
                 MODELS_DIR / "acas" / "acas_fully_connected" / "test_input_acas_fully_connected.txt"
         )
-        acetone_result = acetoneTestCase.run_acetone_for_test(
+        acetone_result, python_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
             dataset_path,
         )
 
-        self.assertListAlmostEqual(acetone_result[0], nnet_result)
-
-    def test_acas_fully_connected_nnet_python(self) -> None:
-        """Tests Acas fully connected, NNet model, compare between python et C code."""
-        model_path = (
-                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.nnet"
-        )
-        acetone_result = acetoneTestCase.run_acetone_for_test(
-            self.tmpdir_name,
-            model_path,
-        )
-
-        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
-
+        self.assertListAlmostEqual(acetone_result, nnet_result)
+        self.assertListAlmostEqual(python_result, nnet_result)
 
 if __name__ == "__main__":
     acetoneTestCase.main()
