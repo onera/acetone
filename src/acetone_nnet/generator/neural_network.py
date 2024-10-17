@@ -253,7 +253,7 @@ class CodeGenerator(ABC):
             c_files_directory: str,
     ) -> tuple[list, list] | np.ndarray:
         """Perform inference pass on test dataset."""
-        with (Path(c_files_directory) / "output_python.txt").open("w+") as fi:
+        with (Path(c_files_directory) / "output_python.txt").open("w") as fi:
             for nn_input in self.test_dataset:
 
                 # Debug Mode output
@@ -356,7 +356,7 @@ class CodeGenerator(ABC):
                     nn_output = self.Normalizer.post_processing(nn_output)
 
                 for n in nn_output:
-                    print(f"{n:.9g}", end=" ", file=fi, flush=True)
+                    print(f"{float.hex(n)}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
 
         print("File output_python.txt generated.")
