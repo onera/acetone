@@ -77,7 +77,7 @@ def run_model_onnx(
 
 
 def debug_onnx(
-        target_model: onnx.ModelProto | str | Path,
+        target_model: onnx.ModelProto | str,
         dataset: np.ndarray,
         debug_target: list[str] | None= None,
         to_save: bool = False,
@@ -86,7 +86,7 @@ def debug_onnx(
 ) -> (onnx.ModelProto, list[int], list[np.ndarray]):
     """Debug an ONNX model."""
     # Loading the model
-    model = onnx.load(target_model) if type(target_model) is str else target_model
+    model = onnx.load(target_model) if isinstance(target_model, str) else target_model
 
     # Tensor output name and indices for acetone debug
     if not debug_target:
