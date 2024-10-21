@@ -109,165 +109,49 @@ void sgemm_micro_kernel(int      kc,
         "DUP V1.4s, w3                      \n\t" // duplicate 0.0 to V1 
         "DUP V2.4s, w3                      \n\t" // duplicate 0.0 to V2 
         "DUP V3.4s, w3                      \n\t" // duplicate 0.0 to V3 
-                
-        "LD1 {v0.s}[0], [x4]                \n\t" // Load in the 1rst single precision of V0 the data at address contained in x4
+
+        // Load the C rows as column
+
+        "LD1 {v0.4s}, [x4]                  \n\t" // Load 1rst row of C in v0   
 
         "ADD x3, x4, x5, lsl #2             \n\t" // x3 = _C (x4) + 1*incRowC*sizeof(float) (x5*4)
-        "LD1 {v0.s}[1], [x3]                \n\t" // Load in the 2nd single precision of V0 the data at address contained in x3
+        "LD1 {v1.4s}, [x3]                  \n\t" // Load  2nd row of C in v1
 
-        "ADD x3, x4, x5, lsl #3             \n\t" // x3 = _C (x4) + 2*incRowC*sizeof(float) (x5*8)
-        "LD1 {v0.s}[2], [x3]                \n\t" // Load in the 3rd single precision of V0 the data at address contained in x3
+        "ADD x3, x3, x5, lsl #2             \n\t" // x3 = _C (x4) + 2*incRowC*sizeof(float) 
+        "LD1 {v2.4s}, [x3]                  \n\t" // Load  3rd row of C in v2
 
-        "ADD x3, x5, x5, lsl #1             \n\t" // x3 =  incRowC + 2*incRowC
-        "ADD x3, x4, x3, lsl #2             \n\t" // x3 = _C (x4) + 3*incRowC*sizeof(float) (x3*4)
-        "LD1 {v0.s}[3], [x3]                \n\t" // Load in the 4th single precision of V0 the data at address contained in x3
+        "ADD x3, x3, x5, lsl #2             \n\t" // x3 = _C (x4) + 3*incRowC*sizeof(float) 
+        "LD1 {v3.4s}, [x3]                  \n\t" // Load  4th row of C in v3
 
-        "ADD x3, x4, #4                     \n\t" // x3 = _C (x4) + 1*sizeof(float)
-        "LD1 {v1.s}[0], [x3]                \n\t" // Load in the 1rst single precision of V1 the data at address contained in x3
-
-        "LSL x3, x5, #2                     \n\t" // x3 = 1*ldC*sizeof(float) (x5*4)
-        "ADD x3, x3, #4                     \n\t" // x3 += 1*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = 1*incRowC*sizeof(float) (x5*4) + 1*sizeof(float) (x3) + _C (x4)
-        "LD1 {v1.s}[1], [x3]                \n\t"
-
-        "LSL x3, x5, #3                     \n\t" // x3 = 1*ldC*sizeof(float) (x5*8)
-        "ADD x3, x3, #4                     \n\t" // x3 += 1*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = 1*incRowC*sizeof(float) (x5*4) + 1*sizeof(float) (x3) + _C (x4)
-        "LD1 {v1.s}[2], [x3]                \n\t"
-
-        "ADD x3, x5, x5, lsl #1             \n\t" // r3 = incRowC + 2*incRowC = 3*incRowC
-        "LSL x3, x3, #2                     \n\t" // x3 = 3*incRowC*sizeof(float) 
-        "ADD x3, x3, #4                     \n\t" // x3 = 3*incRowC*sizeof(float) + 1*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = 1*incRowC*sizeof(float) (x5*4) + 1*sizeof(float) (x3) + _C (x4)
-        "LD1 {v1.s}[3], [x3]                \n\t"
-
-        "ADD x3, x4, #8                     \n\t" // x3 = _C + 2*sizeof(float)
-        "LD1 {v2.s}[0], [x3]                \n\t"
-
-        "LSL x3, x5, #2                     \n\t" // x3 = 1*incRowC*sizeof(float) (x5*4)
-        "ADD x3, x3, #8                     \n\t" // x3 += 2*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = 2*sizeof(float) (x3) + _C (x4) + 1*incRowC*sizeof(float) (x5*4)
-        "LD1 {v2.s}[1], [x3]                \n\t"
-
-        "LSL x3, x5, #3                     \n\t" // x3 = 2*incRowC*sizeof(float) (x5*8)
-        "ADD x3, x3, #8                     \n\t" // x3 += 2*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = 2*sizeof(float) (x3) + _C (x4) +  2*incRowC*sizeof(float) (x5*8)
-        "LD1 {v2.s}[2], [x3]                \n\t"
-
-        "ADD x3, x5, x5, lsl #1             \n\t" // x3 = incRowC + 2*incRowC
-        "LSL x3, x3, #2                     \n\t" // x3 = 3*incRowC*sizeof(float)
-        "ADD x3, x3, #8                     \n\t" // x3 = 3*incRowC*sizeof(float) + 2*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = _C + 3*incRowC*sizeof(float) + 2*sizeof(float)
-        "LD1 {v2.s}[3], [x3]                \n\t"
-
-        "ADD x3, x4, #12                    \n\t" // x3 = _C + 3*sizeof(float)
-        "LD1 {v3.s}[0], [x3]                \n\t"
-
-        "LSL x3, x5, #2                     \n\t" // x3 = 1*incRowC*sizeof(float) (x5*4)
-        "ADD x3, x3, #12                    \n\t" // x3+= 3*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = 3*sizeof(float) (x3) + _C (x4) + 1*incRowC*sizeof(float) (x5*4)
-        "LD1 {v3.s}[1], [x3]                \n\t"
-
-        "LSL x3, x5, #3                     \n\t" // x3 = 2*incRowC*sizeof(float) (x5*8)
-        "ADD x3, x3, #12                    \n\t" // x3+= 3*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = 3*sizeof(float) (x3) + _C (x4) + 2*incRowC*sizeof(float) (x5*8)
-        "LD1 {v3.s}[2], [x3]                \n\t"
-
-        "ADD x3, x5, x5, lsl #1             \n\t" // x3 = incRowC + 2*incRowC
-        "LSL x3, x3, #2                     \n\t" // x3 = 3*incRowC*sizeof(float)
-        "ADD x3, x3, #12                    \n\t" // x3 = 3*incRowC*sizeof(float) + 3*sizeof(float)
-        "ADD x3, x4, x3                     \n\t" // x3 = _C + 3*incRowC*sizeof(float) + 3*sizeof(float)
-        "LD1 {v3.s}[3], [x3]                \n\t"
-        "                                   \n\t"
-        "                                   \n\t" // begin computation
-        "                                   \n\t"
+        // begin computation
+        
         "loop:                              \n\t"
         "LD1 {v4.4s}, [x6]                  \n\t"
         "LD1 {v5.4s}, [x7]                  \n\t"
 
-        "FMLA v0.4s, v4.4s, v5.s[0]         \n\t"
-        "FMLA v1.4s, v4.4s, v5.s[1]         \n\t"
-        "FMLA v2.4s, v4.4s, v5.s[2]         \n\t"
-        "FMLA v3.4s, v4.4s, v5.s[3]         \n\t"
+        "FMLA v0.4s, v5.4s, v4.s[0]         \n\t"
+        "FMLA v1.4s, v5.4s, v4.s[1]         \n\t"
+        "FMLA v2.4s, v5.4s, v4.s[2]         \n\t"
+        "FMLA v3.4s, v5.4s, v4.s[3]         \n\t"
 
         "ADD x6, x6, #16                    \n\t" // A + 4*sizeof(float);
         "ADD x7, x7, #16                    \n\t" // B + 4*sizeof(float);
         "ADD x2, x2, #1                     \n\t"
         "CMP x2, x1                         \n\t"
         "B.LT loop                          \n\t"
-        "                                   \n\t" // store results
-        "                                   \n\t"
-        "                                   \n\t"
+
+        // store results
         
-        "ST1 {v0.s}[0], [x4]                \n\t" // set first fp32 of V0
+        "ST1 {v0.4s}, [x4]                  \n\t" // store 1rst row of C
 
         "ADD x3, x4, x5, lsl #2             \n\t" // x3 = _C (x4) + 1*incRowC*sizeof(float) (x5*4)
-        "ST1 {v0.s}[1], [x3]                \n\t" // set second fp32 of V0
+        "ST1 {v1.4s}, [x3]                  \n\t" // store 2nd row of C
 
-        "ADD x3, x4, x5, lsl #3             \n\t" // x3 = _C (x4) + 2*incRowC*sizeof(float) (x5*8)
-        "ST1 {v0.s}[2], [x3]                \n\t" // set third fp32 of V0
+        "ADD x3, x3, x5, lsl #2             \n\t" // x3 = _C (x4) + 1*incRowC*sizeof(float) (x5*4)
+        "ST1 {v2.4s}, [x3]                  \n\t" // store 3rd row of C
 
-        "ADD    x3, x5, x5, lsl #1          \n\t" // x3 =  incRowC + 2*incRowC
-        "ADD    x3, x4, x3, lsl #2          \n\t" // x3 = _C + 3*incRowC*sizeof(float)
-        "ST1 {v0.s}[3], [x3]                \n\t"
-
-        "ADD x3, x4, #4                     \n\t" // x3 = _C + 1*sizeof(float)
-        "ST1 {v1.s}[0], [x3]                \n\t" // set first fp32 of q1
-
-        "LSL    x3, x5, #2                  \n\t"
-        "ADD    x3, x3, #4                  \n\t"  // x3+= 1*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"  // x3 = 1*sizeof(float) + _C +  1*incRowC*sizeof(float)
-        "ST1 {v1.s}[1], [x3]                \n\t"
-
-        "LSL    x3, x5, #3                  \n\t"  // x3 = 2*incRowC*sizeof(float) (x5*8)
-        "ADD    x3, x3, #4                  \n\t"  // x3+= 1*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"  // x3 = 1*sizeof(float) (x3) + _C (x4) +  2*incRowC*sizeof(float) (x5*8)
-        "ST1 {v1.s}[2], [x3]                \n\t"
-
-        "ADD    x3, x5, x5, lsl #1          \n\t"  // x3 = incRowC + 2*incRowC = 3*incRowC
-        "LSL    x3, x3, #2                  \n\t"  // x3 = 3*incRowC*sizeof(float)
-        "ADD    x3, x3, #4                  \n\t"  // x3 = 3*incRowC*sizeof(float) + 1*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"  // x3 = 1*sizeof(float) + _C (x4) + 3*incRowC*sizeof(float) (x3*4)
-        "ST1 {v1.s}[3], [x3]                \n\t"
-
-        "ADD    x3, x4, #8                  \n\t"  // x3 = _C + 2*sizeof(float)
-        "ST1 {v2.s}[0], [x3]                \n\t"
-
-        "LSL    x3, x5, #2                  \n\t"  // x3 = 1*incRowC*sizeof(float) (x5*4)
-        "ADD    x3, x3, #8                  \n\t"  // x3+= 2*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"  // x3 = 2*sizeof(float) (x3) + _C (x4) + 1*incRowC*sizeof(float) (x5*4)
-        "ST1 {v2.s}[1], [x3]                \n\t"
-
-        "LSL    x3, x5, #3                  \n\t"  // x3 = 2*incRowC*sizeof(float) (x5*8)
-        "ADD    x3, x3, #8                  \n\t"  // x3+= 2*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"  // x3 = 2*sizeof(float) (x3) + _C (x4) +  2*incRowC*sizeof(float) (x5*8)
-        "ST1 {v2.s}[2], [x3]                \n\t"
-
-
-        "ADD    x3, x5, x5, lsl #1          \n\t"  // x3 = incRowC + 2*incRowC
-        "LSL    x3, x3, #2                  \n\t"  // x3 = 3*incRowC*sizeof(float)
-        "ADD    x3, x3, #8                  \n\t"  // x3 = 3*incRowC*sizeof(float) + 2*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"  // x3 = _C + 3*incRowC*sizeof(float) + 2*sizeof(float)
-        "ST1 {v2.s}[3], [x3]                \n\t"
-
-        "ADD    x3, x4, #12                 \n\t"  // x3 = _C + 3*sizeof(float)
-        "ST1 {v3.s}[0], [x3]                \n\t"
-
-        "LSL    x3, x5, #2                  \n\t"   // x3 = 1*incRowC*sizeof(float) (x5*4)
-        "ADD    x3, x3, #12                 \n\t"   // x3+= 3*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"   // x3 = 3*sizeof(float) (x3) + _C (x4) + 1*incRowC*sizeof(float) (x5*4)
-        "ST1 {v3.s}[1], [x3]                \n\t"
-
-        "LSL    x3, x5, #3                  \n\t"   // x3 = 2*incRowC*sizeof(float) (x5*8)
-        "ADD    x3, x3, #12                 \n\t"   // x3+= 3*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"   // x3 = 3*sizeof(float) (x3) + _C (x4) + 2*incRowC*sizeof(float) (x5*8)
-        "ST1 {v3.s}[2], [x3]                \n\t"
-
-        "ADD    x3, x5, x5, lsl #1          \n\t"   // x3 = incRowC + 2*incRowC
-        "LSL    x3, x3, #2                  \n\t"   // x3 = 3*incRowC*sizeof(float)
-        "ADD    x3, x3, #12                 \n\t"   // x3 = 3*incRowC*sizeof(float) + 3*sizeof(float)
-        "ADD    x3, x4, x3                  \n\t"   // x3 = _C + 3*incRowC*sizeof(float) + 3*sizeof(float)
-        "ST1 {v3.s}[3], [x3]                \n\t"
+        "ADD x3, x3, x5, lsl #2             \n\t" // x3 = _C (x4) + 1*incRowC*sizeof(float) (x5*4)
+        "ST1 {v3.4s}, [x3]                  \n\t" // store 4th row of C
         : // outputs operands
         :  
         :  "x3", "v0", "v1", "v2", "v3", "v4", "v5"          // register clobber list
