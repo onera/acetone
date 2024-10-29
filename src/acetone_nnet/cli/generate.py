@@ -33,6 +33,7 @@ def cli_acetone(
     output_dir: str,
     conv_algorithm: str = "std_gemm_nn",
     target: str = "generic",
+    target_page_size: int = 4096,
     test_dataset_file: str | None = None,
     *,
     normalize: bool = False,
@@ -49,6 +50,7 @@ def cli_acetone(
         nb_tests=nb_tests,
         normalize=normalize,
         target=target,
+        target_page_size=target_page_size,
         versions={"Conv2D": conv_algorithm},
     )
     net.generate_c_files(output_dir)
@@ -108,6 +110,13 @@ def acetone_generate() -> None:
         default="generic",
     )
 
+    parser.add_argument(
+        "--target_page_size",
+        default=4096,
+        type=int,
+        help="page size of the target in bytes",
+    )
+
     args = parser.parse_args()
 
     cli_acetone(
@@ -119,6 +128,7 @@ def acetone_generate() -> None:
         target=args.target,
         test_dataset_file=args.dataset,
         normalize=args.normalize,
+        target_page_size=args.target_page_size,
     )
 
 

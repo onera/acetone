@@ -72,6 +72,7 @@ class CodeGenerator(ABC):
         test_dataset: str | np.ndarray | Path | None = None,
         function_name: str = "inference",
         target: str = "generic",
+        target_page_size: int = 4096,
         nb_tests: int | str = 0,
         versions: dict[int, str] | dict[str, str] | None = None,
         normalize: bool | str = False,
@@ -125,6 +126,8 @@ class CodeGenerator(ABC):
         if self.target != "generic":
             self.files_to_gen.append("target.c")
             self.files_to_gen.append("target.h")
+
+        self.target_page_size = target_page_size
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -796,6 +799,7 @@ class CodeGenerator(ABC):
         mustach_hash = {
             "data_type": self.data_type,
             "path": list(range(self.maxpath)),
+            "page_size": self.target_page_size,
         }
 
         if any(
