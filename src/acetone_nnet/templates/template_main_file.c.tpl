@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     {
         for (j = 0; j < nn_output_size; ++j)
         {
-            fprintf(fp,"%.9g ", predictions[i][j]);
+            fprintf(fp,"%a ", predictions[i][j]);
             printf("%.9g ", predictions[i][j]);
             if (j == nn_output_size - 1)
             {

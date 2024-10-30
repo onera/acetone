@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <math.h>
 #include "inference.h"
-
+{{#target_specific}}
+#include "target.h"
+{{/target_specific}}
 {{#time}}
 #include <time.h>
 #include "MMU.h"

@@ -45,25 +45,14 @@ class TestAcasFullyConnectedONNX(acetoneTestCase.AcetoneTestCase):
         input_name = sess.get_inputs()[0].name
         result = sess.run(None, {input_name: dataset[0]})
         onnx_result = result[0].ravel().flatten()
-        acetone_result = acetoneTestCase.run_acetone_for_test(
+        acetone_result, python_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
             self.tmpdir_name + "/dataset.txt",
         )
-
-        self.assertListAlmostEqual(acetone_result[0], onnx_result)
-
-    def test_acas_fully_connected_onnx_python(self) -> None:
-        """Tests Acas fully connected, ONNX model, compare between python et C code."""
-        model_path = (
-                MODELS_DIR / "acas" / "acas_fully_connected" / "acas_fully_connected.onnx"
-        )
-        acetone_result = acetoneTestCase.run_acetone_for_test(
-            self.tmpdir_name,
-            model_path,
-        )
-
-        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+        print(acetone_result)
+        self.assertListAlmostEqual(acetone_result, onnx_result)
+        self.assertListAlmostEqual(python_result, onnx_result)
 
 
 if __name__ == "__main__":

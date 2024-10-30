@@ -16,11 +16,12 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-
 import unittest
 
+import acetone_nnet
 import onnx
 import onnxruntime as rt
+from acetone_nnet import debug
 
 from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
@@ -49,6 +50,62 @@ class TestAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name + "/dataset.txt",
         )
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
+
+    @unittest.expectedFailure
+    def test_acas_coc_onnx_python_ref(self) -> None:
+        """Tests Acas COC, ONNX model, compare between onnx et C code."""
+        model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"
+        onnx_reference = onnx.load(str(model_path))
+        onnx_model = onnx.load(str(model_path))
+
+        dataset_shape = tuple(
+            onnx_model.graph.input[0].type.tensor_type.shape.dim[i].dim_value
+            for i in range(len(onnx_model.graph.input[0].type.tensor_type.shape.dim))
+        )
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, dataset_shape)
+
+        # Compute ONNX debug outputs
+        onnx_model, onnx_layers, onnx_outputs = debug.debug_onnx(
+            target_model=onnx_model,
+            dataset=dataset[0],
+        )
+
+        # Compute Acetone debug outputs
+        generator = acetone_nnet.CodeGenerator(file=model_path,
+                                               test_dataset=dataset,
+                                               nb_tests=1,
+                                               debug_mode="onnx")
+        acetone_outputs, acetone_layers = generator.compute_inference("")
+        acetone_outputs, acetone_layers = debug.reorder_outputs_python(acetone_outputs, acetone_layers)
+
+        # Compute Acetone reference output
+        _, acetone_reference = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name,
+            model_path,
+            self.tmpdir_name + "/dataset.txt",
+            run_generated=False,
+        )
+
+        # Compute ONNX reference output
+        sess = rt.InferenceSession(model_path)
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None, {input_name: dataset[0]})
+        reference_output = result[0].ravel().flatten()
+
+        self.assertListAlmostEqual(onnx_outputs[-1], reference_output)
+        self.assertListAlmostEqual(acetone_outputs[-1], reference_output)
+        self.assertListAlmostEqual(acetone_outputs[-1], acetone_reference)
+        self.assertListAlmostEqual(acetone_reference, reference_output)
+
+        # Compare
+        same = debug.compare_result(
+            acetone_result=acetone_outputs,
+            reference_result=onnx_outputs,
+            targets=acetone_layers,
+            verbose=True,
+        )
+
+        assert same
 
     def test_acas_coc_onnx_python(self) -> None:
         """Tests Acas COC, ONNX model, compare between python et C code."""

@@ -21,6 +21,7 @@ import json
 import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import onnx
@@ -76,7 +77,7 @@ def read_output_c(path_to_output: str) -> np.ndarray:
     with open(path_to_output) as f:
         line = f.readline()
         line = line[:-2].split(" ")
-        line = list(map(float, line))
+        line = list(map(float.fromhex, line))
         line = np.array(line)
     f.close()
     return line
@@ -87,7 +88,7 @@ def read_output_python(path_to_output: str) -> np.ndarray:
     with open(path_to_output) as f:
         line = f.readline()
         line = line[:-3].split(" ")
-        line = list(map(float, line))
+        line = list(map(float.fromhex, line))
         line = np.array(line)
     f.close()
     return line
@@ -98,7 +99,8 @@ def create_dataset(tmpdir: str, shape: tuple):
     dataset = np.float32(np.random.default_rng(seed=10).random((1, *shape)))
     with open(tmpdir + "/dataset.txt", "w") as filehandle:
         row = (dataset[0]).flatten(order="C")
-        json.dump(row.tolist(), filehandle)
+        row = [float(f).hex().replace('0000000p','p') for f in row]
+        json.dump(row, filehandle)
         filehandle.write("\n")
     filehandle.close()
     return dataset
@@ -106,7 +108,7 @@ def create_dataset(tmpdir: str, shape: tuple):
 
 def run_acetone_for_test(
     tmpdir_name: str,
-    model: str,
+    model: str | Path,
     datatest_path: str | np.ndarray | None = None,
     conv_algo: str = "std_gemm_nn",
     normalize=False,

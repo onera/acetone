@@ -39,22 +39,12 @@ class TestAcasCOCNNet(acetoneTestCase.AcetoneTestCase):
         dataset_path = (
                 MODELS_DIR / "acas" / "acas_COC" / "test_input_acas_COC.txt"
         )
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,
+        acetone_result, python_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,
                                                               model_path,
                                                               dataset_path)
 
-        self.assertListAlmostEqual(acetone_result[0], nnet_result)
-
-    def test_acas_coc_nnet_python(self) -> None:
-        """Tests Acas COC, NNet model, compare between python et C code."""
-        model_path = (
-                MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.nnet"
-        )
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,
-                                                              model_path)
-
-        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
-
+        self.assertListAlmostEqual(acetone_result, nnet_result)
+        self.assertListAlmostEqual(python_result, nnet_result)
 
 if __name__ == "__main__":
     acetoneTestCase.main()

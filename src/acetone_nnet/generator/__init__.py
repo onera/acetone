@@ -46,6 +46,7 @@ from .layers import (
     Conv2DGemm,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
+    Conv2DGemmTarget,
     Dense,
     Divide,
     Dot,
