@@ -20,20 +20,15 @@
 """
 
 from pathlib import Path
+from typing import Any
 
 import onnx
 from acetone_nnet.generator import Layer
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
 
-from .H5_importer.parser_h5 import load_keras
-from .JSON_importer.parser_JSON import load_json
-from .NNET_importer.parser_NNET import load_nnet
-from .ONNX_importer.parser_ONNX import load_onnx
 
 
 def parser(
-        file_to_parse: str | Path | onnx.ModelProto | Functional | Sequential,
+        file_to_parse: Any,
         debug: None | str = None,
         *,
         normalize: bool = False,
@@ -50,29 +45,37 @@ def parser(
 
         if "json" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
+            from .JSON_importer.parser_JSON import load_json
             return load_json(str(file_to_parse))
 
         if "onnx" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
+            from .ONNX_importer.parser_ONNX import load_onnx
             return load_onnx(file_to_parse, debug)
 
         if "h5" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
+            from .H5_importer.parser_h5 import load_keras
             return load_keras(str(file_to_parse), debug)
 
         if "nnet" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
+            from .NNET_importer.parser_NNET import load_nnet
             return load_nnet(str(file_to_parse), normalize)
 
         print(f"\nError: model description . {extension[-4:]} not supported")
         raise TypeError("Error: model description ." + extension[
                                                        -4:] + " not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
 
-    if type(file_to_parse) is onnx.ModelProto:
-        return load_onnx(file_to_parse, debug)
+    # TODO Conditional import/test if onnx is available
+    # if type(file_to_parse) is onnx.ModelProto:
+    #     return load_onnx(file_to_parse, debug)
 
-    if type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
-        return load_keras(file_to_parse, debug)
+    # TODO Conditional import/test if keras is available
+    # from keras.engine.functional import Functional
+    # from keras.engine.sequential import Sequential
+    # if type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
+    #     return load_keras(file_to_parse, debug)
 
     print("\nError: model description .", type(file_to_parse), "not supported")
     raise TypeError("Error: model description .", type(file_to_parse),

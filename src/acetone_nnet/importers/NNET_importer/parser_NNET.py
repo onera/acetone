@@ -21,14 +21,12 @@
 
 from pathlib import Path
 
-import keras.backend
 import numpy as np
 from acetone_nnet.generator import Dense, InputLayer, Layer
 from acetone_nnet.generator.activation_functions import Linear, ReLu
 
 from . import nnet_normalize
 
-keras.backend.set_floatx("float32")
 
 
 def generate_layers(
