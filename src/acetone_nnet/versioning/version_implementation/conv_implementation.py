@@ -40,9 +40,9 @@ class Conv2DFactory:
 
     def register_implementation(self, name: str, variant: Conv2DVariant) -> None:
         """Register a new Conv2D variant."""
-        if name in self.implementations:
-            msg = f"Convolution variant {name} already exists."
-            raise KeyError(msg)
+        # if name in self.implementations:
+        #     msg = f"Convolution variant {name} already exists."
+        #     raise KeyError(msg)
         self.implementations[name] = variant
 
     def __call__(self, layer: Conv2D, version: str) -> Conv2D:

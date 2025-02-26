@@ -19,6 +19,7 @@
 ******************************************************************************.
 """
 
+import json
 from abc import ABC
 from pathlib import Path
 from typing import Any
@@ -26,8 +27,6 @@ from typing import Any
 import numpy as np
 import onnx
 import pystache
-import json
-
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 from typing_extensions import Self
@@ -40,9 +39,9 @@ from acetone_nnet.generator.layers import (
     Concatenate,
     Conv2D,
     Conv2D6loops,
+    Conv2DGemmTarget,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
-    Conv2DGemmTarget,
     Dense,
     Dot,
     Gather,
@@ -50,7 +49,6 @@ from acetone_nnet.generator.layers import (
     Gemm,
     MatMul,
     MaxPooling2D,
-    Pad,
     Pooling2D,
     Reduce,
     ResizeCubic,
@@ -97,7 +95,7 @@ class CodeGenerator(ABC):
             self.Normalizer = normalizer
 
         self.layers: list[Any] = l
-        self.versions = self._select_layers_implementation(versions)
+        self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
 
         self.data_type = dtype
@@ -164,7 +162,7 @@ class CodeGenerator(ABC):
             raise ValueError(msg)
 
     # FIXME Unify default layer selection between this and the versioning module.
-    def _select_layers_implementation(
+    def select_layers_implementation(
         self: Self,
         versions: dict[int, str] | dict[str, str] | None,
     ) -> dict[int, str]:
@@ -366,7 +364,7 @@ class CodeGenerator(ABC):
                 if self.normalize:
                     nn_output = self.Normalizer.post_processing(nn_output)
                 out_string = " ".join(
-                    [float(n).hex().replace("0000000p", "p") for n in nn_output]
+                    [float(n).hex().replace("0000000p", "p") for n in nn_output],
                 )
                 print(f"{out_string}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
@@ -405,8 +403,8 @@ class CodeGenerator(ABC):
                         s += (
                             str(
                                 float.hex(float(array[k, f, i, j])).replace(
-                                    "0000000p", "p"
-                                )
+                                    "0000000p", "p",
+                                ),
                             )
                             + ", "
                         )
@@ -756,14 +754,12 @@ class CodeGenerator(ABC):
 
             if hasattr(layer, "weights"):
                 layer_hash["nb_weights"] = layer.nb_weights
-                if layer.nb_weights > self.nb_weights_max:
-                    self.nb_weights_max = layer.nb_weights
+                self.nb_weights_max = max(layer.nb_weights, self.nb_weights_max)
                 to_print = True
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
-                if layer.nb_biases > self.nb_biases_max:
-                    self.nb_biases_max = layer.nb_biases
+                self.nb_biases_max = max(layer.nb_biases, self.nb_biases_max)
                 to_print = True
 
             if isinstance(layer, Conv2DIndirectGemm):
