@@ -77,7 +77,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
 {{#is_gather}}
     int position;
     {{#indices}}
-    int indice_Gather_{{idx}}[{{lenght}}] = {{list}};
+    int indice_Gather_{{idx}}[{{length}}] = {{list}};
     {{/indices}}
 {{/is_gather}}
 {{#is_reduced}}
@@ -120,7 +120,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     reset_evt_counter(0);
     start = read_evt_counter();
 {{/time}}
-{{{ouput_str}}}
+{{{output_str}}}
 {{#time}}
     end = read_evt_counter();
     difference = difference + end - start;

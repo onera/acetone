@@ -22,9 +22,10 @@
 from pathlib import Path
 
 import onnx
-from acetone_nnet.generator import Layer
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
+
+from acetone_nnet.generator import Layer
 
 from .H5_importer.parser_h5 import load_keras
 from .JSON_importer.parser_JSON import load_json
@@ -54,7 +55,7 @@ def parser(
 
         if "onnx" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
-            return load_onnx(file_to_parse, debug)
+            return load_onnx(str(file_to_parse), debug)
 
         if "h5" in extension[-4:]:
             # FIXME Path-based functions should take a path or string

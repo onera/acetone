@@ -119,7 +119,6 @@ class Broadcast(Layer):
     # Go through all the indices and do the operation
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-
         mustach_hash = {}
 
         mustach_hash["name"] = self.name

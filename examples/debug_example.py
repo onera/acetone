@@ -21,7 +21,7 @@
 
 """
 This file gives a quick tour of the debug mode of acetone-nnet.
-The example is using the Onnx debug mode. The process is the same whith Keras.
+The example is using the Onnx debug mode. The process is the same with Keras.
 """
 
 #### Importing the package ####
@@ -36,20 +36,20 @@ target_model = ""  # Replace by the path to the model, or by the model in Onnx (
 dataset = []  # Replace par a numpy array containing the dataset on which to run the debug process (only 1 test)
 debug_target = np.array([])  # Replace by a list containing the name of the output to extract. If void, all the intermediate values will be gathered
 to_save = False  # Set to True if the new model must be saved
-path = ""  # If to_save is True, the model while be save in path (must be a file name)
+path = ""  # If to_save is True, the model while be saved in path (must be a file name)
 # Only for onnx debug
-otpimize_inputs = False  # Set to True if the initializers treated as inputs are to be fixed (all inputs except the first one will be removed, according to Onnx recommandations)
+optimize_inputs = False  # Set to True if the initializers treated as inputs are to be fixed (all inputs except the first one will be removed, according to Onnx recommandations)
 
 #### Running the debug mode ####
 """
 The three outputs are:
     -'model': The (new) model to parse
-    -'targets_indices': The indice the layers at which the outputs are extracted have in acetone
-    -'outputs': A list of flattened numpy arry containing the values of the inference
+    -'targets_indices': The indices the layers at which the outputs are extracted have in acetone
+    -'outputs': A list of flattened numpy array containing the values of the inference
 """
 model, targets_indices, outputs_onnx = debug.debug_onnx(target_model=target_model,
                                                         dataset=dataset,
-                                                        otpimize_inputs=otpimize_inputs,
+                                                        optimize_inputs=optimize_inputs,
                                                         to_save=to_save,
                                                         path=path)
 

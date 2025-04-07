@@ -36,6 +36,7 @@ def tri_topo(dnn: list) -> (list[Layer], list[int], int, dict[int, int]):
     for layer in sorted_layers:
         update_path(layer, paths)
         # FIXME Assess what to_save is supposed to do
+        # Assign a save space to the layer if it has several children
         to_save(layer, dict_cst, sorted_layers)
     # Convert paths
     max_path = max(paths.keys()) + 1

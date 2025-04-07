@@ -25,6 +25,7 @@ from typing_extensions import Self
 from acetone_nnet.versioning.version_implementation.conv_implementation import (
     conv2d_factory,
 )
+
 from . import Conv2D
 from .Conv2DGemm import Conv2DGemm
 

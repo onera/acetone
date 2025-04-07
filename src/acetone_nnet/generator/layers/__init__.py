@@ -44,9 +44,9 @@ from .convolution import (
     Conv2D,
     Conv2D6loops,
     Conv2DGemm,
+    Conv2DGemmTarget,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
-    Conv2DGemmTarget,
 )
 from .Dense import Dense
 from .Dot import Dot

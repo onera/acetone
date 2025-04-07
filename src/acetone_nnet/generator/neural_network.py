@@ -249,13 +249,13 @@ class CodeGenerator(ABC):
         """
         test_dataset: list[list[np.number]] = []
         with path.open() as f:
-            # FIXME This returns at least one array of values even if nb_tests is 0.
+            # FIXME This returns at least one array of values even if nb_tests is 0.DONE
             for i, line in enumerate(f):
+                if i >= nb_tests:
+                    break
                 contents = json.loads(line)
                 contents = [float.fromhex(f) for f in contents]
                 test_dataset.append(list(map(dtype, contents)))
-                if i >= nb_tests - 1:
-                    break
         return np.array(test_dataset)
 
     def compute_inference(
@@ -376,7 +376,7 @@ class CodeGenerator(ABC):
         return nn_output
 
     @staticmethod
-    def flatten_array_orderc(array: np.ndarray) -> str:
+    def flatten_array_order_c(array: np.ndarray) -> str:
         """Generate C flat array initializer in C order."""
         flattened_aray = array.flatten(order="C")
         s = "\n        {"
@@ -412,7 +412,7 @@ class CodeGenerator(ABC):
         s += "}"
         return s
 
-    def generate_testdataset_files(
+    def generate_test_dataset_files(
         self: Self,
         output_dir: Path,
     ) -> None:
@@ -421,8 +421,8 @@ class CodeGenerator(ABC):
         template = (
             Path(self.template_path) / "template_test_dataset_header.c.tpl"
         ).read_text()
-        with Path.open(output_dir / "test_dataset.h", "w+") as testdataset_header:
-            testdataset_header.write(
+        with Path.open(output_dir / "test_dataset.h", "w+") as test_dataset_header:
+            test_dataset_header.write(
                 pystache.render(
                     template,
                     {
@@ -438,15 +438,15 @@ class CodeGenerator(ABC):
         dataset = "{"
         if self.test_dataset is not None:
             dataset += ",".join(
-                map(CodeGenerator.flatten_array_orderc, self.test_dataset),
+                map(CodeGenerator.flatten_array_order_c, self.test_dataset),
             )
         dataset += "};\n"
 
         template = (
             Path(self.template_path) / "template_test_dataset_source.c.tpl"
         ).read_text()
-        with Path.open(output_dir / "test_dataset.c", "w+") as testdataset_source:
-            testdataset_source.write(
+        with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
+            test_dataset_source.write(
                 pystache.render(
                     template,
                     {"data_type": self.data_type, "dataset": dataset},
@@ -511,8 +511,8 @@ class CodeGenerator(ABC):
         print("Generated main file.")
         self.generate_makefile(c_files_directory)
         print("Generated Makefile.")
-        self.generate_testdataset_files(c_files_directory)
-        print("Generated testdataset files.")
+        self.generate_test_dataset_files(c_files_directory)
+        print("Generated test_dataset files.")
         if self.target != "generic":
             self.generate_target_file(c_files_directory)
             print("Generated target file.")
@@ -566,8 +566,8 @@ class CodeGenerator(ABC):
                 indices.append(
                     {
                         "idx": f"{gather.idx:02d}",
-                        "lenght": len(gather.indices.flatten()),
-                        "list": self.flatten_array_orderc(gather.indices),
+                        "length": len(gather.indices.flatten()),
+                        "list": self.flatten_array_order_c(gather.indices),
                     },
                 )
             mustach_hash["indices"] = indices
@@ -668,7 +668,7 @@ class CodeGenerator(ABC):
                 Path(self.template_path)
                 / "memory_layout/template_channels_last_output.c.tpl"
             ).read_text()
-            mustach_hash["ouput_str"] = pystache.render(template, output_hash)
+            mustach_hash["output_str"] = pystache.render(template, output_hash)
         else:
             output_hash["output_size"] = self.layers[-1].size
             if self.data_format == "channels_first":
@@ -682,7 +682,7 @@ class CodeGenerator(ABC):
                 Path(self.template_path)
                 / "memory_layout/template_channels_first_output.c.tpl"
             ).read_text()
-            mustach_hash["ouput_str"] = pystache.render(template, output_hash)
+            mustach_hash["output_str"] = pystache.render(template, output_hash)
 
         if self.normalize:
             mustach_hash["pre_processing"] = self.Normalizer.write_pre_processing()
@@ -843,7 +843,7 @@ class CodeGenerator(ABC):
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
-                layer_hash["biases"] = self.flatten_array_orderc(layer.biases)
+                layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
                 to_print = True
 
             if type(layer) is Conv2DIndirectGemm:
@@ -853,13 +853,13 @@ class CodeGenerator(ABC):
 
             if type(layer) is BatchNormalization:
                 layer_hash["channels"] = layer.output_channels
-                layer_hash["mean"] = self.flatten_array_orderc(layer.mean)
-                layer_hash["var"] = self.flatten_array_orderc(layer.var)
-                layer_hash["scale"] = self.flatten_array_orderc(layer.scale)
+                layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
+                layer_hash["var"] = self.flatten_array_order_c(layer.var)
+                layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
                 to_print = True
 
             if issubclass(type(layer), Broadcast) and layer.constant is not None:
-                layer_hash["constant"] = self.flatten_array_orderc(layer.constant)
+                layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
                 layer_hash["constant_size"] = layer.constant_size
                 to_print = True
 

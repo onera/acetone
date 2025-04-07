@@ -72,7 +72,7 @@ class Gemm(Layer):
 
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
-        if (input_shape):
+        if input_shape:
             self.input_height = input_shape[2]
             self.input_width = input_shape[3]
         else:

@@ -51,12 +51,12 @@ normalize = False  # Turn to True if the input model is in format NNet and the n
 
 # The function while generate the C code and the output of the Python inference is the directory output_path
 cli_acetone(model_file=model_path,
-                         function_name=function_name,
-                         nb_tests=nb_tests,
-                         conv_algorithm=conv_algorithm,
-                         output_dir=output_path,
-                         test_dataset_file=test_dataset,
-                         normalize=normalize)
+            function_name=function_name,
+            nb_tests=nb_tests,
+            conv_algorithm=conv_algorithm,
+            output_dir=output_path,
+            test_dataset_file=test_dataset,
+            normalize=normalize)
 
 ## Using 'CodeGenerator' ##
 """

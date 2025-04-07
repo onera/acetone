@@ -51,7 +51,7 @@ class Reduce(Layer):
         self.reduce_func = ""
 
         self.axes = axis
-        self.keepdims = keepdims
+        self.keepdims = bool(keepdims)
         self.noop_with_empty_axes = noop_with_empty_axes
 
         self.input_channels = input_shape[1]

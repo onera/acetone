@@ -23,6 +23,11 @@ from itertools import islice
 
 import keras
 import numpy as np
+from keras import activations
+from keras.engine.base_layer import Layer
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
+
 from acetone_nnet.generator import (
     ActivationFunctions,
     Add,
@@ -48,10 +53,6 @@ from acetone_nnet.generator import (
     TanH,
 )
 from acetone_nnet.graph import graph_interpretor
-from keras import activations
-from keras.engine.base_layer import Layer
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
 
 
 def get_layer_size(keras_layer: Layer) -> int:

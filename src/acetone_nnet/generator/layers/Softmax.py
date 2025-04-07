@@ -157,4 +157,4 @@ class Softmax(Layer):
             self.axis = -1
 
         exp = np.exp(input_array, dtype=float)
-        return exp / np.sum(exp, keepdims=1, axis=self.axis)
+        return exp / np.sum(exp, keepdims=True, axis=self.axis)
