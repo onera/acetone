@@ -87,4 +87,4 @@ generator = acetone_nnet.CodeGenerator(file=model_path,
 generator.generate_c_files(output_path_c)
 
 # Generating the Python code
-generator.generate_c_files(output_path_py)
+generator.compute_inference(output_path_py)
