@@ -76,6 +76,7 @@ from .generator import (
     Transpose,
     WrapPad,
 )
+from .cli.compare import cli_compare
 
 __all__ = (
     "cli_compare",
