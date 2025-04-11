@@ -39,11 +39,7 @@ def compare_floats(
         return True, diff, 0.0
 
     norm = min((abs(a) + abs(b)), sys.float_info.max)
-    if norm != 0:
-        rel_diff = diff / (norm/2)
-    else:
-        rel_diff = 0.0
-    
+    rel_diff = diff / (norm / 2) if norm != 0 else 0.0
     if diff < max(abs_th, epsilon * norm):
         return True, diff, rel_diff
 
@@ -60,7 +56,11 @@ def preprocess_line(line: str, precision: str) -> list:
     return values
 
 
-def compare_lines(line_f1: str, line_f2: str, precision: str) -> tuple[bool, float, float]:
+def compare_lines(
+        line_f1: str,
+        line_f2: str,
+        precision: str,
+) -> tuple[bool, float, float]:
     """Compare two lines element wise using compare_floats."""
     values_f1 = preprocess_line(line_f1, precision)
     values_f2 = preprocess_line(line_f2, precision)
@@ -101,7 +101,9 @@ def compare_files(
         range(nb_tests + 1),
         strict=False,
     ):
-        float_comparison, max_diff_line, max_rel_diff_line = compare_lines(line_f1, line_f2, precision)
+        float_comparison, max_diff_line, max_rel_diff_line = (
+            compare_lines(line_f1, line_f2, precision)
+        )
         line_comparison = float_comparison & line_comparison
 
         max_diff_file = max(max_diff_line, max_diff_file)
@@ -126,7 +128,9 @@ def cli_compare(
     precision: str = "float",
 ) -> None:
     """Compare two files."""
-    _, max_diff_file, max_rel_diff_file = compare_files(reference_file, c_file, nb_tests, precision)
+    _, max_diff_file, max_rel_diff_file = (
+        compare_files(reference_file, c_file, nb_tests, precision)
+    )
 
     print(f"    Max absolute error for {nb_tests} test(s): {max_diff_file}")
     print(f"    Max relative error for {nb_tests} test(s): {max_rel_diff_file}\n")

@@ -20,6 +20,9 @@
 """
 
 from . import debug, generator
+from .cli.compare import cli_compare
+from .versioning.versioning import register_factory, list_all_implementations
+from .versioning.version_implementation.conv_implementation import conv2d_factory
 from .generator import (
     ActivationFunctions,
     Add,
@@ -35,9 +38,9 @@ from .generator import (
     Conv2D,
     Conv2D6loops,
     Conv2DGemm,
+    Conv2DGemmTarget,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
-    Conv2DGemmTarget,
     Dense,
     Divide,
     Dot,
@@ -76,10 +79,12 @@ from .generator import (
     Transpose,
     WrapPad,
 )
-from .cli.compare import cli_compare
 
 __all__ = (
     "cli_compare",
+    "register_factory",
+    "conv2d_factory",
+    "list_all_implementations",
     generator.__all__,
     debug.__all__,
 )

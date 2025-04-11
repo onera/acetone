@@ -18,7 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from typing import Callable
+from collections.abc import Callable
 
 from acetone_nnet.generator import Layer
 from acetone_nnet.versioning.version_implementation.conv_implementation import (
@@ -27,16 +27,33 @@ from acetone_nnet.versioning.version_implementation.conv_implementation import (
 
 LayerFactory = Callable[[Layer, str], Layer]
 
+implemented: dict[str, LayerFactory] = {
+    "Conv2D": conv2d_factory,
+}
+
+
+def register_factory(name: str, factory: LayerFactory) -> None:
+    """Register a new Layer factory."""
+    if name in implemented:
+        msg = f"Factory for layer {name} already exists."
+        raise KeyError(msg)
+    implemented[name] = factory
+
+def list_all_implementations() -> dict[str, list[str]]:
+    implem = {}
+    for layer_name in implemented:
+        implem[layer_name] = implemented[layer_name].list_implementations
+        
+    return implem
+    
+
+
 
 def versioning(
         layers: list[Layer],
         version: dict[int, str],
 ) -> list[Layer]:
     """Check layers and change the layer version if needed."""
-    implemented: dict[str, LayerFactory] = {
-        "Conv2D": conv2d_factory,
-    }
-
     keys = list(version.keys())
     for idx in keys:
         for j in range(len(layers)):
