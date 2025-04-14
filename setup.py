@@ -23,7 +23,6 @@ setup(
                                         "templates/layers/Gemm/*.tpl",
                                         "templates/layers/Conv/*.tpl"] },
         zip_safe=False,
-        ext_modules=extensions,
         python_requires="==3.10",
         cmdclass={
             "acetone_compare": cli_compare,
