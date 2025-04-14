@@ -19,16 +19,16 @@
 ******************************************************************************
 """
 
-# from .debug_keras import debug_keras
-# from .debug_onnx import debug_onnx
+from .debug_keras import debug_keras
+from .debug_onnx import debug_onnx
 from .debug_tools import (
     compare_result,
     extract_outputs_c,
     extract_outputs_python,
-    reorder_outputs_python,
+    reorder_outputs,
 )
 
 __all__ = (
-    # "debug_keras", "debug_onnx",
-    "compare_result", "extract_outputs_c", "extract_outputs_python", "reorder_outputs_python",
+    "debug_keras", "debug_onnx",
+    "compare_result", "extract_outputs_c", "extract_outputs_python", "reorder_outputs",
 )

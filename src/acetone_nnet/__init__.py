@@ -21,8 +21,6 @@
 
 from . import debug, generator
 from .cli.compare import cli_compare
-from .versioning.versioning import register_factory, list_all_implementations
-from .versioning.version_implementation.conv_implementation import conv2d_factory
 from .generator import (
     ActivationFunctions,
     Add,
@@ -79,6 +77,8 @@ from .generator import (
     Transpose,
     WrapPad,
 )
+from .versioning.version_implementation.conv_implementation import conv2d_factory
+from .versioning.versioning import list_all_implementations, register_factory
 
 __all__ = (
     "cli_compare",

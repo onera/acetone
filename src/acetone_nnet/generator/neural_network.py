@@ -337,9 +337,8 @@ class CodeGenerator(ABC):
                     del layer_inputs[layer.idx]
 
                     # Debug Mode
-                    if self.debug_mode and layer.name != "Input_layer":
+                    if self.debug_mode and layer.idx in self.debug_target:
                         # Add the inference result of the layer to debug_output
-                        if layer.idx in self.debug_target:
                             debug_output.append(layer_output)
                             if (self.data_format == "channels_last") and hasattr(
                                 layer,
@@ -351,7 +350,7 @@ class CodeGenerator(ABC):
                                 )
                             debug_output[-1] = debug_output[-1].flatten()
 
-                        targets.append(str(layer.name) + " " + str(layer.idx))
+                            targets.append(str(layer.name) + " " + str(layer.idx))
 
                 nn_output = layer_output
 
