@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
     FILE *fp = fopen(path, "w+");
 
-    {{data_type}} predictions[nb_samples][nn_output_size];
+    static {{data_type}} predictions[nb_samples][nn_output_size];
 
     clock_t t0 = clock();
     for (i = 0; i < nb_samples; ++i)

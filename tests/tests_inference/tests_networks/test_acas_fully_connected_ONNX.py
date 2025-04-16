@@ -50,10 +50,8 @@ class TestAcasFullyConnectedONNX(acetoneTestCase.AcetoneTestCase):
             model_path,
             self.tmpdir_name + "/dataset.txt",
         )
-        print(acetone_result)
         self.assertListAlmostEqual(acetone_result, onnx_result)
         self.assertListAlmostEqual(python_result, onnx_result)
-
 
 if __name__ == "__main__":
     acetoneTestCase.main()
