@@ -1,4 +1,4 @@
-# conda environnment for Binder
+# conda environment for Binder
 name: acetone_nnet
 channels:
   - defaults

@@ -23,6 +23,8 @@ from pathlib import Path
 from typing import Any
 
 import onnx
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
 from acetone_nnet.generator import Layer
 
 
@@ -68,14 +70,14 @@ def parser(
                                                        -4:] + " not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
 
     # TODO Conditional import/test if onnx is available
-    # if type(file_to_parse) is onnx.ModelProto:
-    #     return load_onnx(file_to_parse, debug)
+    if type(file_to_parse) is onnx.ModelProto:
+        from .ONNX_importer.parser_ONNX import load_onnx
+        return load_onnx(file_to_parse, debug)
 
     # TODO Conditional import/test if keras is available
-    # from keras.engine.functional import Functional
-    # from keras.engine.sequential import Sequential
-    # if type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
-    #     return load_keras(file_to_parse, debug)
+    if type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
+        from .H5_importer.parser_h5 import load_keras
+        return load_keras(file_to_parse, debug)
 
     print("\nError: model description .", type(file_to_parse), "not supported")
     raise TypeError("Error: model description .", type(file_to_parse),

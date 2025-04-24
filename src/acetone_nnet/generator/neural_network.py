@@ -28,8 +28,8 @@ import onnx
 import pystache
 import json
 
-# from keras.engine.functional import Functional
-# from keras.engine.sequential import Sequential
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
 from typing_extensions import Self
 
 from acetone_nnet import templates
@@ -140,7 +140,7 @@ class CodeGenerator(ABC):
         ### Checking argument type ###
         if not isinstance(
             self.file,
-            str | Path, #| onnx.ModelProto | Functional | Sequential,
+            str | Path | onnx.ModelProto | Functional | Sequential,
         ):
             msg = "Error: model type.\n Format must be: path to model, model ONNX or model Keras"
             raise TypeError(msg)
