@@ -85,8 +85,8 @@ class Reduce(Layer):
         if type(self.size) is not int:
             msg += "Error: size type in Reduce (size must be int)"
             msg += "\n"
-        if type(self.keepdims) is not int:
-            msg += "Error: keepdims type in Reduce (size must be int)"
+        if type(self.keepdims) is not bool:
+            msg += "Error: keepdims type in Reduce (size must be bool)"
             msg += "\n"
         if type(self.noop_with_empty_axes) is not int:
             msg += "Error: noop with empty axes type in Reduce (size must be int)"

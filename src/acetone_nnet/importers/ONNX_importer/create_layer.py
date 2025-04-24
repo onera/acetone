@@ -1061,9 +1061,10 @@ def create_add(
         else:
             dict_input[idx].append(input_value)
             input_shapes.append(get_shape(input_value, model))
-    if constant.any() and len(constant.shape) < constant_length:
-        for _i in range(4 - len(constant.shape)):
-            constant = np.expand_dims(constant, axis=0)
+    if constant.any():
+        if len(constant.shape) < constant_length:
+            for _i in range(4 - len(constant.shape)):
+                constant = np.expand_dims(constant, axis=0)
         input_shapes.append(constant.shape)
     else:
         constant = None
