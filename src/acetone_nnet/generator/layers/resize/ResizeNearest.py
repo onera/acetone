@@ -118,7 +118,7 @@ class ResizeNearest(Resize):
                 self.idx,
                 f"j + {self.output_width}*(i + {self.output_height}*f)")
 
-        with open(self.template_path + "layers/Resize/template_ResizeNearest.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Resize" / "template_ResizeNearest.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

@@ -251,7 +251,7 @@ class Reduce(Layer):
             if self.reduce_func in ("Max", "Min"):
                 mustach_hash["starting_value"] = output_str + "[0]"
 
-        with open(self.template_path + "layers/template_Reduce.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Reduce.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

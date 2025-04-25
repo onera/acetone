@@ -183,7 +183,7 @@ class Gemm(Layer):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Gemm/template_gemm_nn.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Gemm" / "template_gemm_nn.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -219,7 +219,7 @@ class Gemm(Layer):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Gemm/template_gemm_nt.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Gemm" / "template_gemm_nt.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -255,7 +255,7 @@ class Gemm(Layer):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Gemm/template_gemm_tn.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Gemm" / "template_gemm_tn.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -291,7 +291,7 @@ class Gemm(Layer):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Gemm/template_gemm_tt.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Gemm" / "template_gemm_tt.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -338,7 +338,7 @@ class Gemm(Layer):
                 f"weights_{self.name}_{self.idx:02d}",
                 self.previous_layer[0].output_str)
 
-        with open(self.template_path + "layers/Gemm/template_Gemm.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Gemm" / "template_Gemm.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

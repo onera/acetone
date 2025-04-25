@@ -101,7 +101,7 @@ class AddBias(Layer):
                 self.idx,
                 "i")
 
-        with open(self.template_path + "layers/template_AddBias.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_AddBias.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

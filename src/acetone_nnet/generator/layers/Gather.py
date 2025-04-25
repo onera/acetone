@@ -156,7 +156,7 @@ class Gather(Layer):
                 self.idx,
                 "position")
 
-        with open(self.template_path + "layers/template_Gather.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Gather.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

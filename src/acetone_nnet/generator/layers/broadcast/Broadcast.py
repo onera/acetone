@@ -173,7 +173,7 @@ class Broadcast(Layer):
             constant_dict["operator"] = self.specific_operator
             mustach_hash["constant"] = [constant_dict]
 
-        with open(self.template_path + "layers/template_Broadcast.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Broadcast.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

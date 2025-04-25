@@ -37,8 +37,8 @@ class ResizeCubic(Resize):
         """Build a ResizeCubic layer."""
         super().__init__(**kwargs)
         self.mode = "cubic"
-        self.template_dict = {"1D": self.template_path + "layers/Resize/template_ResizeCubic1D.c.tpl",
-                              "2D": self.template_path + "layers/Resize/template_ResizeCubic2D.c.tpl"}
+        self.template_dict = {"1D": self.template_path / "layers" / "Resize" / "template_ResizeCubic1D.c.tpl",
+                              "2D": self.template_path / "layers" / "Resize" / "template_ResizeCubic2D.c.tpl"}
 
         ####### Checking the instantiation#######
 

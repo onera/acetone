@@ -45,7 +45,7 @@ class EdgePad(Pad):
         mustach_hash["height_and_pad_top"] = self.input_shape[2] + self.pads[2]
         mustach_hash["width_and_pad_left"] = self.input_shape[3] + self.pads[3]
 
-        with open(self.template_path + "layers/Pad/template_Edge_Pad.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Pad" / "template_Edge_Pad.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -85,7 +85,7 @@ class EdgePad(Pad):
             mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
                 "tenser_temp[j + " + str(self.output_width) + " * (i + " + str(self.output_height) + " * f)]")
 
-        with open(self.template_path + "layers/Pad/template_Pad_Non_Constant.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Pad" / "template_Pad_Non_Constant.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

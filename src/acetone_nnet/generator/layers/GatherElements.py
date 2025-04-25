@@ -163,7 +163,7 @@ class GatherElements(Layer):
         elif self.axis == 3:
             mustach_hash["widths"] = True
 
-        with open(self.template_path + "layers/template_GatherElements.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_GatherElements.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

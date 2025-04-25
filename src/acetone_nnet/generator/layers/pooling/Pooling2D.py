@@ -183,7 +183,7 @@ class Pooling2D(Layer):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/template_Pooling2D.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Pooling2D.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

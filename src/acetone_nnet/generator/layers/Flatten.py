@@ -83,7 +83,7 @@ class Flatten(Layer):
             mustach_hash["path"] = self.path
             mustach_hash["size"] = self.size
 
-        with open(self.template_path + "layers/template_Flatten.c.tpl") as template_file:
+        with open(self.template_path + "layers" / "template_Flatten.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

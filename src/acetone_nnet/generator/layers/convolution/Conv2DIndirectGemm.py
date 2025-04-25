@@ -120,7 +120,7 @@ class Conv2DIndirectGemm(Conv2DGemm):
             mustach_hash["cst"] = True
         mustach_hash["prev_size"] = self.input_channels * self.input_height * self.input_width
 
-        with open(self.template_path + "layers/Conv/template_Conv_indirect_gemm.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_Conv_indirect_gemm.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

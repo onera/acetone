@@ -19,7 +19,6 @@
 ******************************************************************************
 """
 
-
 import numpy as np
 import pystache
 from typing_extensions import Self
@@ -101,7 +100,7 @@ class InputLayer(Layer):
             mustach_hash["size"] = self.size
 
         with open(
-                self.template_path + "/layers/template_Input_Layer.c.tpl",
+                self.template_path / "layers" / "template_Input_Layer.c.tpl",
         ) as template_file:
             template = template_file.read()
         template_file.close()

@@ -110,7 +110,7 @@ class BatchNormalization(Layer):
             msg += (f"Error: non consistency between the scale shape and the output shape in BatchNormalization "
                     f"({self.scale.shape}!={self.output_channels})")
             msg += "\n"
-        if len(self.scale.mean) != 1 or self.mean.shape[0] != self.output_channels:
+        if len(self.mean.shape) != 1 or self.mean.shape[0] != self.output_channels:
             msg += (f"Error: non consistency between the mean shape and the output shape in BatchNormalization "
                     f"({self.mean.shape}!={self.output_channels})")
             msg += "\n"
@@ -146,7 +146,7 @@ class BatchNormalization(Layer):
         mustach_hash["channel_size"] = self.output_height * self.output_width
         mustach_hash["epsilon"] = self.epsilon
 
-        with open(self.template_path + "layers/template_BatchNormalization.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_BatchNormalization.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

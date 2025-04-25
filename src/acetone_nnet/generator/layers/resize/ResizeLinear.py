@@ -36,8 +36,8 @@ class ResizeLinear(Resize):
         """Build a ResizeLinear layer."""
         super().__init__(**kwargs)
         self.mode = "linear"
-        self.template_dict = {"1D": self.template_path + "layers/Resize/template_ResizeLinear1D.c.tpl",
-                              "2D": self.template_path + "layers/Resize/template_ResizeLinear2D.c.tpl"}
+        self.template_dict = {"1D": self.template_path / "layers" / "Resize" / "template_ResizeLinear1D.c.tpl",
+                              "2D": self.template_path / "layers" / "Resize" / "template_ResizeLinear2D.c.tpl"}
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""

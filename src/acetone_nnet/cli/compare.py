@@ -31,22 +31,24 @@ def compare_floats(
     b: float,
     epsilon: float = (128 * sys.float_info.epsilon),
     abs_th: float = sys.float_info.min,
-) -> tuple[bool, float]:
+) -> tuple[bool, float, float]:
     """Compare a-b to abs_th."""
     diff = abs(a - b)
+
     if a == b:
-        return True, diff
+        return True, diff, 0.0
 
     norm = min((abs(a) + abs(b)), sys.float_info.max)
+    rel_diff = diff / (norm / 2) if norm != 0 else 0.0
     if diff < max(abs_th, epsilon * norm):
-        return True, diff
+        return True, diff, rel_diff
 
-    return False, diff
+    return False, diff, rel_diff
 
 
 def preprocess_line(line: str, precision: str) -> list:
     """Cast a list of str to a list of float."""
-    values: list = [x for x in line.split(" ") if x.strip()]
+    values: list = [float.fromhex(x) for x in line.split(" ") if x.strip()]
     if precision == "double":
         values = list(map(np.float64, values))
     elif precision == "float":
@@ -54,23 +56,29 @@ def preprocess_line(line: str, precision: str) -> list:
     return values
 
 
-def compare_lines(line_f1: str, line_f2: str, precision: str) -> tuple[bool, float]:
+def compare_lines(
+        line_f1: str,
+        line_f2: str,
+        precision: str,
+) -> tuple[bool, float, float]:
     """Compare two lines element wise using compare_floats."""
     values_f1 = preprocess_line(line_f1, precision)
     values_f2 = preprocess_line(line_f2, precision)
     max_diff = 0.0
+    max_rel_diff = 0.0
     length = len(values_f1)
     line_comparison = True
 
     for j in range(length):
-        float_comparison, diff = compare_floats(values_f1[j], values_f2[j])
+        float_comparison, diff, rel_diff = compare_floats(values_f1[j], values_f2[j])
         line_comparison = float_comparison & line_comparison
         max_diff = max(diff, max_diff)
+        max_rel_diff = max(rel_diff, max_rel_diff)
 
     if line_comparison:
-        return True, max_diff
+        return True, max_diff, max_rel_diff
 
-    return False, max_diff
+    return False, max_diff, max_rel_diff
 
 
 def compare_files(
@@ -78,12 +86,13 @@ def compare_files(
     file2: str,
     nb_tests: int,
     precision: str,
-) -> tuple[bool, float]:
+) -> tuple[bool, float, float]:
     """Compare two files line wise using compare_lines."""
     f1 = Path.open(Path(file1))
     f2 = Path.open(Path(file2))
 
     max_diff_file = 0.0
+    max_rel_diff_file = 0.0
     line_comparison = True
 
     for line_f1, line_f2, line_counter in zip(
@@ -92,10 +101,13 @@ def compare_files(
         range(nb_tests + 1),
         strict=False,
     ):
-        float_comparison, max_diff_line = compare_lines(line_f1, line_f2, precision)
+        float_comparison, max_diff_line, max_rel_diff_line = (
+            compare_lines(line_f1, line_f2, precision)
+        )
         line_comparison = float_comparison & line_comparison
 
         max_diff_file = max(max_diff_line, max_diff_file)
+        max_rel_diff_file = max(max_rel_diff_line, max_rel_diff_file)
 
         if line_counter == int(nb_tests):
             break
@@ -104,21 +116,24 @@ def compare_files(
     f2.close()
 
     if line_comparison:
-        return True, max_diff_file
+        return True, max_diff_file, max_rel_diff_file
 
-    return False, max_diff_file
+    return False, max_diff_file, max_rel_diff_file
 
 
 def cli_compare(
     reference_file: str,
     c_file: str,
     nb_tests: int,
-    precision: str,
+    precision: str = "float",
 ) -> None:
     """Compare two files."""
-    _, max_diff_file = compare_files(reference_file, c_file, nb_tests, precision)
+    _, max_diff_file, max_rel_diff_file = (
+        compare_files(reference_file, c_file, nb_tests, precision)
+    )
 
-    print(f"   Max absolute error for {nb_tests} test(s): {max_diff_file}")
+    print(f"    Max absolute error for {nb_tests} test(s): {max_diff_file}")
+    print(f"    Max relative error for {nb_tests} test(s): {max_rel_diff_file}\n")
 
 
 def acetone_compare() -> None:

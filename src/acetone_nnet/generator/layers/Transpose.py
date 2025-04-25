@@ -156,7 +156,7 @@ class Transpose(Layer):
                 self.idx,
                 "j")
 
-        with open(self.template_path + "layers/template_Transpose.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Transpose.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

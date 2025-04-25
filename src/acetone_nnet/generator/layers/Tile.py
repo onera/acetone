@@ -126,7 +126,7 @@ class Tile(Layer):
         mustach_hash["input_height"] = self.input_height
         mustach_hash["input_width"] = self.input_width
 
-        with open(self.template_path + "layers/template_Tile.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Tile.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
