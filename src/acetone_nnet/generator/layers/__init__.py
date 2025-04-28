@@ -20,15 +20,18 @@
 """
 
 from . import (
+    batch_normalization,
     broadcast,
+    concatenate,
     convolution,
+    dense,
     padding,
     pooling,
     reduce,
     resize,
 )
 from .AddBias import AddBias
-from .BatchNormalization import BatchNormalization
+from .batch_normalization import BatchNormalization, BatchNormalizationDefault
 from .broadcast import (
     Add,
     Average,
@@ -39,7 +42,7 @@ from .broadcast import (
     Multiply,
     Subtract,
 )
-from .Concatenate import Concatenate
+from .concatenate import Concatenate, ConcatenateDefault
 from .convolution import (
     Conv2D,
     Conv2D6loops,
@@ -48,7 +51,7 @@ from .convolution import (
     Conv2DIndirectGemm,
     Conv2DStdGemm,
 )
-from .Dense import Dense
+from .dense import Dense, DenseDefault
 from .Dot import Dot
 from .Flatten import Flatten
 from .Gather import Gather
@@ -73,8 +76,7 @@ from .Transpose import Transpose
 
 __all__ = (
     "AddBias",
-    "Concatenate",
-    "Dense",
+    dense.__all__,
     "Dot",
     "Flatten",
     "Gather",
@@ -82,10 +84,11 @@ __all__ = (
     "InputLayer",
     "MatMul",
     "Softmax",
-    "BatchNormalization",
     "Transpose",
     "GatherElements",
     "Tile",
+    batch_normalization.__all__,
+    concatenate.__all__,
     broadcast.__all__,
     convolution.__all__,
     padding.__all__,

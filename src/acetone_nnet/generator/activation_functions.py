@@ -1,4 +1,4 @@
-"""Activation Layers type definition.
+"""Activation Functions type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems

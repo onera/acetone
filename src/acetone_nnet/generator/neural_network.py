@@ -183,6 +183,9 @@ class CodeGenerator(ABC):
         selected_implementations = {}
         default_implementations = {
             "Conv2D": "std_gemm_nn",
+            "BatchNormalization": "default",
+            "Concatenate": "default",
+            "Dense": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified
@@ -197,6 +200,8 @@ class CodeGenerator(ABC):
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
                         break
+                if layer.name in default_implementations:
+                    selected_implementations[layer.idx] = default_implementations[layer.name]
         return selected_implementations
 
     def load_debug_target(

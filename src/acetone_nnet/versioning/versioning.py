@@ -21,8 +21,17 @@
 from typing import Callable
 
 from acetone_nnet.generator import Layer
+from acetone_nnet.versioning.version_implementation.batch_normalization_implementation import (
+    batch_normalization_factory,
+)
+from acetone_nnet.versioning.version_implementation.concatenate_implementation import (
+    concatenate_factory,
+)
 from acetone_nnet.versioning.version_implementation.conv_implementation import (
     conv2d_factory,
+)
+from acetone_nnet.versioning.version_implementation.dense_implementation import (
+    dense_factory,
 )
 
 LayerFactory = Callable[[Layer, str], Layer]
@@ -35,6 +44,9 @@ def versioning(
     """Check layers and change the layer version if needed."""
     implemented: dict[str, LayerFactory] = {
         "Conv2D": conv2d_factory,
+        "BatchNormalization": batch_normalization_factory,
+        "Concatenate": concatenate_factory,
+        "Dense": dense_factory,
     }
 
     keys = list(version.keys())

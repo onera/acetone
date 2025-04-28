@@ -89,39 +89,6 @@ class Dense(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        # Variable indicating under which name the input tensor is
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["output_str"] = output_str
-        mustach_hash["road"] = self.path
-        mustach_hash["size"] = self.size
-
-        mustach_hash["activation_function"] = (
-            self.activation_function.write_activation_str(self.local_var)
-        )
-
-        mustach_hash["prev_size"] = self.previous_layer[0].size
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                self.local_var,
-                self.idx,
-                "i",
-            )
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
-        with open(self.template_path / "layers" / "template_Dense.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
 
     def forward_path_layer(
             self: Self,

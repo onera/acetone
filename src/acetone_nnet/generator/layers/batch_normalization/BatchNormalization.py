@@ -20,7 +20,6 @@
 """
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
@@ -127,30 +126,6 @@ class BatchNormalization(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        # Variable indicating under which name the input tensor is
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["output_str"] = output_str
-        mustach_hash["path"] = self.path
-
-        if self.activation_function.name != "linear":
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-                f"output_{self.path}[k + {self.output_height * self.output_width}*f]")
-
-        mustach_hash["input_channels"] = self.output_channels
-        mustach_hash["channel_size"] = self.output_height * self.output_width
-        mustach_hash["epsilon"] = self.epsilon
-
-        with open(self.template_path / "layers" / "template_BatchNormalization.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
 
     def forward_path_layer(
             self: Self,
