@@ -55,6 +55,7 @@ from .layers import (
     Dot,
     EdgePad,
     Flatten,
+    FlattenDefault,
     Gather,
     GatherElements,
     Gemm,

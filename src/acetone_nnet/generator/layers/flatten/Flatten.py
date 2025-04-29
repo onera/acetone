@@ -71,23 +71,6 @@ class Flatten(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        mustach_hash = {}
-
-        if self.data_format == "channels_last":
-            mustach_hash["channels_last"] = True
-            mustach_hash["input_channels"] = self.input_shape[1]
-            mustach_hash["input_height"] = self.input_shape[2]
-            mustach_hash["input_width"] = self.input_shape[3]
-            mustach_hash["name"] = self.name
-            mustach_hash["idx"] = f"{self.idx:02d}"
-            mustach_hash["path"] = self.path
-            mustach_hash["size"] = self.size
-
-        with open(self.template_path + "layers" / "template_Flatten.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
 
     def forward_path_layer(
             self: Self,

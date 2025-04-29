@@ -33,6 +33,12 @@ from acetone_nnet.versioning.version_implementation.conv_implementation import (
 from acetone_nnet.versioning.version_implementation.dense_implementation import (
     dense_factory,
 )
+from acetone_nnet.versioning.version_implementation.flatten_implementation import (
+    flatten_factory,
+)
+from acetone_nnet.versioning.version_implementation.gather_implementation import (
+    gather_factory,
+)
 
 LayerFactory = Callable[[Layer, str], Layer]
 
@@ -47,6 +53,8 @@ def versioning(
         "BatchNormalization": batch_normalization_factory,
         "Concatenate": concatenate_factory,
         "Dense": dense_factory,
+        "Flatten": flatten_factory,
+        "Gather": gather_factory,
     }
 
     keys = list(version.keys())

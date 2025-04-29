@@ -25,10 +25,12 @@ from . import (
     concatenate,
     convolution,
     dense,
+    flatten,
     padding,
     pooling,
     reduce,
     resize,
+gather,
 )
 from .AddBias import AddBias
 from .batch_normalization import BatchNormalization, BatchNormalizationDefault
@@ -53,8 +55,8 @@ from .convolution import (
 )
 from .dense import Dense, DenseDefault
 from .Dot import Dot
-from .Flatten import Flatten
-from .Gather import Gather
+from .flatten import Flatten, FlattenDefault
+from .gather import Gather, GatherDefault
 from .GatherElements import GatherElements
 from .Gemm import Gemm
 from .Input import InputLayer
@@ -78,8 +80,8 @@ __all__ = (
     "AddBias",
     dense.__all__,
     "Dot",
-    "Flatten",
-    "Gather",
+    flatten.__all__,
+    gather.__all__,
     "Gemm",
     "InputLayer",
     "MatMul",

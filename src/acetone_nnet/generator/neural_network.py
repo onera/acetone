@@ -186,6 +186,8 @@ class CodeGenerator(ABC):
             "BatchNormalization": "default",
             "Concatenate": "default",
             "Dense": "default",
+            "Flatten": "default",
+            "Gather": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified
