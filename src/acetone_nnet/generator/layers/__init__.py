@@ -31,6 +31,10 @@ from . import (
     reduce,
     resize,
 gather,
+gather_elements,
+gemm,
+input,
+matmul
 )
 from .AddBias import AddBias
 from .batch_normalization import BatchNormalization, BatchNormalizationDefault
@@ -57,10 +61,10 @@ from .dense import Dense, DenseDefault
 from .Dot import Dot
 from .flatten import Flatten, FlattenDefault
 from .gather import Gather, GatherDefault
-from .GatherElements import GatherElements
-from .Gemm import Gemm
-from .Input import InputLayer
-from .MatMul import MatMul
+from .gather_elements import GatherElements, GatherElementsDefault
+from .gemm import Gemm, GemmDefault
+from .input import InputLayer, InputLayerDefault
+from .matmul import MatMul, MatMulDefault
 from .padding import ConstantPad, EdgePad, Pad, ReflectPad, WrapPad
 from .pooling import AveragePooling2D, MaxPooling2D, Pooling2D
 from .reduce import (
@@ -82,12 +86,12 @@ __all__ = (
     "Dot",
     flatten.__all__,
     gather.__all__,
-    "Gemm",
-    "InputLayer",
-    "MatMul",
+    gemm.__all__,
+    input.__all__,
+    matmul.__all__,
     "Softmax",
     "Transpose",
-    "GatherElements",
+    gather_elements.__all__,
     "Tile",
     batch_normalization.__all__,
     concatenate.__all__,

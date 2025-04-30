@@ -20,7 +20,6 @@
 """
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.Layer import Layer
@@ -85,27 +84,6 @@ class InputLayer(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["road"] = self.path
-
-        if self.data_format == "channels_last" and len(self.input_shape) == 4:
-            mustach_hash["channels_last"] = True
-            mustach_hash["input_channels"] = self.output_channels
-            mustach_hash["input_height"] = self.output_height
-            mustach_hash["input_width"] = self.output_width
-        else:
-            mustach_hash["size"] = self.size
-
-        with open(
-                self.template_path / "layers" / "template_Input_Layer.c.tpl",
-        ) as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
 
     def forward_path_layer(
             self: Self,

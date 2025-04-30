@@ -19,136 +19,28 @@
 ******************************************************************************
 """
 
-
-import numpy as np
 import pystache
-from typing_extensions import Self
+from typing_extensions import Any, Self
 
-from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.versioning.version_implementation.gemm_implementation import (
+    gemm_factory,
+)
+
+from .Gemm import Gemm
 
 
-# The layer which compute the general matrix multiplication
-# input: weight tesnsor W and bias tensor B, input tensor T. The tensor must be of 2D
-# data: alpha and beta constante used in the operation, transpo un tuple saying if the tensor T or W must be transposed before the operation
-# output: The result of the operation """alpha*T*W + beta*B"""
-class Gemm(Layer):
+class GemmDefault(Gemm):
     """Gemm layer class."""
 
-    def __init__(
-            self: Self,
-            idx: int,
-            size: int,
-            alpha: float | int,
-            beta: float | int,
-            transA: bool | int,
-            transB: bool | int,
-            weights: np.ndarray,
-            bias: np.ndarray,
-            input_shape: list,
-            output_shape: list,
-            activation_function: ActivationFunctions,
-    ) -> None:
-        """Build a Gemm layer."""
-        super().__init__()
-        self.name = "Gemm"
-        self.idx = idx
-        self.size = size
+    def __init__(self: Self, version: str, **kwargs: Any) -> None:
+        """Build a Gemm Layer with default implementation."""
+        super().__init__(**kwargs)
+        self.version = version
 
-        if alpha != 1:
-            self.alpha = [alpha]
-        else:
-            self.alpha = []
-        if beta != 1:
-            self.beta = [beta]
-        else:
-            self.beta = []
-
-        self.transpo = (transA, transB)
         self.algo_gemm_mapping = {(0, 0): self.write_gemm_nn,
                                   (0, 1): self.write_gemm_nt,
                                   (1, 1): self.write_gemm_tt,
                                   (1, 0): self.write_gemm_tn}
-
-        self.output_height = output_shape[2]
-        self.output_width = output_shape[3]
-        if input_shape:
-            self.input_height = input_shape[2]
-            self.input_width = input_shape[3]
-        else:
-            self.input_height = 1
-            self.input_width = 1
-
-        self.weights = weights
-        self.biases = bias
-        self.activation_function = activation_function
-        self.nb_weights = self.count_elements_array(self.weights)
-        self.nb_biases = self.count_elements_array(self.biases)
-
-        ####### Checking the instantiation#######
-
-        ### Checking argument type ###
-        msg = ""
-        if type(self.idx) is not int:
-            msg += "Error: idx type in Gemm (idx must be int)"
-            msg += "\n"
-        if type(self.size) is not int:
-            msg += "Error: size type in Gemm (size must be int)"
-            msg += "\n"
-        if type(self.alpha[0]) is not float and type(self.alpha[0]) is int:
-            msg += "Error: alpha type in Gemm (alpha must be int or float)"
-            msg += "\n"
-        if type(self.beta[0]) is not float and type(self.beta[0]) is int:
-            msg += "Error: beta type in Gemm (beta must be int or float)"
-            msg += "\n"
-        if any(type(self.transpo[i]) is not int and type(self.transpo[i]) is not bool for i in range(2)):
-            msg += "Error: transpose type in Gemm (must be boolean or int)"
-            msg += "\n"
-        if type(self.output_height) is not int:
-            msg += "Error: output height type in Gemm (must be int)"
-            msg += "\n"
-        if type(self.output_width) is not int:
-            msg += "Error: output width type in Gemm (must be int)"
-            msg += "\n"
-        if type(self.input_height) is not int:
-            msg += "Error: input height type in Gemm (must be int)"
-            msg += "\n"
-        if type(self.input_width) is not int:
-            msg += "Error: input width type in Gemm (must be int)"
-            msg += "\n"
-        if type(self.weights) is not np.ndarray:
-            msg += "Error: weights in Gemm (weights must be an numpy array)"
-            msg += "\n"
-        if type(self.biases) is not np.ndarray:
-            msg += "Error: biases in Gemm (biases must be an numpy array)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += "Error: activation function type in Gemm (activation function must be a sub-classe of acetone_nnet Activation Function)"
-            msg += "\n"
-        if msg:
-            raise TypeError(msg)
-
-        ### Checking value consistency ###
-        if self.size != self.output_height * self.output_width:
-            msg += f"Error: size value in Gemm ({self.size}!={self.output_height * self.output_width})"
-            msg += "\n"
-        shape = self.input_height if self.transpo[0] else self.input_width
-        if self.weights.shape[self.transpo[1]] != shape:
-            msg += f"Error: non consistency between weight shape and input shape in Gemm ({self.weights.shape[self.transpo[1]]}!={shape})"
-            msg += "\n"
-        shape = self.input_width if self.transpo[0] else self.input_height
-        if self.output_height != shape:
-            msg += f"Error: non consistency between input shape and output shape in Gemm ({self.output_height}!={shape})"
-            msg += "\n"
-        if self.output_width != self.weights.shape[1 - self.transpo[1]]:
-            msg += f"Error: non consistency between output shape and output weight in Gemm ({self.output_width}!={self.weights.shape[1 - self.transpo[1]]})"
-            msg += "\n"
-        if any(self.biases.shape[i] != 1 and self.biases.shape[i] != output_shape[3 - i] for i in
-               range(len(self.biases.shape))):
-            msg = f"Error: biases in Gemm not broadcastable to dim ({self.output_height},{self.output_width})"
-            msg += "\n"
-        if msg:
-            raise ValueError(msg)
 
     # The various ways to compute the operation:
 
@@ -297,21 +189,6 @@ class Gemm(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
-    ) -> np.ndarray:
-        """Compute output of layer."""
-        input_array = input_array.reshape(self.input_height, self.input_width)
-        if self.transpo[0]:
-            input_array = input_array.transpose()
-
-        if self.transpo[1]:
-            self.weights = self.weights.transpose()
-
-        return self.activation_function.compute(
-            self.alpha * np.dot(input_array, self.weights) + self.beta * self.biases)
-
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
         mustach_hash = {}
@@ -343,3 +220,34 @@ class Gemm(Layer):
         template_file.close()
 
         return pystache.render(template, mustach_hash)
+
+
+def gemm_default_implementation(
+        old_layer: Gemm,
+        version: str,
+) -> GemmDefault:
+    """Create a Gemm_Default layer using the attributes of old_layer."""
+    return GemmDefault(
+        version=version,
+        idx=old_layer.idx,
+        size=old_layer.size,
+        alpha=1 if not old_layer.alpha else old_layer.alpha[0],
+        beta=1 if not old_layer.beta else old_layer.beta[0],
+        transA=old_layer.transpo[0],
+        transB=old_layer.transpo[1],
+        weights=old_layer.weights,
+        bias=old_layer.biases,
+        input_shape=[1, 1, old_layer.input_height, old_layer.input_width],
+        output_shape=[1, 1, old_layer.output_height, old_layer.output_width],
+        activation_function=old_layer.activation_function,
+    )
+
+
+gemm_factory.register_implementation(
+    None,
+    gemm_default_implementation,
+)
+gemm_factory.register_implementation(
+    "default",
+    gemm_default_implementation,
+)

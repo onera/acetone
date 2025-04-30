@@ -1,4 +1,4 @@
-"""Gather layer type definition.
+"""GatherElements Layer type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -22,18 +22,18 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.gather_implementation import (
-    gather_factory,
+from acetone_nnet.versioning.version_implementation.gather_elements_implementation import (
+    gather_elements_factory,
 )
 
-from .Gather import Gather
+from .GatherElements import GatherElements
 
 
-class GatherDefault(Gather):
-    """Gather layer class."""
+class GatherElementsDefault(GatherElements):
+    """GatherElements layer class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
-        """Build a Gather Layer with default implementation."""
+        """Build a GatherElements  Layer with default implementation."""
         super().__init__(**kwargs)
         self.version = version
 
@@ -50,63 +50,50 @@ class GatherDefault(Gather):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[position]")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
 
-        mustach_hash["indices_len"] = len(self.indices.flatten())
         mustach_hash["input_width"] = self.input_width
         mustach_hash["input_height"] = self.input_height
+        mustach_hash["output_channels"] = self.output_channels
+        mustach_hash["output_height"] = self.output_height
+        mustach_hash["output_width"] = self.output_width
 
         if self.axis == 1:
             mustach_hash["channels"] = True
-            mustach_hash["output_height"] = self.output_height
-            mustach_hash["output_width"] = self.output_width
         elif self.axis == 2:
             mustach_hash["heights"] = True
-            mustach_hash["output_channels"] = self.output_channels
-            mustach_hash["output_width"] = self.output_width
         elif self.axis == 3:
             mustach_hash["widths"] = True
-            mustach_hash["output_channels"] = self.output_channels
-            mustach_hash["output_height"] = self.output_height
 
-        if self.activation_function.name == "linear":
-            mustach_hash["linear"] = True
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "tensor_temp[position]",
-                self.idx,
-                "position")
-
-        with open(self.template_path / "layers" / "template_Gather.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_GatherElements.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
 
-def gather_default_implementation(
-        old_layer: Gather,
-        version: str,
-) -> GatherDefault:
-    """Create a Gather_Default layer using the parameters of old_layer."""
-    return GatherDefault(
+def gather_elements_default_implementation(
+        old_layer: GatherElements,
+        version: str
+) -> GatherElementsDefault:
+    """Create a GatherElements_Default layer using the parameters of old_layer."""
+    return GatherElementsDefault(
         version=version,
         idx=old_layer.idx,
         size=old_layer.size,
         axis=old_layer.axis,
         indices=old_layer.indices,
-        input_shape=[1, old_layer.output_channels, old_layer.input_height, old_layer.input_width],
+        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
         output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
         activation_function=old_layer.activation_function,
     )
 
 
-gather_factory.register_implementation(
+gather_elements_factory.register_implementation(
     None,
-    gather_default_implementation,
+    gather_elements_default_implementation,
 )
-gather_factory.register_implementation(
+gather_elements_factory.register_implementation(
     "default",
-    gather_default_implementation,
+    gather_elements_default_implementation,
 )

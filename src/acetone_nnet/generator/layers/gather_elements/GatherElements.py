@@ -20,7 +20,6 @@
 """
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
@@ -137,37 +136,6 @@ class GatherElements(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["output_str"] = output_str
-        mustach_hash["road"] = self.path
-        mustach_hash["size"] = self.size
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
-
-        mustach_hash["input_width"] = self.input_width
-        mustach_hash["input_height"] = self.input_height
-        mustach_hash["output_channels"] = self.output_channels
-        mustach_hash["output_height"] = self.output_height
-        mustach_hash["output_width"] = self.output_width
-
-        if self.axis == 1:
-            mustach_hash["channels"] = True
-        elif self.axis == 2:
-            mustach_hash["heights"] = True
-        elif self.axis == 3:
-            mustach_hash["widths"] = True
-
-        with open(self.template_path / "layers" / "template_GatherElements.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
 
     def forward_path_layer(
             self: Self,

@@ -161,7 +161,7 @@ class CodeGenerator(ABC):
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
 
-    # FIXME Unify default layer selection between this and the versioning module.
+
     def select_layers_implementation(
         self: Self,
         versions: dict[int, str] | dict[str, str] | None,
@@ -182,12 +182,16 @@ class CodeGenerator(ABC):
         """
         selected_implementations = {}
         default_implementations = {
-            "Conv2D": "std_gemm_nn",
+            "Conv2D": "6_loops",
             "BatchNormalization": "default",
             "Concatenate": "default",
             "Dense": "default",
             "Flatten": "default",
             "Gather": "default",
+            "GatherElements": "default",
+            "Gemm": "default",
+            "Input_layer": "default",
+            "MatMul": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified

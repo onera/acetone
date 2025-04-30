@@ -1,4 +1,4 @@
-"""Flatten layer type definition.
+"""Input Layer type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -22,18 +22,18 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.flatten_implementation import (
-    flatten_factory,
+from acetone_nnet.versioning.version_implementation.input_implementation import (
+    input_factory,
 )
 
-from .Flatten import Flatten
+from .Input import InputLayer
 
 
-class FlattenDefault(Flatten):
-    """Flatten layer class."""
+class InputLayerDefault(InputLayer):
+    """Input layer class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
-        """Build a Flatten layer with default implementation."""
+        """Build a Input Layer with default implementation."""
         super().__init__(**kwargs)
         self.version = version
 
@@ -41,29 +41,33 @@ class FlattenDefault(Flatten):
         """Generate computation code for layer."""
         mustach_hash = {}
 
-        if self.data_format == "channels_last":
+        mustach_hash["name"] = self.name
+        mustach_hash["idx"] = f"{self.idx:02d}"
+        mustach_hash["road"] = self.path
+
+        if self.data_format == "channels_last" and len(self.input_shape) == 4:
             mustach_hash["channels_last"] = True
-            mustach_hash["input_channels"] = self.input_shape[1]
-            mustach_hash["input_height"] = self.input_shape[2]
-            mustach_hash["input_width"] = self.input_shape[3]
-            mustach_hash["name"] = self.name
-            mustach_hash["idx"] = f"{self.idx:02d}"
-            mustach_hash["path"] = self.path
+            mustach_hash["input_channels"] = self.output_channels
+            mustach_hash["input_height"] = self.output_height
+            mustach_hash["input_width"] = self.output_width
+        else:
             mustach_hash["size"] = self.size
 
-        with open(self.template_path / "layers" / "template_Flatten.c.tpl") as template_file:
+        with open(
+                self.template_path / "layers" / "template_Input_Layer.c.tpl",
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
 
-def flatten_default_implementation(
-        old_layer: Flatten,
-        version: str,
-) -> FlattenDefault:
-    """Create a Flatten_Default layer using the attributes of old_layer."""
-    return FlattenDefault(
+def input_default_implementation(
+        old_layer: InputLayer,
+        version: str
+) -> InputLayerDefault:
+    """Create a InputLayer_Default layer using the attributes of old_layer."""
+    return InputLayerDefault(
         version=version,
         idx=old_layer.idx,
         size=old_layer.size,
@@ -72,12 +76,11 @@ def flatten_default_implementation(
     )
 
 
-flatten_factory.register_implementation(
+input_factory.register_implementation(
     None,
-    flatten_default_implementation,
+    input_default_implementation,
 )
-
-flatten_factory.register_implementation(
+input_factory.register_implementation(
     "default",
-    flatten_default_implementation,
+    input_default_implementation,
 )

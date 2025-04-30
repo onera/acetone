@@ -39,6 +39,19 @@ from acetone_nnet.versioning.version_implementation.flatten_implementation impor
 from acetone_nnet.versioning.version_implementation.gather_implementation import (
     gather_factory,
 )
+from acetone_nnet.versioning.version_implementation.gather_elements_implementation import (
+    gather_elements_factory,
+)
+from acetone_nnet.versioning.version_implementation.gemm_implementation import (
+    gemm_factory,
+)
+from acetone_nnet.versioning.version_implementation.input_implementation import (
+    input_factory,
+)
+from acetone_nnet.versioning.version_implementation.matmul_implementation import (
+    matmul_factory,
+)
+
 
 LayerFactory = Callable[[Layer, str], Layer]
 
@@ -55,6 +68,10 @@ def versioning(
         "Dense": dense_factory,
         "Flatten": flatten_factory,
         "Gather": gather_factory,
+        "GatherElements": gather_elements_factory,
+        "Gemm": gemm_factory,
+        "Input_layer": input_factory,
+        "MatMul": matmul_factory,
     }
 
     keys = list(version.keys())
