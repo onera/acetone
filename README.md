@@ -126,6 +126,14 @@ make -C tests/models/lenet5/lenet5_example/lenet5_generated all
 acetone_compare ./tests/models/lenet5/lenet5_example/output_keras.txt ./tests/models/lenet5/lenet5_example/lenet5_generated/output_acetone.txt 1
 ```
 
+### Tutorials
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/onera/acetone/8-notebook-demo?urlpath=%2Fdoc%2Ftree%2Ftutorials%2Ftutorial1_introduction.ipynb)
+
+Some tutorials are present in the [`tutotials/`](./tutorials/) folder to show more detailled examples and usages of the framework.
+
+They can be run oon your local installation of the framework (by cloning the GitHub repository), or online using the above Binder link. 
+
 ## Tests
 
 Tests are implemented in the folder *tests*.
