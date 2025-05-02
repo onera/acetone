@@ -21,7 +21,6 @@
 
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
@@ -96,6 +95,9 @@ class Tile(Layer):
         if msg:
             raise ValueError(msg)
 
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
+
     def forward_path_layer(
             self: Self,
             input_array: np.ndarray,
@@ -103,31 +105,3 @@ class Tile(Layer):
         """Compute output of layer."""
         input_array = input_array.reshape((self.input_channels, self.input_height, self.input_width))
         return np.tile(input_array, self.repeats[1:])
-
-    def generate_inference_code_layer(self: Self) -> str:
-        """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["output_str"] = output_str
-        mustach_hash["road"] = self.path
-        mustach_hash["size"] = self.size
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
-
-        mustach_hash["output_channels"] = self.output_channels
-        mustach_hash["output_height"] = self.output_height
-        mustach_hash["output_width"] = self.output_width
-        mustach_hash["input_channels"] = self.input_channels
-        mustach_hash["input_height"] = self.input_height
-        mustach_hash["input_width"] = self.input_width
-
-        with open(self.template_path / "layers" / "template_Tile.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)

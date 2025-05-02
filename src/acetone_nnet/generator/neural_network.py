@@ -192,6 +192,9 @@ class CodeGenerator(ABC):
             "Gemm": "default",
             "Input_layer": "default",
             "MatMul": "default",
+            "Softmax": "default",
+            "Tile": "default",
+            "Transpose": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified

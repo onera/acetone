@@ -19,7 +19,6 @@
 ******************************************************************************
 """
 
-
 import numpy as np
 import pystache
 from typing_extensions import Self
@@ -105,6 +104,9 @@ class Transpose(Layer):
         if msg:
             raise ValueError(msg)
 
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
+
     def forward_path_layer(
             self: Self,
             input_array: np.ndarray,
@@ -115,49 +117,3 @@ class Transpose(Layer):
             (1, self.input_channels, self.input_height, self.input_width),
         )
         return np.transpose(input_array, self.perm)
-
-    def generate_inference_code_layer(self: Self) -> str:
-        """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["size"] = self.size
-        mustach_hash["road"] = self.path
-        mustach_hash["output_str"] = output_str
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
-
-        mustach_hash["output_channels"] = self.output_channels
-        mustach_hash["output_height"] = self.output_height
-        mustach_hash["output_width"] = self.output_width
-        mustach_hash["input_height"] = self.input_height
-        mustach_hash["input_width"] = self.input_width
-
-        indices = ["Batch", "f", "i", "j"]
-        if self.perm[1:] == [2, 3, 1]:
-            mustach_hash["a"] = indices[self.perm[1]]
-            mustach_hash["b"] = indices[self.perm[3]]
-            mustach_hash["c"] = indices[self.perm[2]]
-        elif self.perm[1:] == [3, 1, 2]:
-            mustach_hash["a"] = indices[self.perm[2]]
-            mustach_hash["b"] = indices[self.perm[1]]
-            mustach_hash["c"] = indices[self.perm[3]]
-        else:
-            mustach_hash["a"] = indices[self.perm[3]]
-            mustach_hash["b"] = indices[self.perm[2]]
-            mustach_hash["c"] = indices[self.perm[1]]
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output_" + str(self.path) + "[j]",
-                self.idx,
-                "j")
-
-        with open(self.template_path / "layers" / "template_Transpose.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)

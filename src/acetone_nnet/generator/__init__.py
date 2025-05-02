@@ -84,9 +84,12 @@ MatMulDefault,
     ResizeLinear,
     ResizeNearest,
     Softmax,
+SoftmaxDefault,
     Subtract,
     Tile,
+TileDefault,
     Transpose,
+TransposeDefault,
     WrapPad,
 )
 from .neural_network import CodeGenerator

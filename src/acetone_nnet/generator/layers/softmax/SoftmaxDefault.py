@@ -19,75 +19,24 @@
 ******************************************************************************
 """
 
-
-import numpy as np
 import pystache
-from typing_extensions import Self
-
-from acetone_nnet.generator.Layer import Layer
+from typing_extensions import Any, Self
 
 
-class Softmax(Layer):
+from acetone_nnet.versioning.version_implementation.softmax_implementation import (
+    softmax_factory,
+)
+
+from .Softmax import Softmax
+
+
+class SoftmaxDefault(Softmax):
     """Softmax layer class."""
 
-    def __init__(
-            self: Self,
-            idx: int,
-            size: int,
-            output_shape: list,
-            axis: int | None,
-    ) -> None:
-        """Build a Softmax layer."""
-        super().__init__()
-        self.idx = idx
-        self.size = size
-        self.name = "Softmax"
-        self.axis = axis
-
-        if self.size in output_shape:
-            self.one_dimension = True
-        else:
-            self.output_channels = output_shape[1]
-            self.output_height = output_shape[2]
-            self.output_width = output_shape[3]
-            self.one_dimension = False
-
-        ####### Checking the instantiation#######
-
-        ### Checking argument type ###
-        msg = ""
-        if type(self.idx) is not int:
-            msg += "Error: idx type in Softmax (idx must be int)"
-            msg += "\n"
-        if type(self.size) is not int:
-            msg += "Error: size type in Softmax (size must be int)"
-            msg += "\n"
-        if type(self.axis) is not int and self.axis is not None:
-            msg += "Error: axis type in Softmax (axis must be int or None)"
-            msg += "\n"
-        if not self.one_dimension:
-            if type(self.output_channels) is not int:
-                msg += "Error: output channels type in Softmax (must be int)"
-                msg += "\n"
-            if type(self.output_height) is not int:
-                msg += "Error: output height type in Softmax (must be int)"
-                msg += "\n"
-            if type(self.output_width) is not int:
-                msg += "Error: output width type in Softmax (must be int)"
-                msg += "\n"
-        if msg:
-            raise TypeError(msg)
-
-        ### Checking value consistency ###
-        msg = ""
-        if not self.one_dimension and self.size != self.output_channels * self.output_height * self.output_width:
-            msg += f"Error: size value in Transpose ({self.size}!={self.output_channels * self.output_height * self.output_width})"
-            msg += "\n"
-        if axis not in [1, 2, 3] and axis is not None:
-            msg += f"Error: axis out of bound in Softmax ({axis} for tensor in 4 dimension with first dimension unused)"
-            msg += "\n"
-        if msg:
-            raise ValueError(msg)
+    def __init__(self: Self, version: str, **kwargs: Any) -> None:
+        """Build a Softmax Layer with default implementation."""
+        super().__init__(**kwargs)
+        self.version = version
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
@@ -145,16 +94,29 @@ class Softmax(Layer):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
-    ) -> np.ndarray:
-        """Compute output of layer."""
-        if not self.one_dimension:
-            input_array = input_array.reshape(1, self.output_channels, self.output_height, self.output_width)
-        else:
-            input_array = input_array.flatten()
-            self.axis = -1
 
-        exp = np.exp(input_array, dtype=float)
-        return exp / np.sum(exp, keepdims=True, axis=self.axis)
+def softmax_default_implementation(
+        old_layer: Softmax,
+        version: str,
+) -> SoftmaxDefault:
+    """Create a Softmax_Default layer using the attributes of old_layer."""
+    if old_layer.one_dimension:
+        output_shape = [1, 1, 1, old_layer.size]
+    else:
+        output_shape = [1, old_layer.output_channels, old_layer.output_height, old_layer.output_width]
+    return SoftmaxDefault(
+        version=version,
+        idx=old_layer.idx,
+        size=old_layer.size,
+        output_shape=output_shape,
+        axis=old_layer.axis,
+    )
+
+softmax_factory.register_implementation(
+    None,
+    softmax_default_implementation,
+)
+softmax_factory.register_implementation(
+    "default",
+    softmax_default_implementation,
+)

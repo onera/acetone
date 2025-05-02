@@ -51,6 +51,15 @@ from acetone_nnet.versioning.version_implementation.input_implementation import 
 from acetone_nnet.versioning.version_implementation.matmul_implementation import (
     matmul_factory,
 )
+from acetone_nnet.versioning.version_implementation.softmax_implementation import (
+    softmax_factory,
+)
+from acetone_nnet.versioning.version_implementation.tile_implementation import (
+    tile_factory,
+)
+from acetone_nnet.versioning.version_implementation.transpose_implementation import (
+    transpose_factory,
+)
 
 
 LayerFactory = Callable[[Layer, str], Layer]
@@ -72,6 +81,9 @@ def versioning(
         "Gemm": gemm_factory,
         "Input_layer": input_factory,
         "MatMul": matmul_factory,
+        "Softmax": softmax_factory,
+        "Tile": tile_factory,
+        "Transpose": transpose_factory,
     }
 
     keys = list(version.keys())

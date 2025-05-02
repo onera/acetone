@@ -34,7 +34,10 @@ gather,
 gather_elements,
 gemm,
 input,
-matmul
+matmul,
+softmax,
+tile,
+transpose
 )
 from .AddBias import AddBias
 from .batch_normalization import BatchNormalization, BatchNormalizationDefault
@@ -76,9 +79,9 @@ from .reduce import (
     ReduceSum,
 )
 from .resize import Resize, ResizeCubic, ResizeLinear, ResizeNearest
-from .Softmax import Softmax
-from .Tile import Tile
-from .Transpose import Transpose
+from .softmax import SoftmaxDefault, Softmax
+from .tile import Tile, TileDefault
+from .transpose import Transpose, TransposeDefault
 
 __all__ = (
     "AddBias",
@@ -89,10 +92,10 @@ __all__ = (
     gemm.__all__,
     input.__all__,
     matmul.__all__,
-    "Softmax",
-    "Transpose",
+    softmax.__all__,
+    transpose.__all__,
     gather_elements.__all__,
-    "Tile",
+    tile.__all__,
     batch_normalization.__all__,
     concatenate.__all__,
     broadcast.__all__,

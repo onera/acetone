@@ -71,6 +71,7 @@ class ActivationLayer(Layer):
             msg += "\n"
         if msg:
             raise ValueError(msg)
+
     @abstractmethod
     def forward_path_layer(
             self: Self,
