@@ -103,7 +103,8 @@ class CodeGenerator(ABC):
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        self.nb_tests = int(nb_tests)
+        self.read_ext_input = int(nb_tests) == 0
+        self.nb_tests = int(nb_tests) if not self.read_ext_input else 1
         self.test_dataset = self._initialise_dataset(
             test_dataset,
             int(nb_tests),
@@ -117,8 +118,9 @@ class CodeGenerator(ABC):
             "main.c",
             "Makefile",
             "test_dataset.h",
-            "test_dataset.c",
         ]
+        if not self.read_ext_input:
+            self.files_to_gen.append("test_dataset.c")
 
         self.target = target
         if self.target != "generic":
@@ -182,7 +184,7 @@ class CodeGenerator(ABC):
         """
         selected_implementations = {}
         default_implementations = {
-            "Conv2D": "6_loops",
+            "Conv2D": "6loops",
             "BatchNormalization": "default",
             "Concatenate": "default",
             "Dense": "default",
@@ -444,28 +446,30 @@ class CodeGenerator(ABC):
                         "nb_inputs": self.layers[0].size,
                         "nb_outputs": self.layers[-1].size,
                         "data_type": self.data_type,
+                        "read_input": self.read_ext_input,
                     },
                 ),
             )
 
-        # Generate test source file
-        dataset = "{"
-        if self.test_dataset is not None:
-            dataset += ",".join(
-                map(CodeGenerator.flatten_array_order_c, self.test_dataset),
-            )
-        dataset += "};\n"
+        if not self.read_ext_input:
+            # Generate test source file
+            dataset = "{"
+            if self.test_dataset is not None:
+                dataset += ",".join(
+                    map(CodeGenerator.flatten_array_order_c, self.test_dataset),
+                )
+            dataset += "};\n"
 
-        template = (
-            Path(self.template_path) / "template_test_dataset_source.c.tpl"
-        ).read_text()
-        with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
-            test_dataset_source.write(
-                pystache.render(
-                    template,
-                    {"data_type": self.data_type, "dataset": dataset},
-                ),
-            )
+            template = (
+                Path(self.template_path) / "template_test_dataset_source.c.tpl"
+            ).read_text()
+            with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
+                test_dataset_source.write(
+                    pystache.render(
+                        template,
+                        {"data_type": self.data_type, "dataset": dataset},
+                    ),
+                )
 
     def generate_main_file(
         self: Self,
@@ -474,7 +478,11 @@ class CodeGenerator(ABC):
         """Generate entry point C code."""
         template = (Path(self.template_path) / "template_main_file.c.tpl").read_text()
         with (output_dir / "main.c").open("a+") as main_file:
-            main_file.write(pystache.render(template, {"data_type": self.data_type}))
+            main_file.write(
+                pystache.render(template,
+                                {"data_type": self.data_type, "read_input": self.read_ext_input},
+                                ),
+            )
 
     def generate_makefile(
         self: Self,

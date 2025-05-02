@@ -13,13 +13,26 @@
 {{/min}}
 
 struct timeval GetTimeStamp();
-
 int main(int argc, char** argv)
 {
     int i;
     int j;
 
     char *path = argv[1];
+    {{#read_input}}
+    char *input_file_path = argv[2];
+
+    FILE *input_file = fopen(input_file_path, "r");
+    for (i = 0; i < nb_samples; ++i)
+    {
+        for (j = 0; j < nn_input_size; ++j)
+        {
+            fscanf(input_file, "%f", &nn_test_inputs[0][j]);
+        }
+    }
+    fclose(input_file);
+    input_file = NULL;
+    {{/read_input}}
 
     FILE *fp = fopen(path, "w+");
 

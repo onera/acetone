@@ -5,6 +5,6 @@
 #define nn_input_size {{nb_inputs}}
 #define nn_output_size {{nb_outputs}}
 
-extern {{data_type}} nn_test_inputs[nb_samples][nn_input_size];
+{{^read_input}}extern{{/read_input}} {{data_type}} nn_test_inputs[nb_samples][nn_input_size];
 
 #endif
