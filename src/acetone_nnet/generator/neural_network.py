@@ -216,6 +216,10 @@ class CodeGenerator(ABC):
             "Minimum": "default",
             "Multiply": "default",
             "Subtract": "default",
+            "ConstantPad": "default",
+            "EdgePad": "default",
+            "ReflectPad": "default",
+            "WrapPad": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified

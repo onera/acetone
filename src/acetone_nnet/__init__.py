@@ -21,7 +21,6 @@
 
 from . import debug, generator
 from .cli.compare import cli_compare
-from .cli.generate import cli_acetone
 from .generator import (
     ActivationFunctions,
     Add,
@@ -79,7 +78,6 @@ from .generator import (
 
 __all__ = (
     "cli_compare",
-    "cli_acetone",
     generator.__all__,
     debug.__all__,
 )

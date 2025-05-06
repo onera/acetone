@@ -1,4 +1,4 @@
-"""ReflectPad layer type definition.
+"""EdgePad layer type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -18,22 +18,24 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-
 import pystache
+from EdgePad import EdgePad
 from typing_extensions import Self
 
-from .Pad import Pad
+from acetone_nnet.versioning.version_implementation.edge_pad_implementation import (
+    edge_pad_factory,
+)
 
 
-# The Reflect mode of the Pad layers
-# Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
-class ReflectPad(Pad):
-    """ReflectPad layer class."""
+# The Edge mode of the Pad layers
+# Pads with the edge values of array.
+class EdgePadDefault(EdgePad):
+    """EdgePad layer class."""
 
-    def __init__(self: Self, **kwargs: int) -> None:
-        """Build a ReflectPad layer."""
+    def __init__(self: Self, version: str, **kwargs: int) -> None:
+        """Build an EdgePad layer with default implementation."""
         super().__init__(**kwargs)
-        self.mode = "reflect"
+        self.version = version
 
     def write_padding(self: Self) -> str:
         """Generate the padding code."""
@@ -42,11 +44,11 @@ class ReflectPad(Pad):
         mustach_hash["pads_front"] = self.pads[1]
         mustach_hash["pads_top"] = self.pads[2]
         mustach_hash["pads_left"] = self.pads[3]
-        mustach_hash["channels_max"] = self.input_shape[1] - 1
-        mustach_hash["height_max"] = self.input_shape[2] - 1
-        mustach_hash["width_max"] = self.input_shape[3] - 1
+        mustach_hash["channels_and_pad_front"] = self.input_shape[1] + self.pads[1]
+        mustach_hash["height_and_pad_top"] = self.input_shape[2] + self.pads[2]
+        mustach_hash["width_and_pad_left"] = self.input_shape[3] + self.pads[3]
 
-        with open(self.template_path / "layers" / "Pad" / "template_Reflect_Pad.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Pad" / "template_Edge_Pad.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -91,3 +93,28 @@ class ReflectPad(Pad):
         template_file.close()
 
         return pystache.render(template, mustach_hash)
+
+def edge_pad_default_implementation(
+        old_layer: EdgePad,
+        version:str,
+) -> EdgePad:
+    """Create a EdgePad_Default layer using the parameters of old_layer."""
+    return EdgePadDefault(
+        version=version,
+        idx=old_layer.idx,
+        size=old_layer.size,
+        pads=old_layer.pads,
+        constant_value=old_layer.constant_value,
+        axes=old_layer.axes,
+        input_shape=old_layer.input_shape,
+        activation_function=old_layer.activation_function,
+    )
+
+edge_pad_factory.register_implementation(
+    None,
+    edge_pad_default_implementation,
+)
+edge_pad_factory.register_implementation(
+    "default",
+    edge_pad_default_implementation,
+)

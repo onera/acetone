@@ -73,7 +73,17 @@ from .gather_elements import GatherElements, GatherElementsDefault
 from .gemm import Gemm, GemmDefault
 from .input import InputLayer, InputLayerDefault
 from .matmul import MatMul, MatMulDefault
-from .padding import ConstantPad, EdgePad, Pad, ReflectPad, WrapPad
+from .padding import (
+    ConstantPad,
+    ConstantPadDefault,
+    EdgePad,
+    EdgePadDefault,
+    Pad,
+    ReflectPad,
+    ReflectPadDefault,
+    WrapPad,
+    WrapPadDefault,
+)
 from .pooling import AveragePooling2D, MaxPooling2D, Pooling2D
 from .reduce import (
     Reduce,

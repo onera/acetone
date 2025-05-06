@@ -1,4 +1,4 @@
-"""EdgePad layer type definition.
+"""ConstantPad layer type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -18,38 +18,26 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
 import pystache
 from typing_extensions import Self
 
-from .Pad import Pad
+from acetone_nnet.versioning.version_implementation.constant_pad_implementation import (
+    constant_pad_factory,
+)
+
+from .ConstantPad import ConstantPad
 
 
-# The Edge mode of the Pad layers
-# Pads with the edge values of array.
-class EdgePad(Pad):
-    """EdgePad layer class."""
+# The Constant mode of the Pad layers
+# Use a constant to fill paddings
+class ConstantPadDefault(ConstantPad):
+    """ConstantPad layer class."""
 
-    def __init__(self: Self, **kwargs: int) -> None:
-        """Build a EdgePad layer."""
+    def __init__(self: Self, version:str, **kwargs: int) -> None:
+        """Build a ConstantPad layer with default implementation."""
         super().__init__(**kwargs)
-        self.mode = "edge"
-
-    def write_padding(self: Self) -> str:
-        """Generate the padding code."""
-        mustach_hash = {}
-
-        mustach_hash["pads_front"] = self.pads[1]
-        mustach_hash["pads_top"] = self.pads[2]
-        mustach_hash["pads_left"] = self.pads[3]
-        mustach_hash["channels_and_pad_front"] = self.input_shape[1] + self.pads[1]
-        mustach_hash["height_and_pad_top"] = self.input_shape[2] + self.pads[2]
-        mustach_hash["width_and_pad_left"] = self.input_shape[3] + self.pads[3]
-
-        with open(self.template_path / "layers" / "Pad" / "template_Edge_Pad.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
+        self.version = version
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
@@ -71,12 +59,14 @@ class EdgePad(Pad):
         mustach_hash["output_height"] = self.output_height
         mustach_hash["output_width"] = self.output_width
         mustach_hash["pads_front"] = self.pads[1]
+        mustach_hash["channels_without_pads_back"] = self.output_channels - self.pads[5]
         mustach_hash["pads_top"] = self.pads[2]
+        mustach_hash["height_without_pads_bottom"] = self.output_height - self.pads[6]
         mustach_hash["pads_left"] = self.pads[3]
+        mustach_hash["width_without_pads_right"] = self.output_width - self.pads[7]
+        mustach_hash["constant"] = self.constant_value
         mustach_hash["input_width"] = self.input_shape[3]
         mustach_hash["input_height"] = self.input_shape[2]
-
-        mustach_hash["change_indice"] = self.write_padding()
 
         if self.activation_function.name == "linear":
             mustach_hash["linear"] = True
@@ -85,8 +75,33 @@ class EdgePad(Pad):
             mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
                 "tenser_temp[j + " + str(self.output_width) + " * (i + " + str(self.output_height) + " * f)]")
 
-        with open(self.template_path / "layers" / "Pad" / "template_Pad_Non_Constant.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Pad" / "template_Constant_Pad.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
+
+def constant_pad_default_implementation(
+        old_layer: ConstantPad,
+        version:str,
+) -> ConstantPad:
+    """Create a ConstantPad_Default layer using the parameters of old_layer."""
+    return ConstantPadDefault(
+        version=version,
+        idx=old_layer.idx,
+        size=old_layer.size,
+        pads=old_layer.pads,
+        constant_value=old_layer.constant_value,
+        axes=old_layer.axes,
+        input_shape=old_layer.input_shape,
+        activation_function=old_layer.activation_function,
+    )
+
+constant_pad_factory.register_implementation(
+    None,
+    constant_pad_default_implementation,
+)
+constant_pad_factory.register_implementation(
+    "default",
+    constant_pad_default_implementation,
+)

@@ -1,4 +1,4 @@
-"""Init file.
+"""EdgePad layer type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -18,13 +18,21 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+from typing_extensions import Self
 
-from .AveragePooling2D import AveragePooling2D
-from .MaxPooling2D import MaxPooling2D
-from .Pooling2D import Pooling2D
+from acetone_nnet.generator.layers.padding.Pad import Pad
 
-__all__ = (
-    "AveragePooling2D",
-    "MaxPooling2D",
-    "Pooling2D",
-)
+
+# The Edge mode of the Pad layers
+# Pads with the edge values of array.
+class EdgePad(Pad):
+    """EdgePad layer class."""
+
+    def __init__(self: Self, **kwargs: int) -> None:
+        """Build a EdgePad layer."""
+        super().__init__(**kwargs)
+        self.name = "EdgePad"
+        self.mode = "edge"
+
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""

@@ -44,6 +44,7 @@ from .layers import (
     Concatenate,
     ConcatenateDefault,
     ConstantPad,
+    ConstantPadDefault,
     Conv2D,
     Conv2D6loops,
     Conv2DGemm,
@@ -55,6 +56,7 @@ from .layers import (
     Divide,
     DivideDefault,
     EdgePad,
+    EdgePadDefault,
     Flatten,
     FlattenDefault,
     Gather,
@@ -88,6 +90,7 @@ from .layers import (
     ReduceSum,
     ReduceSumDefault,
     ReflectPad,
+    ReflectPadDefault,
     Resize,
     ResizeCubic,
     ResizeCubicDefault,
@@ -104,6 +107,7 @@ from .layers import (
     Transpose,
     TransposeDefault,
     WrapPad,
+    WrapPadDefault,
 )
 from .neural_network import CodeGenerator
 

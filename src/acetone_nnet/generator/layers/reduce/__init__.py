@@ -43,4 +43,5 @@ __all__ = (
     "ReduceProd",
     "ReduceProdDefault",
     "ReduceSum",
+    "ReduceSumDefault",
 )

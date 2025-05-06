@@ -22,19 +22,23 @@
 import pystache
 from typing_extensions import Self
 
-from .Pad import Pad
+from acetone_nnet.versioning.version_implementation.wrap_pad_implementation import (
+    wrap_pad_factory,
+)
+
+from .WrapPad import WrapPad
 
 
 # The Wrap mode of the Pad layers
 # Pads with the wrap of the vector along the axis.
 # The first values are used to pad the end and the end values are used to pad the beginning.
-class WrapPad(Pad):
+class WrapPadDefault(WrapPad):
     """WrapPad layer class."""
 
-    def __init__(self: Self, **kwargs: int) -> None:
-        """Build a WrapPad layer."""
+    def __init__(self: Self, version: str, **kwargs: int) -> None:
+        """Build an WrapPad layer with default implementation."""
         super().__init__(**kwargs)
-        self.mode = "wrap"
+        self.version = version
 
     def write_padding(self: Self) -> str:
         """Generate the padding code."""
@@ -95,3 +99,28 @@ class WrapPad(Pad):
         template_file.close()
 
         return pystache.render(template, mustach_hash)
+
+def wrap_pad_default_implementation(
+        old_layer: WrapPad,
+        version:str,
+) -> WrapPad:
+    """Create a WrapPad_Default layer using the parameters of old_layer."""
+    return WrapPadDefault(
+        version=version,
+        idx=old_layer.idx,
+        size=old_layer.size,
+        pads=old_layer.pads,
+        constant_value=old_layer.constant_value,
+        axes=old_layer.axes,
+        input_shape=old_layer.input_shape,
+        activation_function=old_layer.activation_function,
+    )
+
+wrap_pad_factory.register_implementation(
+    None,
+    wrap_pad_default_implementation,
+)
+wrap_pad_factory.register_implementation(
+    "default",
+    wrap_pad_default_implementation,
+)

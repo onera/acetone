@@ -1,4 +1,4 @@
-"""Init file.
+"""ReflectPad layer type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -19,12 +19,20 @@
 ******************************************************************************
 """
 
-from .AveragePooling2D import AveragePooling2D
-from .MaxPooling2D import MaxPooling2D
-from .Pooling2D import Pooling2D
+from typing_extensions import Self
 
-__all__ = (
-    "AveragePooling2D",
-    "MaxPooling2D",
-    "Pooling2D",
-)
+from acetone_nnet.generator.layers.padding.Pad import Pad
+
+
+# The Reflect mode of the Pad layers
+# Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
+class ReflectPad(Pad):
+    """ReflectPad layer class."""
+
+    def __init__(self: Self, **kwargs: int) -> None:
+        """Build a ReflectPad layer."""
+        super().__init__(**kwargs)
+        self.name = "ReflectPad"
+        self.mode = "reflect"
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""

@@ -18,13 +18,3 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-
-from .AveragePooling2D import AveragePooling2D
-from .MaxPooling2D import MaxPooling2D
-from .Pooling2D import Pooling2D
-
-__all__ = (
-    "AveragePooling2D",
-    "MaxPooling2D",
-    "Pooling2D",
-)
