@@ -26,18 +26,18 @@ from . import (
     convolution,
     dense,
     flatten,
+    gather,
+    gather_elements,
+    gemm,
+    input,
+    matmul,
     padding,
     pooling,
     reduce,
     resize,
-gather,
-gather_elements,
-gemm,
-input,
-matmul,
-softmax,
-tile,
-transpose
+    softmax,
+    tile,
+    transpose,
 )
 from .AddBias import AddBias
 from .batch_normalization import BatchNormalization, BatchNormalizationDefault
@@ -73,13 +73,18 @@ from .pooling import AveragePooling2D, MaxPooling2D, Pooling2D
 from .reduce import (
     Reduce,
     ReduceMax,
+    ReduceMaxDefault,
     ReduceMean,
+    ReduceMeanDefault,
     ReduceMin,
+    ReduceMinDefault,
     ReduceProd,
+    ReduceProdDefault,
     ReduceSum,
+    ReduceSumDefault,
 )
 from .resize import Resize, ResizeCubic, ResizeLinear, ResizeNearest
-from .softmax import SoftmaxDefault, Softmax
+from .softmax import Softmax, SoftmaxDefault
 from .tile import Tile, TileDefault
 from .transpose import Transpose, TransposeDefault
 

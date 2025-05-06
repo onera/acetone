@@ -18,7 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from typing import Callable
+from collections.abc import Callable
 
 from acetone_nnet.generator import Layer
 from acetone_nnet.versioning.version_implementation.batch_normalization_implementation import (
@@ -36,11 +36,11 @@ from acetone_nnet.versioning.version_implementation.dense_implementation import 
 from acetone_nnet.versioning.version_implementation.flatten_implementation import (
     flatten_factory,
 )
-from acetone_nnet.versioning.version_implementation.gather_implementation import (
-    gather_factory,
-)
 from acetone_nnet.versioning.version_implementation.gather_elements_implementation import (
     gather_elements_factory,
+)
+from acetone_nnet.versioning.version_implementation.gather_implementation import (
+    gather_factory,
 )
 from acetone_nnet.versioning.version_implementation.gemm_implementation import (
     gemm_factory,
@@ -51,6 +51,21 @@ from acetone_nnet.versioning.version_implementation.input_implementation import 
 from acetone_nnet.versioning.version_implementation.matmul_implementation import (
     matmul_factory,
 )
+from acetone_nnet.versioning.version_implementation.reduce_max_implementation import (
+    reduce_max_factory,
+)
+from acetone_nnet.versioning.version_implementation.reduce_mean_implementation import (
+    reduce_mean_factory,
+)
+from acetone_nnet.versioning.version_implementation.reduce_min_implementation import (
+    reduce_min_factory,
+)
+from acetone_nnet.versioning.version_implementation.reduce_prod_implementation import (
+    reduce_prod_factory,
+)
+from acetone_nnet.versioning.version_implementation.reduce_sum_implementation import (
+    reduce_sum_factory,
+)
 from acetone_nnet.versioning.version_implementation.softmax_implementation import (
     softmax_factory,
 )
@@ -60,7 +75,6 @@ from acetone_nnet.versioning.version_implementation.tile_implementation import (
 from acetone_nnet.versioning.version_implementation.transpose_implementation import (
     transpose_factory,
 )
-
 
 LayerFactory = Callable[[Layer, str], Layer]
 
@@ -84,6 +98,11 @@ def versioning(
         "Softmax": softmax_factory,
         "Tile": tile_factory,
         "Transpose": transpose_factory,
+        "ReduceMax":reduce_max_factory,
+        "ReduceMean":reduce_mean_factory,
+        "ReduceMin":reduce_min_factory,
+        "ReduceProd":reduce_prod_factory,
+        "ReduceSum":reduce_sum_factory,
     }
 
     keys = list(version.keys())

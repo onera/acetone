@@ -203,6 +203,11 @@ class CodeGenerator(ABC):
             "Softmax": "default",
             "Tile": "default",
             "Transpose": "default",
+            "ReduceMax": "default",
+            "ReduceMean": "default",
+            "ReduceMin": "default",
+            "ReduceProd": "default",
+            "ReduceSum": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified

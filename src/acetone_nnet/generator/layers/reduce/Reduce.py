@@ -30,7 +30,7 @@ from acetone_nnet.generator.Layer import Layer
 
 
 class Reduce(Layer):
-    """Reduce layer base class."""
+    """Reduce layer base implementation class."""
 
     def __init__(
             self: Self,
@@ -131,10 +131,8 @@ class Reduce(Layer):
     ) -> np.ndarray:
         """Compute output of layer."""
 
-    def generate_inference_code_layer(self: Self) -> str:
+    def generate_inference_code_layer(self: Self, output_str) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
         mustach_hash = {}
 
         mustach_hash["name"] = self.name

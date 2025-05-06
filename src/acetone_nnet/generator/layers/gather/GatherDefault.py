@@ -30,7 +30,7 @@ from .Gather import Gather
 
 
 class GatherDefault(Gather):
-    """Gather layer class."""
+    """Gather Default layer class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Gather Layer with default implementation."""
