@@ -19,22 +19,36 @@
 ******************************************************************************
 """
 
-from .Add import Add
-from .Average import Average
+from .add.Add import Add
+from .add.AddDefault import AddDefault
+from .average.Average import Average
+from .average.AverageDefault import AverageDefault
 from .Broadcast import Broadcast
-from .Divide import Divide
-from .Maximum import Maximum
-from .Minimum import Minimum
-from .Multiply import Multiply
-from .Subtract import Subtract
+from .divide.Divide import Divide
+from .divide.DivideDefault import DivideDefault
+from .maximum.Maximum import Maximum
+from .maximum.MaximumDefault import MaximumDefault
+from .minimum.Minimum import Minimum
+from .minimum.MinimumDefault import MinimumDefault
+from .multiply.Multiply import Multiply
+from .multiply.MultiplyDefault import MultiplyDefault
+from .subtract.Subtract import Subtract
+from .subtract.SubtractDefault import SubtractDefault
 
 __all__ = (
     "Add",
+    "AddDefault",
     "Average",
+    "AverageDefault",
     "Broadcast",
     "Divide",
+    "DivideDefault",
     "Maximum",
+    "MaximumDefault",
     "Minimum",
+    "MinimumDefault",
     "Multiply",
+    "MultiplyDefault",
     "Subtract",
+    "SubtractDefault",
 )

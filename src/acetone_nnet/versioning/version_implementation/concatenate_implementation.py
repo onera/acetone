@@ -29,26 +29,26 @@ class ConcatenateFactory:
     """Build Concatenate implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
+        """Build default Concatenate layer factory."""
         self.implementations: dict[str | None, ConcatenateVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known convolution implementations."""
+        """Return known Concatenate implementations."""
         return [i for i in self.implementations if i is not None]
 
     def register_implementation(self, name: str, variant: ConcatenateVariant) -> None:
         """Register a new Concatenate variant."""
         if name in self.implementations:
-            msg = f"Convolution variant {name} already exists."
+            msg = f"Concatenate variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
     def __call__(self, layer: Concatenate, version: str) -> Concatenate:
-        """Create a Convolution implementation layer for the required implementation."""
+        """Create a Concatenate implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown convolution variant {version}."
+            msg = f"Unknown Concatenate variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)

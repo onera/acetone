@@ -22,10 +22,9 @@
 import math
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
-from .Resize import Resize
+from acetone_nnet.generator.layers.resize.Resize import Resize
 
 
 # The Cubic mode of the Resize layers
@@ -36,6 +35,7 @@ class ResizeCubic(Resize):
     def __init__(self: Self, **kwargs: int) -> None:
         """Build a ResizeCubic layer."""
         super().__init__(**kwargs)
+        self.name = "ResizeCubic"
         self.mode = "cubic"
         self.template_dict = {"1D": self.template_path / "layers" / "Resize" / "template_ResizeCubic1D.c.tpl",
                               "2D": self.template_path / "layers" / "Resize" / "template_ResizeCubic2D.c.tpl"}
@@ -103,53 +103,3 @@ class ResizeCubic(Resize):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["output_str"] = output_str
-        mustach_hash["road"] = self.path
-        mustach_hash["size"] = self.size
-
-        if self.activation_function.name != "linear":
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
-
-        mustach_hash["cubic_coeff_a"] = self.cubic_coeff_a
-        mustach_hash["output_channels"] = self.output_channels
-        mustach_hash["output_height"] = self.output_height
-        mustach_hash["output_width"] = self.output_width
-
-        if (self.input_height == 1) and (self.input_width > 1):
-            mustach_hash["dimension"] = self.input_width
-            mustach_hash["coordinate_transformation_mode"] = self.coordinate_transformation_mode_mapping[
-                self.coordinate_transformation_mode]("j", 3, "x")
-            dimension = "1D"
-        elif (self.input_height > 1) and (self.input_width == 1):
-            mustach_hash["dimension"] = self.input_height
-            mustach_hash["coordinate_transformation_mode"] = self.coordinate_transformation_mode_mapping[
-                self.coordinate_transformation_mode]("i", 2, "x")
-            dimension = "1D"
-        elif (self.input_height > 1) and (self.input_width > 1):
-            mustach_hash["input_width"] = self.input_width
-            mustach_hash["input_height"] = self.input_height
-            mustach_hash["coordinate_transformation_mode_x"] = self.coordinate_transformation_mode_mapping[
-                self.coordinate_transformation_mode]("i", 2, "x")
-            mustach_hash["coordinate_transformation_mode_y"] = self.coordinate_transformation_mode_mapping[
-                self.coordinate_transformation_mode]("j", 3, "y")
-            dimension = "2D"
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]",
-                self.idx,
-                f"j + {self.output_width}*(i + {self.output_height}*f)")
-
-        with open(self.template_dict[dimension]) as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)

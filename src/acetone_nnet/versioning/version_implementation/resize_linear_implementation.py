@@ -1,4 +1,4 @@
-"""ReduceMean versioning manager.
+"""ResizeLinear versioning manager.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -20,38 +20,38 @@
 """
 from collections.abc import Callable
 
-from acetone_nnet.generator.layers.reduce import ReduceMean
+from acetone_nnet.generator.layers.resize import ResizeLinear
 
-ReduceMeanVariant = Callable[[ReduceMean, str], ReduceMean]
+ResizeLinearVariant = Callable[[ResizeLinear, str], ResizeLinear]
 
 
-class ReduceMeanFactory:
-    """Build ReduceMean implementation layers."""
+class ResizeLinearFactory:
+    """Build ResizeLinear implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
-        self.implementations: dict[str | None, ReduceMeanVariant] = {
+        """Build default ResizeLinear layer factory."""
+        self.implementations: dict[str | None, ResizeLinearVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known ReduceMean implementations."""
+        """Return known ResizeLinear implementations."""
         return [i for i in self.implementations if i is not None]
 
-    def register_implementation(self, name: str, variant: ReduceMeanVariant) -> None:
-        """Register a new ReduceMean variant."""
+    def register_implementation(self, name: str, variant: ResizeLinearVariant) -> None:
+        """Register a new ResizeLinear variant."""
         if name in self.implementations:
-            msg = f"ReduceMean variant {name} already exists."
+            msg = f"ResizeLinear variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
-    def __call__(self, layer: ReduceMean, version: str) -> ReduceMean:
-        """Create a ReduceMean implementation layer for the required implementation."""
+    def __call__(self, layer: ResizeLinear, version: str) -> ResizeLinear:
+        """Create a ResizeLinear implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown ReduceMean variant {version}."
+            msg = f"Unknown ResizeLinear variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)
 
 
-reduce_mean_factory = ReduceMeanFactory()
+resize_linear_factory = ResizeLinearFactory()

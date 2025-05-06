@@ -20,10 +20,11 @@
 """
 
 from . import debug, generator
+from .cli.compare import cli_compare
+from .cli.generate import cli_acetone
 from .generator import (
     ActivationFunctions,
     Add,
-    AddBias,
     Average,
     AveragePooling2D,
     BatchNormalization,
@@ -35,12 +36,11 @@ from .generator import (
     Conv2D,
     Conv2D6loops,
     Conv2DGemm,
+    Conv2DGemmTarget,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
-    Conv2DGemmTarget,
     Dense,
     Divide,
-    Dot,
     EdgePad,
     Exponential,
     Flatten,
@@ -79,6 +79,7 @@ from .generator import (
 
 __all__ = (
     "cli_compare",
+    "cli_acetone",
     generator.__all__,
     debug.__all__,
 )

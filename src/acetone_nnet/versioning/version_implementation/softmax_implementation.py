@@ -29,26 +29,26 @@ class SoftmaxFactory:
     """Build Softmax implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
+        """Build default Softmax layer factory."""
         self.implementations: dict[str | None, SoftmaxVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known convolution implementations."""
+        """Return known Softmax implementations."""
         return [i for i in self.implementations if i is not None]
 
     def register_implementation(self, name: str, variant: SoftmaxVariant) -> None:
         """Register a new Softmax variant."""
         if name in self.implementations:
-            msg = f"Convolution variant {name} already exists."
+            msg = f"Softmax variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
     def __call__(self, layer: Softmax, version: str) -> Softmax:
-        """Create a Convolution implementation layer for the required implementation."""
+        """Create a Softmax implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown convolution variant {version}."
+            msg = f"Unknown Softmax variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)

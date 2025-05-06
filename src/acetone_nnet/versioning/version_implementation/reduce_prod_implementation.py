@@ -29,26 +29,26 @@ class ReduceProdFactory:
     """Build ReduceProd implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
+        """Build default ReduceProd layer factory."""
         self.implementations: dict[str | None, ReduceProdVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known convolution implementations."""
+        """Return known ReduceProd implementations."""
         return [i for i in self.implementations if i is not None]
 
     def register_implementation(self, name: str, variant: ReduceProdVariant) -> None:
         """Register a new ReduceProd variant."""
         if name in self.implementations:
-            msg = f"Convolution variant {name} already exists."
+            msg = f"ReduceProd variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
     def __call__(self, layer: ReduceProd, version: str) -> ReduceProd:
-        """Create a Convolution implementation layer for the required implementation."""
+        """Create a ReduceProd implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown convolution variant {version}."
+            msg = f"Unknown ReduceProd variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)

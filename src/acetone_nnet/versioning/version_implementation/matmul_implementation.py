@@ -29,26 +29,26 @@ class MatMulFactory:
     """Build MatMul implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
+        """Build default MatMul layer factory."""
         self.implementations: dict[str | None, MatMulVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known convolution implementations."""
+        """Return known MatMul implementations."""
         return [i for i in self.implementations if i is not None]
 
     def register_implementation(self, name: str, variant: MatMulVariant) -> None:
         """Register a new MatMul variant."""
         if name in self.implementations:
-            msg = f"Convolution variant {name} already exists."
+            msg = f"MatMul variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
     def __call__(self, layer: MatMul, version: str) -> MatMul:
-        """Create a Convolution implementation layer for the required implementation."""
+        """Create a MatMul implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown convolution variant {version}."
+            msg = f"Unknown MatMul variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)

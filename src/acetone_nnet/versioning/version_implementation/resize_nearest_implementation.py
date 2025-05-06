@@ -1,4 +1,4 @@
-"""ReduceMean versioning manager.
+"""ResizeNearest versioning manager.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -20,38 +20,38 @@
 """
 from collections.abc import Callable
 
-from acetone_nnet.generator.layers.reduce import ReduceMean
+from acetone_nnet.generator.layers.resize import ResizeNearest
 
-ReduceMeanVariant = Callable[[ReduceMean, str], ReduceMean]
+ResizeNearestVariant = Callable[[ResizeNearest, str], ResizeNearest]
 
 
-class ReduceMeanFactory:
-    """Build ReduceMean implementation layers."""
+class ResizeNearestFactory:
+    """Build ResizeNearest implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
-        self.implementations: dict[str | None, ReduceMeanVariant] = {
+        """Build default ResizeNearest layer factory."""
+        self.implementations: dict[str | None, ResizeNearestVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known ReduceMean implementations."""
+        """Return known ResizeNearest implementations."""
         return [i for i in self.implementations if i is not None]
 
-    def register_implementation(self, name: str, variant: ReduceMeanVariant) -> None:
-        """Register a new ReduceMean variant."""
+    def register_implementation(self, name: str, variant: ResizeNearestVariant) -> None:
+        """Register a new ResizeNearest variant."""
         if name in self.implementations:
-            msg = f"ReduceMean variant {name} already exists."
+            msg = f"ResizeNearest variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
-    def __call__(self, layer: ReduceMean, version: str) -> ReduceMean:
-        """Create a ReduceMean implementation layer for the required implementation."""
+    def __call__(self, layer: ResizeNearest, version: str) -> ResizeNearest:
+        """Create a ResizeNearest implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown ReduceMean variant {version}."
+            msg = f"Unknown ResizeNearest variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)
 
 
-reduce_mean_factory = ReduceMeanFactory()
+resize_nearest_factory = ResizeNearestFactory()

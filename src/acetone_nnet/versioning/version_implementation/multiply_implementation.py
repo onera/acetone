@@ -1,4 +1,4 @@
-"""ReduceMean versioning manager.
+"""Multiply versioning manager.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -20,38 +20,38 @@
 """
 from collections.abc import Callable
 
-from acetone_nnet.generator.layers.reduce import ReduceMean
+from acetone_nnet.generator.layers.broadcast import Multiply
 
-ReduceMeanVariant = Callable[[ReduceMean, str], ReduceMean]
+MultiplyVariant = Callable[[Multiply, str], Multiply]
 
 
-class ReduceMeanFactory:
-    """Build ReduceMean implementation layers."""
+class MultiplyFactory:
+    """Build Multiply implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
-        self.implementations: dict[str | None, ReduceMeanVariant] = {
+        """Build default Multiply layer factory."""
+        self.implementations: dict[str | None, MultiplyVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known ReduceMean implementations."""
+        """Return known Multiply implementations."""
         return [i for i in self.implementations if i is not None]
 
-    def register_implementation(self, name: str, variant: ReduceMeanVariant) -> None:
-        """Register a new ReduceMean variant."""
+    def register_implementation(self, name: str, variant: MultiplyVariant) -> None:
+        """Register a new Multiply variant."""
         if name in self.implementations:
-            msg = f"ReduceMean variant {name} already exists."
+            msg = f"Multiply variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
-    def __call__(self, layer: ReduceMean, version: str) -> ReduceMean:
-        """Create a ReduceMean implementation layer for the required implementation."""
+    def __call__(self, layer: Multiply, version: str) -> Multiply:
+        """Create a Multiply implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown ReduceMean variant {version}."
+            msg = f"Unknown Multiply variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)
 
 
-reduce_mean_factory = ReduceMeanFactory()
+multiply_factory = MultiplyFactory()

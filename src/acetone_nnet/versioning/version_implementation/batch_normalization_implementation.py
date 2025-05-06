@@ -29,26 +29,26 @@ class BatchNormalizationFactory:
     """Build BatchNormalization implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
+        """Build default BatchNormalization layer factory."""
         self.implementations: dict[str | None, BatchNormalizationVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known convolution implementations."""
+        """Return known BatchNormalization implementations."""
         return [i for i in self.implementations if i is not None]
 
     def register_implementation(self, name: str, variant: BatchNormalizationVariant) -> None:
         """Register a new BatchNormalization variant."""
         if name in self.implementations:
-            msg = f"Convolution variant {name} already exists."
+            msg = f"BatchNormalization variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
     def __call__(self, layer: BatchNormalization, version: str) -> BatchNormalization:
-        """Create a Convolution implementation layer for the required implementation."""
+        """Create a BatchNormalization implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown convolution variant {version}."
+            msg = f"Unknown BatchNormalization variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)

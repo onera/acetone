@@ -43,7 +43,6 @@ from acetone_nnet.generator.layers import (
     Conv2DIndirectGemm,
     Conv2DStdGemm,
     Dense,
-    Dot,
     Gather,
     GatherElements,
     Gemm,
@@ -99,7 +98,6 @@ class CodeGenerator(ABC):
         self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
-
         self.data_type = dtype
         self.maxpath = maxpath
         self.data_format = data_format
@@ -208,6 +206,16 @@ class CodeGenerator(ABC):
             "ReduceMin": "default",
             "ReduceProd": "default",
             "ReduceSum": "default",
+            "ResizeCubic": "default",
+            "ResizeLinear": "default",
+            "ResizeNearest": "default",
+            "Add": "default",
+            "Average": "default",
+            "Divide": "default",
+            "Maximum": "default",
+            "Minimum": "default",
+            "Multiply": "default",
+            "Subtract": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified
@@ -616,7 +624,7 @@ class CodeGenerator(ABC):
 
         self.l_size_max = max((i.size for i in self.layers), default=1)
 
-        if any(isinstance(i, Dot | Pooling2D | Conv2D | Gemm) for i in self.layers):
+        if any(isinstance(i, Pooling2D | Conv2D | Gemm) for i in self.layers):
             mustach_hash["p"] = True
 
         if any(

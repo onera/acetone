@@ -1,4 +1,4 @@
-"""ReduceMean versioning manager.
+"""Minimum versioning manager.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -20,38 +20,38 @@
 """
 from collections.abc import Callable
 
-from acetone_nnet.generator.layers.reduce import ReduceMean
+from acetone_nnet.generator.layers.broadcast import Minimum
 
-ReduceMeanVariant = Callable[[ReduceMean, str], ReduceMean]
+MinimumVariant = Callable[[Minimum, str], Minimum]
 
 
-class ReduceMeanFactory:
-    """Build ReduceMean implementation layers."""
+class MinimumFactory:
+    """Build Minimum implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
-        self.implementations: dict[str | None, ReduceMeanVariant] = {
+        """Build default Minimum layer factory."""
+        self.implementations: dict[str | None, MinimumVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known ReduceMean implementations."""
+        """Return known Minimum implementations."""
         return [i for i in self.implementations if i is not None]
 
-    def register_implementation(self, name: str, variant: ReduceMeanVariant) -> None:
-        """Register a new ReduceMean variant."""
+    def register_implementation(self, name: str, variant: MinimumVariant) -> None:
+        """Register a new Minimum variant."""
         if name in self.implementations:
-            msg = f"ReduceMean variant {name} already exists."
+            msg = f"Minimum variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
-    def __call__(self, layer: ReduceMean, version: str) -> ReduceMean:
-        """Create a ReduceMean implementation layer for the required implementation."""
+    def __call__(self, layer: Minimum, version: str) -> Minimum:
+        """Create a Minimum implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown ReduceMean variant {version}."
+            msg = f"Unknown Minimum variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)
 
 
-reduce_mean_factory = ReduceMeanFactory()
+minimum_factory = MinimumFactory()

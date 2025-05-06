@@ -19,48 +19,30 @@
 ******************************************************************************
 """
 
-import math
-
-import numpy as np
 import pystache
 from typing_extensions import Self
 
-from .Resize import Resize
+from acetone_nnet.versioning.version_implementation.resize_nearest_implementation import (
+    resize_nearest_factory,
+)
+
+from .ResizeNearest import ResizeNearest
 
 
-# The mode Nearest of the Resize layers.
-# The value in the new tensor is found by applying an rounding operation
-class ResizeNearest(Resize):
-    """ResizeNearest layer class."""
+# The value in the output tensor are found thanks to a (bi)nearest interpolation
+class ResizeNearestDefault(ResizeNearest):
+    """ResizeNearest default layer class."""
 
-    def __init__(self: Self, **kwargs: int) -> None:
-        """Build a ResizeNearest layer."""
+    def __init__(self: Self,version:str, **kwargs: int) -> None:
+        """Build a ResizeNearest layer with default implementation."""
         super().__init__(**kwargs)
+        self.name = "ResizeNearest"
         self.mode = "nearest"
+        self.version = version
         self.nearest_mode_mapping = {"round_prefer_floor": self.round_prefer_floor,
                                      "round_prefer_ceil": self.round_prefer_ceil,
                                      "floor": self.floor,
                                      "ceil": self.ceil}
-
-        self.nearest_mode_implem_mapping = {"round_prefer_floor": self.round_prefer_floor_implem,
-                                            "round_prefer_ceil": self.round_prefer_ceil_implem,
-                                            "floor": math.floor,
-                                            "ceil": math.ceil}
-
-        ####### Checking the instantiation#######
-
-        ### Checking argument type ###
-        if type(self.nearest_mode) is not str:
-            msg = "Error: nearest mode in Resize Nearest (must be string)"
-            raise TypeError(msg)
-
-        ### Checking value consistency ###
-        if self.nearest_mode not in ["round_prefer_floor",
-                                     "round_prefer_ceil",
-                                     "floor",
-                                     "ceil"]:
-            msg = f"Error: nearest mode value in Resize Nearest ({self.nearest_mode})"
-            raise ValueError(msg)
 
     # Defining the several method to choose the nearest
     def floor(self: Self, x: str, y: str) -> str:
@@ -74,18 +56,6 @@ class ResizeNearest(Resize):
     def round_prefer_floor(self: Self, x: str, y: str) -> str:
         """Generate round prefer floor code."""
         return f"{x} = floor(ceil(2*{y})/2);"
-
-    def round_prefer_floor_implem(self: Self, x: int) -> float:
-        """Compute round prefer floor code."""
-        return math.floor(math.ceil(2 * x) / 2)
-
-    def round_prefer_ceil(self: Self, x: str, y: str) -> str:
-        """Generate round prefer ceil code."""
-        return f"{x} = ceil(floor(2*{y})/2);"
-
-    def round_prefer_ceil_implem(self: Self, x: int) -> float:
-        """Compute round prefer ceil code."""
-        return math.ceil(math.floor(2 * x) / 2)
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
@@ -124,20 +94,35 @@ class ResizeNearest(Resize):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
-    ) -> np.ndarray:
-        """Compute output of layer."""
-        input_array = input_array.reshape(self.input_channels, self.input_height, self.input_width)
-        output = np.zeros((self.output_channels, self.output_height, self.output_width))
-        for f in range(self.output_channels):
-            for i in range(self.output_height):
-                for j in range(self.output_width):
-                    x = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](i, 2)
-                    x0 = self.nearest_mode_implem_mapping[self.nearest_mode](x)
-                    y = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](j, 3)
-                    y0 = self.nearest_mode_implem_mapping[self.nearest_mode](y)
+def resize_nearest_default_implementation(
+        old_layer: ResizeNearest,
+        version: str,
+) -> ResizeNearestDefault:
+    """Create a ResizeNearest_Default layer using the parameters of old_layer."""
+    return ResizeNearestDefault(
+        version=version,
+        idx=old_layer.idx,
+        size=old_layer.size,
+        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
+        activation_function=old_layer.activation_function,
+        axes=old_layer.axes,
+        coordinate_transformation_mode=old_layer.coordinate_transformation_mode,
+        exclude_outside=old_layer.exclude_outside,
+        keep_aspect_ratio_policy=old_layer.keep_aspect_ratio_policy,
+        boolean_resize=True,
+        target_size=old_layer.scale,
+        roi=old_layer.roi,
+        extrapolation_value=old_layer.extrapolation_value,
+        nearest_mode=old_layer.nearest_mode,
+        cubic_coeff_a=old_layer.cubic_coeff_a,
+    )
 
-                    output[f, i, j] = input_array[f, x0, y0]
-        return output
+resize_nearest_factory.register_implementation(
+    None,
+    resize_nearest_default_implementation,
+)
+
+resize_nearest_factory.register_implementation(
+    "default",
+    resize_nearest_default_implementation,
+)

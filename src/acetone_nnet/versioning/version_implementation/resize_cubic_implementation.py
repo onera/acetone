@@ -1,4 +1,4 @@
-"""ReduceMean versioning manager.
+"""ResizeCubic versioning manager.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -20,38 +20,38 @@
 """
 from collections.abc import Callable
 
-from acetone_nnet.generator.layers.reduce import ReduceMean
+from acetone_nnet.generator.layers.resize import ResizeCubic
 
-ReduceMeanVariant = Callable[[ReduceMean, str], ReduceMean]
+ResizeCubicVariant = Callable[[ResizeCubic, str], ResizeCubic]
 
 
-class ReduceMeanFactory:
-    """Build ReduceMean implementation layers."""
+class ResizeCubicFactory:
+    """Build ResizeCubic implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
-        self.implementations: dict[str | None, ReduceMeanVariant] = {
+        """Build default ResizeCubic layer factory."""
+        self.implementations: dict[str | None, ResizeCubicVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known ReduceMean implementations."""
+        """Return known ResizeCubic implementations."""
         return [i for i in self.implementations if i is not None]
 
-    def register_implementation(self, name: str, variant: ReduceMeanVariant) -> None:
-        """Register a new ReduceMean variant."""
+    def register_implementation(self, name: str, variant: ResizeCubicVariant) -> None:
+        """Register a new ResizeCubic variant."""
         if name in self.implementations:
-            msg = f"ReduceMean variant {name} already exists."
+            msg = f"ResizeCubic variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
-    def __call__(self, layer: ReduceMean, version: str) -> ReduceMean:
-        """Create a ReduceMean implementation layer for the required implementation."""
+    def __call__(self, layer: ResizeCubic, version: str) -> ResizeCubic:
+        """Create a ResizeCubic implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown ReduceMean variant {version}."
+            msg = f"Unknown ResizeCubic variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)
 
 
-reduce_mean_factory = ReduceMeanFactory()
+resize_cubic_factory = ResizeCubicFactory()

@@ -29,26 +29,26 @@ class FlattenFactory:
     """Build Flatten implementation layers."""
 
     def __init__(self) -> None:
-        """Build default convolution layer factory."""
+        """Build default Flatten layer factory."""
         self.implementations: dict[str | None, FlattenVariant] = {
         }
 
     @property
     def list_implementations(self) -> list[str]:
-        """Return known convolution implementations."""
+        """Return known Flatten implementations."""
         return [i for i in self.implementations if i is not None]
 
     def register_implementation(self, name: str, variant: FlattenVariant) -> None:
         """Register a new Flatten variant."""
         if name in self.implementations:
-            msg = f"Convolution variant {name} already exists."
+            msg = f"Flatten variant {name} already exists."
             raise KeyError(msg)
         self.implementations[name] = variant
 
     def __call__(self, layer: Flatten, version: str) -> Flatten:
-        """Create a Convolution implementation layer for the required implementation."""
+        """Create a Flatten implementation layer for the required implementation."""
         if version not in self.implementations:
-            msg = f"Unknown convolution variant {version}."
+            msg = f"Unknown Flatten variant {version}."
             raise KeyError(msg)
 
         return self.implementations[version](layer, version)

@@ -39,17 +39,23 @@ from . import (
     tile,
     transpose,
 )
-from .AddBias import AddBias
 from .batch_normalization import BatchNormalization, BatchNormalizationDefault
 from .broadcast import (
     Add,
+    AddDefault,
     Average,
+    AverageDefault,
     Broadcast,
     Divide,
+    DivideDefault,
     Maximum,
+    MaximumDefault,
     Minimum,
+    MinimumDefault,
     Multiply,
+    MultiplyDefault,
     Subtract,
+    SubtractDefault,
 )
 from .concatenate import Concatenate, ConcatenateDefault
 from .convolution import (
@@ -61,7 +67,6 @@ from .convolution import (
     Conv2DStdGemm,
 )
 from .dense import Dense, DenseDefault
-from .Dot import Dot
 from .flatten import Flatten, FlattenDefault
 from .gather import Gather, GatherDefault
 from .gather_elements import GatherElements, GatherElementsDefault
@@ -83,15 +88,21 @@ from .reduce import (
     ReduceSum,
     ReduceSumDefault,
 )
-from .resize import Resize, ResizeCubic, ResizeLinear, ResizeNearest
+from .resize import (
+    Resize,
+    ResizeCubic,
+    ResizeCubicDefault,
+    ResizeLinear,
+    ResizeLinearDefault,
+    ResizeNearest,
+    ResizeNearestDefault,
+)
 from .softmax import Softmax, SoftmaxDefault
 from .tile import Tile, TileDefault
 from .transpose import Transpose, TransposeDefault
 
 __all__ = (
-    "AddBias",
     dense.__all__,
-    "Dot",
     flatten.__all__,
     gather.__all__,
     gemm.__all__,

@@ -21,6 +21,12 @@
 from collections.abc import Callable
 
 from acetone_nnet.generator import Layer
+from acetone_nnet.versioning.version_implementation.add_implementation import (
+    add_factory,
+)
+from acetone_nnet.versioning.version_implementation.average_implementation import (
+    average_factory,
+)
 from acetone_nnet.versioning.version_implementation.batch_normalization_implementation import (
     batch_normalization_factory,
 )
@@ -32,6 +38,9 @@ from acetone_nnet.versioning.version_implementation.conv_implementation import (
 )
 from acetone_nnet.versioning.version_implementation.dense_implementation import (
     dense_factory,
+)
+from acetone_nnet.versioning.version_implementation.divide_implementation import (
+    divide_factory,
 )
 from acetone_nnet.versioning.version_implementation.flatten_implementation import (
     flatten_factory,
@@ -51,6 +60,15 @@ from acetone_nnet.versioning.version_implementation.input_implementation import 
 from acetone_nnet.versioning.version_implementation.matmul_implementation import (
     matmul_factory,
 )
+from acetone_nnet.versioning.version_implementation.maximum_implementation import (
+    maximum_factory,
+)
+from acetone_nnet.versioning.version_implementation.minimum_implementation import (
+    minimum_factory,
+)
+from acetone_nnet.versioning.version_implementation.multiply_implementation import (
+    multiply_factory,
+)
 from acetone_nnet.versioning.version_implementation.reduce_max_implementation import (
     reduce_max_factory,
 )
@@ -66,8 +84,20 @@ from acetone_nnet.versioning.version_implementation.reduce_prod_implementation i
 from acetone_nnet.versioning.version_implementation.reduce_sum_implementation import (
     reduce_sum_factory,
 )
+from acetone_nnet.versioning.version_implementation.resize_cubic_implementation import (
+    resize_cubic_factory,
+)
+from acetone_nnet.versioning.version_implementation.resize_linear_implementation import (
+    resize_linear_factory,
+)
+from acetone_nnet.versioning.version_implementation.resize_nearest_implementation import (
+    resize_nearest_factory,
+)
 from acetone_nnet.versioning.version_implementation.softmax_implementation import (
     softmax_factory,
+)
+from acetone_nnet.versioning.version_implementation.subtract_implementation import (
+    subtract_factory,
 )
 from acetone_nnet.versioning.version_implementation.tile_implementation import (
     tile_factory,
@@ -103,6 +133,16 @@ def versioning(
         "ReduceMin":reduce_min_factory,
         "ReduceProd":reduce_prod_factory,
         "ReduceSum":reduce_sum_factory,
+        "ResizeCubic":resize_cubic_factory,
+        "ResizeLinear":resize_linear_factory,
+        "ResizeNearest":resize_nearest_factory,
+        "Add":add_factory,
+        "Average":average_factory,
+        "Divide":divide_factory,
+        "Maximum":maximum_factory,
+        "Minimum":minimum_factory,
+        "Multiply":multiply_factory,
+        "Subtract":subtract_factory,
     }
 
     keys = list(version.keys())

@@ -1,4 +1,4 @@
-"""Linear Resize base type definition.
+"""Cubic Resize base type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -19,25 +19,25 @@
 ******************************************************************************
 """
 
-import math
-
-import numpy as np
 import pystache
-from typing_extensions import Self
+from typing_extensions import Any, Self
 
-from .Resize import Resize
+from acetone_nnet.versioning.version_implementation.resize_cubic_implementation import (
+    resize_cubic_factory,
+)
+
+from .ResizeCubic import ResizeCubic
 
 
-# The value in the output tensor are found thanks to a (bi)linear interpolation
-class ResizeLinear(Resize):
-    """ResizeLinear layer class."""
+# The Cubic mode of the Resize layers
+# Use a (bi)cubic interpolation to find the new value
+class ResizeCubicDefault(ResizeCubic):
+    """ResizeCubic layer class."""
 
-    def __init__(self: Self, **kwargs: int) -> None:
-        """Build a ResizeLinear layer."""
+    def __init__(self: Self, version: str, **kwargs: Any) -> None:
+        """Build a ResizeCubic layer with default implementation."""
         super().__init__(**kwargs)
-        self.mode = "linear"
-        self.template_dict = {"1D": self.template_path / "layers" / "Resize" / "template_ResizeLinear1D.c.tpl",
-                              "2D": self.template_path / "layers" / "Resize" / "template_ResizeLinear2D.c.tpl"}
+        self.version = version
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
@@ -53,29 +53,25 @@ class ResizeLinear(Resize):
         mustach_hash["size"] = self.size
 
         if self.activation_function.name != "linear":
-            mustach_hash["linear"] = True
             mustach_hash["activation_function"] = self.activation_function.write_activation_str(
                 f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
 
+        mustach_hash["cubic_coeff_a"] = self.cubic_coeff_a
         mustach_hash["output_channels"] = self.output_channels
         mustach_hash["output_height"] = self.output_height
         mustach_hash["output_width"] = self.output_width
 
         if (self.input_height == 1) and (self.input_width > 1):
-            mustach_hash["len_dimension"] = self.input_width - 1
             mustach_hash["dimension"] = self.input_width
             mustach_hash["coordinate_transformation_mode"] = self.coordinate_transformation_mode_mapping[
                 self.coordinate_transformation_mode]("j", 3, "x")
             dimension = "1D"
         elif (self.input_height > 1) and (self.input_width == 1):
-            mustach_hash["len_dimension"] = self.input_height - 1
             mustach_hash["dimension"] = self.input_height
             mustach_hash["coordinate_transformation_mode"] = self.coordinate_transformation_mode_mapping[
                 self.coordinate_transformation_mode]("i", 2, "x")
             dimension = "1D"
         elif (self.input_height > 1) and (self.input_width > 1):
-            mustach_hash["len_height"] = self.input_height - 1
-            mustach_hash["len_width"] = self.input_width - 1
             mustach_hash["input_width"] = self.input_width
             mustach_hash["input_height"] = self.input_height
             mustach_hash["coordinate_transformation_mode_x"] = self.coordinate_transformation_mode_mapping[
@@ -96,34 +92,36 @@ class ResizeLinear(Resize):
 
         return pystache.render(template, mustach_hash)
 
-    def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
-    ) -> np.ndarray:
-        """Compute output of layer."""
-        input_array = input_array.reshape(self.input_channels, self.input_height, self.input_width)
-        output = np.zeros((self.output_channels, self.output_height, self.output_width))
-        for f in range(self.output_channels):
-            for i in range(self.output_height):
-                for j in range(self.output_width):
-                    x = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](i, 2)
-                    x = np.clip(x, 0, self.input_height - 1)
-                    y = self.coordinate_transformation_mode_implem_mapping[self.coordinate_transformation_mode](j, 3)
-                    y = np.clip(y, 0, self.input_width - 1)
 
-                    x0, x1 = math.floor(x), math.floor(x) + 1
-                    y0, y1 = math.floor(y), math.floor(y) + 1
+def resize_cubic_default_implementation(
+        old_layer: ResizeCubic,
+        version: str,
+) -> ResizeCubicDefault:
+    """Create a ResizeCubic_Default layer using the parameters of old_layer."""
+    return ResizeCubicDefault(
+        version=version,
+        idx=old_layer.idx,
+        size=old_layer.size,
+        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
+        activation_function=old_layer.activation_function,
+        axes=old_layer.axes,
+        coordinate_transformation_mode=old_layer.coordinate_transformation_mode,
+        exclude_outside=old_layer.exclude_outside,
+        keep_aspect_ratio_policy=old_layer.keep_aspect_ratio_policy,
+        boolean_resize=True,
+        target_size=old_layer.scale,
+        roi=old_layer.roi,
+        extrapolation_value=old_layer.extrapolation_value,
+        nearest_mode=old_layer.nearest_mode,
+        cubic_coeff_a=old_layer.cubic_coeff_a,
+    )
 
-                    f11 = input_array[f, x0, y0]
-                    f21 = 0 if x1 >= self.input_height else input_array[f, x1, y0]
-                    if x1 >= self.input_height or y1 >= self.input_width:
-                        f22 = 0
-                    else:
-                        f22 = input_array[f, x1, y1]
-                    f12 = 0 if y1 >= self.input_width else input_array[f, x0, y1]
+resize_cubic_factory.register_implementation(
+    None,
+    resize_cubic_default_implementation,
+)
 
-                    output[f, i, j] = ((f11 * (x1 - x) * (y1 - y) + f21 * (x - x0) * (y1 - y)
-                                        + f12 * (x1 - x) * (y - y0) + f22 * (x - x0) * (y - y0))
-                                       / ((x1 - x0) * (y1 - y0)))
-
-        return output
+resize_cubic_factory.register_implementation(
+    "default",
+    resize_cubic_default_implementation,
+)
