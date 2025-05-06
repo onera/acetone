@@ -68,7 +68,7 @@ class CodeGenerator(ABC):
 
     def __init__(
         self: Self,
-        file: Any,
+        file: str | Path | onnx.ModelProto | Functional | Sequential,
         test_dataset: str | np.ndarray | Path | None = None,
         function_name: str = "inference",
         target: str = "generic",
@@ -77,6 +77,7 @@ class CodeGenerator(ABC):
         versions: dict[int, str] | dict[str, str] | None = None,
         normalize: bool | str = False,
         debug_mode: str | None = None,
+        verbose: bool = True,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -84,6 +85,7 @@ class CodeGenerator(ABC):
         self.function_name = function_name
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
+        self.verbose = verbose
 
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
@@ -99,13 +101,13 @@ class CodeGenerator(ABC):
         self.layers: list[Any] = l
         self.versions = self._select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
-
         self.data_type = dtype
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        self.nb_tests = int(nb_tests)
+        self.read_ext_input = int(nb_tests) == 0
+        self.nb_tests = int(nb_tests) if not self.read_ext_input else 1
         self.test_dataset = self._initialise_dataset(
             test_dataset,
             int(nb_tests),
@@ -119,8 +121,9 @@ class CodeGenerator(ABC):
             "main.c",
             "Makefile",
             "test_dataset.h",
-            "test_dataset.c",
         ]
+        if not self.read_ext_input:
+            self.files_to_gen.append("test_dataset.c")
 
         self.target = target
         if self.target != "generic":
@@ -155,6 +158,10 @@ class CodeGenerator(ABC):
         if not (self.debug_mode is None or isinstance(self.debug_mode, str)):
             msg = "Error: debug mode type.\n Must be: string or None"
             raise TypeError(msg)
+        if not isinstance(self.verbose, bool):
+            msg = "Error: verbose type.\n Must be: bool"
+            raise TypeError(msg)
+
 
         ### Checking value consistency ###
 
@@ -416,7 +423,7 @@ class CodeGenerator(ABC):
         s += "}"
         return s
 
-    def generate_testdataset_files(
+    def generate_test_dataset_files(
         self: Self,
         output_dir: Path,
     ) -> None:
@@ -425,8 +432,8 @@ class CodeGenerator(ABC):
         template = (
             Path(self.template_path) / "template_test_dataset_header.c.tpl"
         ).read_text()
-        with Path.open(output_dir / "test_dataset.h", "w+") as testdataset_header:
-            testdataset_header.write(
+        with Path.open(output_dir / "test_dataset.h", "w+") as test_dataset_header:
+            test_dataset_header.write(
                 pystache.render(
                     template,
                     {
@@ -434,28 +441,30 @@ class CodeGenerator(ABC):
                         "nb_inputs": self.layers[0].size,
                         "nb_outputs": self.layers[-1].size,
                         "data_type": self.data_type,
+                        "read_input": self.read_ext_input,
                     },
                 ),
             )
 
-        # Generate test source file
-        dataset = "{"
-        if self.test_dataset is not None:
-            dataset += ",".join(
-                map(CodeGenerator.flatten_array_orderc, self.test_dataset),
-            )
-        dataset += "};\n"
+        if not self.read_ext_input:
+            # Generate test source file
+            dataset = "{"
+            if self.test_dataset is not None:
+                dataset += ",".join(
+                    map(CodeGenerator.flatten_array_orderc, self.test_dataset),
+                )
+            dataset += "};\n"
 
-        template = (
-            Path(self.template_path) / "template_test_dataset_source.c.tpl"
-        ).read_text()
-        with Path.open(output_dir / "test_dataset.c", "w+") as testdataset_source:
-            testdataset_source.write(
-                pystache.render(
-                    template,
-                    {"data_type": self.data_type, "dataset": dataset},
-                ),
-            )
+            template = (
+                Path(self.template_path) / "template_test_dataset_source.c.tpl"
+            ).read_text()
+            with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
+                test_dataset_source.write(
+                    pystache.render(
+                        template,
+                        {"data_type": self.data_type, "dataset": dataset},
+                    ),
+                )
 
     def generate_main_file(
         self: Self,
@@ -464,7 +473,12 @@ class CodeGenerator(ABC):
         """Generate entry point C code."""
         template = (Path(self.template_path) / "template_main_file.c.tpl").read_text()
         with (output_dir / "main.c").open("a+") as main_file:
-            main_file.write(pystache.render(template, {"data_type": self.data_type}))
+            main_file.write(
+                pystache.render(
+                    template,
+                    {"data_type": self.data_type, "read_input": self.read_ext_input, "verbose":self.verbose},
+                ),
+            )
 
     def generate_makefile(
         self: Self,
@@ -506,22 +520,30 @@ class CodeGenerator(ABC):
                 raise FileExistsError(c_files_directory / file)
 
         self.generate_function_source_file(c_files_directory)
-        print("Generated function source file.")
+        if self.verbose:
+            print("Generated function source file.")
         self.generate_function_header_file(c_files_directory)
-        print("Generated function header file.")
+        if self.verbose:
+            print("Generated function header file.")
         self.generate_globalvars_file(c_files_directory)
-        print("Generated globalvars .c file.")
+        if self.verbose:
+            print("Generated globalvars .c file.")
         self.generate_main_file(c_files_directory)
-        print("Generated main file.")
+        if self.verbose:
+            print("Generated main file.")
         self.generate_makefile(c_files_directory)
-        print("Generated Makefile.")
-        self.generate_testdataset_files(c_files_directory)
-        print("Generated testdataset files.")
+        if self.verbose:
+            print("Generated Makefile.")
+        self.generate_test_dataset_files(c_files_directory)
+        if self.verbose:
+            print("Generated test_dataset files.")
         if self.target != "generic":
             self.generate_target_file(c_files_directory)
-            print("Generated target file.")
+            if self.verbose:
+                print("Generated target file.")
             self.generate_target_header_file(c_files_directory)
-            print("Generated target header file.")
+            if self.verbose:
+                print("Generated target header file.")
 
     def generate_target_file(self: Self, output_dir: Path) -> None:
         print("Generation of target file")
