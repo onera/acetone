@@ -5,7 +5,6 @@ We present here a list of notebooks detailing different fonctionalities of the f
 * [ACETONE tutorial 1](./tutorial1_introduction.ipynb)
 * [ACETONE tutorial 2](./tutorial2_using_variants.ipynb)
 * [ACETONE tutorial 3](./tutorial3_using_debug_mode.ipynb)
-* [ACAS Case Study]()
 
 ## ACETONE Tutorial 1: Introduction to the framework
 

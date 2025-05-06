@@ -195,8 +195,11 @@ class CodeGenerator(ABC):
         else:
             # Select the implementation based in priority on layer id, or type
             for layer in self.layers:
+                if layer.name in default_implementations:
+                    selected_implementations[layer.idx] = default_implementations[layer.name]
                 for k in [layer.idx, layer.name]:
                     if k in versions:
+                        print(k)
                         selected_implementations[layer.idx] = versions[k]
                         break
         return selected_implementations
