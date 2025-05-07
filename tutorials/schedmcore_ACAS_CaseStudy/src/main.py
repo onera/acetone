@@ -82,7 +82,7 @@ def get_coordinates(trace, delta_t):
 def run_simulation(system_name, path_initial_states, directory_results, mode):
     # Instantiate the configuration parsers and read the systems config files
     config_systems = configparser.ConfigParser()
-    config_systems.read('/tmp_user/ldtim610h/yaitaiss/schedmcore_ACAS_CaseStudy/src/config_systems.ini')
+    config_systems.read('./schedmcore_ACAS_CaseStudy/src/config_systems.ini')
 
     # System
     if system_name == 'acasxu':
