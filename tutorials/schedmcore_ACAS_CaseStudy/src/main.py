@@ -25,7 +25,6 @@ import pandas as pd
 import numpy as np
 import random
 import json
-import matplotlib.pyplot as plt
 
 # local imports
 from .simulation import simulate
@@ -116,6 +115,7 @@ def run_simulation(system_name, path_initial_states, directory_results, mode):
 
     # (IV) Simulate each initial state in df_initial_states
     n_initial_states = len(df_initial_states.index)
+    coordinates = []
     for n in range(n_initial_states):
 
         # Retrieve useful information for the simulation
@@ -154,12 +154,10 @@ def run_simulation(system_name, path_initial_states, directory_results, mode):
             f_json.write(json_data)
 
         x_own, y_own, x_intruder, y_intruder = get_coordinates(trace, execution_period)
-        plt.plot(x_intruder, y_intruder, label='Intruder')
-        plt.plot(x_own, y_own, label='Own')
-        plt.legend()
-        plt.show()
+        coordinates.append([x_own, y_own, x_intruder, y_intruder])
 
     clean_network(nnets)
+    return coordinates
 
 
 def main():
