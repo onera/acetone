@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     {
         for (j = 0; j < nn_input_size; ++j)
         {
-            fscanf(input_file, "%f", &nn_test_inputs[0][j]);
+            fscanf(input_file, "%f", &nn_test_inputs[i][j]);
         }
     }
     fclose(input_file);

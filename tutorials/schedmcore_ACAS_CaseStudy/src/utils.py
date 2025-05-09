@@ -61,7 +61,7 @@ def parse_nnet_format(path_nnet, act_func):
     """
     tempdir = tempfile.TemporaryDirectory()
     tempdir_name = tempdir.name
-    generator = an.CodeGenerator(file=path_nnet, nb_tests=0, verbose=False)
+    generator = an.CodeGenerator(file=path_nnet, nb_tests=1, verbose=False, external_input=True)
     generator.generate_c_files(tempdir_name)
 
     cmd = ["make", "-C", tempdir_name, "all"]
