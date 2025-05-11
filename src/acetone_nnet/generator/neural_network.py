@@ -104,6 +104,7 @@ class CodeGenerator(ABC):
         self.versions = self._select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
         self.data_type = dtype
+        self.data_type_py = dtype_py
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
@@ -214,7 +215,6 @@ class CodeGenerator(ABC):
                     selected_implementations[layer.idx] = default_implementations[layer.name]
                 for k in [layer.idx, layer.name]:
                     if k in versions:
-                        print(k)
                         selected_implementations[layer.idx] = versions[k]
                         break
         return selected_implementations
@@ -288,7 +288,7 @@ class CodeGenerator(ABC):
             dataset = self._initialise_dataset(
                 dataset_or_path=dataset_or_path,
                 nb_tests=self.nb_tests,
-                data_type=self.data_type,
+                data_type=self.data_type_py,
                 )
         else:
             dataset = self.test_dataset
