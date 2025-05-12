@@ -1,4 +1,4 @@
-"""Cubic Resize base type definition.
+"""Cubic Resize layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .ResizeCubic import ResizeCubic
 # The Cubic mode of the Resize layers
 # Use a (bi)cubic interpolation to find the new value
 class ResizeCubicDefault(ResizeCubic):
-    """ResizeCubic layer class."""
+    """ResizeCubic layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a ResizeCubic layer with default implementation."""

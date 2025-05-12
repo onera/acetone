@@ -1,4 +1,4 @@
-"""EdgePad layer type definition.
+"""EdgePad layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -19,18 +19,19 @@
 ******************************************************************************
 """
 import pystache
-from EdgePad import EdgePad
 from typing_extensions import Self
 
 from acetone_nnet.versioning.version_implementation.edge_pad_implementation import (
     edge_pad_factory,
 )
 
+from .EdgePad import EdgePad
+
 
 # The Edge mode of the Pad layers
 # Pads with the edge values of array.
 class EdgePadDefault(EdgePad):
-    """EdgePad layer class."""
+    """EdgePad layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: int) -> None:
         """Build an EdgePad layer with default implementation."""

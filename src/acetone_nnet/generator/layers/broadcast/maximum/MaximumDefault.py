@@ -1,4 +1,4 @@
-"""Maximum layer type definition.
+"""Maximum layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .Maximum import Maximum
 
 # Addition of several tensors
 class MaximumDefault(Maximum, Broadcast):
-    """Maximum default layer class."""
+    """Maximum layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: Any) -> None:
         """Build a Maximum layer with default implementation."""

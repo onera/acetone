@@ -1,4 +1,4 @@
-"""Minimum layer type definition.
+"""Minimum layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .Minimum import Minimum
 
 # Addition of several tensors
 class MinimumDefault(Minimum, Broadcast):
-    """Minimum default layer class."""
+    """Minimum layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: Any) -> None:
         """Build a Minimum layer with default implementation."""

@@ -1,4 +1,4 @@
-"""WrapPad layer type definition.
+"""WrapPad layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -33,7 +33,7 @@ from .WrapPad import WrapPad
 # Pads with the wrap of the vector along the axis.
 # The first values are used to pad the end and the end values are used to pad the beginning.
 class WrapPadDefault(WrapPad):
-    """WrapPad layer class."""
+    """WrapPad layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: int) -> None:
         """Build an WrapPad layer with default implementation."""

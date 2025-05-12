@@ -1,4 +1,4 @@
-"""ConstantPad layer type definition.
+"""ConstantPad layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .ConstantPad import ConstantPad
 # The Constant mode of the Pad layers
 # Use a constant to fill paddings
 class ConstantPadDefault(ConstantPad):
-    """ConstantPad layer class."""
+    """ConstantPad layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: int) -> None:
         """Build a ConstantPad layer with default implementation."""

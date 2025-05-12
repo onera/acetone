@@ -1,4 +1,4 @@
-"""Gemm Layer type definition.
+"""Gemm Layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .Gemm import Gemm
 
 
 class GemmDefault(Gemm):
-    """Gemm layer class."""
+    """Gemm layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Gemm Layer with default implementation."""

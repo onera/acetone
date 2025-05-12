@@ -1,4 +1,4 @@
-"""ReduceMax layer type definition.
+"""ReduceMax layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .ReduceMax import ReduceMax
 
 
 class ReduceMaxDefault(ReduceMax, Reduce):
-    """Reduce Max Default layer class."""
+    """Reduce Max Default layer with default implementation class."""
 
     def __init__(self:Self, version:str, **kwargs:Any) -> None:
         """Build a Reduce Max Layer with default implementation."""

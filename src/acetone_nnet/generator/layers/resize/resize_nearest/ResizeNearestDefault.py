@@ -1,4 +1,4 @@
-"""Nearest Resize base type definition.
+"""Nearest Resize layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -31,7 +31,7 @@ from .ResizeNearest import ResizeNearest
 
 # The value in the output tensor are found thanks to a (bi)nearest interpolation
 class ResizeNearestDefault(ResizeNearest):
-    """ResizeNearest default layer class."""
+    """ResizeNearest layer with default implementation class."""
 
     def __init__(self: Self,version:str, **kwargs: int) -> None:
         """Build a ResizeNearest layer with default implementation."""

@@ -1,4 +1,4 @@
-"""Add layer type definition.
+"""Add layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .Add import Add
 
 # Addition of several tensors
 class AddDefault(Add, Broadcast):
-    """Add default layer class."""
+    """Add layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: Any) -> None:
         """Build an Add layer with default implementation."""

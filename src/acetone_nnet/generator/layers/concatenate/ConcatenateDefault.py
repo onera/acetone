@@ -1,4 +1,4 @@
-"""Concatenate layer type definition.
+"""Concatenate layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .Concatenate import Concatenate
 
 
 class ConcatenateDefault(Concatenate):
-    """Concatenate layer default implementation class."""
+    """Concatenate layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Concatenate layer with default implementation."""

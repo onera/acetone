@@ -220,6 +220,8 @@ class CodeGenerator(ABC):
             "EdgePad": "default",
             "ReflectPad": "default",
             "WrapPad": "default",
+            "AveragePooling2D": "default",
+            "MaxPooling2D": "default",
         }
         if versions is None:
             # Select the default implementation per layer type, if specified

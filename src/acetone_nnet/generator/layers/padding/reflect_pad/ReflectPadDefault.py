@@ -1,4 +1,4 @@
-"""ReflectPad layer type definition.
+"""ReflectPad layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .ReflectPad import ReflectPad
 # The Reflect mode of the Pad layers
 # Pads with the reflection of the vector mirrored on the first and last values of the vector along each axis.
 class ReflectPadDefault(ReflectPad):
-    """ReflectPad layer class."""
+    """ReflectPad layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: int) -> None:
         """Build an ReflectPad layer with default implementation."""

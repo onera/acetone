@@ -1,4 +1,4 @@
-"""Gather layer type definition.
+"""Gather layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .Gather import Gather
 
 
 class GatherDefault(Gather):
-    """Gather Default layer class."""
+    """Gather Default layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Gather Layer with default implementation."""

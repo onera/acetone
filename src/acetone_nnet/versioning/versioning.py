@@ -27,13 +27,18 @@ from acetone_nnet.versioning.version_implementation.add_implementation import (
 from acetone_nnet.versioning.version_implementation.average_implementation import (
     average_factory,
 )
+from acetone_nnet.versioning.version_implementation.average_pooling_implementation import (
+    average_pooling_factory,
+)
 from acetone_nnet.versioning.version_implementation.batch_normalization_implementation import (
     batch_normalization_factory,
 )
 from acetone_nnet.versioning.version_implementation.concatenate_implementation import (
     concatenate_factory,
 )
-from acetone_nnet.versioning.version_implementation.constant_pad_implementation import constant_pad_factory
+from acetone_nnet.versioning.version_implementation.constant_pad_implementation import (
+    constant_pad_factory,
+)
 from acetone_nnet.versioning.version_implementation.conv_implementation import (
     conv2d_factory,
 )
@@ -43,7 +48,9 @@ from acetone_nnet.versioning.version_implementation.dense_implementation import 
 from acetone_nnet.versioning.version_implementation.divide_implementation import (
     divide_factory,
 )
-from acetone_nnet.versioning.version_implementation.edge_pad_implementation import edge_pad_factory
+from acetone_nnet.versioning.version_implementation.edge_pad_implementation import (
+    edge_pad_factory,
+)
 from acetone_nnet.versioning.version_implementation.flatten_implementation import (
     flatten_factory,
 )
@@ -61,6 +68,9 @@ from acetone_nnet.versioning.version_implementation.input_implementation import 
 )
 from acetone_nnet.versioning.version_implementation.matmul_implementation import (
     matmul_factory,
+)
+from acetone_nnet.versioning.version_implementation.max_pooling_implementation import (
+    max_pooling_factory,
 )
 from acetone_nnet.versioning.version_implementation.maximum_implementation import (
     maximum_factory,
@@ -86,7 +96,9 @@ from acetone_nnet.versioning.version_implementation.reduce_prod_implementation i
 from acetone_nnet.versioning.version_implementation.reduce_sum_implementation import (
     reduce_sum_factory,
 )
-from acetone_nnet.versioning.version_implementation.reflect_pad_implementation import reflect_pad_factory
+from acetone_nnet.versioning.version_implementation.reflect_pad_implementation import (
+    reflect_pad_factory,
+)
 from acetone_nnet.versioning.version_implementation.resize_cubic_implementation import (
     resize_cubic_factory,
 )
@@ -108,7 +120,9 @@ from acetone_nnet.versioning.version_implementation.tile_implementation import (
 from acetone_nnet.versioning.version_implementation.transpose_implementation import (
     transpose_factory,
 )
-from acetone_nnet.versioning.version_implementation.wrap_pad_implementation import wrap_pad_factory
+from acetone_nnet.versioning.version_implementation.wrap_pad_implementation import (
+    wrap_pad_factory,
+)
 
 LayerFactory = Callable[[Layer, str], Layer]
 
@@ -151,6 +165,8 @@ def versioning(
         "EdgePad":edge_pad_factory,
         "ReflectPad":reflect_pad_factory,
         "WrapPad":wrap_pad_factory,
+        "AveragePooling2D":average_pooling_factory,
+        "MaxPooling2D":max_pooling_factory,
     }
 
     keys = list(version.keys())

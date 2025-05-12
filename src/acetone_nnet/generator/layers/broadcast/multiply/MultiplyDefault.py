@@ -1,4 +1,4 @@
-"""Multiply layer type definition.
+"""Multiply layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .Multiply import Multiply
 
 # Addition of several tensors
 class MultiplyDefault(Multiply, Broadcast):
-    """Multiply default layer class."""
+    """Multiply layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: Any) -> None:
         """Build a Multiply layer with default implementation."""

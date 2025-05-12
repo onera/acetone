@@ -1,4 +1,4 @@
-"""Transpose Layer type definition.
+"""Transpose Layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .Transpose import Transpose
 
 
 class TransposeDefault(Transpose):
-    """Transpose layer class."""
+    """Transpose layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Tile Layer with default implementation."""

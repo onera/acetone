@@ -1,4 +1,4 @@
-"""BatchNormalization layer type definition.
+"""BatchNormalization layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .BatchNormalization import BatchNormalization
 
 
 class BatchNormalizationDefault(BatchNormalization):
-    """BatchNormalization layer default implementation class."""
+    """BatchNormalization layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a BatchNormalization layer with default implementation."""

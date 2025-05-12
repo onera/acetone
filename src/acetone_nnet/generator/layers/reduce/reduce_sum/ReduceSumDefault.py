@@ -1,4 +1,4 @@
-"""ReduceMax layer type definition.
+"""ReduceMax layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programsumg framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .ReduceSum import ReduceSum
 
 
 class ReduceSumDefault(ReduceSum, Reduce):
-    """Reduce Sum Default layer class."""
+    """Reduce Sum Default layer with default implementation class."""
 
     def __init__(self:Self, version:str, **kwargs:Any) -> None:
         """Build a Reduce Sum Layer with default implementation."""

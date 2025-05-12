@@ -1,4 +1,4 @@
-"""GatherElements Layer type definition.
+"""GatherElements Layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .GatherElements import GatherElements
 
 
 class GatherElementsDefault(GatherElements):
-    """GatherElements layer class."""
+    """GatherElements layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a GatherElements  Layer with default implementation."""

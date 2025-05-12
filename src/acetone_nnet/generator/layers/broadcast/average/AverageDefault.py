@@ -1,4 +1,4 @@
-"""Average layer type definition.
+"""Average layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .Average import Average
 
 # Addition of several tensors
 class AverageDefault(Average, Broadcast):
-    """Average default layer class."""
+    """Average layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: Any) -> None:
         """Build an Average layer with default implementation."""

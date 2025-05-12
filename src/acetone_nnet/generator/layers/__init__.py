@@ -84,7 +84,13 @@ from .padding import (
     WrapPad,
     WrapPadDefault,
 )
-from .pooling import AveragePooling2D, MaxPooling2D, Pooling2D
+from .pooling import (
+    AveragePooling2D,
+    AveragePooling2DDefault,
+    MaxPooling2D,
+    MaxPooling2DDefault,
+    Pooling2D,
+)
 from .reduce import (
     Reduce,
     ReduceMax,

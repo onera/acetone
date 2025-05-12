@@ -1,4 +1,4 @@
-"""Tile Layer type definition.
+"""Tile Layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .Tile import Tile
 
 
 class TileDefault(Tile):
-    """Tile layer class."""
+    """Tile layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Tile Layer with default implementation."""

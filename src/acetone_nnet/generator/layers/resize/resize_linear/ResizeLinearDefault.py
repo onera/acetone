@@ -1,4 +1,4 @@
-"""Linear Resize base type definition.
+"""Linear Resize layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -31,7 +31,7 @@ from .ResizeLinear import ResizeLinear
 
 # The value in the output tensor are found thanks to a (bi)linear interpolation
 class ResizeLinearDefault(ResizeLinear):
-    """ResizeLinear default layer class."""
+    """ResizeLinear default layer with default implementation class."""
 
     def __init__(self: Self,version:str, **kwargs: int) -> None:
         """Build a ResizeLinear layer with default implementation."""

@@ -1,4 +1,4 @@
-"""AveragePooling layer type definition.
+"""MaxPooling layer type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -22,30 +22,18 @@
 import numpy as np
 from typing_extensions import Self
 
-from .Pooling2D import Pooling2D
+from acetone_nnet.generator.layers.pooling.Pooling2D import Pooling2D
 
 
-class AveragePooling2D(Pooling2D):
-    """AveragePooling layer class."""
+class MaxPooling2D(Pooling2D):
+    """MaxPooling layer class."""
 
     def __init__(self: Self, **kwds: int) -> None:
-        """Build an AveragePooling layer."""
+        """Build a MaxPooling layer."""
         super().__init__(**kwds)
+        self.name = "MaxPooling2D"
+        self.pooling_function = np.amax
 
-        self.name = "AveragePooling2D"
-        self.pooling_function = np.mean
-        self.local_var = "sum"
-        self.local_var_2 = "count"
-        self.output_var = f"{self.local_var}/{self.local_var_2}"
+    def generate_inference_code_layer(self: Self) -> str:
+        """Generate computation code for layer."""
 
-    def update_local_vars(self: Self) -> str:
-        """Generate local var related code."""
-        return f"{self.local_var} = 0; {self.local_var_2} = 0;\n"
-
-    def specific_function(self: Self, index: str, input_of_layer: str) -> str:
-        """Generate pooling function code."""
-        # Computes the average in this subclass AveragePooling2D
-        s = f"{self.local_var} += {input_of_layer} [{index}];\n"
-        s += f"                            {self.local_var_2}++;\n"
-
-        return s

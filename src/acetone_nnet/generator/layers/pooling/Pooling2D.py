@@ -20,10 +20,8 @@
 """
 
 import math
-from abc import abstractmethod
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
@@ -139,55 +137,8 @@ class Pooling2D(Layer):
         if msg:
             raise ValueError(msg)
 
-    @abstractmethod
-    def specific_function(self: Self, index: str, input_of_layer: str) -> str:
-        """Generate pooling function code."""
-
-    @abstractmethod
-    def update_local_vars(self: Self) -> str:
-        """Generate local var related code."""
-
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["road"] = self.path
-        mustach_hash["size"] = self.size
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.output_var)
-
-        mustach_hash["input_channels"] = self.input_channels
-        mustach_hash["output_height"] = self.output_height
-        mustach_hash["output_width"] = self.output_width
-        mustach_hash["update_local_vars"] = self.update_local_vars()
-        mustach_hash["pool_size"] = self.pool_size
-        mustach_hash["strides"] = self.strides
-        mustach_hash["pad_left"] = self.pad_left
-        mustach_hash["pad_top"] = self.pad_top
-        mustach_hash["input_height"] = self.input_height
-        mustach_hash["input_width"] = self.input_width
-        mustach_hash["specific_function"] = self.specific_function(
-            f"jj + {self.input_width}*(ii + {self.input_height}*f)", output_str)
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                self.output_var,
-                self.idx,
-                f"j + {self.output_width}*(i + {self.output_height}*f)")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
-        with open(self.template_path / "layers" / "template_Pooling2D.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
 
     def forward_path_layer(
             self: Self,

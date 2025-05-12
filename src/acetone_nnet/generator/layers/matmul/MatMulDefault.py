@@ -1,4 +1,4 @@
-"""MatMul Layer type definition.
+"""MatMul Layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .MatMul import MatMul
 
 
 class MatMulDefault(MatMul):
-    """MatMul layer class."""
+    """MatMul layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a MatMul Layer with default implementation."""

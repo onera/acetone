@@ -30,7 +30,7 @@ from acetone_nnet.generator.Layer import Layer
 class ActivationLayer(Layer):
     """Abstract class for activation layers."""
 
-    def __init__(self: Self, idx: int, op_type: str, size: int, **kwargs) -> None:  # noqa: ANN003
+    def __init__(self: Self, idx: int, op_type: str, size: int, **kwargs) -> None:
         """Initiate the class."""
         super().__init__()
 

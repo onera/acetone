@@ -1,4 +1,4 @@
-"""Divide layer type definition.
+"""Divide layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .Divide import Divide
 
 # Addition of several tensors
 class DivideDefault(Divide, Broadcast):
-    """Divide default layer class."""
+    """Divide layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: Any) -> None:
         """Build a Divide layer with default implementation."""

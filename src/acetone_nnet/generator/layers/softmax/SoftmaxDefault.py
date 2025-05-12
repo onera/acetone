@@ -1,4 +1,4 @@
-"""Softmax Layer type definition.
+"""Softmax Layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -22,7 +22,6 @@
 import pystache
 from typing_extensions import Any, Self
 
-
 from acetone_nnet.versioning.version_implementation.softmax_implementation import (
     softmax_factory,
 )
@@ -31,7 +30,7 @@ from .Softmax import Softmax
 
 
 class SoftmaxDefault(Softmax):
-    """Softmax layer class."""
+    """Softmax layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Softmax Layer with default implementation."""

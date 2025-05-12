@@ -1,4 +1,4 @@
-"""Flatten layer type definition.
+"""Flatten layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .Flatten import Flatten
 
 
 class FlattenDefault(Flatten):
-    """Flatten layer class."""
+    """Flatten layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Flatten layer with default implementation."""

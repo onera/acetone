@@ -1,4 +1,4 @@
-"""Input Layer type definition.
+"""Input Layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -30,7 +30,7 @@ from .Input import InputLayer
 
 
 class InputLayerDefault(InputLayer):
-    """Input layer class."""
+    """Input layer with default implementation class."""
 
     def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build a Input Layer with default implementation."""

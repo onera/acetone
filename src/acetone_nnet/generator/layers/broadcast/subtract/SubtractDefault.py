@@ -1,4 +1,4 @@
-"""Subtract layer type definition.
+"""Subtract layer with default implementation type definition.
 
 *******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
@@ -32,7 +32,7 @@ from .Subtract import Subtract
 
 # Addition of several tensors
 class SubtractDefault(Subtract, Broadcast):
-    """Subtract default layer class."""
+    """Subtract layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwargs: Any) -> None:
         """Build a Subtract layer with default implementation."""
