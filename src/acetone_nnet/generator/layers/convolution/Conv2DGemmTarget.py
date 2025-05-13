@@ -182,4 +182,4 @@ def conv2d_gemm_target_implementation(
     )
 
 
-conv2d_factory.register_implementation("gemm_target", conv2d_gemm_target_implementation)
+# conv2d_factory.register_implementation("gemm_target", conv2d_gemm_target_implementation)

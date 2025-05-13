@@ -29,8 +29,8 @@ def compare_result(
         reference_result: list | np.ndarray,
         targets: list,
         verbose: bool = False,
-        atol: int = 5e-06,
-        rtol: int = 5e-06
+        atol: float = 5e-06,
+        rtol: float = 5e-06
 ) -> bool:
     """Compare two list and return of they are similar."""
     if len(acetone_result) != len(reference_result):

@@ -19,16 +19,15 @@
 ******************************************************************************.
 """
 
+import json
+import warnings
 from abc import ABC
 from pathlib import Path
 from typing import Any
-import warnings
 
 import numpy as np
 import onnx
 import pystache
-import json
-
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 from typing_extensions import Self
@@ -41,9 +40,9 @@ from acetone_nnet.generator.layers import (
     Concatenate,
     Conv2D,
     Conv2D6loops,
+    Conv2DGemmTarget,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
-    Conv2DGemmTarget,
     Dense,
     Dot,
     Gather,
@@ -171,7 +170,7 @@ class CodeGenerator(ABC):
 
         ### Checking value consistency ###
 
-        if self.read_ext_input is not None and isinstance(test_dataset, str | np.ndarray | Path):
+        if self.read_ext_input and isinstance(test_dataset, str | np.ndarray | Path):
             warnings.warn("Warning: given dataset will be ignored")
 
         # Debug Mode
