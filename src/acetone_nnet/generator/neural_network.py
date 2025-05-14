@@ -43,7 +43,6 @@ from acetone_nnet.generator.layers import (
     Conv2DIndirectGemm,
     Conv2DStdGemm,
     Dense,
-    Dot,
     Gather,
     GatherElements,
     Gemm,
@@ -75,6 +74,7 @@ class CodeGenerator(ABC):
         versions: dict[int, str] | dict[str, str] | None = None,
         normalize: bool | str = False,
         debug_mode: str | None = None,
+        verbose: bool = True,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -82,6 +82,7 @@ class CodeGenerator(ABC):
         self.function_name = function_name
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
+        self.verbose = verbose
 
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
@@ -94,16 +95,53 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
+        self.default_implementations = {
+            "Conv2D": "6loops",
+            "BatchNormalization": "default",
+            "Concatenate": "default",
+            "Dense": "default",
+            "Flatten": "default",
+            "Gather": "default",
+            "GatherElements": "default",
+            "Gemm": "default",
+            "Input_layer": "default",
+            "MatMul": "default",
+            "Softmax": "default",
+            "Tile": "default",
+            "Transpose": "default",
+            "ReduceMax": "default",
+            "ReduceMean": "default",
+            "ReduceMin": "default",
+            "ReduceProd": "default",
+            "ReduceSum": "default",
+            "ResizeCubic": "default",
+            "ResizeLinear": "default",
+            "ResizeNearest": "default",
+            "Add": "default",
+            "Average": "default",
+            "Divide": "default",
+            "Maximum": "default",
+            "Minimum": "default",
+            "Multiply": "default",
+            "Subtract": "default",
+            "ConstantPad": "default",
+            "EdgePad": "default",
+            "ReflectPad": "default",
+            "WrapPad": "default",
+            "AveragePooling2D": "default",
+            "MaxPooling2D": "default",
+        }
+        self.default_implementations = dict(sorted(self.default_implementations.items()))
         self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
-
         self.data_type = dtype
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        self.nb_tests = int(nb_tests)
+        self.read_ext_input = int(nb_tests) == 0
+        self.nb_tests = int(nb_tests) if not self.read_ext_input else 1
         self.test_dataset = self._initialise_dataset(
             test_dataset,
             int(nb_tests),
@@ -117,8 +155,9 @@ class CodeGenerator(ABC):
             "main.c",
             "Makefile",
             "test_dataset.h",
-            "test_dataset.c",
         ]
+        if not self.read_ext_input:
+            self.files_to_gen.append("test_dataset.c")
 
         self.target = target
         if self.target != "generic":
@@ -153,6 +192,10 @@ class CodeGenerator(ABC):
         if not (self.debug_mode is None or isinstance(self.debug_mode, str)):
             msg = "Error: debug mode type.\n Must be: string or None"
             raise TypeError(msg)
+        if not isinstance(self.verbose, bool):
+            msg = "Error: verbose type.\n Must be: bool"
+            raise TypeError(msg)
+
 
         ### Checking value consistency ###
 
@@ -161,7 +204,7 @@ class CodeGenerator(ABC):
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
 
-    # FIXME Unify default layer selection between this and the versioning module.
+
     def select_layers_implementation(
         self: Self,
         versions: dict[int, str] | dict[str, str] | None,
@@ -181,18 +224,14 @@ class CodeGenerator(ABC):
 
         """
         selected_implementations = {}
-        default_implementations = {
-            "Conv2D": "std_gemm_nn",
-        }
-        if versions is None:
+        for layer in self.layers:
             # Select the default implementation per layer type, if specified
-            for layer in self.layers:
-                d = default_implementations.get(layer.name, None)
-                if d is not None:
-                    selected_implementations[layer.idx] = d
-        else:
+            d = self.default_implementations.get(layer.name, None)
+            if d is not None:
+                selected_implementations[layer.idx] = d
+
             # Select the implementation based in priority on layer id, or type
-            for layer in self.layers:
+            if versions is not None:
                 for k in [layer.idx, layer.name]:
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
@@ -430,28 +469,30 @@ class CodeGenerator(ABC):
                         "nb_inputs": self.layers[0].size,
                         "nb_outputs": self.layers[-1].size,
                         "data_type": self.data_type,
+                        "read_input": self.read_ext_input,
                     },
                 ),
             )
 
-        # Generate test source file
-        dataset = "{"
-        if self.test_dataset is not None:
-            dataset += ",".join(
-                map(CodeGenerator.flatten_array_order_c, self.test_dataset),
-            )
-        dataset += "};\n"
+        if not self.read_ext_input:
+            # Generate test source file
+            dataset = "{"
+            if self.test_dataset is not None:
+                dataset += ",".join(
+                    map(CodeGenerator.flatten_array_order_c, self.test_dataset),
+                )
+            dataset += "};\n"
 
-        template = (
-            Path(self.template_path) / "template_test_dataset_source.c.tpl"
-        ).read_text()
-        with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
-            test_dataset_source.write(
-                pystache.render(
-                    template,
-                    {"data_type": self.data_type, "dataset": dataset},
-                ),
-            )
+            template = (
+                Path(self.template_path) / "template_test_dataset_source.c.tpl"
+            ).read_text()
+            with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
+                test_dataset_source.write(
+                    pystache.render(
+                        template,
+                        {"data_type": self.data_type, "dataset": dataset},
+                    ),
+                )
 
     def generate_main_file(
         self: Self,
@@ -460,7 +501,12 @@ class CodeGenerator(ABC):
         """Generate entry point C code."""
         template = (Path(self.template_path) / "template_main_file.c.tpl").read_text()
         with (output_dir / "main.c").open("a+") as main_file:
-            main_file.write(pystache.render(template, {"data_type": self.data_type}))
+            main_file.write(
+                pystache.render(
+                    template,
+                    {"data_type": self.data_type, "read_input": self.read_ext_input, "verbose":self.verbose},
+                ),
+            )
 
     def generate_makefile(
         self: Self,
@@ -502,22 +548,30 @@ class CodeGenerator(ABC):
                 raise FileExistsError(c_files_directory / file)
 
         self.generate_function_source_file(c_files_directory)
-        print("Generated function source file.")
+        if self.verbose:
+            print("Generated function source file.")
         self.generate_function_header_file(c_files_directory)
-        print("Generated function header file.")
+        if self.verbose:
+            print("Generated function header file.")
         self.generate_globalvars_file(c_files_directory)
-        print("Generated globalvars .c file.")
+        if self.verbose:
+            print("Generated globalvars .c file.")
         self.generate_main_file(c_files_directory)
-        print("Generated main file.")
+        if self.verbose:
+            print("Generated main file.")
         self.generate_makefile(c_files_directory)
-        print("Generated Makefile.")
+        if self.verbose:
+            print("Generated Makefile.")
         self.generate_test_dataset_files(c_files_directory)
-        print("Generated test_dataset files.")
+        if self.verbose:
+            print("Generated test_dataset files.")
         if self.target != "generic":
             self.generate_target_file(c_files_directory)
-            print("Generated target file.")
+            if self.verbose:
+                print("Generated target file.")
             self.generate_target_header_file(c_files_directory)
-            print("Generated target header file.")
+            if self.verbose:
+                print("Generated target header file.")
 
     def generate_target_file(self: Self, output_dir: Path) -> None:
         print("Generation of target file")
@@ -574,7 +628,7 @@ class CodeGenerator(ABC):
 
         self.l_size_max = max((i.size for i in self.layers), default=1)
 
-        if any(isinstance(i, Dot | Pooling2D | Conv2D | Gemm) for i in self.layers):
+        if any(isinstance(i, Pooling2D | Conv2D | Gemm) for i in self.layers):
             mustach_hash["p"] = True
 
         if any(

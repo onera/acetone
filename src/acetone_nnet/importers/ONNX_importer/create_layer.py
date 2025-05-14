@@ -399,6 +399,7 @@ def create_pad(
             axe = axes[i]
             if axe < 0:
                 axe = len(input_shape) - axe
+            axes[i] = axe
     return create_pad_obj(
         mode=attributes["mode"],
         idx=idx,
@@ -861,7 +862,7 @@ def create_reduce_prod(
         dict_output: dict,
         model: onnx.ModelProto,
 ) -> ReduceProd:
-    """Create a ReduceProd layer."""
+    """Create a ReduceReduceProd layer."""
     onnx_version_change_implementation = 18
 
     input_shape = get_shape(node.input[0], model)

@@ -20,10 +20,10 @@
 """
 
 from . import debug, generator
+from .cli.compare import cli_compare
 from .generator import (
     ActivationFunctions,
     Add,
-    AddBias,
     Average,
     AveragePooling2D,
     BatchNormalization,
@@ -35,12 +35,11 @@ from .generator import (
     Conv2D,
     Conv2D6loops,
     Conv2DGemm,
+    Conv2DGemmTarget,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
-    Conv2DGemmTarget,
     Dense,
     Divide,
-    Dot,
     EdgePad,
     Exponential,
     Flatten,

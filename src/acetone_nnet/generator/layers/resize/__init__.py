@@ -20,13 +20,19 @@
 """
 
 from .Resize import Resize
-from .ResizeCubic import ResizeCubic
-from .ResizeLinear import ResizeLinear
-from .ResizeNearest import ResizeNearest
+from .resize_cubic.ResizeCubic import ResizeCubic
+from .resize_cubic.ResizeCubicDefault import ResizeCubicDefault
+from .resize_linear.ResizeLinear import ResizeLinear
+from .resize_linear.ResizeLinearDefault import ResizeLinearDefault
+from .resize_nearest.ResizeNearest import ResizeNearest
+from .resize_nearest.ResizeNearestDefault import ResizeNearestDefault
 
 __all__ = (
     "Resize",
     "ResizeCubic",
+    "ResizeCubicDefault",
     "ResizeLinear",
+    "ResizeLinearDefault",
     "ResizeNearest",
+    "ResizeNearestDefault",
 )

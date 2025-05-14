@@ -19,13 +19,29 @@
 ******************************************************************************
 """
 
+
 from .Reduce import Reduce
-from .ReduceMax import ReduceMax
-from .ReduceMean import ReduceMean
-from .ReduceMin import ReduceMin
-from .ReduceProd import ReduceProd
-from .ReduceSum import ReduceSum
+from .reduce_max.ReduceMax import ReduceMax
+from .reduce_max.ReduceMaxDefault import ReduceMaxDefault
+from .reduce_mean.ReduceMean import ReduceMean
+from .reduce_mean.ReduceMeanDefault import ReduceMeanDefault
+from .reduce_min.ReduceMin import ReduceMin
+from .reduce_min.ReduceMinDefault import ReduceMinDefault
+from .reduce_prod.ReduceProd import ReduceProd
+from .reduce_prod.ReduceProdDefault import ReduceProdDefault
+from .reduce_sum.ReduceSum import ReduceSum
+from .reduce_sum.ReduceSumDefault import ReduceSumDefault
 
 __all__ = (
-    "Reduce", "ReduceSum", "ReduceMax", "ReduceProd", "ReduceMean", "ReduceMin",
+    "Reduce",
+    "ReduceMax",
+    "ReduceMaxDefault",
+    "ReduceMean",
+    "ReduceMeanDefault",
+    "ReduceMin",
+    "ReduceMinDefault",
+    "ReduceProd",
+    "ReduceProdDefault",
+    "ReduceSum",
+    "ReduceSumDefault",
 )

@@ -19,10 +19,16 @@
 ******************************************************************************
 """
 
-from .AveragePooling2D import AveragePooling2D
-from .MaxPooling2D import MaxPooling2D
+from .average_pooling.AveragePooling2D import AveragePooling2D
+from .average_pooling.AveragePooling2DDefault import AveragePooling2DDefault
+from .max_pooling.MaxPooling2D import MaxPooling2D
+from .max_pooling.MaxPooling2DDefault import MaxPooling2DDefault
 from .Pooling2D import Pooling2D
 
 __all__ = (
-    "Pooling2D", "AveragePooling2D", "MaxPooling2D",
+    "AveragePooling2D",
+    "AveragePooling2DDefault",
+    "MaxPooling2D",
+    "MaxPooling2DDefault",
+    "Pooling2D",
 )
