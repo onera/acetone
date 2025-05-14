@@ -26,6 +26,7 @@ from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.versioning.layer_factories import conv2d_factory
 
 
 class Conv2D(Layer):

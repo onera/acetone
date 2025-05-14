@@ -19,7 +19,7 @@
 ******************************************************************************
 """
 from acetone_nnet.generator import Layer
-from acetone_nnet.versioning.layer_factories import implemented
+from acetone_nnet.versioning.layer_factories import LayerFactory, implemented
 
 
 def register_factory(name: str, factory: LayerFactory) -> None:
