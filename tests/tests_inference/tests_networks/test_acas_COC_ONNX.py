@@ -18,11 +18,11 @@
 """
 import unittest
 
-import acetone_nnet
 import onnx
 import onnxruntime as rt
-from acetone_nnet import debug
 
+import acetone_nnet
+from acetone_nnet import debug
 from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
 
@@ -76,7 +76,7 @@ class TestAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
                                                nb_tests=1,
                                                debug_mode="onnx")
         acetone_outputs, acetone_layers = generator.compute_inference("")
-        acetone_outputs, acetone_layers = debug.reorder_outputs_python(acetone_outputs, acetone_layers)
+        acetone_outputs, acetone_layers = debug.reorder_outputs(acetone_outputs, acetone_layers)
 
         # Compute Acetone reference output
         _, acetone_reference = acetoneTestCase.run_acetone_for_test(

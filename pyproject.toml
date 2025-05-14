@@ -1,6 +1,6 @@
 [build-system]
 requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+# build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 include-package-data = true
@@ -8,7 +8,7 @@ include-package-data = true
 [project]
 name = "acetone-nnet"
 version = "0.4.dev1"
-requires-python = ">=3.10, <3.12"
+requires-python = ">=3.10"
 
 authors = [
     { name="Yanis AIT-AISSA", email="Yanis.AIT-AISSA@student.isae-supaero.fr"},
@@ -36,12 +36,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy==1.23.5",
-    "numpyencoder==0.3.0",
-    "onnx==1.14.0",
-    "tensorflow==2.12.0",
-    "pystache==0.6.5",
-    "onnxruntime==1.18.1"
+    "numpy",
+    "numpyencoder",
+    "onnx",
+    "tensorflow; python_version <= '3.11'",
+    "pystache",
+    "onnxruntime"
 ]
 
 [project.optional-dependencies]

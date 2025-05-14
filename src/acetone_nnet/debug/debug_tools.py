@@ -29,6 +29,8 @@ def compare_result(
         reference_result: list | np.ndarray,
         targets: list,
         verbose: bool = False,
+        atol: float = 5e-06,
+        rtol: float = 5e-06
 ) -> bool:
     """Compare two list and return of they are similar."""
     if len(acetone_result) != len(reference_result):
@@ -49,8 +51,8 @@ def compare_result(
             np.testing.assert_allclose(
                 acetone_result[i],
                 reference_result[i],
-                atol=5e-06,
-                rtol=5e-06,
+                atol=atol,
+                rtol=rtol,
             )
         except AssertionError as msg:
             print("Error: output value of", targets[i], "incorrect")
@@ -64,12 +66,31 @@ def compare_result(
 
     if verbose:
         print("++++++++++++++++++++++++++++++++++++++++++++")
-        print("Total number of error:", count, "/", len(acetone_result))
-        print("First error at", first)
+        print(f"Total number of error: {count}/{len(acetone_result)} ({count/len(acetone_result)*100:.3}%)")
+        print(f"First error at {first}")
         print("++++++++++++++++++++++++++++++++++++++++++++")
 
     return correct
 
+def reorder_outputs(
+        outputs: list[np.ndarray],
+        targets: list[str],
+) -> (list[np.ndarray], list[str]):
+    """Rearrange the to match the reference."""
+    ordered_outputs = []
+    ordered_targets = []
+
+    dictionary = {}
+    for i in range(len(targets)):
+        dictionary[int(targets[i].split(" ")[-1])] = (
+            outputs[i], targets[i],
+        )
+
+    for element in sorted(dictionary.items(), key=lambda item: item[0]):
+        ordered_outputs.append(element[1][0])
+        ordered_targets.append(element[1][1])
+
+    return ordered_outputs, ordered_targets
 
 def extract_outputs_c(
         path_to_output: str | Path,
@@ -110,8 +131,7 @@ def extract_outputs_c(
                 break
     f.close()
 
-    return list_result, targets
-
+    return reorder_outputs(list_result, targets)
 
 def extract_outputs_python(
         result_python: tuple[list],
@@ -126,25 +146,4 @@ def extract_outputs_python(
                 outputs.append(result_python[0][i])
                 targets.append(result_python[1][i])
 
-    return outputs, targets
-
-
-def reorder_outputs_python(
-        outputs_python: list[np.ndarray],
-        targets_python: list[str],
-) -> (list[np.ndarray], list[str]):
-    """Rearrange the to match the reference."""
-    ordered_outputs = []
-    ordered_targets = []
-
-    dictionary = {}
-    for i in range(len(targets_python)):
-        dictionary[int(targets_python[i].split(" ")[-1])] = (
-            outputs_python[i], targets_python[i],
-        )
-
-    for element in sorted(dictionary.items(), key=lambda item: item[0]):
-        ordered_outputs.append(element[1][0])
-        ordered_targets.append(element[1][1])
-
-    return ordered_outputs, ordered_targets
+    return reorder_outputs(outputs, targets)

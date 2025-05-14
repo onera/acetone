@@ -218,19 +218,7 @@ class Conv2D(Layer):
                 f"({self.output_width}!={math.floor((self.input_width + self.pad_left + self.pad_right - self.kernel_w - (self.kernel_w - 1) * (self.dilation_rate - 1)) / self.strides) + 1})"
             )
             msg += "\n"
-        if self.conv_algorithm not in [
-            "6loops",
-            "indirect_gemm_nn",
-            "indirect_gemm_tn",
-            "indirect_gemm_nt",
-            "indirect_gemm_tt",
-            "std_gemm_nn",
-            "std_gemm_tn",
-            "std_gemm_nt",
-            "std_gemm_",
-            "specs",
-            "gemm_target",
-        ]:
+        if self.conv_algorithm not in conv2d_factory.list_implementations and self.conv_algorithm !="specs":
             msg += f"Error: conv algorithm value in Conv2D ({self.conv_algorithm})"
             msg += "\n"
         if msg:

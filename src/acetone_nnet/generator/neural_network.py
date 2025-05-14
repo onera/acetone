@@ -20,6 +20,7 @@
 """
 
 import json
+import warnings
 from abc import ABC
 from pathlib import Path
 from typing import Any
@@ -67,6 +68,7 @@ class CodeGenerator(ABC):
         self: Self,
         file: str | Path | onnx.ModelProto | Functional | Sequential,
         test_dataset: str | np.ndarray | Path | None = None,
+        external_input: bool | None = False,
         function_name: str = "inference",
         target: str = "generic",
         target_page_size: int = 4096,
@@ -136,12 +138,14 @@ class CodeGenerator(ABC):
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
         self.data_type = dtype
+        self.data_type_py = dtype_py
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
 
-        self.read_ext_input = int(nb_tests) == 0
-        self.nb_tests = int(nb_tests) if not self.read_ext_input else 1
+        self.read_ext_input = external_input
+        self.nb_tests = int(nb_tests)
+
         self.test_dataset = self._initialise_dataset(
             test_dataset,
             int(nb_tests),
@@ -195,9 +199,15 @@ class CodeGenerator(ABC):
         if not isinstance(self.verbose, bool):
             msg = "Error: verbose type.\n Must be: bool"
             raise TypeError(msg)
+        if not (isinstance(self.read_ext_input, bool) or self.read_ext_input is None):
+            msg = "Error: external_input typr.\n Must be: bool"
+            raise TypeError(msg) 
 
 
         ### Checking value consistency ###
+
+        if self.read_ext_input and isinstance(test_dataset, str | np.ndarray | Path):
+            warnings.warn("Warning: given dataset will be ignored")
 
         # Debug Mode
         if self.debug_mode and self.debug_mode not in ["keras", "onnx", "time"]:
@@ -300,10 +310,20 @@ class CodeGenerator(ABC):
     def compute_inference(
         self: Self,
         c_files_directory: str,
+        dataset_or_path: np.ndarray | str | Path | None= None,
     ) -> tuple[list, list] | np.ndarray:
         """Perform inference pass on test dataset."""
+        if self.read_ext_input:
+            dataset = self._initialise_dataset(
+                dataset_or_path=dataset_or_path,
+                nb_tests=self.nb_tests,
+                data_type=self.data_type_py,
+                )
+        else:
+            dataset = self.test_dataset
+
         with (Path(c_files_directory) / "output_python.txt").open("w") as fi:
-            for nn_input in self.test_dataset:
+            for nn_input in dataset:
                 # Debug Mode output
                 debug_output: list[np.ndarray] = []
                 targets: list[str] = []
@@ -374,9 +394,8 @@ class CodeGenerator(ABC):
                     del layer_inputs[layer.idx]
 
                     # Debug Mode
-                    if self.debug_mode and layer.name != "Input_layer":
+                    if self.debug_mode and layer.idx in self.debug_target:
                         # Add the inference result of the layer to debug_output
-                        if layer.idx in self.debug_target:
                             debug_output.append(layer_output)
                             if (self.data_format == "channels_last") and hasattr(
                                 layer,
@@ -388,7 +407,7 @@ class CodeGenerator(ABC):
                                 )
                             debug_output[-1] = debug_output[-1].flatten()
 
-                        targets.append(str(layer.name) + " " + str(layer.idx))
+                            targets.append(str(layer.name) + " " + str(layer.idx))
 
                 nn_output = layer_output
 

@@ -75,9 +75,14 @@ from .generator import (
     Transpose,
     WrapPad,
 )
+from .versioning.version_implementation.conv_implementation import conv2d_factory
+from .versioning.versioning import list_all_implementations, register_factory
 
 __all__ = (
     "cli_compare",
+    "register_factory",
+    "conv2d_factory",
+    "list_all_implementations",
     generator.__all__,
     debug.__all__,
 )

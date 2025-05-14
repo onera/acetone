@@ -126,6 +126,12 @@ make -C tests/models/lenet5/lenet5_example/lenet5_generated all
 acetone_compare ./tests/models/lenet5/lenet5_example/output_keras.txt ./tests/models/lenet5/lenet5_example/lenet5_generated/output_acetone.txt 1
 ```
 
+### Tutorials
+
+Some tutorials are present in the [`tutorials/`](./tutorials/README.md) folder to show more detailled examples and usages of the framework.
+
+They can be run oon your local installation of the framework (by cloning the GitHub repository), or online using the above Binder link. 
+
 ## Tests
 
 Tests are implemented in the folder *tests*.

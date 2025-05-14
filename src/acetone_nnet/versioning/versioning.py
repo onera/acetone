@@ -22,6 +22,23 @@ from acetone_nnet.generator import Layer
 from acetone_nnet.versioning.layer_factories import implemented
 
 
+def register_factory(name: str, factory: LayerFactory) -> None:
+    """Register a new Layer factory."""
+    if name in implemented:
+        msg = f"Factory for layer {name} already exists."
+        raise KeyError(msg)
+    implemented[name] = factory
+
+def list_all_implementations() -> dict[str, list[str]]:
+    implem = {}
+    for layer_name in implemented:
+        implem[layer_name] = implemented[layer_name].list_implementations
+        
+    return implem
+    
+
+
+
 def versioning(
         layers: list[Layer],
         version: dict[int, str],
