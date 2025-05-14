@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.tile_implementation import (
-    tile_factory,
-)
+from acetone_nnet.versioning.layer_factories import tile_factory
 
 from .Tile import Tile
 

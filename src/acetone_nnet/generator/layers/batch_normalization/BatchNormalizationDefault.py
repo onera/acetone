@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.batch_normalization_implementation import (
-    batch_normalization_factory,
-)
+from acetone_nnet.versioning.layer_factories import batch_normalization_factory
 
 from .BatchNormalization import BatchNormalization
 

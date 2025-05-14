@@ -23,9 +23,7 @@ import numpy as np
 from typing_extensions import Any, Self
 
 from acetone_nnet.generator.layers.broadcast.Broadcast import Broadcast
-from acetone_nnet.versioning.version_implementation.minimum_implementation import (
-    minimum_factory,
-)
+from acetone_nnet.versioning.layer_factories import minimum_factory
 
 from .Minimum import Minimum
 

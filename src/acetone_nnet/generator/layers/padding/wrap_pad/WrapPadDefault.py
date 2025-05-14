@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.wrap_pad_implementation import (
-    wrap_pad_factory,
-)
+from acetone_nnet.versioning.layer_factories import wrap_pad_factory
 
 from .WrapPad import WrapPad
 

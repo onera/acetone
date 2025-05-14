@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.max_pooling_implementation import (
-    max_pooling_factory,
-)
+from acetone_nnet.versioning.layer_factories import max_pooling_factory
 
 from .MaxPooling2D import MaxPooling2D
 

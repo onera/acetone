@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.transpose_implementation import (
-    transpose_factory,
-)
+from acetone_nnet.versioning.layer_factories import transpose_factory
 
 from .Transpose import Transpose
 

@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.conv_implementation import (
-    conv2d_factory,
-)
+from acetone_nnet.versioning.layer_factories import conv2d_factory
 
 from .Conv2D import Conv2D
 

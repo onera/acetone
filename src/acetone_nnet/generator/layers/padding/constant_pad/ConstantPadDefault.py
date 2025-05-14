@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.constant_pad_implementation import (
-    constant_pad_factory,
-)
+from acetone_nnet.versioning.layer_factories import constant_pad_factory
 
 from .ConstantPad import ConstantPad
 

@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.average_pooling_implementation import (
-    average_pooling_factory,
-)
+from acetone_nnet.versioning.layer_factories import average_pooling_factory
 
 from .AveragePooling2D import AveragePooling2D
 

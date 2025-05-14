@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.matmul_implementation import (
-    matmul_factory,
-)
+from acetone_nnet.versioning.layer_factories import matmul_factory
 
 from .MatMul import MatMul
 

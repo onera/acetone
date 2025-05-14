@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.resize_cubic_implementation import (
-    resize_cubic_factory,
-)
+from acetone_nnet.versioning.layer_factories import resize_cubic_factory
 
 from .ResizeCubic import ResizeCubic
 

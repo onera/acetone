@@ -23,9 +23,7 @@ import numpy as np
 from typing_extensions import Any, Self
 
 from acetone_nnet.generator.layers.broadcast.Broadcast import Broadcast
-from acetone_nnet.versioning.version_implementation.subtract_implementation import (
-    subtract_factory,
-)
+from acetone_nnet.versioning.layer_factories import subtract_factory
 
 from .Subtract import Subtract
 

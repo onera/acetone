@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.resize_linear_implementation import (
-    resize_linear_factory,
-)
+from acetone_nnet.versioning.layer_factories import resize_linear_factory
 
 from .ResizeLinear import ResizeLinear
 

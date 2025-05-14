@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.concatenate_implementation import (
-    concatenate_factory,
-)
+from acetone_nnet.versioning.layer_factories import concatenate_factory
 
 from .Concatenate import Concatenate
 

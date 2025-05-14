@@ -19,25 +19,30 @@
 ******************************************************************************
 """
 
-from abc import abstractmethod
-
 import numpy as np
+import pystache
 from typing_extensions import Self
 
+from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.generator.Layer import Layer
 
 
 class ActivationLayer(Layer):
     """Abstract class for activation layers."""
 
-    def __init__(self: Self, idx: int, op_type: str, size: int, **kwargs) -> None:
+    def __init__(
+            self: Self,
+            idx: int,
+            size: int,
+            activation_function: ActivationFunctions,
+    ) -> None:
         """Initiate the class."""
         super().__init__()
 
         self.idx = idx
-        self.op_type = op_type
         self.size = size
-        self.kwargs = kwargs
+        self.activation_function = activation_function
+        self.name = activation_function.name.capitalize()
 
         ####### Checking the instantiation#######
 
@@ -49,8 +54,8 @@ class ActivationLayer(Layer):
         if type(self.size) is not int:
             msg += "Error: size type in Activation Layer (size must be int)"
             msg += "\n"
-        if type(self.op_type) is not str:
-            msg += "Error: op_type type in Activation Layer (op_type must be str)"
+        if not isinstance(self.activation_function, ActivationFunctions):
+            msg += "Error: activation_function type in Activation Layer (activation_function must be ActivationFunctions)"
             msg += "\n"
         if msg:
             raise TypeError(msg)
@@ -72,13 +77,27 @@ class ActivationLayer(Layer):
         if msg:
             raise ValueError(msg)
 
-    @abstractmethod
+
     def forward_path_layer(
             self: Self,
             inputs: np.ndarray | list[np.ndarray],
     ) -> np.ndarray:
         """Compute output of layer."""
+        return self.activation_function.compute(inputs)
 
-    @abstractmethod
+
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
+        input_str = self.previous_layer[0].output_str
+
+        template = "    //{{name}}_{{idx}}\n"
+        template += "    for (k = 0; k < {{size}}; ++k) output_{{path}}[k] = {{{function_str}}}\n"
+
+        function_str = self.activation_function.write_activation_str(f"{input_str}[k]")
+        mustach_hash = {
+            "name": self.name,
+            "idx": self.idx,
+            "size": self.size,
+            "function_str": function_str,
+        }
+        return pystache.render(template, mustach_hash)

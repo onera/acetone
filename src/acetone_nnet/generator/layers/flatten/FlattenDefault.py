@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.flatten_implementation import (
-    flatten_factory,
-)
+from acetone_nnet.versioning.layer_factories import flatten_factory
 
 from .Flatten import Flatten
 

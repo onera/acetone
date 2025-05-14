@@ -22,9 +22,7 @@ import numpy as np
 from typing_extensions import Any, Self
 
 from acetone_nnet.generator.layers.reduce.Reduce import Reduce
-from acetone_nnet.versioning.version_implementation.reduce_max_implementation import (
-    reduce_max_factory,
-)
+from acetone_nnet.versioning.layer_factories import reduce_max_factory
 
 from .ReduceMax import ReduceMax
 

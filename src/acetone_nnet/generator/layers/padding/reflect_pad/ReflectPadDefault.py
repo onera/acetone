@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.reflect_pad_implementation import (
-    reflect_pad_factory,
-)
+from acetone_nnet.versioning.layer_factories import reflect_pad_factory
 
 from .ReflectPad import ReflectPad
 

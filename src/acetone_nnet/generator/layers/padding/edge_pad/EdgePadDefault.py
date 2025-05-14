@@ -21,9 +21,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.edge_pad_implementation import (
-    edge_pad_factory,
-)
+from acetone_nnet.versioning.layer_factories import edge_pad_factory
 
 from .EdgePad import EdgePad
 

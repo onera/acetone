@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.resize_nearest_implementation import (
-    resize_nearest_factory,
-)
+from acetone_nnet.versioning.layer_factories import resize_nearest_factory
 
 from .ResizeNearest import ResizeNearest
 

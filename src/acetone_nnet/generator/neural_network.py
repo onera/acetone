@@ -95,6 +95,43 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
+        self.default_implementations = {
+            "Conv2D": "6loops",
+            "BatchNormalization": "default",
+            "Concatenate": "default",
+            "Dense": "default",
+            "Flatten": "default",
+            "Gather": "default",
+            "GatherElements": "default",
+            "Gemm": "default",
+            "Input_layer": "default",
+            "MatMul": "default",
+            "Softmax": "default",
+            "Tile": "default",
+            "Transpose": "default",
+            "ReduceMax": "default",
+            "ReduceMean": "default",
+            "ReduceMin": "default",
+            "ReduceProd": "default",
+            "ReduceSum": "default",
+            "ResizeCubic": "default",
+            "ResizeLinear": "default",
+            "ResizeNearest": "default",
+            "Add": "default",
+            "Average": "default",
+            "Divide": "default",
+            "Maximum": "default",
+            "Minimum": "default",
+            "Multiply": "default",
+            "Subtract": "default",
+            "ConstantPad": "default",
+            "EdgePad": "default",
+            "ReflectPad": "default",
+            "WrapPad": "default",
+            "AveragePooling2D": "default",
+            "MaxPooling2D": "default",
+        }
+        self.default_implementations = dict(sorted(self.default_implementations.items()))
         self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
@@ -187,57 +224,18 @@ class CodeGenerator(ABC):
 
         """
         selected_implementations = {}
-        default_implementations = {
-            "Conv2D": "6loops",
-            "BatchNormalization": "default",
-            "Concatenate": "default",
-            "Dense": "default",
-            "Flatten": "default",
-            "Gather": "default",
-            "GatherElements": "default",
-            "Gemm": "default",
-            "Input_layer": "default",
-            "MatMul": "default",
-            "Softmax": "default",
-            "Tile": "default",
-            "Transpose": "default",
-            "ReduceMax": "default",
-            "ReduceMean": "default",
-            "ReduceMin": "default",
-            "ReduceProd": "default",
-            "ReduceSum": "default",
-            "ResizeCubic": "default",
-            "ResizeLinear": "default",
-            "ResizeNearest": "default",
-            "Add": "default",
-            "Average": "default",
-            "Divide": "default",
-            "Maximum": "default",
-            "Minimum": "default",
-            "Multiply": "default",
-            "Subtract": "default",
-            "ConstantPad": "default",
-            "EdgePad": "default",
-            "ReflectPad": "default",
-            "WrapPad": "default",
-            "AveragePooling2D": "default",
-            "MaxPooling2D": "default",
-        }
-        if versions is None:
+        for layer in self.layers:
             # Select the default implementation per layer type, if specified
-            for layer in self.layers:
-                d = default_implementations.get(layer.name, None)
-                if d is not None:
-                    selected_implementations[layer.idx] = d
-        else:
+            d = self.default_implementations.get(layer.name, None)
+            if d is not None:
+                selected_implementations[layer.idx] = d
+
             # Select the implementation based in priority on layer id, or type
-            for layer in self.layers:
+            if versions is not None:
                 for k in [layer.idx, layer.name]:
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
                         break
-                if layer.name in default_implementations:
-                    selected_implementations[layer.idx] = default_implementations[layer.name]
         return selected_implementations
 
     def load_debug_target(

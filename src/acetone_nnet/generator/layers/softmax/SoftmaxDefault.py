@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.softmax_implementation import (
-    softmax_factory,
-)
+from acetone_nnet.versioning.layer_factories import softmax_factory
 
 from .Softmax import Softmax
 

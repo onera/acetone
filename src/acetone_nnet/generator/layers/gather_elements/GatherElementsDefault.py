@@ -22,9 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.gather_elements_implementation import (
-    gather_elements_factory,
-)
+from acetone_nnet.versioning.layer_factories import gather_elements_factory
 
 from .GatherElements import GatherElements
 
