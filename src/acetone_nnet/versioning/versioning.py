@@ -18,18 +18,8 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from collections.abc import Callable
-
 from acetone_nnet.generator import Layer
-from acetone_nnet.versioning.version_implementation.conv_implementation import (
-    conv2d_factory,
-)
-
-LayerFactory = Callable[[Layer, str], Layer]
-
-implemented: dict[str, LayerFactory] = {
-    "Conv2D": conv2d_factory,
-}
+from acetone_nnet.versioning.layer_factories import implemented
 
 
 def register_factory(name: str, factory: LayerFactory) -> None:

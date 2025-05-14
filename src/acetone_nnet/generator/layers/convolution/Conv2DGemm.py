@@ -22,7 +22,6 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
 from .Conv2D import Conv2D
 
 
@@ -78,7 +77,7 @@ class Conv2DGemm(Conv2D):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Conv/template_Conv_gemm_nn.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_nn.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -119,7 +118,7 @@ class Conv2DGemm(Conv2D):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Conv/template_Conv_gemm_nt.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_nt.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -160,7 +159,7 @@ class Conv2DGemm(Conv2D):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Conv/template_Conv_gemm_tn.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_tn.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -201,7 +200,7 @@ class Conv2DGemm(Conv2D):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Conv/template_Conv_gemm_tt.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_tt.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

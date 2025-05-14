@@ -19,12 +19,24 @@
 ******************************************************************************
 """
 
-from .ConstantPad import ConstantPad
-from .EdgePad import EdgePad
+from .constant_pad.ConstantPad import ConstantPad
+from .constant_pad.ConstantPadDefault import ConstantPadDefault
+from .edge_pad.EdgePad import EdgePad
+from .edge_pad.EdgePadDefault import EdgePadDefault
 from .Pad import Pad
-from .ReflectPad import ReflectPad
-from .WrapPad import WrapPad
+from .reflect_pad.ReflectPad import ReflectPad
+from .reflect_pad.ReflectPadDefault import ReflectPadDefault
+from .wrap_pad.WrapPad import WrapPad
+from .wrap_pad.WrapPadDefault import WrapPadDefault
 
 __all__ = (
-    "Pad", "EdgePad", "ConstantPad", "ReflectPad", "WrapPad",
+    "ConstantPad",
+    "ConstantPadDefault",
+    "EdgePad",
+    "EdgePadDefault",
+    "Pad",
+    "ReflectPad",
+    "ReflectPadDefault",
+    "WrapPad",
+    "WrapPadDefault",
 )

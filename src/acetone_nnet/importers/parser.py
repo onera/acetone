@@ -28,7 +28,6 @@ from keras.engine.sequential import Sequential
 from acetone_nnet.generator import Layer
 
 
-
 def parser(
         file_to_parse: Any,
         debug: None | str = None,

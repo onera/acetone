@@ -20,16 +20,17 @@
 """
 
 import pystache
-from typing_extensions import Self
+from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
+from acetone_nnet.versioning.layer_factories import conv2d_factory
+
 from .Conv2D import Conv2D
 
 
 class Conv2D6loops(Conv2D):
     """Implements Conv2D using the six-loops algorithm (direct conv)."""
 
-    def __init__(self: Self, **kwargs: int) -> None:
+    def __init__(self: Self, **kwargs: Any) -> None:
         """Build a Convolution layer with 6 loops implementation."""
         super().__init__(**kwargs)
 
@@ -70,7 +71,7 @@ class Conv2D6loops(Conv2D):
             if self.activation_function.name == "linear":
                 mustach_hash["linear"] = True
 
-        with open(self.template_path + "layers/Conv/template_Conv_6loops.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_Conv_6loops.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -98,6 +99,7 @@ def conv2d_6loops_implementation(
         biases=old_layer.biases,
         activation_function=old_layer.activation_function,
     )
+
 
 conv2d_factory.register_implementation(None, conv2d_6loops_implementation)
 conv2d_factory.register_implementation("6loops", conv2d_6loops_implementation)

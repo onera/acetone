@@ -399,6 +399,7 @@ def create_pad(
             axe = axes[i]
             if axe < 0:
                 axe = len(input_shape) - axe
+            axes[i] = axe
     return create_pad_obj(
         mode=attributes["mode"],
         idx=idx,
@@ -861,7 +862,7 @@ def create_reduce_prod(
         dict_output: dict,
         model: onnx.ModelProto,
 ) -> ReduceProd:
-    """Create a ReduceProd layer."""
+    """Create a ReduceReduceProd layer."""
     onnx_version_change_implementation = 18
 
     input_shape = get_shape(node.input[0], model)
@@ -1100,13 +1101,14 @@ def create_div(
         else:
             dict_input[idx].append(input_value)
             input_shapes.append(get_shape(input_value, model))
+
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    if not constant.all(): # FIXME It seems like a test is missing here on the values of constant
-        if len(constant.shape) < constant_length:
-            for _i in range(4 - len(constant.shape)):
-                constant = np.expand_dims(constant, axis=0)
+    # FIXME It seems like a test is missing here on the values of constant
+    if not constant.all() and len(constant.shape) < constant_length:
+        for _i in range(4 - len(constant.shape)):
+            constant = np.expand_dims(constant, axis=0)
     input_shapes.append(constant.shape)
     input_shapes = np.array(input_shapes)
     return Divide(
@@ -1143,10 +1145,9 @@ def create_mul(
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    if not constant.all():
-        if len(constant.shape) < constant_length:
-            for _i in range(4 - len(constant.shape)):
-                constant = np.expand_dims(constant, axis=0)
+    if not constant.all() and len(constant.shape) < constant_length:
+        for _i in range(4 - len(constant.shape)):
+            constant = np.expand_dims(constant, axis=0)
     input_shapes.append(list(constant.shape))
     input_shapes = np.array(input_shapes)
     return Multiply(
@@ -1183,10 +1184,9 @@ def create_sub(
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    if constant.any():
-        if len(constant.shape) < constant_lenght:
-            for _i in range(4 - len(constant.shape)):
-                constant = np.expand_dims(constant, axis=0)
+    if constant.any() and len(constant.shape) < constant_lenght:
+        for _i in range(4 - len(constant.shape)):
+            constant = np.expand_dims(constant, axis=0)
     input_shapes.append(constant.shape)
     input_shapes = np.array(input_shapes)
     return Subtract(

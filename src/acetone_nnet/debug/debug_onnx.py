@@ -79,10 +79,10 @@ def run_model_onnx(
 def debug_onnx(
         target_model: onnx.ModelProto | str,
         dataset: np.ndarray,
-        debug_target: list[str] | None= None,
+        debug_target: list[str] | None = None,
         to_save: bool = False,
         path: str | Path = "",
-        otpimize_inputs: bool = False,
+        optimize_inputs: bool = False,
 ) -> (onnx.ModelProto, list[int], list[np.ndarray]):
     """Debug an ONNX model."""
     # Loading the model
@@ -106,7 +106,7 @@ def debug_onnx(
     model.graph.output.extend(value_info_protos)  # in inference stage, these tensor will be added to output dict.
 
     # Optimizing the model by removing the useless inputs
-    if otpimize_inputs:
+    if optimize_inputs:
         clean_inputs(model)
 
     onnx.checker.check_model(model)

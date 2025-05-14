@@ -119,7 +119,6 @@ class Broadcast(Layer):
     # Go through all the indices and do the operation
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
@@ -174,7 +173,7 @@ class Broadcast(Layer):
             constant_dict["operator"] = self.specific_operator
             mustach_hash["constant"] = [constant_dict]
 
-        with open(self.template_path + "layers/template_Broadcast.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Broadcast.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

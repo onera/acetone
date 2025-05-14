@@ -51,7 +51,7 @@ if __name__ == "__main__":
         "tests_network": network,
     }
 
-    cmd = ["python3", "-m", "unittest", "discover"]
+    cmd = ["python3.10", "-m", "unittest", "discover"]
 
     if len(sys.argv) == 1:
         print(

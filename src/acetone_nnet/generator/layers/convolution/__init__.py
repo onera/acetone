@@ -22,15 +22,15 @@
 from .Conv2D import Conv2D
 from .Conv2D6loops import Conv2D6loops
 from .Conv2DGemm import Conv2DGemm
+from .Conv2DGemmTarget import Conv2DGemmTarget
 from .Conv2DIndirectGemm import Conv2DIndirectGemm
 from .Conv2DStdGemm import Conv2DStdGemm
-from .Conv2DGemmTarget import Conv2DGemmTarget
 
 __all__ = (
     "Conv2D",
     "Conv2D6loops",
     "Conv2DGemm",
+    "Conv2DGemmTarget",
     "Conv2DIndirectGemm",
     "Conv2DStdGemm",
-    "Conv2DGemmTarget",
 )

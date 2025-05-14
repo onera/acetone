@@ -20,72 +20,116 @@
 """
 
 from . import (
+    batch_normalization,
     broadcast,
+    concatenate,
     convolution,
+    dense,
+    flatten,
+    gather,
+    gather_elements,
+    gemm,
+    input,
+    matmul,
     padding,
     pooling,
     reduce,
     resize,
+    softmax,
+    tile,
+    transpose,
 )
-from .AddBias import AddBias
-from .BatchNormalization import BatchNormalization
+from .batch_normalization import BatchNormalization, BatchNormalizationDefault
 from .broadcast import (
     Add,
+    AddDefault,
     Average,
+    AverageDefault,
     Broadcast,
     Divide,
+    DivideDefault,
     Maximum,
+    MaximumDefault,
     Minimum,
+    MinimumDefault,
     Multiply,
+    MultiplyDefault,
     Subtract,
+    SubtractDefault,
 )
-from .Concatenate import Concatenate
+from .concatenate import Concatenate, ConcatenateDefault
 from .convolution import (
     Conv2D,
     Conv2D6loops,
     Conv2DGemm,
+    Conv2DGemmTarget,
     Conv2DIndirectGemm,
     Conv2DStdGemm,
-    Conv2DGemmTarget,
 )
-from .Dense import Dense
-from .Dot import Dot
-from .Flatten import Flatten
-from .Gather import Gather
-from .GatherElements import GatherElements
-from .Gemm import Gemm
-from .Input import InputLayer
-from .MatMul import MatMul
-from .padding import ConstantPad, EdgePad, Pad, ReflectPad, WrapPad
-from .pooling import AveragePooling2D, MaxPooling2D, Pooling2D
+from .dense import Dense, DenseDefault
+from .flatten import Flatten, FlattenDefault
+from .gather import Gather, GatherDefault
+from .gather_elements import GatherElements, GatherElementsDefault
+from .gemm import Gemm, GemmDefault
+from .input import InputLayer, InputLayerDefault
+from .matmul import MatMul, MatMulDefault
+from .padding import (
+    ConstantPad,
+    ConstantPadDefault,
+    EdgePad,
+    EdgePadDefault,
+    Pad,
+    ReflectPad,
+    ReflectPadDefault,
+    WrapPad,
+    WrapPadDefault,
+)
+from .pooling import (
+    AveragePooling2D,
+    AveragePooling2DDefault,
+    MaxPooling2D,
+    MaxPooling2DDefault,
+    Pooling2D,
+)
 from .reduce import (
     Reduce,
     ReduceMax,
+    ReduceMaxDefault,
     ReduceMean,
+    ReduceMeanDefault,
     ReduceMin,
+    ReduceMinDefault,
     ReduceProd,
+    ReduceProdDefault,
     ReduceSum,
+    ReduceSumDefault,
 )
-from .resize import Resize, ResizeCubic, ResizeLinear, ResizeNearest
-from .Softmax import Softmax
-from .Tile import Tile
-from .Transpose import Transpose
+from .resize import (
+    Resize,
+    ResizeCubic,
+    ResizeCubicDefault,
+    ResizeLinear,
+    ResizeLinearDefault,
+    ResizeNearest,
+    ResizeNearestDefault,
+)
+from .softmax import Softmax, SoftmaxDefault
+from .tile import Tile, TileDefault
+from .transpose import Transpose, TransposeDefault
 
 __all__ = (
-    "AddBias",
-    "Concatenate",
-    "Dense",
-    "Dot",
-    "Flatten",
-    "Gather",
-    "Gemm",
-    "InputLayer",
-    "MatMul",
-    "Softmax",
-    "BatchNormalization",
-    "Transpose",
-    "GatherElements",
-    "Tile",
+    dense.__all__,
+    flatten.__all__,
+    gather.__all__,
+    gemm.__all__,
+    input.__all__,
+    matmul.__all__,
+    softmax.__all__,
+    transpose.__all__,
+    gather_elements.__all__,
+    tile.__all__,
+    batch_normalization.__all__,
+    concatenate.__all__,
     broadcast.__all__,
     convolution.__all__,
     padding.__all__,

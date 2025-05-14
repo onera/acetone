@@ -44,12 +44,7 @@ class Layer(ABC):
         self.sorted: int | None = None
         self.output_str = ""
         self.fused_layer = None
-        self.template_path = (
-                str(
-                    Path(templates.__file__).parent,
-                )
-                + "/"
-        )  # FIXME Should be a proper path
+        self.template_path = Path(templates.__file__).parent
 
         super().__init__()
 

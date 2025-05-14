@@ -22,7 +22,8 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.version_implementation.conv_implementation import conv2d_factory
+from acetone_nnet.versioning.layer_factories import conv2d_factory
+
 from . import Conv2D
 from .Conv2DGemm import Conv2DGemm
 
@@ -61,7 +62,7 @@ class Conv2DStdGemm(Conv2DGemm):
         mustach_hash["patches_width"] = self.patches_width
         mustach_hash["output_str"] = output_str
 
-        with open(self.template_path + "layers/Conv/template_im2col.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_im2col.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -89,7 +90,7 @@ class Conv2DStdGemm(Conv2DGemm):
         mustach_hash["patches_width"] = self.patches_width
         mustach_hash["output_str"] = output_str
 
-        with open(self.template_path + "layers/Conv/template_im2row.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_im2row.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -119,7 +120,7 @@ class Conv2DStdGemm(Conv2DGemm):
             mustach_hash["cst"] = True
             mustach_hash["input_size"] = self.input_channels * self.input_height * self.input_width
 
-        with open(self.template_path + "layers/Conv/template_Conv_std_gemm.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "Conv" / "template_Conv_std_gemm.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

@@ -44,13 +44,11 @@ from acetone_nnet.generator.layers import (
     Conv2DIndirectGemm,
     Conv2DStdGemm,
     Dense,
-    Dot,
     Gather,
     GatherElements,
     Gemm,
     MatMul,
     MaxPooling2D,
-    Pad,
     Pooling2D,
     Reduce,
     ResizeCubic,
@@ -99,8 +97,45 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
+        self.default_implementations = {
+            "Conv2D": "6loops",
+            "BatchNormalization": "default",
+            "Concatenate": "default",
+            "Dense": "default",
+            "Flatten": "default",
+            "Gather": "default",
+            "GatherElements": "default",
+            "Gemm": "default",
+            "Input_layer": "default",
+            "MatMul": "default",
+            "Softmax": "default",
+            "Tile": "default",
+            "Transpose": "default",
+            "ReduceMax": "default",
+            "ReduceMean": "default",
+            "ReduceMin": "default",
+            "ReduceProd": "default",
+            "ReduceSum": "default",
+            "ResizeCubic": "default",
+            "ResizeLinear": "default",
+            "ResizeNearest": "default",
+            "Add": "default",
+            "Average": "default",
+            "Divide": "default",
+            "Maximum": "default",
+            "Minimum": "default",
+            "Multiply": "default",
+            "Subtract": "default",
+            "ConstantPad": "default",
+            "EdgePad": "default",
+            "ReflectPad": "default",
+            "WrapPad": "default",
+            "AveragePooling2D": "default",
+            "MaxPooling2D": "default",
+        }
+        self.default_implementations = dict(sorted(self.default_implementations.items()))
         self.layers: list[Any] = l
-        self.versions = self._select_layers_implementation(versions)
+        self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
         self.data_type = dtype
         self.data_type_py = dtype_py
@@ -110,6 +145,7 @@ class CodeGenerator(ABC):
 
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)
+
         self.test_dataset = self._initialise_dataset(
             test_dataset,
             int(nb_tests),
@@ -178,8 +214,8 @@ class CodeGenerator(ABC):
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
 
-    # FIXME Unify default layer selection between this and the versioning module.
-    def _select_layers_implementation(
+
+    def select_layers_implementation(
         self: Self,
         versions: dict[int, str] | dict[str, str] | None,
     ) -> dict[int, str]:
@@ -198,20 +234,14 @@ class CodeGenerator(ABC):
 
         """
         selected_implementations = {}
-        default_implementations = {
-            "Conv2D": "std_gemm_nn",
-        }
-        if versions is None:
+        for layer in self.layers:
             # Select the default implementation per layer type, if specified
-            for layer in self.layers:
-                d = default_implementations.get(layer.name, None)
-                if d is not None:
-                    selected_implementations[layer.idx] = d
-        else:
+            d = self.default_implementations.get(layer.name, None)
+            if d is not None:
+                selected_implementations[layer.idx] = d
+
             # Select the implementation based in priority on layer id, or type
-            for layer in self.layers:
-                if layer.name in default_implementations:
-                    selected_implementations[layer.idx] = default_implementations[layer.name]
+            if versions is not None:
                 for k in [layer.idx, layer.name]:
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
@@ -268,13 +298,13 @@ class CodeGenerator(ABC):
         """
         test_dataset: list[list[np.number]] = []
         with path.open() as f:
-            # FIXME This returns at least one array of values even if nb_tests is 0.
+            # FIXME This returns at least one array of values even if nb_tests is 0.DONE
             for i, line in enumerate(f):
+                if i >= nb_tests:
+                    break
                 contents = json.loads(line)
                 contents = [float.fromhex(f) for f in contents]
                 test_dataset.append(list(map(dtype, contents)))
-                if i >= nb_tests - 1:
-                    break
         return np.array(test_dataset)
 
     def compute_inference(
@@ -392,7 +422,7 @@ class CodeGenerator(ABC):
                 if self.normalize:
                     nn_output = self.Normalizer.post_processing(nn_output)
                 out_string = " ".join(
-                    [float(n).hex().replace("0000000p", "p") for n in nn_output]
+                    [float(n).hex().replace("0000000p", "p") for n in nn_output],
                 )
                 print(f"{out_string}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
@@ -404,7 +434,7 @@ class CodeGenerator(ABC):
         return nn_output
 
     @staticmethod
-    def flatten_array_orderc(array: np.ndarray) -> str:
+    def flatten_array_order_c(array: np.ndarray) -> str:
         """Generate C flat array initializer in C order."""
         flattened_aray = array.flatten(order="C")
         s = "\n        {"
@@ -431,8 +461,8 @@ class CodeGenerator(ABC):
                         s += (
                             str(
                                 float.hex(float(array[k, f, i, j])).replace(
-                                    "0000000p", "p"
-                                )
+                                    "0000000p", "p",
+                                ),
                             )
                             + ", "
                         )
@@ -468,7 +498,7 @@ class CodeGenerator(ABC):
             dataset = "{"
             if self.test_dataset is not None:
                 dataset += ",".join(
-                    map(CodeGenerator.flatten_array_orderc, self.test_dataset),
+                    map(CodeGenerator.flatten_array_order_c, self.test_dataset),
                 )
             dataset += "};\n"
 
@@ -609,15 +639,15 @@ class CodeGenerator(ABC):
                 indices.append(
                     {
                         "idx": f"{gather.idx:02d}",
-                        "lenght": len(gather.indices.flatten()),
-                        "list": self.flatten_array_orderc(gather.indices),
+                        "length": len(gather.indices.flatten()),
+                        "list": self.flatten_array_order_c(gather.indices),
                     },
                 )
             mustach_hash["indices"] = indices
 
         self.l_size_max = max((i.size for i in self.layers), default=1)
 
-        if any(isinstance(i, Dot | Pooling2D | Conv2D | Gemm) for i in self.layers):
+        if any(isinstance(i, Pooling2D | Conv2D | Gemm) for i in self.layers):
             mustach_hash["p"] = True
 
         if any(
@@ -711,7 +741,7 @@ class CodeGenerator(ABC):
                 Path(self.template_path)
                 / "memory_layout/template_channels_last_output.c.tpl"
             ).read_text()
-            mustach_hash["ouput_str"] = pystache.render(template, output_hash)
+            mustach_hash["output_str"] = pystache.render(template, output_hash)
         else:
             output_hash["output_size"] = self.layers[-1].size
             if self.data_format == "channels_first":
@@ -725,7 +755,7 @@ class CodeGenerator(ABC):
                 Path(self.template_path)
                 / "memory_layout/template_channels_first_output.c.tpl"
             ).read_text()
-            mustach_hash["ouput_str"] = pystache.render(template, output_hash)
+            mustach_hash["output_str"] = pystache.render(template, output_hash)
 
         if self.normalize:
             mustach_hash["pre_processing"] = self.Normalizer.write_pre_processing()
@@ -797,14 +827,12 @@ class CodeGenerator(ABC):
 
             if hasattr(layer, "weights"):
                 layer_hash["nb_weights"] = layer.nb_weights
-                if layer.nb_weights > self.nb_weights_max:
-                    self.nb_weights_max = layer.nb_weights
+                self.nb_weights_max = max(layer.nb_weights, self.nb_weights_max)
                 to_print = True
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
-                if layer.nb_biases > self.nb_biases_max:
-                    self.nb_biases_max = layer.nb_biases
+                self.nb_biases_max = max(layer.nb_biases, self.nb_biases_max)
                 to_print = True
 
             if isinstance(layer, Conv2DIndirectGemm):
@@ -888,7 +916,7 @@ class CodeGenerator(ABC):
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
-                layer_hash["biases"] = self.flatten_array_orderc(layer.biases)
+                layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
                 to_print = True
 
             if type(layer) is Conv2DIndirectGemm:
@@ -898,13 +926,13 @@ class CodeGenerator(ABC):
 
             if type(layer) is BatchNormalization:
                 layer_hash["channels"] = layer.output_channels
-                layer_hash["mean"] = self.flatten_array_orderc(layer.mean)
-                layer_hash["var"] = self.flatten_array_orderc(layer.var)
-                layer_hash["scale"] = self.flatten_array_orderc(layer.scale)
+                layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
+                layer_hash["var"] = self.flatten_array_order_c(layer.var)
+                layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
                 to_print = True
 
             if issubclass(type(layer), Broadcast) and layer.constant is not None:
-                layer_hash["constant"] = self.flatten_array_orderc(layer.constant)
+                layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
                 layer_hash["constant_size"] = layer.constant_size
                 to_print = True
 

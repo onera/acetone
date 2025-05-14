@@ -30,7 +30,7 @@ from acetone_nnet.generator.Layer import Layer
 
 
 class Reduce(Layer):
-    """Reduce layer base class."""
+    """Reduce layer base implementation class."""
 
     def __init__(
             self: Self,
@@ -51,7 +51,7 @@ class Reduce(Layer):
         self.reduce_func = ""
 
         self.axes = axis
-        self.keepdims = keepdims
+        self.keepdims = bool(keepdims)
         self.noop_with_empty_axes = noop_with_empty_axes
 
         self.input_channels = input_shape[1]
@@ -85,8 +85,8 @@ class Reduce(Layer):
         if type(self.size) is not int:
             msg += "Error: size type in Reduce (size must be int)"
             msg += "\n"
-        if type(self.keepdims) is not int:
-            msg += "Error: keepdims type in Reduce (size must be int)"
+        if type(self.keepdims) is not bool:
+            msg += "Error: keepdims type in Reduce (size must be bool)"
             msg += "\n"
         if type(self.noop_with_empty_axes) is not int:
             msg += "Error: noop with empty axes type in Reduce (size must be int)"
@@ -131,10 +131,8 @@ class Reduce(Layer):
     ) -> np.ndarray:
         """Compute output of layer."""
 
-    def generate_inference_code_layer(self: Self) -> str:
+    def generate_inference_code_layer(self: Self, output_str) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
@@ -251,7 +249,7 @@ class Reduce(Layer):
             if self.reduce_func in ("Max", "Min"):
                 mustach_hash["starting_value"] = output_str + "[0]"
 
-        with open(self.template_path + "layers/template_Reduce.c.tpl") as template_file:
+        with open(self.template_path / "layers" / "template_Reduce.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 

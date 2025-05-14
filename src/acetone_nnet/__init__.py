@@ -24,7 +24,6 @@ from .cli.compare import cli_compare
 from .generator import (
     ActivationFunctions,
     Add,
-    AddBias,
     Average,
     AveragePooling2D,
     BatchNormalization,
@@ -41,7 +40,6 @@ from .generator import (
     Conv2DStdGemm,
     Dense,
     Divide,
-    Dot,
     EdgePad,
     Exponential,
     Flatten,
