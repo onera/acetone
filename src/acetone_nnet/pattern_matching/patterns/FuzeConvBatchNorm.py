@@ -21,9 +21,10 @@
 
 import numpy as np
 
+from acetone_nnet.generator.activation_functions import Linear
 from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import BatchNormalization, Conv2D
-from acetone_nnet.pattern_matching.Pattern import Pattern, update_indices
+from acetone_nnet.pattern_matching.Pattern import Pattern, list_patterns, update_indices
 
 
 class FuseConvBatchNorm(Pattern):
@@ -42,12 +43,18 @@ class FuseConvBatchNorm(Pattern):
         if not isinstance(layer, BatchNormalization):
             return False
 
-        # Checking if the previous layer exists, is a Conv2D and has only one child
+        # Checking if the previous layer:
+        #     - exists
+        #     - is a Conv2D
+        #     - has only one child
+        #     - has a linear activation function
         if len(layer.previous_layer) != 1:
             return False
         if not isinstance(layer.previous_layer[0], Conv2D):
             return False
         if len(layer.previous_layer[0].next_layer) != 1:
+            return False
+        if not isinstance(layer.previous_layer[0].activation_function, Linear):
             return False
 
         return True
@@ -87,3 +94,5 @@ class FuseConvBatchNorm(Pattern):
         update_indices(index - 1, layers, 1)
 
         return self.pattern.format(index - 1, index, index - 1)
+
+list_patterns.append(FuseConvBatchNorm())

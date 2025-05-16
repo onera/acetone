@@ -59,3 +59,5 @@ class Pattern(ABC):
     @abstractmethod
     def apply_pattern(self: Self, index: int, layers: list[Layer]) -> str:
         """Apply the pattern to the layer."""
+
+list_patterns: list[Pattern] = []
