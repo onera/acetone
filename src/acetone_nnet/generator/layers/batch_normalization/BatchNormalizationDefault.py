@@ -65,7 +65,7 @@ class BatchNormalizationDefault(BatchNormalization):
 
 def batch_normalization_default_implementation(
         old_layer: BatchNormalization,
-        version, str,
+        version: str,
 ) -> BatchNormalizationDefault:
     """Create a BatchNormalization_Default layer using the attributes of old_layer."""
     return BatchNormalizationDefault(

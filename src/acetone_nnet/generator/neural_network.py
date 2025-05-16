@@ -924,7 +924,7 @@ class CodeGenerator(ABC):
                 layer_hash["patches"] = layer.create_ppatches()
                 to_print = True
 
-            if type(layer) is BatchNormalization:
+            if issubclass(type(layer), BatchNormalization):
                 layer_hash["channels"] = layer.output_channels
                 layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
                 layer_hash["var"] = self.flatten_array_order_c(layer.var)
