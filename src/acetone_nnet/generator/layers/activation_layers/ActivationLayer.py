@@ -60,23 +60,6 @@ class ActivationLayer(Layer):
         if msg:
             raise TypeError(msg)
 
-        ### Checking value consistency ###
-        msg = ""
-        if self.op_type not in [
-            "sigmoid",
-            "relu",
-            "leakyrelu",
-            "hyperb_tan",
-            "linear",
-            "Exponential",
-            "Logarithm",
-            "Clip",
-        ]:
-            msg += f"Error: op_type value in Activation Layer ({self.conv_algorithm})"
-            msg += "\n"
-        if msg:
-            raise ValueError(msg)
-
 
     def forward_path_layer(
             self: Self,
@@ -90,7 +73,7 @@ class ActivationLayer(Layer):
         """Generate computation code for layer."""
         input_str = self.previous_layer[0].output_str
 
-        template = "    //{{name}}_{{idx}}\n"
+        template  = "    //{{name}}_{{idx}}\n"
         template += "    for (k = 0; k < {{size}}; ++k) output_{{path}}[k] = {{{function_str}}}\n"
 
         function_str = self.activation_function.write_activation_str(f"{input_str}[k]")

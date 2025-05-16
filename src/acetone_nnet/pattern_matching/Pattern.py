@@ -27,6 +27,21 @@ from typing_extensions import Self
 from acetone_nnet.generator.Layer import Layer
 
 
+def update_indices(index: int, layers: list[Layer], shift: int) -> None:
+    """Update the indices of the layers after index by shifting them of shift."""
+    nb_layers = len(layers)
+
+    if index >= nb_layers:
+        m = f"Index out of bound ({index} > {nb_layers})"
+        raise ValueError(m)
+    if shift > index:
+        m = f"Shift can't superior to the index ({shift} > {index})"
+        raise ValueError(m)
+
+    for i in range(index + 1, nb_layers):
+        layers[i].idx = layers[i].idx - shift
+
+
 @dataclass
 class Pattern(ABC):
     """Base class for patterns."""
