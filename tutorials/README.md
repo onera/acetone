@@ -55,7 +55,7 @@ In the later part, we use some provided tools to create a reference (known to be
 
  ## ACETONE Tutorial 4: Creating a new layer implementation
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/onera/acetone/main?urlpath=%2 Fdoc%2Ftree%2Ftutorials%2Ftutorial4_new_variants.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/onera/acetone/main?urlpath=%2Fdoc%2Ftree%2Ftutorials%2Ftutorial4_new_variants.ipynb)
 
 After seeing how to use several implementations for a specific type of layers, and how to use the mode debug to locate errors in our inference, we want to use them both to create our own implementation and ensure its correctness. 
 
