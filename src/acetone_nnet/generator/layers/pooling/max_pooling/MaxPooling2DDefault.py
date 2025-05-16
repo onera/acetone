@@ -31,7 +31,7 @@ class MaxPooling2DDefault(MaxPooling2D):
     """MaxPooling layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwds: int) -> None:
-        """Build an MaxPooling layer."""
+        """Build a MaxPooling layer."""
         super().__init__(**kwds)
         self.local_var = "max"
         self.output_var = self.local_var

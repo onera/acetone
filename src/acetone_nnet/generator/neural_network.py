@@ -33,6 +33,7 @@ from keras.engine.sequential import Sequential
 from typing_extensions import Self
 
 from acetone_nnet import templates
+from acetone_nnet.exporters.exporter import exporter
 from acetone_nnet.generator.layers import (
     AveragePooling2D,
     BatchNormalization,
@@ -213,6 +214,19 @@ class CodeGenerator(ABC):
         if self.debug_mode and self.debug_mode not in ["keras", "onnx", "time"]:
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
+
+    def export_model(
+            self: Self,
+            format:str = "onnx",
+            graph_name:str="ACETONE graph"
+    ) -> onnx.ModelProto | None:
+        """Export ACETONE's internal representation to a specific format."""
+        return exporter(
+            format=format,
+            list_layer=self.layers,
+            datatype_py=self.data_type_py,
+            graph_name=graph_name,
+        )
 
 
     def select_layers_implementation(

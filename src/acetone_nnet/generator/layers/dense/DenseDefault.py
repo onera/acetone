@@ -34,6 +34,7 @@ class DenseDefault(Dense):
         """Build a Dense layer with default implementation."""
         super().__init__(**kwargs)
         self.version = version
+        self.local_var = "dotproduct"
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""

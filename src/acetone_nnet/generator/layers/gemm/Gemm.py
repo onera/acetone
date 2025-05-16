@@ -65,6 +65,7 @@ class Gemm(Layer):
 
         self.transpo = (transA, transB)
 
+        self.output_channels = output_shape[1]
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         if input_shape:

@@ -79,4 +79,4 @@ class Flatten(Layer):
         """Compute output of layer."""
         if self.data_format == "channels_last":
             return np.transpose(np.reshape(input_array, self.input_shape[1:]), (1, 2, 0))
-        return input_array
+        return input_array.flatten()

@@ -46,7 +46,6 @@ class Dense(Layer):
         self.weights = weights
         self.biases = biases
         self.activation_function = activation_function
-        self.local_var = "dotproduct"
 
         self.nb_weights = self.count_elements_array(self.weights)
         self.nb_biases = self.count_elements_array(self.biases)

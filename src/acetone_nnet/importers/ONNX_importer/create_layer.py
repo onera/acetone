@@ -22,6 +22,7 @@ from typing import Any
 
 import numpy as np
 import onnx
+
 from acetone_nnet.generator.activation_functions import (
     Clip,
     Exponential,
@@ -404,10 +405,10 @@ def create_pad(
         mode=attributes["mode"],
         idx=idx,
         size=size,
-        pads=onnx.numpy_helper.to_array(initializers[0]),
-        constant_value=onnx.numpy_helper.to_array(initializers[1]),
+        pads=list(map(int,onnx.numpy_helper.to_array(initializers[0]))),
+        constant_value=int(onnx.numpy_helper.to_array(initializers[1])),
         axes=axes,
-        input_shape=input_shape,
+        input_shape=list(map(int,input_shape)),
         activation_function=Linear(),
     )
 
@@ -561,7 +562,7 @@ def create_matmul(
             weights = np.moveaxis(weights, 0, 3)
             dict_input[idx] = [node.input[1]]
         if left_tensor and not right_tensor:
-            # the weight is the right tensor:  MatMul(W,T)
+            # the weight is the left tensor:  MatMul(T,W)
             side = 0
             input_shape = get_shape(node.input[0], model)
             weights = onnx.numpy_helper.to_array(left_tensor)
@@ -1303,7 +1304,7 @@ layer_type = {"Softmax": create_softmax,
               "Mean": create_avg}
 
 
-###### Function to deal with the 'non important' layers of the graph ######
+###### Function to deal with the 'non-important' layers of the graph ######
 
 # Do the operation: Dropout.input = Dropout.output
 def bypass(

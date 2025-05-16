@@ -25,6 +25,7 @@ from typing import Any
 import onnx
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
+
 from acetone_nnet.generator import Layer
 
 
