@@ -22,6 +22,9 @@
 import pystache
 from typing_extensions import Any, Self
 
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import dense_factory
 
 from .Dense import Dense
@@ -97,3 +100,4 @@ dense_factory.register_implementation(
     "default",
     dense_default_implementation,
 )
+default_implementations_manager.set_as_default("Dense", "default")

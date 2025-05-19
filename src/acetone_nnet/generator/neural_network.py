@@ -33,7 +33,6 @@ from keras.engine.sequential import Sequential
 from typing_extensions import Self
 
 from acetone_nnet import templates
-from acetone_nnet.exporters.exporter import exporter
 from acetone_nnet.generator.layers import (
     AveragePooling2D,
     BatchNormalization,
@@ -58,7 +57,9 @@ from acetone_nnet.generator.layers import (
     Softmax,
 )
 from acetone_nnet.importers.parser import parser
+from acetone_nnet.pattern_matching.pattern_matcher import pattern_matcher
 from acetone_nnet.templates.template_makefile import TemplateMakefile
+from acetone_nnet.versioning.default_implementations import default_implementations_manager
 from acetone_nnet.versioning.versioning import versioning
 
 
@@ -78,6 +79,7 @@ class CodeGenerator(ABC):
         normalize: bool | str = False,
         debug_mode: str | None = None,
         verbose: bool = True,
+        optimization: bool = True,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -86,6 +88,8 @@ class CodeGenerator(ABC):
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
         self.verbose = verbose
+        self.optimization = optimization
+        self.log = ""
 
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
@@ -98,44 +102,9 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
-        self.default_implementations = {
-            "Conv2D": "6loops",
-            "BatchNormalization": "default",
-            "Concatenate": "default",
-            "Dense": "default",
-            "Flatten": "default",
-            "Gather": "default",
-            "GatherElements": "default",
-            "Gemm": "default",
-            "Input_layer": "default",
-            "MatMul": "default",
-            "Softmax": "default",
-            "Tile": "default",
-            "Transpose": "default",
-            "ReduceMax": "default",
-            "ReduceMean": "default",
-            "ReduceMin": "default",
-            "ReduceProd": "default",
-            "ReduceSum": "default",
-            "ResizeCubic": "default",
-            "ResizeLinear": "default",
-            "ResizeNearest": "default",
-            "Add": "default",
-            "Average": "default",
-            "Divide": "default",
-            "Maximum": "default",
-            "Minimum": "default",
-            "Multiply": "default",
-            "Subtract": "default",
-            "ConstantPad": "default",
-            "EdgePad": "default",
-            "ReflectPad": "default",
-            "WrapPad": "default",
-            "AveragePooling2D": "default",
-            "MaxPooling2D": "default",
-        }
-        self.default_implementations = dict(sorted(self.default_implementations.items()))
         self.layers: list[Any] = l
+        if self.optimization:
+            self.layers, self.log = pattern_matcher(self.layers)
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
         self.data_type = dtype
@@ -215,20 +184,6 @@ class CodeGenerator(ABC):
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
 
-    def export_model(
-            self: Self,
-            format:str = "onnx",
-            graph_name:str="ACETONE graph"
-    ) -> onnx.ModelProto | None:
-        """Export ACETONE's internal representation to a specific format."""
-        return exporter(
-            format=format,
-            list_layer=self.layers,
-            datatype_py=self.data_type_py,
-            graph_name=graph_name,
-        )
-
-
     def select_layers_implementation(
         self: Self,
         versions: dict[int, str] | dict[str, str] | None,
@@ -250,7 +205,7 @@ class CodeGenerator(ABC):
         selected_implementations = {}
         for layer in self.layers:
             # Select the default implementation per layer type, if specified
-            d = self.default_implementations.get(layer.name, None)
+            d = default_implementations_manager.default_implementations.get(layer.name, None)
             if d is not None:
                 selected_implementations[layer.idx] = d
 
@@ -857,7 +812,7 @@ class CodeGenerator(ABC):
                 layer_hash["channels"] = layer.output_channels
                 to_print = True
 
-            if issubclass(type(layer), Broadcast) and layer.constant is not None:
+            if isinstance(layer, Broadcast) and layer.constant is not None:
                 layer_hash["constant_size"] = layer.constant_size
                 to_print = True
 
@@ -938,14 +893,14 @@ class CodeGenerator(ABC):
                 layer_hash["patches"] = layer.create_ppatches()
                 to_print = True
 
-            if type(layer) is BatchNormalization:
+            if isinstance(layer, BatchNormalization):
                 layer_hash["channels"] = layer.output_channels
                 layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
                 layer_hash["var"] = self.flatten_array_order_c(layer.var)
                 layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
                 to_print = True
 
-            if issubclass(type(layer), Broadcast) and layer.constant is not None:
+            if isinstance(layer, Broadcast) and layer.constant is not None:
                 layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
                 layer_hash["constant_size"] = layer.constant_size
                 to_print = True

@@ -20,7 +20,9 @@
 """
 
 from acetone_nnet.generator.Layer import Layer
-from acetone_nnet.pattern_matching.Pattern import Pattern, list_patterns
+from acetone_nnet.pattern_matching.patterns import FuseConvBatchNorm, MatMulAddToDense
+
+list_patterns = [FuseConvBatchNorm(), MatMulAddToDense()]
 
 
 def pattern_matcher(model: list[Layer]) -> tuple[list[Layer], str]:
@@ -30,11 +32,12 @@ def pattern_matcher(model: list[Layer]) -> tuple[list[Layer], str]:
     i = 0
     while i < len(temp):
         layer = temp[i]
-        msg = None
+        msg = ""
         for pattern in list_patterns:
             if pattern.is_pattern(layer):
                 pattern.apply_pattern(index=i,layers=temp)
                 log += msg
+        i += 1
 
     return temp, log
 

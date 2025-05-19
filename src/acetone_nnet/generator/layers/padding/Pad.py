@@ -53,6 +53,7 @@ class Pad(Layer):
         self.size = size
         self.pads = pads
         self.constant_value = constant_value
+        print(self.constant_value)
         self.axes = axes
         self.name = "Pad"
         self.input_shape = input_shape
@@ -117,13 +118,6 @@ class Pad(Layer):
             input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""
-        input_array = input_array.reshape(self.input_shape[1], self.input_shape[2], self.input_shape[3])
-        nb_dim = len(self.pads) // 2
-        pad_width = [(self.pads[i], self.pads[i + nb_dim]) for i in
-                     range(1, nb_dim)]  # Constructing the pads accordingly to the numpy nomenclature
-        return self.activation_function.compute(
-            np.pad(input_array, pad_width=pad_width, mode=self.mode, constant_values=self.constant_value),
-        )
 
     @abstractmethod
     def generate_inference_code_layer(self: Self) -> str:

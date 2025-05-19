@@ -22,6 +22,7 @@
 import pystache
 from typing_extensions import Any, Self
 
+from acetone_nnet.versioning.default_implementations import default_implementations_manager
 from acetone_nnet.versioning.layer_factories import conv2d_factory
 
 from .Conv2D import Conv2D
@@ -103,3 +104,4 @@ def conv2d_6loops_implementation(
 
 conv2d_factory.register_implementation(None, conv2d_6loops_implementation)
 conv2d_factory.register_implementation("6loops", conv2d_6loops_implementation)
+default_implementations_manager.set_as_default("Conv2D", "6loops")

@@ -22,6 +22,9 @@
 import pystache
 from typing_extensions import Self
 
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import reflect_pad_factory
 
 from .ReflectPad import ReflectPad
@@ -118,3 +121,4 @@ reflect_pad_factory.register_implementation(
     "default",
     reflect_pad_default_implementation,
 )
+default_implementations_manager.set_as_default("ReflectPad", "default")

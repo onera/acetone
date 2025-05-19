@@ -22,16 +22,15 @@ from pathlib import Path
 
 import numpy as np
 import onnx
+
 from acetone_nnet.generator import Layer
+from acetone_nnet.graph.graph_interpretor import tri_topo
 from acetone_nnet.importers.ONNX_importer.create_layer import (
     activation_layers,
-    create_batch_norm,
     create_input_layer,
-    fuse_batch_normalization,
     layer_type,
     unused_layers,
 )
-from acetone_nnet.graph.graph_interpretor import tri_topo
 
 
 def find_data_type(
@@ -86,19 +85,7 @@ def load_onnx(
 
     # Going through all the nodes to create the layers and add them to the list
     for node in model.graph.node:
-        if node.op_type == "BatchNormalization":
-            if layers[-1].name == "Conv2D" and not debug:
-                fuse_batch_normalization(node, dict_output, model, layers)
-            else:
-                layers.append(create_batch_norm(
-                    node,
-                    idx,
-                    dict_input,
-                    dict_output,
-                    model,
-                ))
-                idx += 1
-        elif node.op_type in layer_type:
+        if node.op_type in layer_type:
             # If the node is a useful layer, we add it to the list
             layers.append(layer_type[node.op_type](
                 node,

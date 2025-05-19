@@ -22,6 +22,9 @@
 import pystache
 from typing_extensions import Any, Self
 
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import input_factory
 
 from .Input import InputLayer
@@ -82,3 +85,4 @@ input_factory.register_implementation(
     "default",
     input_default_implementation,
 )
+default_implementations_manager.set_as_default("Input_layer", "default")

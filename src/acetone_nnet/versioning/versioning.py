@@ -30,14 +30,11 @@ def register_factory(name: str, factory: LayerFactory) -> None:
     implemented[name] = factory
 
 def list_all_implementations() -> dict[str, list[str]]:
+    """List all the registered layer implementations."""
     implem = {}
     for layer_name in implemented:
         implem[layer_name] = implemented[layer_name].list_implementations
-        
     return implem
-    
-
-
 
 def versioning(
         layers: list[Layer],

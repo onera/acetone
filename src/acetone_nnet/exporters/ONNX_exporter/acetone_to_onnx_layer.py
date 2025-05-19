@@ -644,6 +644,7 @@ def export_leaky_relu(
         op_type="LeakyRelu",
         inputs=[intput_name],
         outputs=[output_name],
+        alpha=layer.activation_function.alpha,
     )
 
     return node, []
@@ -739,6 +740,10 @@ list_activation_exporters = {
     "relu":export_relu,
     "hyperb_tan":export_tanh,
     "leakyrelu":export_leaky_relu,
+    "sigmoid": export_sigmoid,
+    "Exponential": export_exponential,
+    "Logarithm": export_log,
+    "Clip": export_clip,
 }
 ###### Functions to define the inputs and outputs of the graph ######
 def export_input(

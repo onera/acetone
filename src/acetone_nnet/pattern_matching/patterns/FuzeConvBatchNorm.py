@@ -24,7 +24,7 @@ import numpy as np
 from acetone_nnet.generator.activation_functions import Linear
 from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import BatchNormalization, Conv2D
-from acetone_nnet.pattern_matching.Pattern import Pattern, list_patterns, update_indices
+from acetone_nnet.pattern_matching.Pattern import Pattern, update_indices
 
 
 class FuseConvBatchNorm(Pattern):
@@ -88,11 +88,11 @@ class FuseConvBatchNorm(Pattern):
             next_layer.previous_layer.append(conv)
 
         conv.next_layer.remove(batch_norm)
+        conv.next_layer.extend(batch_norm.next_layer)
+        conv.activation_function = batch_norm.activation_function
 
         # Updating the list of layers
         layers.pop(index)
         update_indices(index - 1, layers, 1)
 
         return self.pattern.format(index - 1, index, index - 1)
-
-list_patterns.append(FuseConvBatchNorm())

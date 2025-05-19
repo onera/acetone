@@ -21,6 +21,9 @@
 import pystache
 from typing_extensions import Self
 
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import edge_pad_factory
 
 from .EdgePad import EdgePad
@@ -46,6 +49,9 @@ class EdgePadDefault(EdgePad):
         mustach_hash["channels_and_pad_front"] = self.input_shape[1] + self.pads[1]
         mustach_hash["height_and_pad_top"] = self.input_shape[2] + self.pads[2]
         mustach_hash["width_and_pad_left"] = self.input_shape[3] + self.pads[3]
+        mustach_hash["channels"] = self.input_shape[1] - 1
+        mustach_hash["height"] = self.input_shape[2] - 1
+        mustach_hash["width"] = self.input_shape[3] - 1
 
         with open(self.template_path / "layers" / "Pad" / "template_Edge_Pad.c.tpl") as template_file:
             template = template_file.read()
@@ -117,3 +123,4 @@ edge_pad_factory.register_implementation(
     "default",
     edge_pad_default_implementation,
 )
+default_implementations_manager.set_as_default("EdgePad", "default")

@@ -19,8 +19,10 @@
 ******************************************************************************
 """
 
-from .exporter import exporter
+from .FuzeConvBatchNorm import FuseConvBatchNorm
+from .FuzeMatMulAdd import MatMulAddToDense
 
 __all__ = (
-    "exporter",
+    "FuseConvBatchNorm",
+    "MatMulAddToDense",
 )

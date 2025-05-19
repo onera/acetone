@@ -22,6 +22,9 @@ import numpy as np
 from typing_extensions import Any, Self
 
 from acetone_nnet.generator.layers.reduce.Reduce import Reduce
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import reduce_min_factory
 
 from .ReduceMin import ReduceMin
@@ -75,3 +78,4 @@ reduce_min_factory.register_implementation(
     "default",
     reduce_min_default_implementation,
 )
+default_implementations_manager.set_as_default("ReduceMin", "default")

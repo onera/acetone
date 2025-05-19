@@ -22,6 +22,9 @@
 import pystache
 from typing_extensions import Self
 
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import resize_nearest_factory
 
 from .ResizeNearest import ResizeNearest
@@ -124,3 +127,4 @@ resize_nearest_factory.register_implementation(
     "default",
     resize_nearest_default_implementation,
 )
+default_implementations_manager.set_as_default("ResizeNearest", "default")

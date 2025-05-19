@@ -406,7 +406,7 @@ def create_pad(
         idx=idx,
         size=size,
         pads=list(map(int,onnx.numpy_helper.to_array(initializers[0]))),
-        constant_value=int(onnx.numpy_helper.to_array(initializers[1])),
+        constant_value=float(onnx.numpy_helper.to_array(initializers[1])),
         axes=axes,
         input_shape=list(map(int,input_shape)),
         activation_function=Linear(),
@@ -1301,7 +1301,8 @@ layer_type = {"Softmax": create_softmax,
               "Sub": create_sub,
               "Max": create_max,
               "Min": create_min,
-              "Mean": create_avg}
+              "Mean": create_avg,
+              "BatchNormalization":create_batch_norm}
 
 
 ###### Function to deal with the 'non-important' layers of the graph ######

@@ -16,14 +16,15 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+import numpy as np
 
-from tests.tests_inference import acetoneTestCase
+
 acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
 import sys
 sys.path.append(acetoneTestCase_path)
 import acetoneTestCase
-
 import keras
+import onnx
 from keras.layers import Input, ZeroPadding2D
 
 from tests.tests_inference import acetoneTestCase
@@ -47,6 +48,254 @@ class TestPad(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
+    def test_edge_pad(self):
+        testshape = (1, 5, 20, 20)
+
+        pads_name = "pads"
+        pads = np.random.randint(10, size=8)
+        pads[0] = 0
+        pads[4] = 0
+        pads_initializer = acetoneTestCase.create_initializer_tensor(
+            pads_name,
+            pads,
+            onnx.TensorProto.INT64,
+        )
+
+        cst_name = "constant"
+        cst = np.random.rand(1)
+        cst_initializer = acetoneTestCase.create_initializer_tensor(
+            cst_name,
+            cst,
+            onnx.TensorProto.FLOAT,
+        )
+
+        out_shape = (
+            1,
+            int(testshape[1] + pads[1] + pads[5]),
+            int(testshape[2] + pads[2] + pads[6]),
+            int(testshape[3] + pads[3] + pads[7]),
+        )
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name, onnx.TensorProto.FLOAT, testshape
+        )
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name, onnx.TensorProto.FLOAT, out_shape
+        )
+
+        activation_node = onnx.helper.make_node(
+            op_type="Pad",
+            inputs=[model_input_name, pads_name, cst_name],
+            outputs=[model_output_name],
+            mode="edge"
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[activation_node],
+            name="edge_pad",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[pads_initializer, cst_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name, self.tmpdir_name + "/model.onnx"
+        )
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+
+    def test_wrap_pad(self):
+        testshape = (1, 5, 20, 20)
+
+        pads_name = "pads"
+        pads = np.random.randint(10, size=8)
+        pads[0] = 0
+        pads[4] = 0
+        print(pads)
+        pads_initializer = acetoneTestCase.create_initializer_tensor(
+            pads_name,
+            pads,
+            onnx.TensorProto.INT64,
+        )
+
+        cst_name = "constant"
+        cst = np.random.rand(1)
+        cst_initializer = acetoneTestCase.create_initializer_tensor(
+            cst_name,
+            cst,
+            onnx.TensorProto.FLOAT,
+        )
+
+        out_shape = (
+            1,
+            int(testshape[1] + pads[1] + pads[5]),
+            int(testshape[2] + pads[2] + pads[6]),
+            int(testshape[3] + pads[3] + pads[7]),
+        )
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name, onnx.TensorProto.FLOAT, testshape
+        )
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name, onnx.TensorProto.FLOAT, out_shape
+        )
+
+        activation_node = onnx.helper.make_node(
+            op_type="Pad",
+            inputs=[model_input_name, pads_name, cst_name],
+            outputs=[model_output_name],
+            mode="wrap"
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[activation_node],
+            name="wrap_pad",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[pads_initializer, cst_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name, self.tmpdir_name + "/model.onnx"
+        )
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+
+    def test_constant_pad(self):
+        testshape = (1, 5, 20, 20)
+
+        pads_name = "pads"
+        pads = np.random.randint(10, size=8)
+        pads[0] = 0
+        pads[4] = 0
+        pads_initializer = acetoneTestCase.create_initializer_tensor(
+            pads_name,
+            pads,
+            onnx.TensorProto.INT64,
+        )
+
+        cst_name = "constant"
+        cst = np.random.rand(1)
+        cst_initializer = acetoneTestCase.create_initializer_tensor(
+            cst_name,
+            cst,
+            onnx.TensorProto.FLOAT,
+        )
+
+        out_shape = (
+            1,
+            int(testshape[1] + pads[1] + pads[5]),
+            int(testshape[2] + pads[2] + pads[6]),
+            int(testshape[3] + pads[3] + pads[7]),
+        )
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name, onnx.TensorProto.FLOAT, testshape
+        )
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name, onnx.TensorProto.FLOAT, out_shape
+        )
+
+        activation_node = onnx.helper.make_node(
+            op_type="Pad",
+            inputs=[model_input_name, pads_name, cst_name],
+            outputs=[model_output_name],
+            mode="constant"
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[activation_node],
+            name="constant_pad",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[pads_initializer, cst_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name, self.tmpdir_name + "/model.onnx"
+        )
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+
+    def test_reflect_pad(self):
+        testshape = (1, 5, 20, 20)
+
+        pads_name = "pads"
+        pads = np.random.randint(10, size=8)
+        pads[0] = 0
+        pads[4] = 0
+        pads_initializer = acetoneTestCase.create_initializer_tensor(
+            pads_name,
+            pads,
+            onnx.TensorProto.INT64,
+        )
+
+        cst_name = "constant"
+        cst = np.random.rand(1)
+        cst_initializer = acetoneTestCase.create_initializer_tensor(
+            cst_name,
+            cst,
+            onnx.TensorProto.FLOAT,
+        )
+
+        out_shape = (
+            1,
+            int(testshape[1] + pads[1] + pads[5]),
+            int(testshape[2] + pads[2] + pads[6]),
+            int(testshape[3] + pads[3] + pads[7]),
+        )
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name, onnx.TensorProto.FLOAT, testshape
+        )
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name, onnx.TensorProto.FLOAT, out_shape
+        )
+
+        activation_node = onnx.helper.make_node(
+            op_type="Pad",
+            inputs=[model_input_name, pads_name, cst_name],
+            outputs=[model_output_name],
+            mode="reflect"
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[activation_node],
+            name="reflect_pad",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[pads_initializer, cst_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name, self.tmpdir_name + "/model.onnx"
+        )
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
 
 if __name__ == "__main__":
     acetoneTestCase.main()
