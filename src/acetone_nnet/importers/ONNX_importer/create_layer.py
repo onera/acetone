@@ -34,6 +34,7 @@ from acetone_nnet.generator.activation_functions import (
     TanH,
 )
 from acetone_nnet.generator.layers import (
+    ActivationLayer,
     Add,
     AddBias,
     Average,
@@ -1275,6 +1276,57 @@ def create_avg(
     )
 
 
+def instantiate_activation_layer(
+        node: onnx.NodeProto,
+        model: onnx.ModelProto,
+) -> TanH | Sigmoid | ReLu | LeakyReLu | Exponential | Logarithm | Clip | None:
+    """Create an activation function from an ONNX node."""
+    match node.op_type:
+        case "Relu":
+            return ReLu()
+        case "Tanh":
+            return TanH()
+        case "Sigmoid":
+            return Sigmoid()
+        case "Exp":
+            return Exponential()
+        case "Log":
+            return Logarithm()
+        case "LeakyRelu":
+            attribute = extract_attributes(node)
+            if "alpha" not in attribute:
+                attribute["alpha"] = 0.01
+            return LeakyReLu(attribute["alpha"])
+        case "Clip":
+            mini, maxi = float("-inf"), float("inf")
+            if node.input[1]:
+                mini = onnx.numpy_helper.to_array(look_for_initializer(node.input[1], model))[0]
+            if node.input[2]:
+                maxi = onnx.numpy_helper.to_array(look_for_initializer(node.input[2], model))[0]
+            return Clip(maxi,mini)
+        case _:
+            return None
+
+
+def create_activation_layer(
+        node: onnx.NodeProto,
+        idx: int,
+        dict_input: dict,
+        dict_output: dict,
+        model: onnx.ModelProto,
+) -> ActivationLayer:
+    """Create an activation layer."""
+    output_shape = get_shape(node.output[0], model)
+    size = find_size(output_shape)
+    dict_input[idx] = [node.input[0]]
+    dict_output[node.output[0]] = idx
+    return ActivationLayer(
+        idx=idx,
+        size=size,
+        activation_function=instantiate_activation_layer(node, model),
+    )
+
+
 ###### Dict of all the functions ######
 layer_type = {"Softmax": create_softmax,
               "Conv": create_conv,
@@ -1302,7 +1354,14 @@ layer_type = {"Softmax": create_softmax,
               "Max": create_max,
               "Min": create_min,
               "Mean": create_avg,
-              "BatchNormalization":create_batch_norm}
+              "BatchNormalization":create_batch_norm,
+              "Relu": create_activation_layer,
+             "Tanh": create_activation_layer,
+             "Sigmoid": create_activation_layer,
+             "Clip": create_activation_layer,
+             "Exp": create_activation_layer,
+             "Log": create_activation_layer,
+             "LeakyRelu": create_activation_layer}
 
 
 ###### Function to deal with the 'non-important' layers of the graph ######

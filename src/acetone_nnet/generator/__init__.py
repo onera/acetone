@@ -33,6 +33,7 @@ from .activation_functions import (
 )
 from .Layer import Layer
 from .layers import (
+    ActivationLayer,
     Add,
     AddDefault,
     Average,
