@@ -21,37 +21,47 @@
 
 import numpy as np
 import onnx
-from onnx.helper import make_node, np_dtype_to_tensor_dtype, make_tensor_value_info
+from onnx.helper import make_node, make_tensor_value_info, np_dtype_to_tensor_dtype
 from onnxruntime_extensions import onnx_op
 
 from acetone_nnet import MatMul
+from acetone_nnet.generator.activation_functions import Linear
 from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import (
+    ActivationLayer,
     Add,
     Average,
     BatchNormalization,
     Concatenate,
+    ConstantPad,
     Conv2D,
     Dense,
     Divide,
+    EdgePad,
     Flatten,
     Gather,
-GatherElements,
-Gemm,
-InputLayer,
-EdgePad,
-WrapPad,
-ReflectPad,
-ConstantPad,
-Pooling2D,
-ReduceMax,ReduceMean,ReduceProd,ReduceSum,ReduceMin,
-ResizeCubic,ResizeLinear,ResizeNearest, Resize,Softmax,Tile,Transpose,
+    GatherElements,
+    Gemm,
+    InputLayer,
     Maximum,
     Minimum,
     Multiply,
+    Pooling2D,
+    ReduceMax,
+    ReduceMean,
+    ReduceMin,
+    ReduceProd,
+    ReduceSum,
+    ReflectPad,
+    ResizeCubic,
+    ResizeLinear,
+    ResizeNearest,
+    Softmax,
     Subtract,
+    Tile,
+    Transpose,
+    WrapPad,
 )
-from acetone_nnet.generator.activation_functions import Linear
 
 ###### Utility functions ######
 
@@ -75,7 +85,12 @@ def generate_input_output_name(
     inputs_name = []
     for parent in layer.previous_layer:
         inputs_name.append(f"{parent.name}_{parent.idx}")
-    if hasattr(layer, "activation_function") and (layer.activation_function is not None and not isinstance(layer.activation_function, Linear)):
+    if (
+        hasattr(layer, "activation_function")
+        and layer.activation_function is not None
+        and not isinstance(layer.activation_function, Linear)
+        and not isinstance(layer, ActivationLayer)
+    ):
         output_name = f"{layer.name}_{layer.idx}_pre_activation"
     else:
         output_name = f"{layer.name}_{layer.idx}"
@@ -133,7 +148,6 @@ def export_broadcast(
     initializer = []
 
     output_name, inputs_name = generate_input_output_name(broadcast_layer)
-
     if broadcast_layer.constant is not None:
         constant_name = f"{broadcast_layer.name}_{broadcast_layer.idx}_constant"
         inputs_name.append(constant_name)
@@ -554,22 +568,76 @@ def export_transpose(
 
     return node, []
 
+def get_activation_op_type(activation_layer: ActivationLayer) -> str | None:
+    """Retrieve the corresponding ONNX op_type from an ACETONE Activation layer."""
+    match activation_layer.name:
+        case "Relu":
+            return "Relu"
+        case "Hyperb_tan":
+            return "Tanh"
+        case "Sigmoid":
+            return "Sigmoid"
+        case "Exponential":
+            return "Exp"
+        case "Logarithm":
+            return "Log"
+        case "Leakyrelu":
+            return "LeakyRelu"
+        case "Clip":
+            return "Clip"
+        case "Silu":
+            return "Silu"
+        case _:
+            return None
+
+def export_activation(
+        activation_layer: ActivationLayer,
+        dtype_py:np.dtype,
+) -> tuple[onnx.NodeProto, list[onnx.TensorProto]]:
+    """Export an ACETONE Activation layer to an ONNX activation layer."""
+    tensor_dtype = np_dtype_to_tensor_dtype(np.dtype(dtype_py.__name__))
+
+    output_name, inputs_name = generate_input_output_name(activation_layer)
+    op_tye = get_activation_op_type(activation_layer)
+
+    if op_tye == "Silu":
+        @onnx_op(
+            op_type="Silu",
+            inputs=[tensor_dtype],
+            outputs=[tensor_dtype],
+        )
+        def silu(tensor: np.array) -> np.array:
+            return tensor / (1 + np.exp(-tensor))
+
+    node = make_node(
+        name=f"Layer_{op_tye}",
+        op_type=op_tye,
+        inputs=inputs_name,
+        outputs=[output_name],
+    )
+    return node, []
+
 ###### Dict of all the exporters ######
 list_exporters = {
     "Add": export_broadcast,
     "Average": export_broadcast,
     "AveragePooling2D": export_pool,
     "BatchNormalization": export_batch_normalization,
-    "Concatenate":export_concatenate,
+    "Clip": export_activation,
+    "Concatenate": export_concatenate,
     "ConstantPad": export_pad,
     "Conv2D": export_conv2d,
     "Dense": export_dense,
     "Divide": export_broadcast,
     "EdgePad": export_pad,
+    "Exponential": export_activation,
     "Flatten": export_flatten,
     "Gather": export_gather,
     "GatherElements": export_gather_elements,
     "Gemm": export_gemm,
+    "Hyperb_tan": export_activation,
+    "Leakyrelu": export_activation,
+    "Logarithm": export_activation,
     "MaxPooling2D": export_pool,
     "Maximum": export_broadcast,
     "MatMul": export_matmul,
@@ -582,8 +650,11 @@ list_exporters = {
     "ReduceProd": export_reduce,
     "ReduceSum": export_reduce,
     "ResizeCubic": export_resize,
+    "Relu": export_activation,
     "ResizeLinear": export_resize,
     "ResizeNearest": export_resize,
+    "Sigmoid": export_activation,
+    "Silu": export_activation,
     "Subtract": export_broadcast,
     "Softmax": export_softmax,
     "Tile": export_tile,
@@ -605,7 +676,34 @@ def export_relu(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
+        name="Function_Relu",
         op_type="Relu",
+        inputs=[intput_name],
+        outputs=[output_name],
+    )
+
+    return node, []
+
+def export_silu(
+        layer: Layer,
+        dtype_py:np.dtype,
+) -> tuple[onnx.NodeProto, list[onnx.TensorProto]]:
+    """Export an ACETONE Silu activation function to an ONNX makeshift silu layer."""
+    tensor_dtype = np_dtype_to_tensor_dtype(np.dtype(dtype_py.__name__))
+    @onnx_op(
+        op_type="Silu",
+        inputs=[tensor_dtype],
+        outputs=[tensor_dtype],
+    )
+    def silu(tensor: np.array) -> np.array:
+        return tensor / (1 + np.exp(-tensor))
+
+    intput_name = f"{layer.name}_{layer.idx}_pre_activation"
+    output_name= f"{layer.name}_{layer.idx}"
+
+    node = make_node(
+        name="Function_Silu",
+        op_type="Silu",
         inputs=[intput_name],
         outputs=[output_name],
     )
@@ -623,6 +721,7 @@ def export_tanh(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
+        name="Function_Tanh",
         op_type="Tanh",
         inputs=[intput_name],
         outputs=[output_name],
@@ -641,6 +740,7 @@ def export_leaky_relu(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
+        name="Function_LeakyRelu",
         op_type="LeakyRelu",
         inputs=[intput_name],
         outputs=[output_name],
@@ -660,6 +760,7 @@ def export_sigmoid(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
+        name="Function_Sigmoid",
         op_type="Sigmoid",
         inputs=[intput_name],
         outputs=[output_name],
@@ -678,6 +779,7 @@ def export_exponential(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
+        name="Function_Exp",
         op_type="Exp",
         inputs=[intput_name],
         outputs=[output_name],
@@ -696,6 +798,7 @@ def export_log(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
+        name="Function_Log",
         op_type="Log",
         inputs=[intput_name],
         outputs=[output_name],
@@ -716,6 +819,7 @@ def export_clip(
     max_name = f"{layer.name}_{layer.idx}_clip_max"
 
     node = make_node(
+        name="Function_Clip",
         op_type="Clip",
         inputs=[intput_name,min_name,max_name],
         outputs=[output_name],
@@ -744,6 +848,7 @@ list_activation_exporters = {
     "Exponential": export_exponential,
     "Logarithm": export_log,
     "Clip": export_clip,
+    "silu": export_silu,
 }
 ###### Functions to define the inputs and outputs of the graph ######
 def export_input(

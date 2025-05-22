@@ -29,6 +29,7 @@ import onnx
 from acetone_nnet.cli.generate import cli_acetone
 
 
+
 class AcetoneTestCase(unittest.TestCase):
     """TestCase class for inference tests."""
 
@@ -112,6 +113,8 @@ def run_acetone_for_test(
     datatest_path: str | np.ndarray | None = None,
     conv_algo: str = "std_gemm_nn",
     normalize=False,
+    optimization: bool = False,
+    verbose:bool = False,
     run_generated=True,
     run_reference=True,
 ):
@@ -123,6 +126,8 @@ def run_acetone_for_test(
         output_dir=tmpdir_name,
         test_dataset_file=datatest_path,
         normalize=normalize,
+        verbose=verbose,
+        optimization=optimization,
     )
 
     if run_reference:

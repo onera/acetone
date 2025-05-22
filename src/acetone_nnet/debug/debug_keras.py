@@ -66,18 +66,18 @@ def debug_keras(
         targets_indices = extract_targets_indices(model, inter_layers)
 
     # Add an output after each name of inter_layers
-    functional = [Functional([model.input], [out]) for out in inter_layers]
+    functional = [Functional(model.input, out) for out in inter_layers]
 
     # Saving the model
     if to_save:
         for i in range(len(functional)):
             saving_path = Path(path) / ("model_" + str(i) + ".h5")
-            keras.models.save_model(model, saving_path)
+            keras.models.save_model(functional[i], saving_path)
 
     # Model inference
     outputs = [func([dataset]) for func in functional]
 
     for i in range(len(outputs)):
-        outputs[i] = outputs[i].ravel().flatten()
+        outputs[i] = np.array(outputs[i]).ravel().flatten()
 
     return model, targets_indices, outputs

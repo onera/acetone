@@ -1108,10 +1108,13 @@ def create_div(
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
     # FIXME It seems like a test is missing here on the values of constant
-    if not constant.all() and len(constant.shape) < constant_length:
-        for _i in range(4 - len(constant.shape)):
-            constant = np.expand_dims(constant, axis=0)
-    input_shapes.append(constant.shape)
+    if (constant != np.ones(constant.shape)).all():
+        if len(constant.shape) < constant_length:
+            for _i in range(4 - len(constant.shape)):
+                constant = np.expand_dims(constant, axis=0)
+        input_shapes.append(list(constant.shape))
+    else:
+        constant = None
     input_shapes = np.array(input_shapes)
     return Divide(
         idx=idx,
@@ -1147,10 +1150,13 @@ def create_mul(
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    if not constant.all() and len(constant.shape) < constant_length:
-        for _i in range(4 - len(constant.shape)):
-            constant = np.expand_dims(constant, axis=0)
-    input_shapes.append(list(constant.shape))
+    if (constant != np.ones(constant.shape)).all():
+        if len(constant.shape) < constant_length:
+            for _i in range(4 - len(constant.shape)):
+                constant = np.expand_dims(constant, axis=0)
+        input_shapes.append(list(constant.shape))
+    else:
+        constant = None
     input_shapes = np.array(input_shapes)
     return Multiply(
         idx=idx,
@@ -1171,7 +1177,7 @@ def create_sub(
         model: onnx.ModelProto,
 ) -> Subtract:
     """Create a Subtract layer."""
-    constant_lenght = 4
+    constant_length = 4
 
     input_shapes = []
     constant = np.zeros(get_shape(node.input[0], model))
@@ -1186,10 +1192,13 @@ def create_sub(
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    if constant.any() and len(constant.shape) < constant_lenght:
-        for _i in range(4 - len(constant.shape)):
-            constant = np.expand_dims(constant, axis=0)
-    input_shapes.append(constant.shape)
+    if (constant != np.zeros(constant.shape)).all():
+        if len(constant.shape) < constant_length:
+            for _i in range(4 - len(constant.shape)):
+                constant = np.expand_dims(constant, axis=0)
+        input_shapes.append(list(constant.shape))
+    else:
+        constant = None
     input_shapes = np.array(input_shapes)
     return Subtract(
         idx=idx,

@@ -22,10 +22,34 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from typing_extensions import Self
+from typing_extensions import Any, Self
 
 from acetone_nnet.generator.Layer import Layer
 
+
+@dataclass
+class Pattern(ABC):
+    """Base class for patterns."""
+
+    def __init__(self: Self, name: str, pattern: str, shift: int) -> None:
+        """Build a non-specific pattern."""
+        super().__init__()
+        self.name = name
+        self.pattern = pattern
+        self.shift = shift
+
+    @abstractmethod
+    def is_pattern(self: Self, layer: Layer) -> bool:
+        """Check if the layer is the root of the pattern."""
+
+    @abstractmethod
+    def apply_pattern(
+        self: Self,
+        index: int,
+        layers: list[Layer],
+        dict_cst: dict[int, int],
+    ) -> str:
+        """Apply the pattern to the layer."""
 
 def update_indices(index: int, layers: list[Layer], shift: int) -> None:
     """Update the indices of the layers after index by shifting them of shift."""
@@ -41,21 +65,33 @@ def update_indices(index: int, layers: list[Layer], shift: int) -> None:
     for i in range(index + 1, nb_layers):
         layers[i].idx = layers[i].idx - shift
 
+def update_next_layers(removed_layer: Layer, replacement_layer:Layer) -> None:
+    """Link the layers in removed_layer.next_layer to the replacement_layer as input."""
+    for next_layer in removed_layer.next_layer:
+        update = True
+        while update:
+            try:
+                pos = next_layer.previous_layer.index(removed_layer)
+                next_layer.previous_layer[pos]= replacement_layer
+            except ValueError:
+                update = False
 
-@dataclass
-class Pattern(ABC):
-    """Base class for patterns."""
+def update_previous_layers(removed_layer: Layer, replacement_layer:Layer) -> None:
+    """Link the layers in removed_layer.previous_layer to take the replacement_layer as output."""
+    for prev_layer in removed_layer.previous_layer:
+        update = True
+        while update:
+            try:
+                pos = prev_layer.next_layer.index(removed_layer)
+                prev_layer.next_layer[pos]= replacement_layer
+            except ValueError:
+                update = False
 
-    def __init__(self: Self, name: str, pattern: str) -> None:
-        """Build a non-specific pattern."""
-        super().__init__()
-        self.name = name
-        self.pattern = pattern
 
-    @abstractmethod
-    def is_pattern(self: Self, layer: Layer) -> bool:
-        """Check if the layer is the root of the pattern."""
-
-    @abstractmethod
-    def apply_pattern(self: Self, index: int, layers: list[Layer]) -> str:
-        """Apply the pattern to the layer."""
+def update_dict_cst(removed_layer: Layer, replacement_layer:Layer, dict_cst:dict[int,int]) -> None:
+    """Update dict_cst."""
+    replacement_layer.output_str = removed_layer.output_str
+    cst_index = dict_cst.get(removed_layer.idx, None)
+    if cst_index is not None:
+        dict_cst[replacement_layer.idx] = cst_index
+        dict_cst.pop(removed_layer.idx)

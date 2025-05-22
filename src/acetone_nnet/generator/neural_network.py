@@ -57,9 +57,11 @@ from acetone_nnet.generator.layers import (
     Softmax,
 )
 from acetone_nnet.importers.parser import parser
-from acetone_nnet.pattern_matching.pattern_matcher import pattern_matcher
+from acetone_nnet.pattern_matching.PatternMatcher import pattern_matcher
 from acetone_nnet.templates.template_makefile import TemplateMakefile
-from acetone_nnet.versioning.default_implementations import default_implementations_manager
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.versioning import versioning
 
 
@@ -102,16 +104,22 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
-        self.layers: list[Any] = l
-        if self.optimization:
-            self.layers, self.log = pattern_matcher(self.layers)
-        self.versions = self.select_layers_implementation(versions)
-        self.layers = versioning(self.layers, self.versions)
         self.data_type = dtype
         self.data_type_py = dtype_py
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
+
+        self.layers: list[Any] = l
+        if self.optimization:
+            self.layers, self.log = pattern_matcher.match(self.layers, self.dict_cst)
+
+        if self.verbose and self.log:
+            print("Changes:")
+            print(self.log)
+
+        self.versions = self.select_layers_implementation(versions)
+        self.layers = versioning(self.layers, self.versions)
 
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)

@@ -77,6 +77,22 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
+    def testSilu(self):
+        testshape = (10, 10, 3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="silu", bias_initializer="he_normal",
+                     padding="same", data_format="channels_last")(input)
+
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5")
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+
     def testTanh(self):
         testshape = (10, 10, 3)
         filters = 3
@@ -506,12 +522,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             strides=(1, 1),
         )
 
+        min_value = np.random.rand(1)
         min_initializer = acetoneTestCase.create_initializer_tensor(name="min",
-                                                                    tensor_array=np.random.rand(1),
+                                                                    tensor_array=min_value,
                                                                     data_type=onnx.TensorProto.FLOAT)
 
+        max_value = min_value + np.random.rand(1)
         max_initializer = acetoneTestCase.create_initializer_tensor(name="max",
-                                                                    tensor_array=np.random.rand(1) * 20,
+                                                                    tensor_array=max_value,
                                                                     data_type=onnx.TensorProto.FLOAT)
 
         activation_node = onnx.helper.make_node(

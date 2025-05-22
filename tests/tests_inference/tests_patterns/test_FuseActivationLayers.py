@@ -17,116 +17,20 @@
 ******************************************************************************
 """
 
-import keras
 import numpy as np
 import onnx
-import onnxruntime as rt
 import tensorflow as tf
-from keras.layers import Conv2D, Dense, Input
 
 from tests.tests_inference import acetoneTestCase
 
 tf.keras.backend.set_floatx("float32")
 
 
-class TestActivation(acetoneTestCase.AcetoneTestCase):
-    """Test for Activations Layer"""
+class TestFuseActivationsLayers(acetoneTestCase.AcetoneTestCase):
+    """Test for FuseActivationsLayers pattern."""
 
     def testReLu(self):
-        testshape = (1, 1, 16)
-        units = 8
-
-        input = Input(testshape)
-        out = Dense(units, activation="relu", bias_initializer="he_normal")(input)
-
-        model = keras.Model(input, out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
-        model.save(self.tmpdir_name + "/model.h5")
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5",
-                                                              self.tmpdir_name + "/dataset.txt")
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-
-    def testLeakyReLu(self):
-        testshape = (10, 10, 3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="leaky_relu", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(input)
-
-        model = keras.Model(input, out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
-        model.save(self.tmpdir_name + "/model.h5")
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5",
-                                                              self.tmpdir_name + "/dataset.txt")
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-
-    def testSigmoid(self):
-        testshape = (10, 10, 3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="sigmoid", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(input)
-
-        model = keras.Model(input, out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
-        model.save(self.tmpdir_name + "/model.h5")
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5",
-                                                              self.tmpdir_name + "/dataset.txt")
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-
-    def testSilu(self):
-        testshape = (10, 10, 3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="silu", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(input)
-
-        model = keras.Model(input, out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
-        model.save(self.tmpdir_name + "/model.h5")
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5",
-                                                              self.tmpdir_name + "/dataset.txt")
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-
-    def testTanh(self):
-        testshape = (10, 10, 3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = Input(testshape)
-        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="tanh", bias_initializer="he_normal",
-                     padding="same", data_format="channels_last")(input)
-
-        model = keras.Model(input, out)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
-        model.save(self.tmpdir_name + "/model.h5")
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5",
-                                                              self.tmpdir_name + "/dataset.txt")
-        keras_result = np.array(model.predict(dataset)).flatten()
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(keras_result))
-
-    def testReLuONNX(self):
-        testshape = (1, 3, 10, 10)
+        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -182,21 +86,28 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
-        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None, {input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
-                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testSigmoidONNX(self):
-        testshape = (1, 3, 10, 10)
+    def testSigmoid(self):
+        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -252,21 +163,28 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
-        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None, {input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
-                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testLeakyReludONNX(self):
-        testshape = (1, 3, 10, 10)
+    def testLeakyRelu(self):
+        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -323,21 +241,28 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
-        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None, {input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
-                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testTanhONNX(self):
-        testshape = (1, 3, 10, 10)
+    def testTanh(self):
+        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -393,21 +318,28 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
-        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None, {input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
-                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testExpONNX(self):
-        testshape = (1, 3, 10, 10)
+    def testExp(self):
+        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -463,21 +395,28 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
-        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None, {input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
-                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testLogONNX(self):
-        testshape = (1, 3, 10, 10)
+    def testLog(self):
+        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -533,21 +472,28 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
-        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None, {input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
-                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
-
-    def testClipONNX(self):
-        testshape = (1, 3, 10, 10)
+    def testClip(self):
+        testshape = (1,3,10,10)
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
@@ -588,14 +534,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         )
 
         min_value = np.random.rand(1)
-        min_initializer = acetoneTestCase.create_initializer_tensor(
-            name="min", tensor_array=min_value, data_type=onnx.TensorProto.FLOAT
-        )
+        min_initializer = acetoneTestCase.create_initializer_tensor(name="min",
+                                                                    tensor_array=min_value,
+                                                                    data_type=onnx.TensorProto.FLOAT)
 
         max_value = min_value + np.random.rand(1)
-        max_initializer = acetoneTestCase.create_initializer_tensor(
-            name="max", tensor_array=max_value, data_type=onnx.TensorProto.FLOAT
-        )
+        max_initializer = acetoneTestCase.create_initializer_tensor(name="max",
+                                                                    tensor_array=max_value,
+                                                                    data_type=onnx.TensorProto.FLOAT)
 
         activation_node = onnx.helper.make_node(
             op_type="Clip",
@@ -613,18 +559,243 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         model = onnx.helper.make_model(graph)
         model = onnx.shape_inference.infer_shapes(model)
         onnx.checker.check_model(model)
-        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
         onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
 
-        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
-        input_name = sess.get_inputs()[0].name
-        result = sess.run(None, {input_name: dataset[0]})
-        onnx_result = result[0].ravel().flatten()
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
-                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+    def testActivationNotOnlyOutput(self):
+        testshape = (1,3,10,10)
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 5, 10, 10])
+
+        conv1_output_name = "output_conv1"
+        conv1_in_channels = 3
+        conv1_out_channels = 5
+        conv1_kernel_shape = (7, 7)
+        conv1_W = np.random.rand(conv1_out_channels, conv1_in_channels,
+                                 *conv1_kernel_shape).astype(np.float32)
+        conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
+        conv1_W_initializer_tensor_name = "Conv1_W"
+        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_W_initializer_tensor_name,
+            tensor_array=conv1_W,
+            data_type=onnx.TensorProto.FLOAT)
+        conv1_B_initializer_tensor_name = "Conv1_B"
+        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_B_initializer_tensor_name,
+            tensor_array=conv1_B,
+            data_type=onnx.TensorProto.FLOAT)
+
+        conv1_node = onnx.helper.make_node(
+            op_type="Conv",
+            inputs=[
+                model_input_name, conv1_W_initializer_tensor_name,
+                conv1_B_initializer_tensor_name,
+            ],
+            outputs=[conv1_output_name],
+            kernel_shape=conv1_kernel_shape,
+            auto_pad="SAME_UPPER",
+            strides=(1, 1),
+        )
+
+        conv2_output_name = "output_conv2"
+        conv2_in_channels = 5
+        conv2_out_channels = 5
+        conv2_kernel_shape = (7, 7)
+        conv2_W = np.random.rand(
+            conv2_out_channels, conv2_in_channels, *conv2_kernel_shape
+        ).astype(np.float32)
+        conv2_B = np.random.rand(conv2_out_channels).astype(np.float32)
+        conv2_W_initializer_tensor_name = "Conv2_W"
+        conv2_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv2_W_initializer_tensor_name,
+            tensor_array=conv2_W,
+            data_type=onnx.TensorProto.FLOAT,
+        )
+        conv2_B_initializer_tensor_name = "Conv2_B"
+        conv2_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv2_B_initializer_tensor_name,
+            tensor_array=conv2_B,
+            data_type=onnx.TensorProto.FLOAT,
+        )
+
+        conv2_node = onnx.helper.make_node(
+            op_type="Conv",
+            inputs=[
+                conv1_output_name,
+                conv2_W_initializer_tensor_name,
+                conv2_B_initializer_tensor_name,
+            ],
+            outputs=[conv2_output_name],
+            kernel_shape=conv2_kernel_shape,
+            auto_pad="SAME_UPPER",
+            strides=(1, 1),
+        )
+
+        relu_output_name = "output_relu"
+        activation_node = onnx.helper.make_node(
+            op_type="Relu",
+            inputs=[conv1_output_name],
+            outputs=[relu_output_name],
+        )
+
+        add_node = onnx.helper.make_node(
+            op_type="Add",
+            inputs=[conv2_output_name,relu_output_name],
+            outputs=[model_output_name],
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[conv1_node,conv2_node, activation_node, add_node],
+            name="Conv",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[
+                conv1_W_initializer_tensor,
+                conv1_B_initializer_tensor,
+                conv2_W_initializer_tensor,
+                conv2_B_initializer_tensor,
+            ],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
+
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
+
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
+
+    def testThreeSuccessiveActivationLayers(self):
+        testshape = (1,3,10,10)
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 3, 10, 10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [None, 5, 10, 10])
+
+        conv1_output_name = "output_conv1"
+        conv1_in_channels = 3
+        conv1_out_channels = 5
+        conv1_kernel_shape = (7, 7)
+        conv1_W = np.random.rand(conv1_out_channels, conv1_in_channels,
+                                 *conv1_kernel_shape).astype(np.float32)
+        conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
+        conv1_W_initializer_tensor_name = "Conv1_W"
+        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_W_initializer_tensor_name,
+            tensor_array=conv1_W,
+            data_type=onnx.TensorProto.FLOAT)
+        conv1_B_initializer_tensor_name = "Conv1_B"
+        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            name=conv1_B_initializer_tensor_name,
+            tensor_array=conv1_B,
+            data_type=onnx.TensorProto.FLOAT)
+
+        conv1_node = onnx.helper.make_node(
+            op_type="Conv",
+            inputs=[
+                model_input_name, conv1_W_initializer_tensor_name,
+                conv1_B_initializer_tensor_name,
+            ],
+            outputs=[conv1_output_name],
+            kernel_shape=conv1_kernel_shape,
+            auto_pad="SAME_UPPER",
+            strides=(1, 1),
+        )
+
+        relu_output_name = "output_relu"
+        activation_node1 = onnx.helper.make_node(
+            op_type="Relu",
+            inputs=[conv1_output_name],
+            outputs=[relu_output_name],
+        )
+
+        tanh_output_name = "output_tanh"
+        activation_node2 = onnx.helper.make_node(
+            op_type="Tanh",
+            inputs=[relu_output_name],
+            outputs=[tanh_output_name],
+        )
+
+        sigmoid_output_name = "output_sigmoid"
+        activation_node3 = onnx.helper.make_node(
+            op_type="Sigmoid",
+            inputs=[tanh_output_name],
+            outputs=[model_output_name],
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[conv1_node, activation_node1, activation_node2, activation_node3],
+            name="Conv",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[
+                conv1_W_initializer_tensor,
+                conv1_B_initializer_tensor,
+            ],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
+
+        acetone_result_norm = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/classic",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=False,
+        )
+        acetone_result_opti = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name + "/optimized",
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            optimization=True,
+            verbose=True,
+        )
+
+        self.assertListAlmostEqual(acetone_result_norm[0], acetone_result_opti[0])
+        self.assertListAlmostEqual(acetone_result_norm[1], acetone_result_opti[1])
 
 
 if __name__ == "__main__":

@@ -37,6 +37,8 @@ def cli_acetone(
     test_dataset_file: str | None = None,
     *,
     normalize: bool = False,
+    verbose: bool = True,
+    optimization: bool = False,
 ) -> None:
     """Generate code with ACETONE."""
     logging.info("C CODE GENERATOR FOR NEURAL NETWORKS")
@@ -52,6 +54,8 @@ def cli_acetone(
         target=target,
         target_page_size=target_page_size,
         versions={"Conv2D": conv_algorithm},
+        optimization=optimization,
+        verbose=verbose,
     )
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)
@@ -103,6 +107,16 @@ def acetone_generate() -> None:
         help="Default variant used for implementation of the Convolution operation.",
         default="std_gemm_nn",
     )
+    parser.add_argument(
+        "--optimization",
+        help="Activate model optimization on the internal representation.",
+        default=True,
+    )
+    parser.add_argument(
+        "--verbose",
+        help="Show verbose output",
+        default=True,
+    )
 
     parser.add_argument(
         "--target",
@@ -129,6 +143,8 @@ def acetone_generate() -> None:
         test_dataset_file=args.dataset,
         normalize=args.normalize,
         target_page_size=args.target_page_size,
+        optimization=args.optimization,
+        verbose=args.verbose,
     )
 
 

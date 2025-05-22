@@ -24,6 +24,7 @@ from onnx import helper
 
 from acetone_nnet.generator.activation_functions import Linear
 from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.generator.layers import ActivationLayer
 
 from .acetone_to_onnx_layer import (
     export_input,
@@ -60,6 +61,7 @@ def onnx_exporter(
         if (hasattr(layer, "activation_function")
                 and layer.activation_function is not None
                 and not isinstance(layer.activation_function, Linear)
+                and not isinstance(layer, ActivationLayer)
         ):
             activation_exporter = list_activation_exporters.get(layer.activation_function.name, None)
             if activation_exporter is not None:

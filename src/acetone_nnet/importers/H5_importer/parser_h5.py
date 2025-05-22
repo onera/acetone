@@ -48,10 +48,12 @@ from acetone_nnet.generator import (
     Multiply,
     ReLu,
     Sigmoid,
+    Silu,
     Softmax,
     Subtract,
     TanH,
 )
+from acetone_nnet.generator.activation_functions import Silu
 from acetone_nnet.graph import graph_interpretor
 
 
@@ -115,6 +117,8 @@ def create_actv_function_obj(
         return LeakyReLu(0.2)
     if keras_activation_obj == activations.softmax:
         return Linear()
+    if keras_activation_obj == activations.swish:
+        return Silu()
 
     msg = "Activation layer"
     raise TypeError(msg, keras_activation_obj.__name__, "not implemented")
@@ -323,36 +327,17 @@ def load_keras(
                                         activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "BatchNormalization":
-            if layers[-1].name == "Conv2D" and not debug:
-                scale = data_type_py(layer_keras.get_weights()[0])
-                bias = data_type_py(layer_keras.get_weights()[1])
-                mean = data_type_py(layer_keras.get_weights()[2])
-                var = data_type_py(layer_keras.get_weights()[3])
-
-                weights = layers[-1].weights
-                biases = layers[-1].biases
-
-                for z in range(len(weights[0, 0, 0, :])):
-                    alpha = scale[z] / np.sqrt(var[z] + layer_keras.epsilon)
-                    B = bias[z] - (mean[z] * alpha)
-                    weights[:, :, :, z] = alpha * weights[:, :, :, z]
-                    biases[z] = alpha * biases[z] + B
-
-                layers[-1].weights = weights
-                layers[-1].biases = biases
-
-                continue
-            else:
-                current_layer = BatchNormalization(idx=idx,
-                                                   size=get_layer_size(layer_keras),
-                                                   input_shape=get_input_dimensions(layer_keras.input_shape,
-                                                                                    data_format),
-                                                   epsilon=layer_keras.epsilon,
-                                                   scale=data_type_py(layer_keras.get_weights()[0]),
-                                                   biases=data_type_py(layer_keras.get_weights()[1]),
-                                                   mean=data_type_py(layer_keras.get_weights()[2]),
-                                                   var=data_type_py(layer_keras.get_weights()[3]),
-                                                   activation_function=Linear())
+            current_layer = BatchNormalization(
+                idx=idx,
+                size=get_layer_size(layer_keras),
+                input_shape=get_input_dimensions(layer_keras.input_shape,data_format),
+                epsilon=layer_keras.epsilon,
+                scale=data_type_py(layer_keras.get_weights()[0]),
+                biases=data_type_py(layer_keras.get_weights()[1]),
+                mean=data_type_py(layer_keras.get_weights()[2]),
+                var=data_type_py(layer_keras.get_weights()[3]),
+                activation_function=Linear(),
+            )
 
         elif layer_keras.__class__.__name__ in ("Reshape", "Dropout"):
             continue

@@ -18,3 +18,19 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
+from . import patterns
+from .Pattern import Pattern
+from .PatternMatcher import PatternMatcher
+from .patterns import (
+    FuseActivationLayer,
+    FuseConvBatchNorm,
+    MatMulAddToDense,
+    SigmoidMultiplyToSilu,
+)
+
+__all__ = (
+    "PatternMatcher",
+    "Pattern",
+    patterns.__all__,
+)

@@ -1,6 +1,4 @@
-"""Main pattern matching function.
-
-*******************************************************************************
+"""*******************************************************************************
 * ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
@@ -18,26 +16,3 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-
-from acetone_nnet.generator.Layer import Layer
-from acetone_nnet.pattern_matching.patterns import FuseConvBatchNorm, MatMulAddToDense
-
-list_patterns = [FuseConvBatchNorm(), MatMulAddToDense()]
-
-
-def pattern_matcher(model: list[Layer]) -> tuple[list[Layer], str]:
-    """Apply pattern matching to the given model."""
-    temp = model.copy()
-    log = ""
-    i = 0
-    while i < len(temp):
-        layer = temp[i]
-        msg = ""
-        for pattern in list_patterns:
-            if pattern.is_pattern(layer):
-                pattern.apply_pattern(index=i,layers=temp)
-                log += msg
-        i += 1
-
-    return temp, log
-

@@ -20,21 +20,29 @@
 """
 
 import numpy as np
+from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import Linear
 from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import BatchNormalization, Conv2D
-from acetone_nnet.pattern_matching.Pattern import Pattern, update_indices
+from acetone_nnet.pattern_matching.Pattern import (
+    Pattern,
+    update_dict_cst,
+    update_indices,
+    update_next_layers,
+)
+from acetone_nnet.pattern_matching.PatternMatcher import pattern_matcher
 
 
 class FuseConvBatchNorm(Pattern):
     """Fusing Conv2D and BatchNormalization pattern class."""
 
     def __init__(self):
-        """Fusing Conv2D and BatchNormalization pattern instantiation."""
+        """Pattern instantiation."""
         super().__init__(
             name="Conv2D followed by BatchNormalization becomes Conv2D_new",
-            pattern="Conv2D_{0}(BatchNormalization_{1}(_)) -> Conv2D_new_{0}(_)\n"
+            pattern="Conv2D_{0}(BatchNormalization_{1}(_)) -> Conv2D_new_{0}(_)\n",
+            shift=1,
         )
 
     def is_pattern(self, layer: Layer) -> bool:
@@ -59,7 +67,12 @@ class FuseConvBatchNorm(Pattern):
 
         return True
 
-    def apply_pattern(self, index: int, layers: list[Layer]) -> str:
+    def apply_pattern(
+        self: Self,
+        index: int,
+        layers: list[Layer],
+        dict_cst: dict[int, int],
+    ) -> str:
         """Apply the pattern to the layer."""
         batch_norm: BatchNormalization = layers[index]
         conv: Conv2D = layers[index - 1]
@@ -83,16 +96,17 @@ class FuseConvBatchNorm(Pattern):
         conv.weights = weights
         conv.biases = biases
 
-        for next_layer in batch_norm.next_layer:
-            next_layer.previous_layer.remove(batch_norm)
-            next_layer.previous_layer.append(conv)
+        update_next_layers(conv, batch_norm)
 
         conv.next_layer.remove(batch_norm)
         conv.next_layer.extend(batch_norm.next_layer)
         conv.activation_function = batch_norm.activation_function
+        update_dict_cst(batch_norm,conv,dict_cst)
 
         # Updating the list of layers
         layers.pop(index)
         update_indices(index - 1, layers, 1)
 
         return self.pattern.format(index - 1, index, index - 1)
+
+pattern_matcher.register_pattern(FuseConvBatchNorm())

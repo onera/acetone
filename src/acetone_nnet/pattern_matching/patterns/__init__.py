@@ -19,10 +19,14 @@
 ******************************************************************************
 """
 
-from .FuzeConvBatchNorm import FuseConvBatchNorm
-from .FuzeMatMulAdd import MatMulAddToDense
+from .FuseActivationLayers import FuseActivationLayer
+from .FuseConvBatchNorm import FuseConvBatchNorm
+from .FuseMatMulAdd import MatMulAddToDense
+from .FuseSigmoidMul import SigmoidMultiplyToSilu
 
 __all__ = (
+    "FuseActivationLayer",
     "FuseConvBatchNorm",
     "MatMulAddToDense",
+    "SigmoidMultiplyToSilu",
 )

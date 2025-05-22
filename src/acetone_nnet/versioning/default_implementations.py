@@ -22,4 +22,8 @@ class DefaultImplementationManager:
             self.default_implementations[layer_name] = version
         self.default_implementations = dict(sorted(self.default_implementations.items()))
 
+    def list_default_implementations(self) -> list[tuple[str, str]]:
+        """Return known Layer implementations."""
+        return list(self.default_implementations.items())
+
 default_implementations_manager: DefaultImplementationManager = DefaultImplementationManager()
