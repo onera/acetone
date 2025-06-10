@@ -286,7 +286,7 @@ class CodeGenerator(ABC):
 
     def compute_inference(
         self: Self,
-        c_files_directory: str,
+        c_files_directory: str | Path,
         dataset_or_path: np.ndarray | str | Path | None= None,
     ) -> tuple[list, list] | np.ndarray:
         """Perform inference pass on test dataset."""
@@ -407,6 +407,7 @@ class CodeGenerator(ABC):
         print("File output_python.txt generated.")
 
         if self.debug_mode:
+            print("so far so good")
             return debug_output, targets
         return nn_output
 

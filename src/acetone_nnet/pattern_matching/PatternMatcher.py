@@ -26,7 +26,7 @@ from acetone_nnet.pattern_matching.Pattern import Pattern
 class PatternMatcher:
     """Pattern matching handler class definition."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Create the pattern matcher."""
         self.patterns = []
 
@@ -39,7 +39,11 @@ class PatternMatcher:
         return [pattern.name for pattern in self.patterns]
 
 
-    def match(self, model: list[Layer], dict_cst:dict[int, int]) -> tuple[list[Layer], str]:
+    def match(
+        self,
+        model: list[Layer],
+        dict_cst:dict[int, int],
+    ) -> tuple[list[Layer], str]:
         """Apply pattern matching to the given model."""
         temp = model.copy()
         log = ""
@@ -48,9 +52,12 @@ class PatternMatcher:
             layer = temp[i]
             for pattern in self.patterns:
                 if pattern.is_pattern(layer):
-                    msg = pattern.apply_pattern(index=i,layers=temp, dict_cst=dict_cst)
+                    msg, i = pattern.apply_pattern(
+                        index=i,
+                        layers=temp,
+                        dict_cst=dict_cst,
+                    )
                     log += msg
-                    i = i - pattern.shift
             i += 1
 
         return temp, log

@@ -91,10 +91,10 @@ class Gemm(Layer):
         if type(self.size) is not int:
             msg += "Error: size type in Gemm (size must be int)"
             msg += "\n"
-        if type(self.alpha[0]) is not float and type(self.alpha[0]) is int:
+        if self.alpha != [] and (type(self.alpha[0]) is not float and type(self.alpha[0]) is int):
             msg += "Error: alpha type in Gemm (alpha must be int or float)"
             msg += "\n"
-        if type(self.beta[0]) is not float and type(self.beta[0]) is int:
+        if self.alpha != [] and (type(self.beta[0]) is not float and type(self.beta[0]) is int):
             msg += "Error: beta type in Gemm (beta must be int or float)"
             msg += "\n"
         if any(type(self.transpo[i]) is not int and type(self.transpo[i]) is not bool for i in range(2)):
@@ -161,5 +161,8 @@ class Gemm(Layer):
         if self.transpo[1]:
             self.weights = self.weights.transpose()
 
+        beta = self.beta if self.beta != [] else 1.0
+        alpha = self.alpha if self.alpha != [] else 1.0
+
         return self.activation_function.compute(
-            self.alpha * np.dot(input_array, self.weights) + self.beta * self.biases)
+            alpha * np.dot(input_array, self.weights) + beta * self.biases)

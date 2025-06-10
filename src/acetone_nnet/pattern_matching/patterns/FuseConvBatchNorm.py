@@ -72,7 +72,7 @@ class FuseConvBatchNorm(Pattern):
         index: int,
         layers: list[Layer],
         dict_cst: dict[int, int],
-    ) -> str:
+    ) -> tuple[str, int]:
         """Apply the pattern to the layer."""
         batch_norm: BatchNormalization = layers[index]
         conv: Conv2D = layers[index - 1]
@@ -96,17 +96,15 @@ class FuseConvBatchNorm(Pattern):
         conv.weights = weights
         conv.biases = biases
 
-        update_next_layers(conv, batch_norm)
-
-        conv.next_layer.remove(batch_norm)
-        conv.next_layer.extend(batch_norm.next_layer)
         conv.activation_function = batch_norm.activation_function
+        conv.next_layer.remove(batch_norm)
+        update_next_layers(batch_norm, conv)
         update_dict_cst(batch_norm,conv,dict_cst)
 
         # Updating the list of layers
         layers.pop(index)
-        update_indices(index - 1, layers, 1)
+        update_indices(index - 1, layers, 1, dict_cst)
 
-        return self.pattern.format(index - 1, index, index - 1)
+        return self.pattern.format(index - 1, index, index - 1), layers.index(conv)
 
 pattern_matcher.register_pattern(FuseConvBatchNorm())

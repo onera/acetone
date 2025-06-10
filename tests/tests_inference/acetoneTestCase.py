@@ -29,7 +29,6 @@ import onnx
 from acetone_nnet.cli.generate import cli_acetone
 
 
-
 class AcetoneTestCase(unittest.TestCase):
     """TestCase class for inference tests."""
 
@@ -62,7 +61,7 @@ class AcetoneTestCase(unittest.TestCase):
 def create_initializer_tensor(
         name: str,
         tensor_array: np.ndarray,
-        data_type: onnx.TensorProto = onnx.TensorProto.FLOAT,
+        data_type: int = onnx.TensorProto.FLOAT,
 ) -> onnx.TensorProto:
     """Create a TensorProto."""
     return onnx.helper.make_tensor(
@@ -100,7 +99,7 @@ def create_dataset(tmpdir: str, shape: tuple):
     dataset = np.float32(np.random.default_rng(seed=10).random((1, *shape)))
     with open(tmpdir + "/dataset.txt", "w") as filehandle:
         row = (dataset[0]).flatten(order="C")
-        row = [float(f).hex().replace('0000000p','p') for f in row]
+        row = [float(f).hex().replace("0000000p","p") for f in row]
         json.dump(row, filehandle)
         filehandle.write("\n")
     filehandle.close()

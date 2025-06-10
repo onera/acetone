@@ -219,7 +219,7 @@ def export_dense(
 ) -> tuple[onnx.NodeProto, list[onnx.TensorProto]]:
     """Export ACETONE dense layer to an ONNX dense layer.
 
-    The custom dense layer is made with onnxruntime_extension. see: https://onnxruntime.ai/docs/extensions/add-op.html).
+    The custom dense layer is made with onnxruntime_extension. (see: https://onnxruntime.ai/docs/extensions/add-op.html).
     """
     tensor_dtype = np_dtype_to_tensor_dtype(np.dtype(dtype_py.__name__))
     @onnx_op(op_type="Dense",

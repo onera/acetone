@@ -27,6 +27,7 @@ from acetone_nnet.pattern_matching.Pattern import (
     Pattern,
     update_indices,
     update_next_layers,
+    update_dict_cst,
 )
 from acetone_nnet.pattern_matching.PatternMatcher import pattern_matcher
 
@@ -85,7 +86,7 @@ class SigmoidMultiplyToSilu(Pattern):
         index: int,
         layers: list[Layer],
         dict_cst: dict[int, int],
-    ) -> str:
+    ) -> tuple[str, int]:
         """Apply the pattern to the layer."""
         sigmoid: ActivationLayer = layers[index]
         layer: Layer = sigmoid.previous_layer[0]
@@ -114,11 +115,13 @@ class SigmoidMultiplyToSilu(Pattern):
         # Updating the children
         update_next_layers(multiply, silu)
 
+        update_dict_cst(multiply, silu, dict_cst)
         # Updating the list of layers
         layers[index] = silu
         layers.remove(multiply)
-        update_indices(index, layers, 1)
+        update_indices(index, layers, 1, dict_cst)
 
-        return self.pattern.format(layer.idx, sigmoid.idx, multiply.idx, silu.idx)
+        return (self.pattern.format(layer.idx, sigmoid.idx, multiply.idx, silu.idx),
+                layers.index(layer))
 
 pattern_matcher.register_pattern(SigmoidMultiplyToSilu())

@@ -39,7 +39,7 @@ class FuseActivationLayer(Pattern):
         """Pattern instantiation."""
         super().__init__(
             name="Fusing Activation layer to the previous one",
-            pattern="Layer_{0}({3}_{1}(_)) -> Layer_{2}(_)\n",
+            pattern="{4}_{0}({3}_{1}(_)) -> {4}_{2}(_)\n",
             shift=1,
         )
 
@@ -72,7 +72,7 @@ class FuseActivationLayer(Pattern):
         index: int,
         layers: list[Layer],
         dict_cst: dict[int, int],
-    ) -> str:
+    ) -> tuple[str, int]:
         """Apply the pattern to the layer."""
         activation_layer: ActivationLayer = layers[index]
         layer: Layer = activation_layer.previous_layer[0]
@@ -80,15 +80,19 @@ class FuseActivationLayer(Pattern):
         layer.activation_function = activation_layer.activation_function
         update_dict_cst(activation_layer,layer,dict_cst)
 
-        update_next_layers(activation_layer, layer)
-
         layer.next_layer.remove(activation_layer)
-        layer.next_layer.extend(activation_layer.next_layer)
+        update_next_layers(activation_layer, layer)
 
         # Updating the list of layers
         layers.pop(index)
-        update_indices(index - 1, layers, 1)
+        update_indices(index - 1, layers, 1, dict_cst)
 
-        return self.pattern.format(layer.idx, activation_layer.idx, layer.idx, activation_layer.name)
+        return self.pattern.format(
+            layer.idx,
+            activation_layer.idx,
+            layer.idx,
+            activation_layer.name,
+            layer.name,
+        ), layers.index(layer)
 
 pattern_matcher.register_pattern(FuseActivationLayer())

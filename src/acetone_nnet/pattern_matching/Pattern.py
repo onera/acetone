@@ -22,7 +22,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from typing_extensions import Any, Self
+from typing_extensions import Self
 
 from acetone_nnet.generator.Layer import Layer
 
@@ -48,12 +48,18 @@ class Pattern(ABC):
         index: int,
         layers: list[Layer],
         dict_cst: dict[int, int],
-    ) -> str:
+    ) -> tuple[str, int]:
         """Apply the pattern to the layer."""
 
-def update_indices(index: int, layers: list[Layer], shift: int) -> None:
+def update_indices(
+        index: int,
+        layers: list[Layer],
+        shift: int,
+        dict_cst: dict[int,int],
+) -> None:
     """Update the indices of the layers after index by shifting them of shift."""
     nb_layers = len(layers)
+    ref = layers[index].idx
 
     if index >= nb_layers:
         m = f"Index out of bound ({index} > {nb_layers})"
@@ -62,12 +68,19 @@ def update_indices(index: int, layers: list[Layer], shift: int) -> None:
         m = f"Shift can't superior to the index ({shift} > {index})"
         raise ValueError(m)
 
-    for i in range(index + 1, nb_layers):
-        layers[i].idx = layers[i].idx - shift
+    for i in range(nb_layers):
+        if layers[i].idx > ref:
+            cst_index = dict_cst.get(layers[i].idx, None)
+            if cst_index is not None:
+                dict_cst.pop(layers[i].idx)
+                dict_cst[layers[i].idx - shift] = cst_index
+            layers[i].idx = layers[i].idx - shift
 
 def update_next_layers(removed_layer: Layer, replacement_layer:Layer) -> None:
     """Link the layers in removed_layer.next_layer to the replacement_layer as input."""
     for next_layer in removed_layer.next_layer:
+        if next_layer not in replacement_layer.next_layer:
+            replacement_layer.next_layer.append(next_layer)
         update = True
         while update:
             try:
@@ -79,6 +92,8 @@ def update_next_layers(removed_layer: Layer, replacement_layer:Layer) -> None:
 def update_previous_layers(removed_layer: Layer, replacement_layer:Layer) -> None:
     """Link the layers in removed_layer.previous_layer to take the replacement_layer as output."""
     for prev_layer in removed_layer.previous_layer:
+        if prev_layer not in replacement_layer.previous_layer:
+            replacement_layer.previous_layer.append(prev_layer)
         update = True
         while update:
             try:

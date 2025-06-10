@@ -140,4 +140,4 @@ class BatchNormalization(Layer):
         for i in range(self.output_channels):
             output.append(
                 (input_array[i] - self.mean[i]) / np.sqrt(self.var[i] + self.epsilon) * self.scale[i] + self.biases[i])
-        return np.array(output)
+        return self.activation_function.compute(np.array(output))

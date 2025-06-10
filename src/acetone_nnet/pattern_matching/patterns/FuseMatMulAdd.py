@@ -77,7 +77,7 @@ class MatMulAddToDense(Pattern):
         index: int,
         layers: list[Layer],
         dict_cst: dict[int, int],
-    ) -> str:
+    ) -> tuple[str, int]:
         """Apply the pattern to the layer."""
         matmul: MatMul = layers[index]
         add: Add = matmul.next_layer[0]
@@ -113,8 +113,8 @@ class MatMulAddToDense(Pattern):
         # Updating the list of layers
         layers[index] = dense
         layers.pop(index + 1)
-        update_indices(index, layers, 1)
+        update_indices(index, layers, 1, dict_cst)
 
-        return self.pattern.format(index, index + 1, index)
+        return self.pattern.format(index, index + 1, index), layers.index(dense)
 
 pattern_matcher.register_pattern(MatMulAddToDense())
