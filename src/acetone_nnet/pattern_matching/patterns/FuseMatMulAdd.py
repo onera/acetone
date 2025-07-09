@@ -92,8 +92,14 @@ class MatMulAddToDense(Pattern):
             weights = weights.T
 
         # Create the new layer
-        dense = Dense(idx=matmul.idx, size=add.size, weights=weights, biases=bias,
-                      activation_function=add.activation_function)
+        dense = Dense(
+            original_name=f"{matmul.original_name} fuse with {add.original_name}",
+            idx=matmul.idx,
+            size=add.size,
+            weights=weights,
+            biases=bias,
+            activation_function=add.activation_function,
+        )
 
         # Getting the basic parameters of the layer
         dense.next_layer = add.next_layer

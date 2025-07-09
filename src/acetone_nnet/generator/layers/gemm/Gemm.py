@@ -36,6 +36,7 @@ class Gemm(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             alpha: float | int,
@@ -52,6 +53,10 @@ class Gemm(Layer):
         super().__init__()
         self.name = "Gemm"
         self.idx = idx
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.size = size
 
         if alpha != 1:

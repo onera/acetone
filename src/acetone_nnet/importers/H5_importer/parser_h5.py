@@ -163,13 +163,15 @@ def load_keras(
     layers = []
 
     if model.layers[0].__class__.__name__ == "InputLayer":
-        l_temp = InputLayer(idx=0,
+        l_temp = InputLayer(original_name=model.layers[0].name,
+                            idx=0,
                             size=get_layer_size(model.layers[0]),
                             input_shape=get_input_dimensions(model.layers[0].input_shape, data_format),
                             data_format=data_format)
         start = 1
     else:
-        l_temp = InputLayer(idx=0,
+        l_temp = InputLayer(original_name=model.input[0].name,
+                            idx=0,
                             size=input_layer_size,
                             input_shape=get_input_dimensions(model.input_shape, data_format),
                             data_format=data_format)
@@ -197,7 +199,8 @@ def load_keras(
             if len(weights.shape) < 4:
                 weights = np.expand_dims(weights, axis=0)
             biases = data_type_py(layer_keras.get_weights()[1])
-            current_layer = Dense(idx=idx,
+            current_layer = Dense(original_name=layer_keras.name,
+                                  idx=idx,
                                   size=get_layer_size(layer_keras),
                                   weights=weights,
                                   biases=biases,
@@ -213,6 +216,7 @@ def load_keras(
                 weights = np.expand_dims(weights, axis=0)
             biases = data_type_py(layer_keras.get_weights()[1])
             current_layer = Conv2D(conv_algorithm="specs",
+                                   original_name=layer_keras.name,
                                    idx=idx,
                                    size=get_layer_size(layer_keras),
                                    padding=layer_keras.padding,
@@ -228,7 +232,8 @@ def load_keras(
                                    activation_function=create_actv_function_obj(layer_keras.activation))
 
         elif layer_keras.__class__.__name__ == "AveragePooling2D":
-            current_layer = AveragePooling2D(idx=idx,
+            current_layer = AveragePooling2D(original_name=layer_keras.name,
+                                             idx=idx,
                                              size=get_layer_size(layer_keras),
                                              padding=layer_keras.padding,
                                              strides=layer_keras.strides[0],
@@ -238,7 +243,8 @@ def load_keras(
                                              activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "MaxPooling2D":
-            current_layer = MaxPooling2D(idx=idx,
+            current_layer = MaxPooling2D(original_name=layer_keras.name,
+                                         idx=idx,
                                          size=get_layer_size(layer_keras),
                                          padding=layer_keras.padding,
                                          strides=layer_keras.strides[0],
@@ -248,48 +254,55 @@ def load_keras(
                                          activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "Flatten":
-            current_layer = Flatten(idx=idx,
+            current_layer = Flatten(original_name=layer_keras.name,
+                                    idx=idx,
                                     size=get_layer_size(layer_keras),
                                     input_shape=get_input_dimensions(layer_keras.input_shape, data_format),
                                     data_format=data_format)
 
         elif layer_keras.__class__.__name__ == "Add":
-            current_layer = Add(idx=idx,
+            current_layer = Add(original_name=layer_keras.name,
+                                idx=idx,
                                 size=get_layer_size(layer_keras),
                                 input_shapes=get_input_dimensions(layer_keras.input_shape, data_format),
                                 output_shape=get_output_dimensions(layer_keras.output_shape, data_format),
                                 activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "Multiply":
-            current_layer = Multiply(idx=idx,
+            current_layer = Multiply(original_name=layer_keras.name,
+                                     idx=idx,
                                      size=get_layer_size(layer_keras),
                                      input_shapes=get_input_dimensions(layer_keras.input_shape, data_format),
                                      output_shape=get_output_dimensions(layer_keras.output_shape, data_format),
                                      activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "Subtract":
-            current_layer = Subtract(idx=idx,
+            current_layer = Subtract(original_name=layer_keras.name,
+                                     idx=idx,
                                      size=get_layer_size(layer_keras),
                                      input_shapes=get_input_dimensions(layer_keras.input_shape, data_format),
                                      output_shape=get_output_dimensions(layer_keras.output_shape, data_format),
                                      activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "Maximum":
-            current_layer = Maximum(idx=idx,
+            current_layer = Maximum(original_name=layer_keras.name,
+                                    idx=idx,
                                     size=get_layer_size(layer_keras),
                                     input_shapes=get_input_dimensions(layer_keras.input_shape, data_format),
                                     output_shape=get_output_dimensions(layer_keras.output_shape, data_format),
                                     activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "Minimum":
-            current_layer = Minimum(idx=idx,
+            current_layer = Minimum(original_name=layer_keras.name,
+                                    idx=idx,
                                     size=get_layer_size(layer_keras),
                                     input_shapes=get_input_dimensions(layer_keras.input_shape, data_format),
                                     output_shape=get_output_dimensions(layer_keras.output_shape, data_format),
                                     activation_function=Linear())
 
         elif layer_keras.__class__.__name__ == "Average":
-            current_layer = Average(idx=idx,
+            current_layer = Average(original_name=layer_keras.name,
+                                    idx=idx,
                                     size=get_layer_size(layer_keras),
                                     input_shapes=get_input_dimensions(layer_keras.input_shape, data_format),
                                     output_shape=get_output_dimensions(layer_keras.output_shape, data_format),
@@ -299,7 +312,8 @@ def load_keras(
             axis = layer_keras.axis
             if data_format == "channels_last":
                 axis = 1 if axis == 3 else axis + 1
-            current_layer = Concatenate(idx=idx,
+            current_layer = Concatenate(original_name=layer_keras.name,
+                                        idx=idx,
                                         size=get_layer_size(layer_keras),
                                         axis=axis,
                                         input_shapes=get_input_dimensions(layer_keras.input_shape, data_format),
@@ -318,7 +332,8 @@ def load_keras(
                 pad_top, pad_bottom = pads[0][0], pads[0][1]
                 pad_left, pad_right = pads[1][0], pads[1][1]
             pads = [0, 0, pad_top, pad_left, 0, 0, pad_bottom, pad_right]
-            current_layer = ConstantPad(idx=idx,
+            current_layer = ConstantPad(original_name=layer_keras.name,
+                                        idx=idx,
                                         size=get_layer_size(layer_keras),
                                         pads=pads,
                                         constant_value=0,
@@ -328,6 +343,7 @@ def load_keras(
 
         elif layer_keras.__class__.__name__ == "BatchNormalization":
             current_layer = BatchNormalization(
+                original_name=layer_keras.name,
                 idx=idx,
                 size=get_layer_size(layer_keras),
                 input_shape=get_input_dimensions(layer_keras.input_shape,data_format),
@@ -370,7 +386,8 @@ def load_keras(
 
         if add_softmax_layer:
             nb_softmax_layers += 1
-            current_layer = Softmax(idx=idx + 1,
+            current_layer = Softmax(original_name=f"Softmax_{idx+1}",
+                                    idx=idx + 1,
                                     size=l_temp.size,
                                     output_shape=get_output_dimensions(layer_keras.output_shape, data_format),
                                     axis=None)

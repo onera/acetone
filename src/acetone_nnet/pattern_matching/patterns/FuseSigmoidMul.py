@@ -94,6 +94,7 @@ class SigmoidMultiplyToSilu(Pattern):
 
         # Create the new layer
         silu = ActivationLayer(
+            original_name=f"{sigmoid.original_name} fuse with {multiply.original_name}",
             idx=sigmoid.idx,
             size=sigmoid.size,
             activation_function=Silu(),

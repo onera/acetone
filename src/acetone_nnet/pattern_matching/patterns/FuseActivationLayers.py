@@ -82,6 +82,7 @@ class FuseActivationLayer(Pattern):
 
         layer.next_layer.remove(activation_layer)
         update_next_layers(activation_layer, layer)
+        layer.original_name += f" fused with {activation_layer.original_name}"
 
         # Updating the list of layers
         layers.pop(index)

@@ -32,6 +32,7 @@ class Tile(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             repeats: list,
@@ -46,6 +47,10 @@ class Tile(Layer):
         self.input_height = input_shape[2]
         self.input_width = input_shape[3]
         self.name = "Tile"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.repeats = repeats
         self.output_height = repeats[2] * self.input_height
         self.output_width = repeats[3] * self.input_width

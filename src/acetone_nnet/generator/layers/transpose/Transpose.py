@@ -32,6 +32,7 @@ class Transpose(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             input_shape: list,
@@ -43,6 +44,10 @@ class Transpose(Layer):
         self.idx = idx
         self.size = size
         self.name = "Transpose"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
 
         self.perm = perm
 

@@ -60,6 +60,7 @@ def reduce_sum_default_implementation(
     """Create a Reduce_Sum_Default layer using the parameters of old_layer."""
     return ReduceSumDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         axis=old_layer.axes,

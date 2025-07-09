@@ -58,6 +58,7 @@ def maximum_default_implementation(
     """Create a Maximum_Default layer using the parameters of old_layer."""
     return MaximumDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         input_shapes=old_layer.input_shapes,

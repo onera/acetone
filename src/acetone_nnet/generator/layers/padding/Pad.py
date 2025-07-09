@@ -39,6 +39,7 @@ class Pad(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             pads: np.ndarray,
@@ -56,6 +57,10 @@ class Pad(Layer):
         print(self.constant_value)
         self.axes = axes
         self.name = "Pad"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.input_shape = input_shape
         self.output_channels = input_shape[1] + pads[1] + pads[5]
         self.output_height = input_shape[2] + pads[2] + pads[6]

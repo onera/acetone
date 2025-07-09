@@ -1,5 +1,4 @@
-{{#channels_last}}
-    //{{name}}_{{idx}} to transforme the tensor in channels_last before entering the 1D layers
+    //{{name}}_{{idx}} to transforme the tensor in channels_last before entering the 1D layers {{#channels_last}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
     for(f = 0; f < {{input_channels}}; ++f)
     {
         for (i = 0; i < {{input_height}}; ++i)

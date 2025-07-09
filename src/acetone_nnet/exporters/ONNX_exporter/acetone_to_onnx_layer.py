@@ -115,7 +115,7 @@ def export_batch_normalization(
     inputs_name.extend([scale_name, biases_name, mean_name, var_name])
 
     node = make_node(
-        name="BatchNormalization",
+        name=batch_normalization_layer.original_name,
         op_type="BatchNormalization",
         inputs=inputs_name,
         outputs=[output_name],
@@ -153,12 +153,22 @@ def export_broadcast(
         inputs_name.append(constant_name)
 
         constant = create_initializer_tensor(
-            name=constant_name, tensor_array=broadcast_layer.constant, data_type=tensor_dtype,
+            name=constant_name, tensor_array=np.squeeze(broadcast_layer.constant), data_type=tensor_dtype,
+        )
+        initializer.append(constant)
+    elif len(inputs_name) == 1 and op_type in ["Add", "Sub", "Mul", "Div"]:
+        constant_name = f"{broadcast_layer.name}_{broadcast_layer.idx}_constant"
+        inputs_name.append(constant_name)
+        constant_value = np.array(0) if op_type in ["Add", "Sub"] else np.array(1)
+        constant = create_initializer_tensor(
+            name=constant_name,
+            tensor_array=constant_value,
+            data_type=tensor_dtype,
         )
         initializer.append(constant)
 
     node = make_node(
-        op_type, inputs_name, [output_name],
+        op_type, inputs_name, [output_name], name=broadcast_layer.original_name,
     )
 
     return node, initializer
@@ -176,7 +186,8 @@ def export_concatenate(
         "Concat",
         inputs_name,
         [output_name],
-        axis=concatenate_layer.axis
+        axis=concatenate_layer.axis,
+        name=concatenate_layer.original_name
     )
 
     return node, []
@@ -193,6 +204,7 @@ def export_conv2d(
     bias_name = f"{conv2d_layer.name}_{conv2d_layer.idx}_bias"
     inputs_name.extend([weight_name,bias_name])
     node = make_node(
+        name=conv2d_layer.original_name,
         op_type="Conv",
         inputs=inputs_name,
         outputs=[output_name],
@@ -202,8 +214,9 @@ def export_conv2d(
         dilations=(conv2d_layer.dilation_rate, conv2d_layer.dilation_rate),
     )
 
+    weights_array = np.moveaxis(conv2d_layer.weights, 3, 0)
     weights = create_initializer_tensor(
-        name=weight_name, tensor_array=conv2d_layer.weights, data_type=tensor_dtype,
+        name=weight_name, tensor_array=weights_array, data_type=tensor_dtype,
     )
     biases = create_initializer_tensor(
         name=bias_name, tensor_array=conv2d_layer.biases, data_type=tensor_dtype,
@@ -233,7 +246,7 @@ def export_dense(
     bias_name = f"{dense_layer.name}_{dense_layer.idx}_bias"
     inputs_name.extend([weight_name,bias_name])
     node = make_node(
-        "Dense", inputs_name, [output_name]
+        "Dense", inputs_name, [output_name], name=dense_layer.original_name
     )
 
     weights = create_initializer_tensor(
@@ -255,6 +268,7 @@ def export_flatten(
 
     output_name, inputs_name = generate_input_output_name(flatten_layer)
     node = make_node(
+        name=flatten_layer.original_name,
         op_type="Flatten",
         inputs=inputs_name,
         outputs=[output_name],
@@ -274,6 +288,7 @@ def export_gather(
     indices_name = f"{gather_layer.name}_{gather_layer.idx}_indices"
     inputs_name.append(indices_name)
     node = make_node(
+        name=gather_layer.original_name,
         op_type="Gather",
         inputs=inputs_name,
         outputs=[output_name],
@@ -300,6 +315,7 @@ def export_gather_elements(
     indices_name = f"{gather_elements_layer.name}_{gather_elements_layer.idx}_indices"
     inputs_name.append(indices_name)
     node = make_node(
+        name=gather_elements_layer.original_name,
         op_type="GatherElements",
         inputs=inputs_name,
         outputs=[output_name],
@@ -316,7 +332,7 @@ def export_gather_elements(
     return node, initializer
 
 def export_gemm(
-        gemm_layer: Gemm,
+    gemm_layer: Gemm,
         dtype_py:np.dtype,
 ) -> tuple[onnx.NodeProto, list[onnx.TensorProto]]:
     """Export ACETONE Gemm layer to an ONNX Gemm layer."""
@@ -328,6 +344,7 @@ def export_gemm(
     inputs_name.extend([weight_name, bias_name])
 
     node = make_node(
+        name=gemm_layer.original_name,
         op_type="Gemm",
         inputs=inputs_name,
         outputs=[output_name],
@@ -371,15 +388,18 @@ def export_matmul(
     else:
         pass
     node = make_node(
+        name=matmul_layer.original_name,
         op_type="MatMul",
         inputs=inputs_name,
         outputs=[output_name],
     )
 
     if matmul_layer.weights is not None:
+        weight_value = matmul_layer.weights
+        weight_value = np.reshape(weight_value, (weight_value.shape[-2],weight_value.shape[-1]))
         weight = create_initializer_tensor(
             name=weight_name,
-            tensor_array=matmul_layer.weights,
+            tensor_array=weight_value,
             data_type=tensor_dtype,
         )
         initializer.append(weight)
@@ -399,6 +419,7 @@ def export_pool(
 
     output_name, inputs_name = generate_input_output_name(pool_layer)
     node = make_node(
+        name=pool_layer.original_name,
         op_type=op_type[pool_layer.name],
         inputs=inputs_name,
         outputs=[output_name],
@@ -417,6 +438,7 @@ def export_softmax(
     tensor_dtype = np_dtype_to_tensor_dtype(np.dtype(dtype_py.__name__))
     output_name, inputs_name = generate_input_output_name(softmax_layer)
     node = make_node(
+        name=softmax_layer.original_name,
         op_type="Softmax",
         inputs=inputs_name,
         outputs=[output_name],
@@ -437,6 +459,7 @@ def export_pad(
     constant_name = f"{pad_layer.name}_{pad_layer.idx}_constant" if pad_layer.constant_value is not None else ""
     inputs_name.extend([pads_name, constant_name, axes_name])
     node = make_node(
+        name=pad_layer.original_name,
         op_type="Pad",
         inputs=inputs_name,
         outputs=[output_name],
@@ -477,6 +500,7 @@ def export_resize(
     scale_name = f"{resize_layer.name}_{resize_layer.idx}_scale"
     inputs_name.extend(["",scale_name,""])
     node = make_node(
+        name=resize_layer.original_name,
         op_type="Resize",
         inputs=inputs_name,
         outputs=[output_name],
@@ -510,6 +534,7 @@ def export_reduce(
     axes_name = f"{reduce_layer.name}_{reduce_layer.idx}_axes"
     inputs_name.append(axes_name)
     node = make_node(
+        name=reduce_layer.original_name,
         op_type=reduce_layer.name,
         inputs=inputs_name,
         outputs=[output_name],
@@ -537,6 +562,7 @@ def export_tile(
     repeat_name = f"{tile_layer.name}_{tile_layer.idx}_repeat"
     inputs_name.append(repeat_name)
     node = make_node(
+        name=tile_layer.original_name,
         op_type="Tile",
         inputs=inputs_name,
         outputs=[output_name],
@@ -560,6 +586,7 @@ def export_transpose(
 
     output_name, inputs_name = generate_input_output_name(transpose_layer)
     node = make_node(
+        name=transpose_layer.original_name,
         op_type="Transpose",
         inputs=inputs_name,
         outputs=[output_name],
@@ -610,7 +637,7 @@ def export_activation(
             return tensor / (1 + np.exp(-tensor))
 
     node = make_node(
-        name=f"Layer_{op_tye}",
+        name=activation_layer.original_name,
         op_type=op_tye,
         inputs=inputs_name,
         outputs=[output_name],
@@ -676,7 +703,7 @@ def export_relu(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
-        name="Function_Relu",
+        name=f"Relu fonction from node {layer.original_name} ",
         op_type="Relu",
         inputs=[intput_name],
         outputs=[output_name],
@@ -702,7 +729,7 @@ def export_silu(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
-        name="Function_Silu",
+        name=f"Silu fonction from node {layer.original_name} ",
         op_type="Silu",
         inputs=[intput_name],
         outputs=[output_name],
@@ -721,7 +748,7 @@ def export_tanh(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
-        name="Function_Tanh",
+        name=f"Tanh fonction from node {layer.original_name} ",
         op_type="Tanh",
         inputs=[intput_name],
         outputs=[output_name],
@@ -740,7 +767,7 @@ def export_leaky_relu(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
-        name="Function_LeakyRelu",
+        name=f"LeakyRelu fonction from node {layer.original_name} ",
         op_type="LeakyRelu",
         inputs=[intput_name],
         outputs=[output_name],
@@ -760,7 +787,7 @@ def export_sigmoid(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
-        name="Function_Sigmoid",
+        name=f"Sigmoid fonction from node {layer.original_name} ",
         op_type="Sigmoid",
         inputs=[intput_name],
         outputs=[output_name],
@@ -779,7 +806,7 @@ def export_exponential(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
-        name="Function_Exp",
+        name=f"Exp fonction from node {layer.original_name} ",
         op_type="Exp",
         inputs=[intput_name],
         outputs=[output_name],
@@ -798,7 +825,7 @@ def export_log(
     output_name= f"{layer.name}_{layer.idx}"
 
     node = make_node(
-        name="Function_Log",
+        name=f"Log fonction from node {layer.original_name} ",
         op_type="Log",
         inputs=[intput_name],
         outputs=[output_name],
@@ -819,7 +846,7 @@ def export_clip(
     max_name = f"{layer.name}_{layer.idx}_clip_max"
 
     node = make_node(
-        name="Function_Clip",
+        name=f"Clip fonction from node {layer.original_name} ",
         op_type="Clip",
         inputs=[intput_name,min_name,max_name],
         outputs=[output_name],

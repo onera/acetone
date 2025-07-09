@@ -64,6 +64,7 @@ class ReflectPadDefault(ReflectPad):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["size"] = self.size
@@ -104,6 +105,7 @@ def reflect_pad_default_implementation(
     """Create a ReflectPad_Default layer using the parameters of old_layer."""
     return ReflectPadDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         pads=old_layer.pads,

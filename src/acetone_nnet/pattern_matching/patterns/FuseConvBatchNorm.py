@@ -100,6 +100,7 @@ class FuseConvBatchNorm(Pattern):
         conv.next_layer.remove(batch_norm)
         update_next_layers(batch_norm, conv)
         update_dict_cst(batch_norm,conv,dict_cst)
+        conv.original_name += f" fused with {batch_norm.original_name}"
 
         # Updating the list of layers
         layers.pop(index)

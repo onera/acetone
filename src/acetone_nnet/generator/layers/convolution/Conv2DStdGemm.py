@@ -101,6 +101,7 @@ class Conv2DStdGemm(Conv2DGemm):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["size"] = self.size
@@ -134,6 +135,7 @@ def conv2d_std_gemm_implementation(
     """Create a Conv2D_std_gemm layer using the attributes of old_layer."""
     return Conv2DStdGemm(
         idx=old_layer.idx,
+        original_name=old_layer.original_name,
         conv_algorithm=conv_algo,
         size=old_layer.size,
         padding=old_layer.padding,

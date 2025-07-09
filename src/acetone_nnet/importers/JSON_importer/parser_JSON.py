@@ -131,30 +131,37 @@ def load_json(
             add_softmax_layer = True
 
         if layer["class_name"] == "Dense":
-            current_layer = Dense(idx=idx,
+            current_layer = Dense(original_name=layer["config"]["name"],
+                                  idx=idx,
                                   size=layer["config"]["units"],
                                   weights=np.array(data_type_py(layer["weights"])),
                                   biases=data_type_py(layer["biases"]),
                                   activation_function=create_actv_function_obj(layer["config"]["activation"]))
 
         elif layer["class_name"] == "Conv2D":
-            current_layer = Conv2D(conv_algorithm="specs",
-                                   idx=idx,
-                                   size=layer["config"]["size"],
-                                   padding=layer["config"]["padding"],
-                                   strides=layer["config"]["strides"][0],
-                                   kernel_h=layer["config"]["kernel_size"][0],
-                                   kernel_w=layer["config"]["kernel_size"][1],
-                                   dilation_rate=layer["config"]["dilation_rate"][0],
-                                   nb_filters=layer["config"]["filters"],
-                                   input_shape=layer["config"]["input_shape"],
-                                   output_shape=layer["config"]["output_shape"],
-                                   weights=np.array(data_type_py(layer["weights"])),
-                                   biases=data_type_py(layer["biases"]),
-                                   activation_function=create_actv_function_obj(layer["config"]["activation"]))
+            current_layer = Conv2D(
+                conv_algorithm="specs",
+                original_name=layer["config"]["name"],
+                idx=idx,
+                size=layer["config"]["size"],
+                padding=layer["config"]["padding"],
+                strides=layer["config"]["strides"][0],
+                kernel_h=layer["config"]["kernel_size"][0],
+                kernel_w=layer["config"]["kernel_size"][1],
+                dilation_rate=layer["config"]["dilation_rate"][0],
+                nb_filters=layer["config"]["filters"],
+                input_shape=layer["config"]["input_shape"],
+                output_shape=layer["config"]["output_shape"],
+                weights=np.array(data_type_py(layer["weights"])),
+                biases=data_type_py(layer["biases"]),
+                activation_function=create_actv_function_obj(
+                    layer["config"]["activation"]
+                ),
+            )
 
         elif layer["class_name"] == "AveragePooling2D":
-            current_layer = AveragePooling2D(idx=idx,
+            current_layer = AveragePooling2D(original_name=layer["config"]["name"],
+                                             idx=idx,
                                              size=layer["config"]["size"],
                                              padding=layer["config"]["padding"],
                                              strides=layer["config"]["strides"][0],
@@ -164,7 +171,8 @@ def load_json(
                                              activation_function=Linear())
 
         elif layer["class_name"] == "MaxPooling2D":
-            current_layer = MaxPooling2D(idx=idx,
+            current_layer = MaxPooling2D(original_name=layer["config"]["name"],
+                                         idx=idx,
                                          size=layer["config"]["size"],
                                          padding=layer["config"]["padding"],
                                          strides=layer["config"]["strides"][0],
@@ -174,27 +182,31 @@ def load_json(
                                          activation_function=Linear())
 
         elif layer["class_name"] == "Flatten":
-            current_layer = Flatten(idx=idx,
+            current_layer = Flatten(original_name=layer["config"]["name"],
+                                    idx=idx,
                                     size=layer["config"]["size"],
                                     input_shape=layer["config"]["input_shape"],
                                     data_format=data_format)
 
         elif layer["class_name"] == "Add":
-            current_layer = Add(idx=layer["config"]["idx"],
+            current_layer = Add(original_name=layer["config"]["name"],
+                                idx=layer["config"]["idx"],
                                 size=layer["config"]["size"],
                                 input_shapes=layer["config"]["input_shape"],
                                 output_shape=layer["config"]["output_shape"],
                                 activation_function=Linear())
 
         elif layer["class_name"] == "Multiply":
-            current_layer = Multiply(idx=layer["config"]["idx"],
+            current_layer = Multiply(original_name=layer["config"]["name"],
+                                     idx=layer["config"]["idx"],
                                      size=layer["config"]["size"],
                                      input_shapes=layer["config"]["input_shape"],
                                      output_shape=layer["config"]["output_shape"],
                                      activation_function=Linear())
 
         elif layer["class_name"] == "Subtract":
-            current_layer = Subtract(idx=layer["config"]["idx"],
+            current_layer = Subtract(original_name=layer["config"]["name"],
+                                     idx=layer["config"]["idx"],
                                      size=layer["config"]["size"],
                                      input_shapes=layer["config"]["input_shape"],
                                      output_shape=layer["config"]["output_shape"],
@@ -204,7 +216,8 @@ def load_json(
             axis = layer["config"]["axis"]
             if data_format == "channels_last":
                 axis = 1 if axis == 3 else axis + 1
-            current_layer = Concatenate(idx=layer["config"]["idx"],
+            current_layer = Concatenate(original_name=layer["config"]["name"],
+                                        idx=layer["config"]["idx"],
                                         size=layer["config"]["size"],
                                         axis=axis,
                                         input_shapes=layer["config"]["input_shape"],
@@ -212,21 +225,24 @@ def load_json(
                                         activation_function=Linear())
 
         elif layer["class_name"] == "Maximum":
-            current_layer = Maximum(idx=layer["config"]["idx"],
+            current_layer = Maximum(original_name=layer["config"]["name"],
+                                    idx=layer["config"]["idx"],
                                     size=layer["config"]["size"],
                                     input_shapes=layer["config"]["input_shape"],
                                     output_shape=layer["config"]["output_shape"],
                                     activation_function=Linear())
 
         elif layer["class_name"] == "Minimum":
-            current_layer = Minimum(idx=layer["config"]["idx"],
+            current_layer = Minimum(original_name=layer["config"]["name"],
+                                    idx=layer["config"]["idx"],
                                     size=layer["config"]["size"],
                                     input_shapes=layer["config"]["input_shape"],
                                     output_shape=layer["config"]["output_shape"],
                                     activation_function=Linear())
 
         elif layer["class_name"] == "Average":
-            current_layer = Average(idx=layer["config"]["idx"],
+            current_layer = Average(original_name=layer["config"]["name"],
+                                    idx=layer["config"]["idx"],
                                     size=layer["config"]["size"],
                                     input_shapes=layer["config"]["input_shape"],
                                     output_shape=layer["config"]["output_shape"],
@@ -245,7 +261,8 @@ def load_json(
                     pad_left, pad_right = pads[1][0], pads[1][1]
                 pads = [0, 0, pad_top, pad_left, 0, 0, pad_bottom, pad_right]
 
-            current_layer = ConstantPad(idx=layer["config"]["idx"],
+            current_layer = ConstantPad(original_name=layer["config"]["name"],
+                                        idx=layer["config"]["idx"],
                                         size=layer["config"]["size"],
                                         pads=pads,
                                         constant_value=0,
@@ -254,26 +271,8 @@ def load_json(
                                         activation_function=Linear())
 
         elif layer["class_name"] == "BatchNormalization":
-            if layers[-1].name == "Conv2D":
-                scale = np.array(data_type_py(layer["gamma"]))
-                bias = np.array(data_type_py(layer["beta"]))
-                mean = np.array(data_type_py(layer["moving_mean"]))
-                var = np.array(data_type_py(layer["moving_var"]))
-
-                weights = layers[-1].weights
-                biases = layers[-1].biases
-
-                for z in range(len(weights[0, 0, 0, :])):
-                    alpha = scale[z] / np.sqrt(var[z] + layer["config"]["epsilon"])
-                    b = bias[z] - (mean[z] * alpha)
-                    weights[:, :, :, z] = alpha * weights[:, :, :, z]
-                    biases[z] = alpha * biases[z] + b
-
-                layers[-1].weights = weights
-                layers[-1].biases = biases
-
-            else:
-                current_layer = BatchNormalization(idx=layer["config"]["idx"],
+            BatchNormalization(original_name=layer["config"]["name"],
+                                                   idx=layer["config"]["idx"],
                                                    size=layer["config"]["size"],
                                                    input_shape=layer["config"]["input_shape"],
                                                    epsilon=layer["config"]["epsilon"],
@@ -301,10 +300,11 @@ def load_json(
         # Separated method to generate softmax
         if add_softmax_layer:
             nb_softmax_layers += 1
-            current_layer = Softmax(idx + 1,
-                                    l_temp.size,
-                                    layer["config"]["output_shape"],
-                                    None)
+            current_layer = Softmax(original_name=f"Softmax_{idx+1}",
+                                    idx=idx + 1,
+                                    size=l_temp.size,
+                                    output_shape=layer["config"]["output_shape"],
+                                    axis=None)
             l_temp.next_layer.append(current_layer)
             current_layer.previous_layer.append(l_temp)
             l_temp = current_layer

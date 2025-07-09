@@ -34,6 +34,7 @@ class Reduce(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             axis: tuple[int],
@@ -47,6 +48,10 @@ class Reduce(Layer):
         self.idx = idx
         self.size = size
         self.name = "Reduce"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
 
         self.reduce_func = ""
 
@@ -136,6 +141,7 @@ class Reduce(Layer):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["output_str"] = output_str

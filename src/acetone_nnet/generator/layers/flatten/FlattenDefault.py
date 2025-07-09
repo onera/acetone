@@ -48,6 +48,7 @@ class FlattenDefault(Flatten):
             mustach_hash["input_height"] = self.input_shape[2]
             mustach_hash["input_width"] = self.input_shape[3]
             mustach_hash["name"] = self.name
+            mustach_hash["original_name"] = self.original_name
             mustach_hash["idx"] = f"{self.idx:02d}"
             mustach_hash["path"] = self.path
             mustach_hash["size"] = self.size
@@ -66,6 +67,7 @@ def flatten_default_implementation(
     """Create a Flatten_Default layer using the attributes of old_layer."""
     return FlattenDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         input_shape=old_layer.input_shape,

@@ -47,6 +47,7 @@ class DenseDefault(Dense):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["output_str"] = output_str
@@ -83,6 +84,7 @@ def dense_default_implementation(
     """Create a Dense_Default layer using the attributes of old_layer."""
     return DenseDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         weights=old_layer.weights,

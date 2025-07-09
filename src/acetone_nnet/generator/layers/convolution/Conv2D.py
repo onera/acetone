@@ -34,6 +34,7 @@ class Conv2D(Layer):
 
     def __init__(
         self: Self,
+        original_name : str,
         idx: int,
         conv_algorithm: str,
         size: int,
@@ -55,6 +56,10 @@ class Conv2D(Layer):
         self.idx = idx
         self.size = size
         self.name = "Conv2D"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.padding = padding
         self.strides = strides
         self.kernel_h = kernel_h

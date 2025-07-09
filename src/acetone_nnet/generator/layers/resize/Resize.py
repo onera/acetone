@@ -41,6 +41,7 @@ class Resize(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             input_shape: list,
@@ -72,6 +73,10 @@ class Resize(Layer):
         self.keep_aspect_ratio_policy = keep_aspect_ratio_policy
         self.roi = roi
         self.name = "Resize"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.extrapolation_value = extrapolation_value
         if type(coordinate_transformation_mode) is bytes:
             self.coordinate_transformation_mode = str(coordinate_transformation_mode)[2:-1]

@@ -183,7 +183,13 @@ def create_input_layer(
                     range(len(input_layer.type.tensor_type.shape.dim))]
     size = find_size(output_shape)
 
-    return InputLayer(idx, size, output_shape, "channels_first")
+    return InputLayer(
+        original_name=input_layer.name,
+        idx=idx,
+        size=size,
+        input_shape=output_shape,
+        data_format="channels_first",
+    )
 
 
 # Create a layer Softmax
@@ -209,10 +215,13 @@ def create_softmax(
             attributes["axis"] = len(output_shape) - 1
     if attributes["axis"] < 0:
         attributes["axis"] = len(output_shape) + attributes["axis"]
-    return Softmax(idx=idx,
-                   size=size,
-                   output_shape=output_shape,
-                   axis=attributes["axis"])
+    return Softmax(
+        original_name=node.name,
+        idx=idx,
+        size=size,
+        output_shape=output_shape,
+        axis=attributes["axis"],
+    )
 
 
 # Create a layer Conv
@@ -254,6 +263,7 @@ def create_conv(
 
     return Conv2D(
         conv_algorithm="specs",
+        original_name=node.name,
         idx=idx,
         size=size,
         padding=attributes["auto_pad"],
@@ -288,11 +298,12 @@ def create_concat(
     dict_output[node.output[0]] = idx
     attributes = extract_attributes(node)
     return Concatenate(
-        idx,
-        size,
-        attributes["axis"],
-        input_shapes,
-        output_shape,
+        original_name=node.name,
+        idx=idx,
+        size=size,
+        axis=attributes["axis"],
+        input_shapes=input_shapes,
+        output_shape=output_shape,
         activation_function=Linear(),
     )
 
@@ -357,6 +368,7 @@ def create_resize(
 
     return create_resize_obj(
         mode=attributes["mode"],
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shape=input_shape,
@@ -404,6 +416,7 @@ def create_pad(
             axes[i] = axe
     return create_pad_obj(
         mode=attributes["mode"],
+        original_name=node.name,
         idx=idx,
         size=size,
         pads=list(map(int,onnx.numpy_helper.to_array(initializers[0]))),
@@ -435,6 +448,7 @@ def create_gather(
         if indices[i] < 0:
             indices[i] = input_shape[attributes["axis"]] - abs(indices[i])
     return Gather(
+        original_name=node.name,
         idx=idx,
         size=size,
         axis=attributes["axis"],
@@ -466,6 +480,7 @@ def create_gather_elements(
         if indices[i] < 0:
             indices[i] = input_shape[attributes["axis"]] - abs(indices[i])
     return GatherElements(
+        original_name=node.name,
         idx=idx,
         size=size,
         axis=attributes["axis"],
@@ -505,6 +520,7 @@ def create_gemm(
     if "beta" not in attributes:
         attributes["beta"] = 1.0
     return Gemm(
+        original_name=node.name,
         idx=idx,
         size=size,
         alpha=attributes["alpha"],
@@ -578,12 +594,15 @@ def create_matmul(
         side = 2
         weights = None
         # to check
-    return MatMul(idx=idx,
-                  size=size,
-                  input_shapes=input_shape,
-                  weights=weights,
-                  side=side,
-                  activation_function=Linear())
+    return MatMul(
+        original_name=node.name,
+        idx=idx,
+        size=size,
+        input_shapes=input_shape,
+        weights=weights,
+        side=side,
+        activation_function=Linear(),
+    )
 
 
 def create_batch_norm(
@@ -609,6 +628,7 @@ def create_batch_norm(
     var = look_for_initializer(node.input[4], model)
 
     return BatchNormalization(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shape=output_shape,
@@ -636,6 +656,7 @@ def create_transpose(
     dict_output[node.output[0]] = idx
     attributes = extract_attributes(node)
     return Transpose(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shape=input_shape,
@@ -665,6 +686,7 @@ def create_tile(
         for _i in range(len(repeats), 4):
             repeats.insert(0, 1)
     return Tile(
+        original_name=node.name,
         idx=idx,
         size=size,
         repeats=repeats,
@@ -709,6 +731,7 @@ def create_reduce_sum(
             attributes["axes"] = []
 
     return ReduceSum(
+        original_name=node.name,
         idx=idx,
         size=size,
         axis=tuple(attributes["axes"]),
@@ -755,6 +778,7 @@ def create_reduce_max(
             attributes["axes"] = []
 
     return ReduceMax(
+        original_name=node.name,
         idx=idx,
         size=size,
         axis=tuple(attributes["axes"]),
@@ -801,6 +825,7 @@ def create_reduce_min(
             attributes["axes"] = []
 
     return ReduceMin(
+        original_name=node.name,
         idx=idx,
         size=size,
         axis=tuple(attributes["axes"]),
@@ -847,6 +872,7 @@ def create_reduce_mean(
             attributes["axes"] = []
 
     return ReduceMean(
+        original_name=node.name,
         idx=idx,
         size=size,
         axis=tuple(attributes["axes"]),
@@ -893,6 +919,7 @@ def create_reduce_prod(
             attributes["axes"] = []
 
     return ReduceProd(
+        original_name=node.name,
         idx=idx,
         size=size,
         axis=tuple(attributes["axes"]),
@@ -932,6 +959,7 @@ def create_max_pool(
     if "strides" not in attributes:
         attributes["strides"] = [1, 1]
     return MaxPooling2D(
+        original_name=node.name,
         idx=idx,
         size=size,
         padding=attributes["auto_pad"],
@@ -970,6 +998,7 @@ def create_average_pool(
     if "strides" not in attributes:
         attributes["strides"] = [1, 1]
     return AveragePooling2D(
+        original_name=node.name,
         idx=idx,
         size=size,
         padding=attributes["auto_pad"],
@@ -996,6 +1025,7 @@ def create_global_average_pool(
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
     return AveragePooling2D(
+        original_name=node.name,
         idx=idx,
         size=size,
         padding=[0, 0, 0, 0],
@@ -1008,37 +1038,6 @@ def create_global_average_pool(
 
 
 ### Broadcasts layers ###
-
-# create a layer AddBias
-##### UNUSED #####
-def create_add_bias(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
-) -> AddBias:
-    """Create an AddBias layer."""
-    output_shape = get_shape(node.output[0], model)
-    size = find_size(output_shape)
-    dict_output[node.output[0]] = idx
-    right_tensor = look_for_initializer(node.input[0], model)
-    left_tensor = look_for_initializer(node.input[1], model)
-    biases = []
-    if right_tensor:
-        biases = onnx.numpy_helper.to_array(right_tensor)
-        dict_input[idx] = [node.input[1]]
-    elif left_tensor:
-        biases = onnx.numpy_helper.to_array(left_tensor)
-        dict_input[idx] = [node.input[0]]
-
-    return AddBias(
-        idx=idx,
-        size=size,
-        biases=biases,
-        activation_function=Linear(),
-    )
-
 
 # create a layer Add
 def create_add(
@@ -1073,6 +1072,7 @@ def create_add(
         constant = None
     input_shapes = np.array(input_shapes)
     return Add(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=input_shapes,
@@ -1117,6 +1117,7 @@ def create_div(
         constant = None
     input_shapes = np.array(input_shapes)
     return Divide(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=input_shapes,
@@ -1159,6 +1160,7 @@ def create_mul(
         constant = None
     input_shapes = np.array(input_shapes)
     return Multiply(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=input_shapes,
@@ -1201,6 +1203,7 @@ def create_sub(
         constant = None
     input_shapes = np.array(input_shapes)
     return Subtract(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=input_shapes,
@@ -1227,6 +1230,7 @@ def create_max(
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
     return Maximum(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=np.array(input_shapes),
@@ -1252,6 +1256,7 @@ def create_min(
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
     return Minimum(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=np.array(input_shapes),
@@ -1277,6 +1282,7 @@ def create_avg(
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
     return Average(
+        original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=input_shapes,
@@ -1330,6 +1336,7 @@ def create_activation_layer(
     dict_input[idx] = [node.input[0]]
     dict_output[node.output[0]] = idx
     return ActivationLayer(
+        original_name=node.name,
         idx=idx,
         size=size,
         activation_function=instantiate_activation_layer(node, model),
