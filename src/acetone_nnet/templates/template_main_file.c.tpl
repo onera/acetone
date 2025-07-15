@@ -55,7 +55,8 @@ int main(int argc, char** argv)
     {
         for (j = 0; j < nn_output_size; ++j)
         {
-            fprintf(fp,"%a ", predictions[i][j]);
+            {{#to_hex}}fprintf(fp,"%a ", predictions[i][j]);{{/to_hex}}
+            {{^to_hex}}fprintf(fp,"%.9g ", predictions[i][j]);{{/to_hex}}
             {{#verbose}}
             printf("%.9g ", predictions[i][j]);
             {{/verbose}}
