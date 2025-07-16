@@ -22,7 +22,6 @@
 import argparse
 import logging
 import pathlib
-
 from acetone_nnet import CodeGenerator
 
 
@@ -38,11 +37,11 @@ def cli_acetone(
     *,
     normalize: bool = False,
 ) -> None:
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
     """Generate code with ACETONE."""
     logging.info("C CODE GENERATOR FOR NEURAL NETWORKS")
-    print(target, " selected")
+    logging.info(f'Target {target} selected')
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
-
     net = CodeGenerator(
         file=model_file,
         test_dataset=test_dataset_file,

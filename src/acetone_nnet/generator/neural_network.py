@@ -20,7 +20,7 @@
 """
 
 import json
-import warnings
+import logging
 from abc import ABC
 from pathlib import Path
 from typing import Any
@@ -28,8 +28,12 @@ from typing import Any
 import numpy as np
 import onnx
 import pystache
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
+try:
+    from keras.engine.functional import Functional
+    from keras.engine.sequential import Sequential
+except ImportError:
+    from keras import Model as Functional
+    from keras import Sequential
 from typing_extensions import Self
 
 from acetone_nnet import templates
@@ -87,7 +91,17 @@ class CodeGenerator(ABC):
         self.template_path = templates.__file__[:-11]
         self.verbose = verbose
         self.to_hex = to_hex
-
+        self.target_cfg = None
+        try:
+            with open(target+'.json', 'r') as f:
+                try:
+                    self.target_cfg = json.load(f)
+                    self.to_hex = False
+                    logging.info(f'Target configuration {self.target_cfg['name']} loaded')
+                except json.JSONDecodeError as e:
+                    logging.warning(f'Target configuration file {target+'.json'} parse error: {e}')
+        except FileNotFoundError as e:
+            logging.warning(f'Target configuration file {target+'.json'} not found, continue')
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
                 file_to_parse=self.file,
@@ -139,8 +153,10 @@ class CodeGenerator(ABC):
         self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
-        self.data_type = dtype
-        self.data_type_py = dtype_py
+        self.data_type = self.target_cfg['quantization']['dtype'] if self.target_cfg is not None else dtype
+        self.data_type_py = np.dtype(self.target_cfg['quantization']['pydtype']) if self.target_cfg is not None else dtype_py
+        logging.info(f'dtype {self.data_type}')
+        logging.info(f'pydtype {self.data_type_py}')
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
@@ -209,7 +225,7 @@ class CodeGenerator(ABC):
         ### Checking value consistency ###
 
         if self.read_ext_input and isinstance(test_dataset, str | np.ndarray | Path):
-            warnings.warn("Warning: given dataset will be ignored")
+            logging.warning("Warning: given dataset will be ignored")
 
         # Debug Mode
         if self.debug_mode and self.debug_mode not in ["keras", "onnx", "time"]:
@@ -305,10 +321,7 @@ class CodeGenerator(ABC):
                 if i >= nb_tests:
                     break
                 contents = json.loads(line)
-                if self.to_hex:
-                    contents = [float.fromhex(f) for f in contents]
-                else:
-                    contents = [float(f) for f in contents]
+                contents = [self.c2data(c) for c in contents]
                 test_dataset.append(list(map(dtype, contents)))
         return np.array(test_dataset)
 
@@ -426,35 +439,33 @@ class CodeGenerator(ABC):
 
                 if self.normalize:
                     nn_output = self.Normalizer.post_processing(nn_output)
-
-                if self.to_hex:
-                    out_string = " ".join(
-                        [float(n).hex().replace("0000000p", "p") for n in nn_output],
-                    )
-                else:
-                    out_string = " ".join(
-                        [str(n) for n in nn_output],
-                    )
+                out_string = " ".join([self.data2c(n) for n in nn_output])
                 print(f"{out_string}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
 
-        print("File output_python.txt generated.")
+        logging.info("File output_python.txt generated.")
 
         if self.debug_mode:
             return debug_output, targets
         return nn_output
 
+    def data2c(self, d):
+        if self.to_hex:
+            return float.hex(float(d)).replace("0000000p", "p")
+        else:
+            return str(float(d))
+
+    def c2data(self, c):
+        if self.to_hex:
+            return float.fromhex(c)
+        else:
+            return float(f)
 
     def flatten_array_order_c(self:Self, array: np.ndarray) -> str:
         """Generate C flat array initializer in C order."""
         flattened_aray = array.flatten(order="C")
         s = "\n        {"
-        for i in range(flattened_aray.size):
-            if self.to_hex:
-                s += float.hex(float(flattened_aray[i])).replace("0000000p", "p") + ", "
-            else:
-                s += str(float(flattened_aray[i])) + ", "
-        s = s[:-2]
+        s += ", ".join([self.data2c(d) for d in flattened_aray])
         s += "}"
 
         return s
@@ -467,20 +478,13 @@ class CodeGenerator(ABC):
             for _i in range(4 - len(shape)):
                 shape = (1, *shape)
             array = np.reshape(array, shape)
+        s_array=[]
         for j in range(shape[3]):
             for k in range(shape[0]):
                 for f in range(shape[1]):
                     for i in range(shape[2]):
-                        if self.to_hex:
-                            s += (
-                                    float.hex(float(array[k, f, i, j])).replace(
-                                        "0000000p", "p",
-                                    )
-                                    + ", "
-                            )
-                        else:
-                            s += str(float(array[k, f, i, j])) + ", "
-        s = s[:-2]
+                        s_array.append(self.data2c(array[k, f, i, j]))
+        s += ", ".join(s_array)
         s += "}"
         return s
 
@@ -587,32 +591,32 @@ class CodeGenerator(ABC):
 
         self.generate_function_source_file(c_files_directory)
         if self.verbose:
-            print("Generated function source file.")
+            logging.info("Generated function source file.")
         self.generate_function_header_file(c_files_directory)
         if self.verbose:
-            print("Generated function header file.")
+            logging.info("Generated function header file.")
         self.generate_globalvars_file(c_files_directory)
         if self.verbose:
-            print("Generated globalvars .c file.")
+            logging.info("Generated globalvars .c file.")
         self.generate_main_file(c_files_directory)
         if self.verbose:
-            print("Generated main file.")
+            logging.info("Generated main file.")
         self.generate_makefile(c_files_directory)
         if self.verbose:
-            print("Generated Makefile.")
+            logging.info("Generated Makefile.")
         self.generate_test_dataset_files(c_files_directory)
         if self.verbose:
-            print("Generated test_dataset files.")
+            logging.info("Generated test_dataset files.")
         if self.target != "generic":
             self.generate_target_file(c_files_directory)
             if self.verbose:
-                print("Generated target file.")
+                logging.info("Generated target file.")
             self.generate_target_header_file(c_files_directory)
             if self.verbose:
-                print("Generated target header file.")
+                logging.info("Generated target header file.")
 
     def generate_target_file(self: Self, output_dir: Path) -> None:
-        print("Generation of target file")
+        logging.info("Generation of target file")
         mustach_hash = {}
         # mustach_hash[self.target] = True
         # Generate C code
@@ -623,7 +627,7 @@ class CodeGenerator(ABC):
             source_file.write(pystache.render(template, mustach_hash))
 
     def generate_target_header_file(self: Self, output_dir: Path) -> None:
-        print("Generation of target header file")
+        logging.info("Generation of target header file")
         mustach_hash = {}
         # mustach_hash[self.target] = True
         # Generate C code
