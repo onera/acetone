@@ -547,7 +547,7 @@ class CodeGenerator(ABC):
                         "data_type": self.data_type,
                         "read_input": self.read_ext_input,
                         "verbose":self.verbose,
-                        "format":"%a" if self.to_hex else "%9g",
+                        "format":"%d" if np.issubdtype(self.data_type_py,np.integer) else "%a" if self.to_hex else "%9g",
                     },
                 ),
             )
