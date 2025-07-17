@@ -31,11 +31,11 @@ from acetone_nnet.cli.generate import cli_acetone
 
 class AcetoneTestCase(unittest.TestCase):
     """TestCase class for inference tests."""
-
     def setUp(self) -> None:
         """Create a temp_dir."""
         self.tmpdir = tempfile.TemporaryDirectory()
         self.tmpdir_name = self.tmpdir.name
+        self.tmpdir_name = 'temp'
 
     def tearDown(self) -> None:
         """Destroy a temp_dir."""
@@ -114,6 +114,7 @@ def run_acetone_for_test(
     normalize=False,
     run_generated=True,
     run_reference=True,
+    target='generic',
 ):
     cli_acetone(
         model_file=model,
@@ -123,6 +124,8 @@ def run_acetone_for_test(
         output_dir=tmpdir_name,
         test_dataset_file=datatest_path,
         normalize=normalize,
+        target=target,
+        verbose=True
     )
 
     if run_reference:

@@ -80,7 +80,7 @@ class CodeGenerator(ABC):
         versions: dict[int, str] | dict[str, str] | None = None,
         normalize: bool | str = False,
         debug_mode: str | None = None,
-        verbose: bool = True,
+        verbose: bool = False,
         to_hex: bool = True,
         **kwargs,
     ) -> None:
@@ -592,30 +592,22 @@ class CodeGenerator(ABC):
                 raise FileExistsError(c_files_directory / file)
 
         self.generate_function_source_file(c_files_directory)
-        if self.verbose:
-            logging.info("Generated function source file.")
+        logging.info("Generated function source file.")
         self.generate_function_header_file(c_files_directory)
-        if self.verbose:
-            logging.info("Generated function header file.")
+        logging.info("Generated function header file.")
         self.generate_globalvars_file(c_files_directory)
-        if self.verbose:
-            logging.info("Generated globalvars .c file.")
+        logging.info("Generated globalvars .c file.")
         self.generate_main_file(c_files_directory)
-        if self.verbose:
-            logging.info("Generated main file.")
+        logging.info("Generated main file.")
         self.generate_makefile(c_files_directory)
-        if self.verbose:
-            logging.info("Generated Makefile.")
+        logging.info("Generated Makefile.")
         self.generate_test_dataset_files(c_files_directory)
-        if self.verbose:
-            logging.info("Generated test_dataset files.")
+        logging.info("Generated test_dataset files.")
         if self.target != "generic":
             self.generate_target_file(c_files_directory)
-            if self.verbose:
-                logging.info("Generated target file.")
+            logging.info("Generated target file.")
             self.generate_target_header_file(c_files_directory)
-            if self.verbose:
-                logging.info("Generated target header file.")
+            logging.info("Generated target header file.")
 
     def generate_target_file(self: Self, output_dir: Path) -> None:
         logging.info("Generation of target file")
