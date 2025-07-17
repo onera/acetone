@@ -35,6 +35,7 @@ def cli_acetone(
     target_page_size: int = 4096,
     test_dataset_file: str | None = None,
     verbose:bool = False,
+    to_hex:bool = True,
     *,
     normalize: bool = False,
 ) -> None:
@@ -52,7 +53,8 @@ def cli_acetone(
         target=target,
         target_page_size=target_page_size,
         versions={"Conv2D": conv_algorithm},
-        verbose=verbose
+        verbose=verbose,
+        to_hex=to_hex
     )
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)

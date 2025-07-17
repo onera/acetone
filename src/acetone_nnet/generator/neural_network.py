@@ -451,17 +451,14 @@ class CodeGenerator(ABC):
 
     def data2c(self, d):
         if self.data_type_py==np.int16:
-            return str(int(d*32767))
+            return str(int(d*1000))
         if self.to_hex:
             return float.hex(float(d)).replace("0000000p", "p")
         else:
             return str(float(d))
 
     def c2data(self, c):
-        if self.to_hex:
-            return float.fromhex(c)
-        else:
-            return float(f)
+        return float.fromhex(c) if self.to_hex else float(c)
 
     def flatten_array_order_c(self:Self, array: np.ndarray) -> str:
         """Generate C flat array initializer in C order."""
