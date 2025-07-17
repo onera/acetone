@@ -450,6 +450,8 @@ class CodeGenerator(ABC):
         return nn_output
 
     def data2c(self, d):
+        if self.data_type_py==np.int16:
+            return str(int(d*32767))
         if self.to_hex:
             return float.hex(float(d)).replace("0000000p", "p")
         else:
@@ -545,7 +547,7 @@ class CodeGenerator(ABC):
                         "data_type": self.data_type,
                         "read_input": self.read_ext_input,
                         "verbose":self.verbose,
-                        "to_hex":self.to_hex,
+                        "format":"%a" if self.to_hex else "%9g",
                     },
                 ),
             )
