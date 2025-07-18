@@ -142,7 +142,7 @@ class Layer(ABC):
 
         keys = list(self.__dict__.keys())
         for key in keys:
-            if (key in ("previous_layer", "next_layer")
+            if (key in ("previous_layer", "next_layer", "original_name")
                     or type(self.__dict__[key]) is dict):
                 continue
 
