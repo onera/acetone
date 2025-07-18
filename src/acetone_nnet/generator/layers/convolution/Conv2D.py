@@ -25,7 +25,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 from acetone_nnet.versioning.layer_factories import conv2d_factory
 
 
@@ -191,7 +191,7 @@ class Conv2D(Layer):
                     - self.kernel_h
                     - (self.kernel_h - 1) * (self.dilation_rate - 1)
                 )
-                / self.strides
+                / self.strides,
             )
             + 1
         ):
@@ -210,7 +210,7 @@ class Conv2D(Layer):
                     - self.kernel_w
                     - (self.kernel_w - 1) * (self.dilation_rate - 1)
                 )
-                / self.strides
+                / self.strides,
             )
             + 1
         ):
@@ -235,7 +235,7 @@ class Conv2D(Layer):
         """Compute output of layer."""
         # Conv for chw
         input_array = input_array.reshape(
-            self.input_channels, self.input_height, self.input_width
+            self.input_channels, self.input_height, self.input_width,
         )
 
         output = np.zeros((self.nb_filters, self.output_height, self.output_width))
@@ -247,13 +247,13 @@ class Conv2D(Layer):
                     self.input_channels,
                     self.input_height + self.pad_top + self.pad_bottom,
                     self.input_width + self.pad_left + self.pad_right,
-                )
+                ),
             )
 
             border_right = None if self.pad_right == 0 else -self.pad_right
             border_bottom = None if self.pad_bottom == 0 else -self.pad_bottom
             input_padded[
-                :, self.pad_top : border_bottom, self.pad_left : border_right
+                :, self.pad_top : border_bottom, self.pad_left : border_right,
             ] = input_array
         else:
             input_padded = input_array

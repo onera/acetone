@@ -24,7 +24,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 # The layer which compute the general matrix multiplication
@@ -38,8 +38,8 @@ class Gemm(Layer):
             self: Self,
             idx: int,
             size: int,
-            alpha: float | int,
-            beta: float | int,
+            alpha: float,
+            beta: float,
             transA: bool | int,
             transB: bool | int,
             weights: np.ndarray,

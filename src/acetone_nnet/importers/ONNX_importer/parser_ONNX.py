@@ -22,7 +22,8 @@ from pathlib import Path
 
 import numpy as np
 import onnx
-from acetone_nnet.generator import Layer
+
+from acetone_nnet.graph.graph_interpretor import tri_topo
 from acetone_nnet.importers.ONNX_importer.create_layer import (
     activation_layers,
     create_batch_norm,
@@ -31,7 +32,7 @@ from acetone_nnet.importers.ONNX_importer.create_layer import (
     layer_type,
     unused_layers,
 )
-from acetone_nnet.graph.graph_interpretor import tri_topo
+from acetone_nnet.ir import Layer
 
 
 def find_data_type(
