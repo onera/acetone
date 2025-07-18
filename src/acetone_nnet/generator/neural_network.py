@@ -92,16 +92,18 @@ class CodeGenerator(ABC):
         self.verbose = verbose
         self.to_hex = to_hex
         self.target_cfg = None
-        try:
-            with open(target+'.json', 'r') as f:
-                try:
-                    self.target_cfg = json.load(f)
-                    self.to_hex = False
-                    logging.info(f'Target configuration {self.target_cfg['name']} loaded')
-                except json.JSONDecodeError as e:
-                    logging.warning(f'Target configuration file {target+'.json'} parse error: {e}')
-        except FileNotFoundError as e:
-            logging.warning(f'Target configuration file {target+'.json'} not found, continue')
+        if target != 'generic':
+            try:
+                with open(target+'.json', 'r') as f:
+                    try:
+                        self.target_cfg = json.load(f)
+                        self.to_hex = False
+                        logging.info(f'Target configuration {self.target_cfg["name"]} loaded')
+                    except json.JSONDecodeError as e:
+                        logging.warning(f'Target configuration file {target+".json"} parse error: {e}')
+            except FileNotFoundError as e:
+                logging.warning(f'Target configuration file {target+".json"} not found, continue')
+        
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
                 file_to_parse=self.file,
@@ -155,8 +157,8 @@ class CodeGenerator(ABC):
         self.layers = versioning(self.layers, self.versions)
         self.data_type = self.target_cfg['quantization']['dtype'] if self.target_cfg is not None else dtype
         self.data_type_py = np.dtype(self.target_cfg['quantization']['pydtype']) if self.target_cfg is not None else dtype_py
-        logging.info(f'dtype {self.data_type}')
-        logging.info(f'pydtype {self.data_type_py}')
+        logging.info(f'C type {self.data_type}')
+        logging.info(f'py dtype {self.data_type_py}')
         self.quantize_layers()
         self.maxpath = maxpath
         self.data_format = data_format
@@ -715,7 +717,7 @@ class CodeGenerator(ABC):
         if self.debug_mode in ["time"]:
             mustach_hash["time"] = True
 
-        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype']
+        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype'] if self.target_cfg is not None else self.data_type 
 
         # Generate parameters per layer
         mustach_hash["layers"] = []
@@ -797,7 +799,7 @@ class CodeGenerator(ABC):
             "data_type": self.data_type,
             "path": list(range(self.maxpath)),
         }
-        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype']
+        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype'] if self.target_cfg is not None else self.data_type 
 
         self.nb_weights_max = 1
         self.nb_biases_max = 1
@@ -884,18 +886,18 @@ class CodeGenerator(ABC):
             header_file.write(pystache.render(template, mustach_hash))
 
     def quantize_layers(self):
-        for l in self.layers:
-            try:
-                qformat = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]['params']
-                logging.info(f'Quantize qformat for {l.name}_{l.idx} : {qformat}')
-                (n,m) = qform.parse_q_format(qformat)
-                if hasattr(l, "weights"):
-                    l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
-                if hasattr(l, "biases"):
-                    l.biases = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
-            except KeyError as e:
-                #logging.warning(f'Quantize key error {e}')
-                pass
+        if self.target_cfg is not None:
+            for l in self.layers:
+                try:
+                    qformat = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]['params']
+                    logging.info(f'Quantize qformat for {l.name}_{l.idx} : {qformat}')
+                    (n,m) = qform.parse_q_format(qformat)
+                    if hasattr(l, "weights"):
+                        l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+                    if hasattr(l, "biases"):
+                        l.biases = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+                except KeyError as e:
+                    pass
 
     def generate_globalvars_file(
         self: Self,
@@ -936,7 +938,7 @@ class CodeGenerator(ABC):
 
         # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
         mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
-        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype']
+        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype'] if self.target_cfg is not None else self.data_type 
 
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True

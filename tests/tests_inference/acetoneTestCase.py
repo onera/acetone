@@ -35,7 +35,6 @@ class AcetoneTestCase(unittest.TestCase):
         """Create a temp_dir."""
         self.tmpdir = tempfile.TemporaryDirectory()
         self.tmpdir_name = self.tmpdir.name
-        self.tmpdir_name = 'temp'
 
     def tearDown(self) -> None:
         """Destroy a temp_dir."""
