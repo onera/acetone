@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}
+    // {{name}}_{{idx}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
     {{#1D}}
     sum = 0;
     for (i = 0; i < {{size}}; ++i)

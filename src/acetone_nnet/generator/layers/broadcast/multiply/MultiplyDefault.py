@@ -55,6 +55,7 @@ def multiply_default_implementation(
     """Create a Multiply_Default layer using the parameters of old_layer."""
     return MultiplyDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         input_shapes=old_layer.input_shapes,

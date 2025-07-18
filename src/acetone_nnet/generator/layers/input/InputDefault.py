@@ -40,6 +40,7 @@ class InputLayerDefault(InputLayer):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["road"] = self.path
 
@@ -67,6 +68,7 @@ def input_default_implementation(
     """Create a InputLayer_Default layer using the attributes of old_layer."""
     return InputLayerDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         input_shape=old_layer.input_shape,

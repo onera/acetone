@@ -42,6 +42,7 @@ class TransposeDefault(Transpose):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["size"] = self.size
         mustach_hash["road"] = self.path
@@ -89,6 +90,7 @@ def transpose_default_implementation(
     """Create a Transpose_Default layer using the attributes of old_layer."""
     return TransposeDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],

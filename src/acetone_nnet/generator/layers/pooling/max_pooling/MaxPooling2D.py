@@ -32,8 +32,9 @@ class MaxPooling2D(Pooling2D):
         """Build a MaxPooling layer."""
         super().__init__(**kwds)
         self.name = "MaxPooling2D"
+        if self.original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
         self.pooling_function = np.amax
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-

@@ -42,6 +42,7 @@ class SoftmaxDefault(Softmax):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["road"] = self.path
         mustach_hash["output_str"] = output_str
@@ -103,6 +104,7 @@ def softmax_default_implementation(
         output_shape = [1, old_layer.output_channels, old_layer.output_height, old_layer.output_width]
     return SoftmaxDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         output_shape=output_shape,

@@ -38,6 +38,7 @@ class Layer(ABC):
         self.idx = 0
         self.size = 0
         self.name = ""
+        self.original_name = ""
         self.next_layer: list[Layer] = []
         self.previous_layer: list[Layer] = []
         self.path: int | None = None
@@ -117,7 +118,7 @@ class Layer(ABC):
 
     # Give to the layer a string saying were the output will be saved
     # (either in a 'cst' or in an 'output_road')
-    def find_output_str(self: Self, dict_cst: dict) -> Self:
+    def find_output_str(self: Self, dict_cst: dict[int,int]) -> Self:
         """Give to the layer a string saying were the output will be saved."""
         # dict_cst is the dict linking a layer to it's cst
         # This cst represent where the output must be saved if needed
