@@ -239,6 +239,10 @@ class CodeGenerator(ABC):
 
         return targets
 
+    def get_input_shape(self:Self) -> list[int]:
+        """Return the input shape of the model."""
+        return self.layers[0].input_shape
+
     def _initialise_dataset(
         self: Self,
         dataset_or_path: np.ndarray | str | Path | None,
