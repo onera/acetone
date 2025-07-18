@@ -77,6 +77,7 @@ class CodeGenerator(ABC):
         normalize: bool | str = False,
         debug_mode: str | None = None,
         verbose: bool = True,
+        to_hex: bool = True,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -85,6 +86,7 @@ class CodeGenerator(ABC):
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
         self.verbose = verbose
+        self.to_hex = to_hex
 
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
@@ -201,7 +203,7 @@ class CodeGenerator(ABC):
             raise TypeError(msg)
         if not (isinstance(self.read_ext_input, bool) or self.read_ext_input is None):
             msg = "Error: external_input typr.\n Must be: bool"
-            raise TypeError(msg) 
+            raise TypeError(msg)
 
 
         ### Checking value consistency ###
@@ -303,7 +305,10 @@ class CodeGenerator(ABC):
                 if i >= nb_tests:
                     break
                 contents = json.loads(line)
-                contents = [float.fromhex(f) for f in contents]
+                if self.to_hex:
+                    contents = [float.fromhex(f) for f in contents]
+                else:
+                    contents = [float(f) for f in contents]
                 test_dataset.append(list(map(dtype, contents)))
         return np.array(test_dataset)
 
@@ -421,9 +426,15 @@ class CodeGenerator(ABC):
 
                 if self.normalize:
                     nn_output = self.Normalizer.post_processing(nn_output)
-                out_string = " ".join(
-                    [float(n).hex().replace("0000000p", "p") for n in nn_output],
-                )
+
+                if self.to_hex:
+                    out_string = " ".join(
+                        [float(n).hex().replace("0000000p", "p") for n in nn_output],
+                    )
+                else:
+                    out_string = " ".join(
+                        [str(n) for n in nn_output],
+                    )
                 print(f"{out_string}", end=" ", file=fi, flush=True)
                 print(" ", file=fi)
 
@@ -433,20 +444,22 @@ class CodeGenerator(ABC):
             return debug_output, targets
         return nn_output
 
-    @staticmethod
-    def flatten_array_order_c(array: np.ndarray) -> str:
+
+    def flatten_array_order_c(self:Self, array: np.ndarray) -> str:
         """Generate C flat array initializer in C order."""
         flattened_aray = array.flatten(order="C")
         s = "\n        {"
         for i in range(flattened_aray.size):
-            s += float.hex(float(flattened_aray[i])).replace("0000000p", "p") + ", "
+            if self.to_hex:
+                s += float.hex(float(flattened_aray[i])).replace("0000000p", "p") + ", "
+            else:
+                s += str(float(flattened_aray[i])) + ", "
         s = s[:-2]
         s += "}"
 
         return s
 
-    @staticmethod
-    def flatten_array(array: np.ndarray) -> str:
+    def flatten_array(self:Self, array: np.ndarray) -> str:
         """Generate C flat array initializer in Fortran order."""
         s = "\n        {"
         shape = array.shape
@@ -458,14 +471,15 @@ class CodeGenerator(ABC):
             for k in range(shape[0]):
                 for f in range(shape[1]):
                     for i in range(shape[2]):
-                        s += (
-                            str(
-                                float.hex(float(array[k, f, i, j])).replace(
-                                    "0000000p", "p",
-                                ),
+                        if self.to_hex:
+                            s += (
+                                    float.hex(float(array[k, f, i, j])).replace(
+                                        "0000000p", "p",
+                                    )
+                                    + ", "
                             )
-                            + ", "
-                        )
+                        else:
+                            s += str(float(array[k, f, i, j])) + ", "
         s = s[:-2]
         s += "}"
         return s
@@ -498,7 +512,7 @@ class CodeGenerator(ABC):
             dataset = "{"
             if self.test_dataset is not None:
                 dataset += ",".join(
-                    map(CodeGenerator.flatten_array_order_c, self.test_dataset),
+                    map(self.flatten_array_order_c, self.test_dataset),
                 )
             dataset += "};\n"
 
@@ -523,7 +537,12 @@ class CodeGenerator(ABC):
             main_file.write(
                 pystache.render(
                     template,
-                    {"data_type": self.data_type, "read_input": self.read_ext_input, "verbose":self.verbose},
+                    {
+                        "data_type": self.data_type,
+                        "read_input": self.read_ext_input,
+                        "verbose":self.verbose,
+                        "to_hex":self.to_hex,
+                    },
                 ),
             )
 
