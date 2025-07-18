@@ -5,7 +5,7 @@
         {{^linear}}
         output_{{road}}[i] = {{{activation_function}}};
         {{/linear}}
-        {{#fused_layer}}
-        output_{{road}}[i] = {{{fused_layer}}};
-        {{/fused_layer}}
+        {{#activation_function}}
+        output_{{road}}[i] = {{{activation_function}}};
+        {{/activation_function}}
     }

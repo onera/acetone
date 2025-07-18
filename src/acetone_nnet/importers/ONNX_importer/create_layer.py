@@ -22,6 +22,7 @@ from typing import Any
 
 import numpy as np
 import onnx
+
 from acetone_nnet.generator.activation_functions import (
     Clip,
     Exponential,

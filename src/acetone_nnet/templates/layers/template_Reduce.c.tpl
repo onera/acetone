@@ -98,10 +98,8 @@
     {{/one}}
     {{#none}}
     //Act like a Linear layer
-    {{#Activation}}
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = {{{activation_functions}}};
+        output_{{road}}[k] = {{{activation_function}}};
     }
-    {{/Activation}}
     {{/none}}

@@ -22,12 +22,7 @@
                 f12 = y1 >= {{input_width}} ? 0 : {{output_str}}[y1 + {{input_width}}*(x0 + {{input_height}}*f)];
 
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = (f11*(x1 - x)*(y1 - y) + f21*(x - x0)*(y1 - y) + f12*(x1 - x)*(y - y0) + f22*(x - x0)*(y - y0))/((x1 - x0)*(y1 - y0));
-                {{#linear}}
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
-                {{/linear}}
-                {{#fused_layer}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
-                {{/fused_layer}}
             }
         }
     }

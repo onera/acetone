@@ -59,10 +59,6 @@ class AddBias(Layer):
         if type(self.biases) is not np.ndarray:
             msg += "Error: biases in AddBias (biases must be an numpy array)"
             msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in AddBias "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 
@@ -91,15 +87,6 @@ class AddBias(Layer):
 
         mustach_hash["activation_function"] = self.activation_function.write_activation_str(
             f"output_{self.path}[i]")
-
-        if self.activation_function.name == "linear":
-            mustach_hash["linear"] = True
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                f"output_{self.path}[i]",
-                self.idx,
-                "i")
 
         with open(self.template_path / "layers" / "template_AddBias.c.tpl") as template_file:
             template = template_file.read()

@@ -90,10 +90,6 @@ class Gather(Layer):
         if type(self.input_width) is not int:
             msg += "Error: input width type in Gather (must be int)"
             msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Gather "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 
@@ -146,15 +142,6 @@ class Gather(Layer):
             mustach_hash["widths"] = True
             mustach_hash["output_channels"] = self.output_channels
             mustach_hash["output_height"] = self.output_height
-
-        if self.activation_function.name == "linear":
-            mustach_hash["linear"] = True
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "tensor_temp[position]",
-                self.idx,
-                "position")
 
         with open(self.template_path / "layers" / "template_Gather.c.tpl") as template_file:
             template = template_file.read()

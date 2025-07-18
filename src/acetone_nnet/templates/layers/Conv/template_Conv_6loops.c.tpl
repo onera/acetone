@@ -21,15 +21,7 @@
                     }
                 }
                 sum += biases_{{name}}_{{idx}}[f];
-                {{^fused_layer}}
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
-                {{/fused_layer}}
-                {{#fused_layer}}
-                    {{^linear}}
-                sum = {{{activation_function}}};
-                    {{/linear}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
-                {{/fused_layer}}
             }
         }
     }

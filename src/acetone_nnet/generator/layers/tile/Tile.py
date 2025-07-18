@@ -74,9 +74,6 @@ class Tile(Layer):
         if type(self.input_width) is not int:
             msg += "Error: input width type in Tile (must be int)"
             msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += "Error: activation function type in Tile (activation function must be a sub-classe of acetone_nnet Activation Function)"
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 

@@ -15,12 +15,7 @@
                 x = x<x0 ? x0 : (x>x1 ? x1: x);
 
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = (f11*(x1 - x) + f22*(x - x0))/(x1 - x0);
-                {{#linear}}
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
-                {{/linear}}
-                {{#fused_layer}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
-                {{/fused_layer}}
             }
         }
     }

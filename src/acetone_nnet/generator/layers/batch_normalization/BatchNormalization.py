@@ -92,10 +92,6 @@ class BatchNormalization(Layer):
         if type(self.biases) is not np.ndarray:
             msg += "Error: biases in BatchNormalization (biases must be an numpy array)"
             msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in BatchNormalization "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 

@@ -77,10 +77,6 @@ class Transpose(Layer):
         if not isinstance(self.input_width, int):
             msg += "Error: input width type in Transpose (must be int)"
             msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Transpose "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 

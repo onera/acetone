@@ -30,12 +30,7 @@
                 j = indice_Gather_{{idx}}[k];
     {{/widths}}
                 tensor_temp[position] = {{output_str}}[j + {{input_width}}*(i + {{input_height}}*f)];
-            {{^linear}}
                 tensor_temp[position] = {{{activation_function}}};
-            {{/linear}}
-            {{#fused_layer}}
-                tensor_temp[position] = {{{fused_layer}}};
-            {{/fused_layer}}
                 position++;
             }
         }

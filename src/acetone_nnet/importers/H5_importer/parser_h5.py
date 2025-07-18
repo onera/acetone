@@ -342,17 +342,16 @@ def load_keras(
                 layers[-1].biases = biases
 
                 continue
-            else:
-                current_layer = BatchNormalization(idx=idx,
-                                                   size=get_layer_size(layer_keras),
-                                                   input_shape=get_input_dimensions(layer_keras.input_shape,
-                                                                                    data_format),
-                                                   epsilon=layer_keras.epsilon,
-                                                   scale=data_type_py(layer_keras.get_weights()[0]),
-                                                   biases=data_type_py(layer_keras.get_weights()[1]),
-                                                   mean=data_type_py(layer_keras.get_weights()[2]),
-                                                   var=data_type_py(layer_keras.get_weights()[3]),
-                                                   activation_function=Linear())
+            current_layer = BatchNormalization(idx=idx,
+                                               size=get_layer_size(layer_keras),
+                                               input_shape=get_input_dimensions(layer_keras.input_shape,
+                                                                                data_format),
+                                               epsilon=layer_keras.epsilon,
+                                               scale=data_type_py(layer_keras.get_weights()[0]),
+                                               biases=data_type_py(layer_keras.get_weights()[1]),
+                                               mean=data_type_py(layer_keras.get_weights()[2]),
+                                               var=data_type_py(layer_keras.get_weights()[3]),
+                                               activation_function=Linear())
 
         elif layer_keras.__class__.__name__ in ("Reshape", "Dropout"):
             continue

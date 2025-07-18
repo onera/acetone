@@ -67,15 +67,6 @@ class GatherDefault(Gather):
             mustach_hash["output_channels"] = self.output_channels
             mustach_hash["output_height"] = self.output_height
 
-        if self.activation_function.name == "linear":
-            mustach_hash["linear"] = True
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "tensor_temp[position]",
-                self.idx,
-                "position")
-
         with open(self.template_path / "layers" / "template_Gather.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()

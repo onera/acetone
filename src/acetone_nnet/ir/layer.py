@@ -36,7 +36,7 @@ from traits.api import (
 )
 
 from acetone_nnet import templates
-from acetone_nnet.generator.activation_functions import ActivationFunctions
+from acetone_nnet.generator.activation_functions import ActivationFunctions, Linear
 
 
 class Name(BaseStr):
@@ -90,7 +90,7 @@ class Layer(ABCHasTraits):
     output_str = Str()
 
     #: Fused activation layer, if any
-    fused_layer = Union(None, Instance(ActivationFunctions))
+    activation_function = Instance(ActivationFunctions, factory=Linear)
 
     #: Root path to code generator templates
     template_path: ClassVar[Path] = Path(templates.__file__).parent

@@ -56,7 +56,7 @@ def versioning(
                 layer.previous_layer = layers[j].previous_layer
                 layer.sorted = layers[j].sorted
                 layer.output_str = layers[j].output_str
-                layer.fused_layer = layers[j].fused_layer
+                layer.activation_function = layers[j].activation_function
 
                 layers[j] = layer
 

@@ -90,10 +90,6 @@ class Pad(Layer):
         if any(type(shape) is not int for shape in self.input_shape[1:]):
             msg += "Error: input shape type in Pad (must be int)"
             msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Pad "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 

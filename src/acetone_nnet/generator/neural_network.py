@@ -385,11 +385,11 @@ class CodeGenerator(ABC):
 
                     # Compute layer output
                     layer_output = layer.forward_path_layer(forward_inputs)
-                    if layer.fused_layer:
-                        fused_inputs = gather_inputs(layer.fused_layer, layer_inputs)
-                        layer_output = layer.fused_layer.forward_path_layer(
-                            fused_inputs,
-                        )
+                    # Fused layer computation is the responsibility of the layer
+                    # if layer.activation_function:
+                    #     layer_output = layer.activation_function.compute(
+                    #         layer_output,
+                    #     )
 
                     # Write Layer output into successors' input
                     for successor in layer.next_layer:
