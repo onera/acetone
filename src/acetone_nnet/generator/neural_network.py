@@ -37,7 +37,7 @@ except ImportError:
 from typing_extensions import Self
 
 from acetone_nnet import templates
-from acetone_nnet.generator.layers import (
+from .layers import (
     AveragePooling2D,
     BatchNormalization,
     Broadcast,
@@ -63,7 +63,7 @@ from acetone_nnet.generator.layers import (
 from acetone_nnet.importers.parser import parser
 from acetone_nnet.templates.template_makefile import TemplateMakefile
 from acetone_nnet.versioning.versioning import versioning
-
+from acetone_nnet.quantize import qform
 
 class CodeGenerator(ABC):
     """Main module of ACETONE."""
@@ -157,6 +157,7 @@ class CodeGenerator(ABC):
         self.data_type_py = np.dtype(self.target_cfg['quantization']['pydtype']) if self.target_cfg is not None else dtype_py
         logging.info(f'dtype {self.data_type}')
         logging.info(f'pydtype {self.data_type_py}')
+        self.quantize_layers()
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
@@ -166,8 +167,7 @@ class CodeGenerator(ABC):
 
         self.test_dataset = self._initialise_dataset(
             test_dataset,
-            int(nb_tests),
-            dtype_py,
+            int(nb_tests)
         )
 
         self.files_to_gen = [
@@ -220,7 +220,6 @@ class CodeGenerator(ABC):
         if not (isinstance(self.read_ext_input, bool) or self.read_ext_input is None):
             msg = "Error: external_input typr.\n Must be: bool"
             raise TypeError(msg)
-
 
         ### Checking value consistency ###
 
@@ -284,20 +283,27 @@ class CodeGenerator(ABC):
         self: Self,
         dataset_or_path: np.ndarray | str | Path | None,
         nb_tests: int,
-        data_type: np.dtype,
     ) -> np.ndarray:
         """Initialise dataset for model randomly or from existing data."""
         match dataset_or_path:
             case None:
                 # Create random dataset for graph.
-                d = np.random.default_rng(seed=10).random(
-                    size=(nb_tests, 1, int(self.layers[0].size)),
-                    dtype=data_type,
-                )
+                if np.issubdtype(self.data_type_py,np.integer):
+                    d = np.random.default_rng(seed=10).integers(
+                        np.iinfo(self.data_type_py).min,
+                        np.iinfo(self.data_type_py).max,
+                        size=(nb_tests, 1, int(self.layers[0].size)),
+                        dtype=self.data_type_py,
+                    )
+                else:
+                    d = np.random.default_rng(seed=10).random(
+                        size=(nb_tests, 1, int(self.layers[0].size)),
+                        dtype=self.data_type_py,
+                    )
             case np.ndarray() as dataset:
                 d = dataset
             case Path() | str() as path:
-                d = self._load_dataset(Path(path), data_type, nb_tests)
+                d = self._load_dataset(Path(path), self.data_type_py, nb_tests)
             case _:
                 raise ValueError
         return d
@@ -450,9 +456,9 @@ class CodeGenerator(ABC):
         return nn_output
 
     def data2c(self, d):
-        if self.data_type_py==np.int16:
-            return str(int(d*1000))
-        if self.to_hex:
+        if np.issubdtype(self.data_type_py,np.integer):
+            return str(d)
+        elif self.to_hex:
             return float.hex(float(d)).replace("0000000p", "p")
         else:
             return str(float(d))
@@ -709,6 +715,8 @@ class CodeGenerator(ABC):
         if self.debug_mode in ["time"]:
             mustach_hash["time"] = True
 
+        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype']
+
         # Generate parameters per layer
         mustach_hash["layers"] = []
         for layer in self.layers:
@@ -789,6 +797,7 @@ class CodeGenerator(ABC):
             "data_type": self.data_type,
             "path": list(range(self.maxpath)),
         }
+        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype']
 
         self.nb_weights_max = 1
         self.nb_biases_max = 1
@@ -874,6 +883,20 @@ class CodeGenerator(ABC):
         with (output_dir / "inference.h").open("a+") as header_file:
             header_file.write(pystache.render(template, mustach_hash))
 
+    def quantize_layers(self):
+        for l in self.layers:
+            try:
+                qformat = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]['params']
+                logging.info(f'Quantize qformat for {l.name}_{l.idx} : {qformat}')
+                (n,m) = qform.parse_q_format(qformat)
+                if hasattr(l, "weights"):
+                    l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+                if hasattr(l, "biases"):
+                    l.biases = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+            except KeyError as e:
+                #logging.warning(f'Quantize key error {e}')
+                pass
+
     def generate_globalvars_file(
         self: Self,
         output_dir: Path,
@@ -913,6 +936,7 @@ class CodeGenerator(ABC):
 
         # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
         mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
+        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype']
 
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
