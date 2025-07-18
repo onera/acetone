@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}{{comment}}
+    // {{name}}_{{idx}}{{comment}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
     for (p = 0; p < {{output_fourth_dim}}; ++p)
     {
         for (f = 0; f < {{output_channels}}; ++f)

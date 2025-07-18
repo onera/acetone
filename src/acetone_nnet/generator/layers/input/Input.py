@@ -30,6 +30,7 @@ class InputLayer(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             input_shape: np.ndarray | list,
@@ -46,6 +47,10 @@ class InputLayer(Layer):
             self.output_width = self.input_shape[3]
         self.data_format = data_format
         self.name = "Input_layer"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
 
         ####### Checking the instantiation#######
 

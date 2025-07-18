@@ -31,6 +31,7 @@ class Flatten(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             input_shape: list[int],
@@ -43,6 +44,10 @@ class Flatten(Layer):
         self.input_shape = input_shape
         self.data_format = data_format
         self.name = "Flatten"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
 
         ####### Checking the instantiation#######
 
@@ -79,4 +84,4 @@ class Flatten(Layer):
         """Compute output of layer."""
         if self.data_format == "channels_last":
             return np.transpose(np.reshape(input_array, self.input_shape[1:]), (1, 2, 0))
-        return input_array
+        return input_array.flatten()

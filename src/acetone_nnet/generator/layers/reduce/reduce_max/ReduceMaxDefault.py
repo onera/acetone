@@ -57,6 +57,7 @@ def reduce_max_default_implementation(
     """Create a Reduce_Max_Default layer using the parameters of old_layer."""
     return ReduceMaxDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         axis=old_layer.axes,
@@ -70,7 +71,6 @@ reduce_max_factory.register_implementation(
     None,
     reduce_max_default_implementation,
 )
-
 reduce_max_factory.register_implementation(
     "default",
     reduce_max_default_implementation,

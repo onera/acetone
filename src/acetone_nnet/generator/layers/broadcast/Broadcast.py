@@ -38,6 +38,7 @@ class Broadcast(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             input_shapes: list[np.ndarray],
@@ -50,6 +51,7 @@ class Broadcast(Layer):
         self.idx = idx
         self.size = size
         self.name = ""
+        self.original_name = original_name
         self.input_shapes = input_shapes
 
         self.output_height = output_shape[2]
@@ -122,6 +124,7 @@ class Broadcast(Layer):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["road"] = self.path

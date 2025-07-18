@@ -31,6 +31,7 @@ class BatchNormalization(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             input_shape: list,
@@ -46,6 +47,10 @@ class BatchNormalization(Layer):
         self.idx = idx
         self.size = size
         self.name = "BatchNormalization"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.output_channels = input_shape[1]
         self.output_height = input_shape[2]
         self.output_width = input_shape[3]
@@ -140,4 +145,4 @@ class BatchNormalization(Layer):
         for i in range(self.output_channels):
             output.append(
                 (input_array[i] - self.mean[i]) / np.sqrt(self.var[i] + self.epsilon) * self.scale[i] + self.biases[i])
-        return np.array(output)
+        return self.activation_function.compute(np.array(output))
