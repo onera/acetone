@@ -41,7 +41,8 @@ dependencies = [
     "onnx",
     "tensorflow; python_version <= '3.11'",
     "pystache",
-    "onnxruntime"
+    "onnxruntime",
+    "traits~=7.0",
 ]
 
 [project.optional-dependencies]
