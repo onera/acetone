@@ -49,7 +49,6 @@ class Broadcast(Layer):
         super().__init__()
         self.idx = idx
         self.size = size
-        self.name = ""
         self.input_shapes = input_shapes
 
         self.output_height = output_shape[2]

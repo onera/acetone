@@ -47,7 +47,6 @@ class Pooling2D(Layer):
         super().__init__()
         self.idx = idx
         self.size = size
-        self.name = ""
         self.padding = padding
         self.strides = strides
         self.pool_size = pool_size

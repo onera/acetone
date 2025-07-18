@@ -19,34 +19,81 @@
 ******************************************************************************
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from abc import abstractmethod
 from pathlib import Path
+from typing import ClassVar, Self
 
 import numpy as np
-from typing_extensions import Self
+from traits.api import (
+    ABCHasTraits,
+    BaseStr,
+    DefaultValue,
+    Instance,
+    Int,
+    List,
+    Str,
+    Union,
+)
 
 from acetone_nnet import templates
+from acetone_nnet.generator.activation_functions import ActivationFunctions
 
 
-@dataclass
-class Layer(ABC):
+class Name(BaseStr):
+    """Trait defining a non-empty, string name."""
+
+    info_text = "a non-empty string"
+
+    def get_default_value(self: Self) -> tuple[int, str]:
+        """Prevent unspecified name on init."""
+        return DefaultValue.disallow, ""
+
+    def validate(self: Self, owner: object, name: str, value: str) -> str | None:
+        """Validate Name is a non-empty string."""
+        value = super().validate(owner, name, value)  # type: ignore[misc]
+        if len(value) > 0:
+            return value
+        self.error(owner, name, value)
+        return None
+
+
+class Layer(ABCHasTraits):
     """Base class for inference layer."""
 
-    def __init__(self: Self) -> None:
-        """Build a non-specific layer."""
-        self.idx = 0
-        self.size = 0
-        self.name = ""
-        self.next_layer: list[Layer] = []
-        self.previous_layer: list[Layer] = []
-        self.path: int | None = None
-        self.sorted: int | None = None
-        self.output_str = ""
-        self.fused_layer = None
-        self.template_path = Path(templates.__file__).parent
+    #: The unique index of the layer in its model
+    idx = Int(default_value=0)
 
-        super().__init__()
+    # FIXME Should be at worst a computed property,
+    #  at best an explicit access to the layer output
+    #: The size of the layer output
+    size = Int(default_value=0)
+
+    #: The name of the layer
+    name = Name()
+
+    #: Preceding layers in the model
+    previous_layer = List(Instance("Layer", allow_none=False))
+
+    #: Succeeding layers in the model
+    next_layer = List(Instance("Layer", allow_none=False))
+
+    # FIXME Code generation concern, we might need a memory allocator
+    #: Identifier for tensor inputs/outputs liveliness
+    path = Union(None, Int)
+
+    #: Index in topologically layer order
+    sorted = Union(None, Int)
+
+    # FIXME Should be at worst a computed property,
+    #  at best an explicit access to the layer output
+    #: Allocated output variable name
+    output_str = Str()
+
+    #: Fused activation layer, if any
+    fused_layer = Union(None, Instance(ActivationFunctions))
+
+    #: Root path to code generator templates
+    template_path: ClassVar[Path] = Path(templates.__file__).parent
 
     @abstractmethod
     def generate_inference_code_layer(self: Self) -> str:
