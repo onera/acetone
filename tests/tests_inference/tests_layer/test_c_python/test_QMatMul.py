@@ -31,11 +31,37 @@ from tests.tests_inference import acetoneTestCase
 
 tf.keras.backend.set_floatx("float32")
 
+targetconf = '''
+{
+    "name":"AVX",
+    "cflags":"-mavx512vnni",
+    "quantization":
+    {
+        "dtype":"short",
+        "temp_dtype":"int",
+        "pydtype":"int16",
+        "layers":
+        {
+            "Input_layer_0":{
+                "out":"Q0.15"
+            },
+            "MatMul_1":{
+                "in":"Q0.15",
+                "params":"Q0.15",
+                "out":"Q2.13"
+            }
+        }
+    }  
+}
+'''
 
-class TestMatMul(acetoneTestCase.AcetoneTestCase):
-    """Test for Dense Layer"""
+def writeconf(conf):
+    with open('AVX512VNNI.json','w') as f:
+        f.write(conf)
 
-    def test_MatMul0(self):
+class TestQMatMul(acetoneTestCase.AcetoneTestCase):
+    def test_QMatMul0(self):
+        writeconf(targetconf)
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -81,7 +107,7 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
-    def test_MatMul1(self):
+    def test_QMatMul1(self):
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -127,7 +153,7 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
 
-    def test_MatMul2(self):
+    def test_QMatMul2(self):
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,

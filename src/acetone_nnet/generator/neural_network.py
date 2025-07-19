@@ -892,12 +892,12 @@ class CodeGenerator(ABC):
                     qformat = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]['params']
                     logging.info(f'Quantize qformat for {l.name}_{l.idx} : {qformat}')
                     (n,m) = qform.parse_q_format(qformat)
-                    if hasattr(l, "weights"):
-                        l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
-                    if hasattr(l, "biases"):
-                        l.biases = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
                 except KeyError as e:
                     pass
+                if hasattr(l, "weights"):
+                    l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+                if hasattr(l, "biases"):
+                    l.biases = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
 
     def generate_globalvars_file(
         self: Self,
