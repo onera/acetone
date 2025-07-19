@@ -889,15 +889,20 @@ class CodeGenerator(ABC):
         if self.target_cfg is not None:
             for l in self.layers:
                 try:
-                    qformat = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]['params']
-                    logging.info(f'Quantize qformat for {l.name}_{l.idx} : {qformat}')
-                    (n,m) = qform.parse_q_format(qformat)
+                    layer_qconf = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]
+                    qformat = layer_qconf['params']
+                    logging.info(f'Quantize weight for {l.name}_{l.idx} : {qformat}')
+                    (_, m) = qform.parse_q_format(qformat)
+                    if hasattr(l, "weights"):
+                        l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+                    if hasattr(l, "biases"):
+                        l.biases = np.rint(l.biases*(2**m-1)).astype(self.data_type_py)
+                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
+                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])                   
+                    l.qpost_shift = in_dec + m - out_dec
                 except KeyError as e:
-                    pass
-                if hasattr(l, "weights"):
-                    l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
-                if hasattr(l, "biases"):
-                    l.biases = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+                    if hasattr(l, "weights") or hasattr(l, "biases"):
+                        raise KeyError(f'Cannot quantize layer {l.name}_{l.idx}, missing data in target config')
 
     def generate_globalvars_file(
         self: Self,
