@@ -40,6 +40,7 @@ targetconf = '''
         "dtype":"short",
         "temp_dtype":"int",
         "pydtype":"int16",
+        "temp_pydtype":"int32",
         "layers":
         {
             "Input_layer_0":{
@@ -152,6 +153,7 @@ class TestQMatMul(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",target='AVX512VNNI')
 
         self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+
 
     def test_QMatMul2(self):
         # IO tensors (ValueInfoProto).
