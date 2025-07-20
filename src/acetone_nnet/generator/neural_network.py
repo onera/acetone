@@ -94,13 +94,11 @@ class CodeGenerator(ABC):
         self.target_cfg = None
         if target != 'generic':
             try:
-                with open(target+'.json', 'r') as f:
-                    try:
-                        self.target_cfg = json.load(f)
-                        self.to_hex = False
-                        logging.info(f'Target configuration {self.target_cfg["name"]} loaded')
-                    except json.JSONDecodeError as e:
-                        logging.warning(f'Target configuration file {target+".json"} parse error: {e}')
+                self.target_cfg = json.loads((Path('.') / (target+'.json')).read_text())
+                self.to_hex = False
+                logging.info(f'Target configuration {self.target_cfg["name"]} loaded')
+            except json.JSONDecodeError as e:
+                logging.warning(f'Target configuration file {target+".json"} parse error: {e}')
             except FileNotFoundError as e:
                 logging.warning(f'Target configuration file {target+".json"} not found, continue')
         
