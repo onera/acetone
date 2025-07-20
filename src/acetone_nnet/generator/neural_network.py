@@ -889,7 +889,6 @@ class CodeGenerator(ABC):
                 try:
                     layer_qconf = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]
                     qformat = layer_qconf['params']
-                    logging.info(f'Quantize weight for {l.name}_{l.idx} : {qformat}')
                     (_, m) = qform.parse_q_format(qformat)
                     if hasattr(l, "weights"):
                         l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
@@ -898,6 +897,7 @@ class CodeGenerator(ABC):
                     (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
                     (_, out_dec) = qform.parse_q_format(layer_qconf['out'])                   
                     l.qpost_shift = in_dec + m - out_dec
+                    logging.info(f'Quantize {l.name}_{l.idx} format {qformat}, post_shift: {l.qpost_shift}')
                 except KeyError as e:
                     if hasattr(l, "weights") or hasattr(l, "biases"):
                         raise KeyError(f'Cannot quantize layer {l.name}_{l.idx}, missing data in target config')

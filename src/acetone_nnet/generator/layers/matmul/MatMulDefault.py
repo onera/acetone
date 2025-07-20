@@ -71,6 +71,9 @@ class MatMulDefault(MatMul):
                 self.local_var,
                 self.idx,
                 "i")
+        if hasattr(self,'qpost_shift'):
+            mustach_hash["qcast"] = "(short)("
+            mustach_hash["qshift"] = f" >> {self.qpost_shift})"
 
         with open(self.template_path / "layers" / "template_MatMul.c.tpl") as template_file:
             template = template_file.read()
