@@ -82,8 +82,9 @@ def load_onnx(
     idx = 0
 
     # Creating and adding all the input layers to the list
-    layers.append(create_input_layer(model.graph.input[0], idx, dict_output))
-    idx += 1
+    for i in model.graph.input:
+        layers.append(create_input_layer(i, idx, dict_output))
+        idx += 1
 
     # Going through all the nodes to create the layers and add them to the list
     for node in model.graph.node:
