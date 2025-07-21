@@ -21,7 +21,7 @@
 
 from abc import abstractmethod
 from pathlib import Path
-from typing import ClassVar, Self
+from typing import ClassVar
 
 import numpy as np
 from traits.api import (
@@ -34,6 +34,7 @@ from traits.api import (
     Str,
     Union,
 )
+from typing_extensions import Self
 
 from acetone_nnet import templates
 from acetone_nnet.generator.activation_functions import ActivationFunctions, Linear
@@ -104,8 +105,8 @@ class Layer(ABCHasTraits):
 
     @abstractmethod
     def forward_path_layer(
-            self: Self,
-            inputs: np.ndarray | list[np.ndarray],
+        self: Self,
+        inputs: np.ndarray | list[np.ndarray],
     ) -> np.ndarray:
         """Compute output of layer."""
 
@@ -116,13 +117,13 @@ class Layer(ABCHasTraits):
 
     @staticmethod
     def compute_padding(
-            padding: str | list,
-            in_height: int,
-            in_width: int,
-            kernel_h: int,
-            kernel_w: int,
-            strides: int,
-            dilation_rate: int = 1,
+        padding: str | list,
+        in_height: int,
+        in_width: int,
+        kernel_h: int,
+        kernel_w: int,
+        strides: int,
+        dilation_rate: int = 1,
     ) -> tuple[int, int, int, int]:
         """Compute required padding given input and kernel dimensions."""
         pad_right, pad_left, pad_bottom, pad_top = 0, 0, 0, 0
@@ -167,7 +168,7 @@ class Layer(ABCHasTraits):
 
     # Give to the layer a string saying were the output will be saved
     # (either in a 'cst' or in an 'output_road')
-    def find_output_str(self: Self, dict_cst: dict[int,int]) -> Self:
+    def find_output_str(self: Self, dict_cst: dict[int, int]) -> Self:
         """Give to the layer a string saying were the output will be saved."""
         # dict_cst is the dict linking a layer to it's cst
         # This cst represent where the output must be saved if needed
@@ -181,8 +182,8 @@ class Layer(ABCHasTraits):
         return self
 
     def __eq__(
-            self: Self,
-            other: object,
+        self: Self,
+        other: object,
     ) -> bool:
         """Eq method for layers."""
         # compare two layers and say if they are equals
@@ -191,8 +192,10 @@ class Layer(ABCHasTraits):
 
         keys = list(self.__dict__.keys())
         for key in keys:
-            if (key in ("previous_layer", "next_layer", "original_name")
-                    or type(self.__dict__[key]) is dict):
+            if (
+                key in ("previous_layer", "next_layer", "original_name")
+                or type(self.__dict__[key]) is dict
+            ):
                 continue
 
             if type(self.__dict__[key]) is np.ndarray:
