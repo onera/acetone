@@ -32,6 +32,7 @@ class ActivationLayer(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             activation_function: ActivationFunctions,
@@ -43,6 +44,10 @@ class ActivationLayer(Layer):
         self.size = size
         self.activation_function = activation_function
         self.name = activation_function.name.capitalize()
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
 
         ####### Checking the instantiation#######
 
@@ -60,23 +65,6 @@ class ActivationLayer(Layer):
         if msg:
             raise TypeError(msg)
 
-        ### Checking value consistency ###
-        msg = ""
-        if self.op_type not in [
-            "sigmoid",
-            "relu",
-            "leakyrelu",
-            "hyperb_tan",
-            "linear",
-            "Exponential",
-            "Logarithm",
-            "Clip",
-        ]:
-            msg += f"Error: op_type value in Activation Layer ({self.conv_algorithm})"
-            msg += "\n"
-        if msg:
-            raise ValueError(msg)
-
 
     def forward_path_layer(
             self: Self,
@@ -90,14 +78,16 @@ class ActivationLayer(Layer):
         """Generate computation code for layer."""
         input_str = self.previous_layer[0].output_str
 
-        template = "    //{{name}}_{{idx}}\n"
-        template += "    for (k = 0; k < {{size}}; ++k) output_{{path}}[k] = {{{function_str}}}\n"
+        template  = "    //{{name}}_{{idx}}\n"
+        template += "    for (k = 0; k < {{size}}; ++k) output_{{path}}[k] = {{{function_str}}};\n"
 
         function_str = self.activation_function.write_activation_str(f"{input_str}[k]")
         mustach_hash = {
             "name": self.name,
+            "original_name": self.original_name,
             "idx": self.idx,
             "size": self.size,
+            "path": self.path,
             "function_str": function_str,
         }
         return pystache.render(template, mustach_hash)

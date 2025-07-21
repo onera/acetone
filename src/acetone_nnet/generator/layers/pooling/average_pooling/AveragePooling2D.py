@@ -32,6 +32,8 @@ class AveragePooling2D(Pooling2D):
         """Build an AveragePooling layer."""
         super().__init__(**kwds)
         self.name = "AveragePooling2D"
+        if self.original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
         self.pooling_function = np.mean
 
 

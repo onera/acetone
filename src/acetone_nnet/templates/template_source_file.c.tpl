@@ -40,7 +40,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     {{/hw}}
 
 {{#is_dense}}
-    {{data_type}} dotproduct;
+    {{temp_data_type}} dotproduct;
 {{/is_dense}}
 {{#is_sum}}
     {{data_type}} sum;

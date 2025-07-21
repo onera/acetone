@@ -37,6 +37,7 @@ class Gather(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             axis: int,
@@ -50,6 +51,10 @@ class Gather(Layer):
         self.idx = idx
         self.size = size
         self.name = "Gather"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.indices = indices
         self.axis = axis
         self.output_channels = input_shape[1]

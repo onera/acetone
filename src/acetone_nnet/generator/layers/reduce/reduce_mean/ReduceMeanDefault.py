@@ -57,6 +57,7 @@ def reduce_mean_default_implementation(
     """Create a Reduce_Mean_Default layer using the parameters of old_layer."""
     return ReduceMeanDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         axis=old_layer.axes,

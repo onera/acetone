@@ -31,7 +31,7 @@ class MaxPooling2DDefault(MaxPooling2D):
     """MaxPooling layer with default implementation class."""
 
     def __init__(self: Self, version:str, **kwds: int) -> None:
-        """Build an MaxPooling layer."""
+        """Build a MaxPooling layer."""
         super().__init__(**kwds)
         self.local_var = "max"
         self.output_var = self.local_var
@@ -55,6 +55,7 @@ class MaxPooling2DDefault(MaxPooling2D):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["road"] = self.path
@@ -97,6 +98,7 @@ def max_pooling_default_implementation(
     """Create an MaxPooling2D_Default layer using the attributes of old_layer."""
     return MaxPooling2DDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         padding=old_layer.padding,
