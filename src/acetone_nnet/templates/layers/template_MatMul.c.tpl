@@ -16,5 +16,5 @@
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = {{qcast}}tensor_temp[k]{{qshift}};
+        output_{{road}}[k] = {{qcast}}tensor_temp[k]{{{qshift}}};
     }

@@ -39,6 +39,7 @@ class MatMul(Layer):
             weights: np.ndarray,
             side: int,
             activation_function: ActivationFunctions,
+            temp_pydtype=np.int64,
     ) -> None:
         """Build a MatMul layer."""
         super().__init__()
@@ -53,7 +54,7 @@ class MatMul(Layer):
         self.local_var = "dotproduct"
         self.side = side
         self.input_shapes = input_shapes
-
+        self.temp_pydtype = temp_pydtype
         if weights is not None:
             self.weights = weights
             self.nb_weights = self.count_elements_array(self.weights)
@@ -138,18 +139,22 @@ class MatMul(Layer):
             input_array: np.ndarray | list[np.ndarray],
     ) -> np.ndarray:
         """Compute output of layer."""
-        if self.side == 1:
-            input_1 = input_array.reshape(self.input_shapes)
-            weights = np.moveaxis(self.weights, 3, 0)
-            weights = np.reshape(weights, (1, 1, weights.shape[-1], weights.shape[0]))
-            return self.activation_function.compute(np.matmul(weights, input_1))
-        if self.side == 0:
-            input_1 = input_array.reshape(self.input_shapes)
-            weights = np.moveaxis(self.weights, 3, 0)
-            weights = np.reshape(weights, (1, 1, weights.shape[-1], weights.shape[0]))
-            return self.activation_function.compute(np.matmul(input_1, weights))
+        out = np.array([])
         if self.side == 2:
             input_1 = input_array[0].reshape(self.input_shapes[0])
             input_2 = input_array[1].reshape(self.input_shapes[1])
-            return self.activation_function.compute(np.matmul(input_1, input_2))
-        return np.array([])  # Case should not be happening
+            out = self.activation_function.compute(np.matmul(input_1, input_2))
+        else: 
+            input_1 = input_array.reshape(self.input_shapes)
+            weights = np.moveaxis(self.weights, 3, 0)
+            weights = np.reshape(weights, (1, 1, weights.shape[-1], weights.shape[0]))
+            if self.side == 1:
+                out = np.matmul(weights, input_1)
+            elif self.side == 0:
+                if np.issubdtype(input_1.dtype,np.integer):
+                    out = np.matmul(input_1, weights, dtype=self.temp_pydtype )
+                    out = np.right_shift(out, self.qpost_shift).astype(input_1.dtype)
+                else:
+                    out = np.matmul(input_1, weights)
+            out = self.activation_function.compute(out)
+        return out  # Case should not be happening

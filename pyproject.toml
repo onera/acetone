@@ -17,6 +17,7 @@ authors = [
     { name="Adrien GAUFFRIAU", email="Adrien.Gauffriau@airbus.com" },
     { name="Benjamin LESAGE", email="benjamin.lesage@onera.fr"},
     { name="Claire PAGETTI", email="Claire.Pagetti@onera.fr" },
+    { name="Nicolas VALOT", email="nicolas.valot@airbus.com" },
 ]
 
 description = "Predictable programming framework for ML applications in safety-critical systems."
