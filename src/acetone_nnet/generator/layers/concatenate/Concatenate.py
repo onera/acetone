@@ -35,6 +35,7 @@ class Concatenate(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             axis: int,
@@ -48,6 +49,10 @@ class Concatenate(Layer):
         self.size = size
         self.input_shapes = input_shapes
         self.name = "Concatenate"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.axis = axis
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]

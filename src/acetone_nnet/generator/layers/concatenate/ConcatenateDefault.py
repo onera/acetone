@@ -89,6 +89,7 @@ def concatenate_default_implementation(
     """Create a Concatenate_Default layer using the attributes of old_layer."""
     return ConcatenateDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         axis=old_layer.axis,

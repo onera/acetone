@@ -511,13 +511,14 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             auto_pad="SAME_UPPER",
             strides=(1, 1),
         )
-
+        min_value = np.random.rand(1)
         min_initializer = acetoneTestCase.create_initializer_tensor(name="min",
-                                                                    tensor_array=np.random.rand(1),
+                                                                    tensor_array=min_value,
                                                                     data_type=onnx.TensorProto.FLOAT)
 
+        max_value = min_value + np.random.rand(1)
         max_initializer = acetoneTestCase.create_initializer_tensor(name="max",
-                                                                    tensor_array=np.random.rand(1) * 20,
+                                                                    tensor_array=max_value,
                                                                     data_type=onnx.TensorProto.FLOAT)
 
         activation_node = onnx.helper.make_node(

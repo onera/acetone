@@ -32,6 +32,7 @@ class Add(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             input_shapes: list[np.ndarray],
@@ -45,6 +46,10 @@ class Add(Layer):
         self.size = size
         self.activation_function = activation_function
         self.name = "Add"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.specific_operator = " + "
         self.input_shapes = input_shapes
 

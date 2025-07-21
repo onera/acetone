@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}{{comment}}
+    // {{name}}_{{idx}}{{comment}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
     a = {{cubic_coeff_a}};
 
     for (f = 0; f < {{output_channels}}; ++f)

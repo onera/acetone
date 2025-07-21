@@ -46,6 +46,9 @@ class EdgePadDefault(EdgePad):
         mustach_hash["channels_and_pad_front"] = self.input_shape[1] + self.pads[1]
         mustach_hash["height_and_pad_top"] = self.input_shape[2] + self.pads[2]
         mustach_hash["width_and_pad_left"] = self.input_shape[3] + self.pads[3]
+        mustach_hash["channels"] = self.input_shape[1] - 1
+        mustach_hash["height"] = self.input_shape[2] - 1
+        mustach_hash["width"] = self.input_shape[3] - 1
 
         with open(self.template_path / "layers" / "Pad" / "template_Edge_Pad.c.tpl") as template_file:
             template = template_file.read()
@@ -60,6 +63,7 @@ class EdgePadDefault(EdgePad):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["size"] = self.size
@@ -93,6 +97,7 @@ def edge_pad_default_implementation(
     """Create a EdgePad_Default layer using the parameters of old_layer."""
     return EdgePadDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         pads=old_layer.pads,

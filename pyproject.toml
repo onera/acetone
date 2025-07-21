@@ -52,14 +52,7 @@ dev = ["ruff", "mypy"]
 where = ["src"]
 
 [tool.setuptools.package-data]
-acetone_nnet = ["templates/**.tpl",
-    "templates/normalization/*.tpl",
-    "templates/memory_layout/*.tpl",
-    "templates/layers/*.tpl",
-    "templates/layers/Resize/*.tpl",
-    "templates/layers/Pad/*.tpl",
-    "templates/layers/Gemm/*.tpl",
-    "templates/layers/Conv/*.tpl"]
+acetone_nnet = ["templates/**/*.tpl"]
 
 [project.scripts]
 acetone_generate = "acetone_nnet.cli.generate:acetone_generate"

@@ -43,6 +43,7 @@ def generate_layers(
 
     layers.append(
         InputLayer(
+            original_name="Input_layer",
             idx=0,
             size=layer_sizes[0],
             input_shape=[layer_sizes[0]],
@@ -58,7 +59,8 @@ def generate_layers(
             for _j in range(4 - len(weight.shape)):
                 weight = np.expand_dims(weight, axis=0)
 
-        layer = Dense(idx=i + 1,
+        layer = Dense(original_name=f"Dense_{i+1} fused with Relu",
+                      idx=i + 1,
                       size=layer_sizes[i + 1],
                       weights=weight,
                       biases=biases[i],
@@ -173,4 +175,5 @@ def load_nnet(
         )
         return (layers, data_type, data_type_py, data_format, max_road, dict_cst,
                 normalizer)
-    return layers, data_type, data_type_py, data_format, max_road, dict_cst
+    else:
+        return layers, data_type, data_type_py, data_format, max_road, dict_cst

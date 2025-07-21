@@ -32,6 +32,7 @@ class Multiply(Layer):
 
     def __init__(
         self: Self,
+        original_name : str,
         idx: int,
         size: int,
         input_shapes: list[np.ndarray],
@@ -44,6 +45,10 @@ class Multiply(Layer):
         self.idx = idx
         self.size = size
         self.name = "Multiply"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.specific_operator = "*"
         self.input_shapes = input_shapes
 

@@ -30,6 +30,7 @@ class Softmax(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             output_shape: list,
@@ -40,6 +41,10 @@ class Softmax(Layer):
         self.idx = idx
         self.size = size
         self.name = "Softmax"
+        if original_name == "":
+            self.original_name = f"{self.name}_{self.idx}"
+        else:
+            self.original_name = original_name
         self.axis = axis
 
         if self.size in output_shape:

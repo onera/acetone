@@ -43,6 +43,7 @@ class BatchNormalizationDefault(BatchNormalization):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["output_str"] = output_str
@@ -69,6 +70,7 @@ def batch_normalization_default_implementation(
     """Create a BatchNormalization_Default layer using the attributes of old_layer."""
     return BatchNormalizationDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         input_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],

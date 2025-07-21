@@ -55,6 +55,7 @@ class GemmDefault(Gemm):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["m"] = m
         mustach_hash["n"] = n
@@ -195,6 +196,7 @@ def gemm_default_implementation(
     """Create a Gemm_Default layer using the attributes of old_layer."""
     return GemmDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         alpha=1 if not old_layer.alpha else old_layer.alpha[0],

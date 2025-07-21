@@ -33,6 +33,7 @@ class Pooling2D(Layer):
 
     def __init__(
             self: Self,
+            original_name : str,
             idx: int,
             size: int,
             padding: str | np.ndarray,
@@ -45,6 +46,7 @@ class Pooling2D(Layer):
     ) -> None:
         """Instantiate a Pooling layer."""
         super().__init__()
+        self.original_name = original_name
         self.idx = idx
         self.size = size
         self.padding = padding

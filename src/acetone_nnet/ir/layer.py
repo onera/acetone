@@ -68,8 +68,11 @@ class Layer(ABCHasTraits):
     #: The size of the layer output
     size = Int(default_value=0)
 
-    #: The name of the layer
+    #: Internal layer name (may be used as op sub-type)
     name = Name()
+
+    #: Importer layer name
+    original_name = Str()
 
     #: Preceding layers in the model
     previous_layer = List(Instance("Layer", allow_none=False))
@@ -164,7 +167,7 @@ class Layer(ABCHasTraits):
 
     # Give to the layer a string saying were the output will be saved
     # (either in a 'cst' or in an 'output_road')
-    def find_output_str(self: Self, dict_cst: dict) -> Self:
+    def find_output_str(self: Self, dict_cst: dict[int,int]) -> Self:
         """Give to the layer a string saying were the output will be saved."""
         # dict_cst is the dict linking a layer to it's cst
         # This cst represent where the output must be saved if needed
@@ -188,7 +191,7 @@ class Layer(ABCHasTraits):
 
         keys = list(self.__dict__.keys())
         for key in keys:
-            if (key in ("previous_layer", "next_layer")
+            if (key in ("previous_layer", "next_layer", "original_name")
                     or type(self.__dict__[key]) is dict):
                 continue
 

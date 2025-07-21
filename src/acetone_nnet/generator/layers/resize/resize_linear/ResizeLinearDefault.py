@@ -47,6 +47,7 @@ class ResizeLinearDefault(ResizeLinear):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["output_str"] = output_str
@@ -96,6 +97,7 @@ def resize_linear_default_implementation(
     """Create a ResizeLinear_Default layer using the parameters of old_layer."""
     return ResizeLinearDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],

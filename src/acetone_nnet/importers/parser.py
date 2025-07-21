@@ -23,8 +23,13 @@ from pathlib import Path
 from typing import Any
 
 import onnx
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
+
+try:
+    from keras.engine.functional import Functional
+    from keras.engine.sequential import Sequential
+except ImportError:
+    from keras import Model as Functional
+    from keras import Sequential
 
 from acetone_nnet.ir import Layer
 

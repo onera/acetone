@@ -42,6 +42,7 @@ class GatherDefault(Gather):
         mustach_hash = {}
 
         mustach_hash["name"] = self.name
+        mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["output_str"] = output_str
@@ -81,6 +82,7 @@ def gather_default_implementation(
     """Create a Gather_Default layer using the parameters of old_layer."""
     return GatherDefault(
         version=version,
+        original_name=old_layer.original_name,
         idx=old_layer.idx,
         size=old_layer.size,
         axis=old_layer.axis,
