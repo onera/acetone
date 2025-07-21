@@ -94,13 +94,11 @@ class CodeGenerator(ABC):
         self.target_cfg = None
         if target != 'generic':
             try:
-                with open(target+'.json', 'r') as f:
-                    try:
-                        self.target_cfg = json.load(f)
-                        self.to_hex = False
-                        logging.info(f'Target configuration {self.target_cfg["name"]} loaded')
-                    except json.JSONDecodeError as e:
-                        logging.warning(f'Target configuration file {target+".json"} parse error: {e}')
+                self.target_cfg = json.loads((Path('.') / (target+'.json')).read_text())
+                self.to_hex = False
+                logging.info(f'Target configuration {self.target_cfg["name"]} loaded')
+            except json.JSONDecodeError as e:
+                logging.warning(f'Target configuration file {target+".json"} parse error: {e}')
             except FileNotFoundError as e:
                 logging.warning(f'Target configuration file {target+".json"} not found, continue')
         
@@ -907,7 +905,6 @@ class CodeGenerator(ABC):
                 try:
                     layer_qconf = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]
                     qformat = layer_qconf['params']
-                    logging.info(f'Quantize weight for {l.name}_{l.idx} : {qformat}')
                     (_, m) = qform.parse_q_format(qformat)
                     if hasattr(l, "weights"):
                         l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
@@ -916,6 +913,7 @@ class CodeGenerator(ABC):
                     (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
                     (_, out_dec) = qform.parse_q_format(layer_qconf['out'])                   
                     l.qpost_shift = in_dec + m - out_dec
+                    logging.info(f'Quantize {l.name}_{l.idx} format {qformat}, post_shift: {l.qpost_shift}')
                 except KeyError as e:
                     if hasattr(l, "weights") or hasattr(l, "biases"):
                         raise KeyError(f'Cannot quantize layer {l.name}_{l.idx}, missing data in target config')
