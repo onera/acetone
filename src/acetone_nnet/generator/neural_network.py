@@ -333,6 +333,22 @@ class CodeGenerator(ABC):
                 test_dataset.append(list(map(dtype, contents)))
         return np.array(test_dataset)
 
+    def get_input_shape(self:Self)->list[int]:
+        """Return the input shape of the model."""
+        return self.layers[0].input_shape
+
+    def generate_dataset(self:Self) -> np.ndarray:
+        """Generate a dataset for the model."""
+        input_shape = self.get_input_shape()
+
+        dataset = np.random.default_rng().random(
+            size=(self.nb_tests, *input_shape),
+            dtype=self.data_type_py,
+        )
+        self.test_dataset = dataset
+        return dataset
+
+
     def compute_inference(
         self: Self,
         c_files_directory: str,
