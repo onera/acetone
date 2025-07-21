@@ -143,24 +143,21 @@ class MatMul(Layer):
     ) -> np.ndarray:
         """Compute output of layer."""
         out = np.array([])
-        if  np.issubdtype(input_array.dtype,np.integer): 
-            temp_pydtype = self.temp_pydtype
-        else:
-            temp_pydtype = input_array.dtype
-        if self.side == 1:
-            input_1 = input_array.reshape(self.input_shapes)
-            weights = np.moveaxis(self.weights, 3, 0)
-            weights = np.reshape(weights, (1, 1, weights.shape[-1], weights.shape[0]))
-            out = self.activation_function.compute(np.matmul(weights, input_1,dtype=temp_pydtype))
-        if self.side == 0:
-            input_1 = input_array.reshape(self.input_shapes)
-            weights = np.moveaxis(self.weights, 3, 0)
-            weights = np.reshape(weights, (1, 1, weights.shape[-1], weights.shape[0]))
-            out = self.activation_function.compute(np.matmul(input_1, weights,dtype=temp_pydtype))
         if self.side == 2:
             input_1 = input_array[0].reshape(self.input_shapes[0])
             input_2 = input_array[1].reshape(self.input_shapes[1])
-            out = self.activation_function.compute(np.matmul(input_1, input_2,dtype=temp_pydtype))
-        if  np.issubdtype(input_array.dtype,np.integer): 
-            out = np.right_shift(out, self.qpost_shift)
+            out = self.activation_function.compute(np.matmul(input_1, input_2))
+        else: 
+            input_1 = input_array.reshape(self.input_shapes)
+            weights = np.moveaxis(self.weights, 3, 0)
+            weights = np.reshape(weights, (1, 1, weights.shape[-1], weights.shape[0]))
+            if self.side == 1:
+                out = np.matmul(weights, input_1)
+            elif self.side == 0:
+                if np.issubdtype(input_1.dtype,np.integer):
+                    out = np.matmul(input_1, weights, dtype=self.temp_pydtype )
+                    out = np.right_shift(out, self.qpost_shift).astype(input_1.dtype)
+                else:
+                    out = np.matmul(input_1, weights)
+            out = self.activation_function.compute(out)
         return out  # Case should not be happening
