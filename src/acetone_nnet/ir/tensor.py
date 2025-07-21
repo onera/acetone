@@ -31,7 +31,7 @@ class Shape(BaseTuple):
         """Validate shape is a tuple with all values of the specified type."""
         value = super().validate(obj, name, value)
         if len(value) > 0 and all(
-            self.typ.validate(obj, name, v) and v > 0 for v in value
+            self.base.validate(obj, name, v) and v > 0 for v in value
         ):
             return value
         self.error(object, name, value)
