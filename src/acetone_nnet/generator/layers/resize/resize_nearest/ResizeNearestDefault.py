@@ -81,12 +81,6 @@ class ResizeNearestDefault(ResizeNearest):
         mustach_hash["nearest_mode_x"] = self.nearest_mode_mapping[self.nearest_mode]("x0", "x")
         mustach_hash["nearest_mode_y"] = self.nearest_mode_mapping[self.nearest_mode]("y0", "y")
 
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]",
-                self.idx,
-                f"j + {self.output_width}*(i + {self.output_height}*f)")
-
         with open(self.template_path / "layers" / "Resize" / "template_ResizeNearest.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()

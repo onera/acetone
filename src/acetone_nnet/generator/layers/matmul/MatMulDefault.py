@@ -46,10 +46,8 @@ class MatMulDefault(MatMul):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        if self.activation_function.name != "linear":
-            mustach_hash["non_linear"] = True
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
+            f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
 
         mustach_hash["shared_dimension"] = self.shared_dimension
         mustach_hash["output_channels"] = self.output_channels
@@ -66,11 +64,6 @@ class MatMulDefault(MatMul):
             mustach_hash["output_str_left"] = self.previous_layer[0].output_str
             mustach_hash["output_str_right"] = self.previous_layer[1].output_str
 
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                self.local_var,
-                self.idx,
-                "i")
         if hasattr(self,'qpost_shift'):
             mustach_hash["qcast"] = "(short)("
             mustach_hash["qshift"] = f" >> {self.qpost_shift})"

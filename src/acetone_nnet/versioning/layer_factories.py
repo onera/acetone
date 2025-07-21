@@ -20,7 +20,7 @@
 """
 from collections.abc import Callable
 
-from acetone_nnet.generator import Layer
+from acetone_nnet.ir import Layer
 
 LayerVariant = Callable[[Layer, str], Layer]
 
@@ -47,8 +47,8 @@ class LayerFactory:
         self.implementations = dict(
             sorted(
                 self.implementations.items(),
-                key=lambda x: "a" if x[0] is None else x[0]
-            )
+                key=lambda x: "a" if x[0] is None else x[0],
+            ),
         )
 
     def __call__(self, layer: Layer, version: str) -> Layer:

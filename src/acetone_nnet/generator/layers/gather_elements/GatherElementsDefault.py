@@ -73,7 +73,7 @@ class GatherElementsDefault(GatherElements):
 
 def gather_elements_default_implementation(
         old_layer: GatherElements,
-        version: str
+        version: str,
 ) -> GatherElementsDefault:
     """Create a GatherElements_Default layer using the parameters of old_layer."""
     return GatherElementsDefault(

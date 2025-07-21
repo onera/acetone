@@ -24,7 +24,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 class MatMul(Layer):
@@ -98,9 +98,6 @@ class MatMul(Layer):
             msg += "\n"
         if type(side) is not int:
             msg = "Error: side type in MatMul (side must be a boolean)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg = "Error: activation function type in MatMul (activation function must be a sub-classe of acetone_nnet Activation Function)"
             msg += "\n"
         if msg:
             raise TypeError(msg)

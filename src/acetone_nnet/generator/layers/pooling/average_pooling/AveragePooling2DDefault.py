@@ -78,15 +78,6 @@ class AveragePooling2DDefault(AveragePooling2D):
         mustach_hash["specific_function"] = self.specific_function(
             f"jj + {self.input_width}*(ii + {self.input_height}*f)", output_str)
 
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                self.output_var,
-                self.idx,
-                f"j + {self.output_width}*(i + {self.output_height}*f)")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
         with open(self.template_path / "layers" / "template_Pooling2D.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()

@@ -17,11 +17,11 @@
 ******************************************************************************
 """
 
+
 import keras
 import numpy as np
 import onnx
 import tensorflow as tf
-import unittest
 from keras import layers
 
 from tests.tests_inference import acetoneTestCase
@@ -244,64 +244,6 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
 
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
                                                               conv_algo="indirect_gemm_nn")
-
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
-
-    @unittest.expectedFailure
-    def test_conv_cuda_naive(self):
-        from acetone_nnet.templates.cuda.cuda_convolution_naive import (
-            register_cuda_convolution_naive,
-        )
-        register_cuda_convolution_naive()
-        model_input_name = "X"
-        X = onnx.helper.make_tensor_value_info(
-            model_input_name,
-            onnx.TensorProto.FLOAT,
-            [None, 3, 10, 10],
-        )
-        model_output_name = "Y"
-        Y = onnx.helper.make_tensor_value_info(
-            model_output_name,
-            onnx.TensorProto.FLOAT,
-            [None, 5, 6, 4],
-        )
-        conv1_in_channels = 3
-        conv1_out_channels = 5
-        conv1_kernel_shape = (7, 7)
-        conv1_W = np.random.rand(
-            conv1_out_channels,
-            conv1_in_channels,
-            *conv1_kernel_shape,
-        ).astype(np.float32)
-        conv1_B = np.random.rand(conv1_out_channels).astype(np.float32)
-        conv1_W_initializer_tensor_name = "Conv1_W"
-        conv1_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
-            name=conv1_W_initializer_tensor_name,
-            tensor_array=conv1_W,
-            data_type=onnx.TensorProto.FLOAT,
-        )
-        conv1_B_initializer_tensor_name = "Conv1_B"
-        conv1_B_initializer_tensor = acetoneTestCase.create_initializer_tensor(
-            name=conv1_B_initializer_tensor_name,
-            tensor_array=conv1_B,
-            data_type=onnx.TensorProto.FLOAT,
-        )
-
-        testshape = (10, 10, 3)
-        filters = 3
-        kernel_size = (3, 3)
-
-        input = layers.Input(testshape)
-        out = layers.Conv2D(filters=filters, kernel_size=kernel_size, activation=None,
-                            bias_initializer="he_normal",
-                            padding="same", data_format="channels_last")(input)
-
-        model = keras.Model(input, out)
-        model.save(self.tmpdir_name + "/model.h5")
-
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name,
-                                                              self.tmpdir_name + "/model.h5",
-                                                              conv_algo="cuda/naive")
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 

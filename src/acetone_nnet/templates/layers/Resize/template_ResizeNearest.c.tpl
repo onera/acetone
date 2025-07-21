@@ -10,9 +10,6 @@
                 {{nearest_mode_x}}
                 {{nearest_mode_y}}
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
-                {{#fused_layer}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
-                {{/fused_layer}}
             }
         }
     }

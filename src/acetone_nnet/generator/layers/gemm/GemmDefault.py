@@ -65,14 +65,6 @@ class GemmDefault(Gemm):
         mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
 
         with open(self.template_path / "layers" / "Gemm" / "template_gemm_nn.c.tpl") as template_file:
             template = template_file.read()
@@ -101,14 +93,6 @@ class GemmDefault(Gemm):
         mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
 
         with open(self.template_path / "layers" / "Gemm" / "template_gemm_nt.c.tpl") as template_file:
             template = template_file.read()
@@ -137,14 +121,6 @@ class GemmDefault(Gemm):
         mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
 
         with open(self.template_path / "layers" / "Gemm" / "template_gemm_tn.c.tpl") as template_file:
             template = template_file.read()
@@ -173,14 +149,6 @@ class GemmDefault(Gemm):
         mustach_hash["activation_function"] = self.activation_function.write_activation_str("sum")
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                f"output_{self.path}",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
 
         with open(self.template_path / "layers" / "Gemm" / "template_gemm_tt.c.tpl") as template_file:
             template = template_file.read()

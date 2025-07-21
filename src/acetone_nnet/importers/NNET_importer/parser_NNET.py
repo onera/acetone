@@ -22,11 +22,12 @@
 from pathlib import Path
 
 import numpy as np
-from acetone_nnet.generator import Dense, InputLayer, Layer
+
+from acetone_nnet.generator import Dense, InputLayer
 from acetone_nnet.generator.activation_functions import Linear, ReLu
+from acetone_nnet.ir import Layer
 
 from . import nnet_normalize
-
 
 
 def generate_layers(

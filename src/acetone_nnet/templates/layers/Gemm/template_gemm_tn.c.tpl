@@ -9,15 +9,6 @@
                 output += {{#alpha}}{{.}}*{{/alpha}}{{A}}[i*{{k}}+p]*{{#direct}}*{{/direct}}({{B}}[p*{{n}}+j]);
             }   
             output += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[i];
-        {{^fused_layer}}
             tensor_temp[j*{{m}} + i] = {{{activation_function}}};
-        {{/fused_layer}}
-        {{#fused_layer}}
-            {{^linear}}
-            output = {{{activation_function}}};
-            {{/linear}}
-            tensor_temp[j*{{m}} + i] = {{{fused_layer}}};
-        {{/fused_layer}}
-            
         }
     }

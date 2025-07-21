@@ -20,11 +20,10 @@
 """
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 class Dense(Layer):
@@ -70,10 +69,6 @@ class Dense(Layer):
             msg += "\n"
         if type(self.biases) is not np.ndarray:
             msg += "Error: biases in Dense (biases must be an numpy array)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Dense "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
             msg += "\n"
         if msg:
             raise TypeError(msg)

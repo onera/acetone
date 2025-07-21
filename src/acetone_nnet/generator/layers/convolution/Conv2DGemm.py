@@ -67,15 +67,9 @@ class Conv2DGemm(Conv2D):
         mustach_hash["ldB"] = n
         mustach_hash["C"] = c
         mustach_hash["ldC"] = n
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
                 "output",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
+            )
 
         with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_nn.c.tpl") as template_file:
             template = template_file.read()
@@ -108,15 +102,9 @@ class Conv2DGemm(Conv2D):
         mustach_hash["ldB"] = n
         mustach_hash["C"] = c
         mustach_hash["ldC"] = n
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
                 "output",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
+            )
 
         with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_nt.c.tpl") as template_file:
             template = template_file.read()
@@ -149,15 +137,9 @@ class Conv2DGemm(Conv2D):
         mustach_hash["ldB"] = n
         mustach_hash["C"] = c
         mustach_hash["ldC"] = n
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
                 "output",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
+            )
 
         with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_tn.c.tpl") as template_file:
             template = template_file.read()
@@ -190,15 +172,9 @@ class Conv2DGemm(Conv2D):
         mustach_hash["ldB"] = n
         mustach_hash["C"] = c
         mustach_hash["ldC"] = n
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("sum")
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output",
-                self.idx,
-                f"i*{self.ldC} + j")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
+                "sum",
+            )
 
         with open(self.template_path / "layers" / "Conv" / "template_Conv_gemm_tt.c.tpl") as template_file:
             template = template_file.read()

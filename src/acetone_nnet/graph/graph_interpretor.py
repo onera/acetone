@@ -19,7 +19,7 @@
 ******************************************************************************
 """
 
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 def tri_topo(dnn: list) -> (list[Layer], list[int], int, dict[int, int]):

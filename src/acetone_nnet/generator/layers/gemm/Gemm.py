@@ -24,7 +24,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 # The layer which compute the general matrix multiplication
@@ -39,8 +39,8 @@ class Gemm(Layer):
             original_name : str,
             idx: int,
             size: int,
-            alpha: float | int,
-            beta: float | int,
+            alpha: float,
+            beta: float,
             transA: bool | int,
             transB: bool | int,
             weights: np.ndarray,
@@ -122,9 +122,6 @@ class Gemm(Layer):
             msg += "\n"
         if type(self.biases) is not np.ndarray:
             msg += "Error: biases in Gemm (biases must be an numpy array)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += "Error: activation function type in Gemm (activation function must be a sub-classe of acetone_nnet Activation Function)"
             msg += "\n"
         if msg:
             raise TypeError(msg)
