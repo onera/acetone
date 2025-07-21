@@ -32,7 +32,7 @@ from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 from typing_extensions import Self
 
-from acetone_nnet import templates, InputLayer
+from acetone_nnet import templates
 from acetone_nnet.generator.layers import (
     AveragePooling2D,
     BatchNormalization,
