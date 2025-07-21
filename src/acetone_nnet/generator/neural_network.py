@@ -315,7 +315,7 @@ class CodeGenerator(ABC):
         """Generate a dataset for the model."""
         input_shape = self.get_input_shape()
 
-        dataset = np.random.default_rng(seed=10).random(
+        dataset = np.random.default_rng().random(
             size=(self.nb_tests, *input_shape),
             dtype=self.data_type_py,
         )
