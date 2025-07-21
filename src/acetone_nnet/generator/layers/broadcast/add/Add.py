@@ -108,7 +108,7 @@ class Add(Layer):
     def forward_path_layer(self: Self, input_arrays: np.ndarray) -> np.ndarray:
         """Compute output of layer."""
         if self.constant is None:
-            constant = np.zeros(1)
+            constant = np.zeros(1,dtype=input_arrays[0].dtype)
         else:
             constant = np.reshape(self.constant, self.input_shapes[-1][1:])
             self.input_shapes = np.delete(self.input_shapes, -1, axis=0)
