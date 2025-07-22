@@ -1013,16 +1013,9 @@ class CodeGenerator(ABC):
             layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
 
             # FIXME Revert to attribute test once all layers types have been managed
-            if (w := getattr(layer, "weights", None)) is not None and isinstance(
-                layer,
-                Conv2D | Gemm | Dense | MatMul,
-            ):
+            if (w := getattr(layer, "weights", None)) is not None:
                 layer_hash["nb_weights"] = layer.nb_weights
                 layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
-                to_print = True
-            elif (w := getattr(layer, "weights", None)) is not None:
-                layer_hash["nb_weights"] = w.size
-                layer_hash["weights"] = self.flatten_array(w)
                 to_print = True
 
             if hasattr(layer, "biases"):
