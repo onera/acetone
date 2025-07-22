@@ -26,6 +26,8 @@ from typing_extensions import Self
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
 
+from acetone_nnet.quantize import qform
+import logging
 
 class MatMul(Layer):
     """MatMul layer class."""
@@ -38,8 +40,7 @@ class MatMul(Layer):
             input_shapes: list,
             weights: np.ndarray,
             side: int,
-            activation_function: ActivationFunctions,
-            temp_pydtype=np.int64,
+            activation_function: ActivationFunctions
     ) -> None:
         """Build a MatMul layer."""
         super().__init__()
@@ -54,7 +55,6 @@ class MatMul(Layer):
         self.local_var = "dotproduct"
         self.side = side
         self.input_shapes = input_shapes
-        self.temp_pydtype = temp_pydtype
         if weights is not None:
             self.weights = weights
             self.nb_weights = self.count_elements_array(self.weights)
@@ -134,6 +134,18 @@ class MatMul(Layer):
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
 
+    def compute_post_shift(self):
+        ''' Q compute the rescaling factor '''
+        if hasattr(self,'qparam'):
+            (_,mparam) = qform.parse_q_format(self.qparam)
+            (_,min) = qform.parse_q_format(self.qin)
+            (_,mout) = qform.parse_q_format(self.qout)
+            qpost_shift = min + mparam - mout
+            if qpost_shift < 0:
+                logging.warning(f'MatMul {self} qpost_shift invalid {qpost_shift}, take 0')
+                qpost_shift = 0
+            return qpost_shift
+
     def forward_path_layer(
             self: Self,
             input_array: np.ndarray | list[np.ndarray],
@@ -153,7 +165,7 @@ class MatMul(Layer):
             elif self.side == 0:
                 if np.issubdtype(input_1.dtype,np.integer):
                     out = np.matmul(input_1, weights, dtype=self.temp_pydtype )
-                    out = np.right_shift(out, self.qpost_shift).astype(input_1.dtype)
+                    out = np.right_shift(out, self.compute_post_shift()).astype(input_1.dtype)
                 else:
                     out = np.matmul(input_1, weights)
             out = self.activation_function.compute(out)
