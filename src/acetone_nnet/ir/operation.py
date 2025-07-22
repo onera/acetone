@@ -1,64 +1,143 @@
 from functools import wraps
 from inspect import Parameter, signature
-from typing import Generic, ParamSpec, Self, TypeVar
 
 import numpy as np
-from traits.api import Dict, Interface, List, Str, Supports, Trait, provides
-from traits.has_traits import ABCHasTraits
+from traits.api import (
+    ABCHasTraits,
+    Dict,
+    HasTraits,
+    Interface,
+    List,
+    Property,
+    Str,
+    Supports,
+    Trait,
+    cached_property,
+    provides,
+)
+from typing_extensions import Self
 
 from acetone_nnet.ir.layer import Layer
 from acetone_nnet.ir.tensor import Tensor, TensorSpec
 
-P = ParamSpec("P", bound=Tensor)  # type: ignore[misc] # bound undefined for ParamSpec
-
-R = TypeVar("R", Tensor, dict[str, Tensor], tuple[Tensor, ...])
-
-
-class _OperationBase(Interface, Generic[P, R]):
-    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
-        raise NotImplementedError
-
-    def infer_shape(self, *args: P.args, **kwargs: P.kwargs) -> TensorSpec:
-        raise NotImplementedError
-
 
 class Operation(Interface):
-    """Basic tensor operation."""
+    """Interface a tensor-based operations.
 
-    #: Names of input tensors
-    input_names = List(Str)
+    The interface defines the expected method from an operation on tensors.
+    Additional methods may be provided to perform input validation, or provide
+    information on the computation itself, e.g. the shape of output tensor.
 
-    #: Names of output tensors
-    output_names = List(Str)
+    An operation may have additional parameters, fixed for each instance of the
+    operation itself. As an example, the operation may use weights and bias tensors
+    or a scalar padding value.
+    """
 
     def validate_inputs(
         self,
         *args: TensorSpec,
         **kwargs: TensorSpec,
     ) -> bool:
-        """Validate the provided inputs against operation requirements."""
+        """Validate the applicability of the operation with the provided inputs."""
 
     def __call__(
         self,
         *args: Tensor,
         **kwargs: Tensor,
-    ) -> dict[str, Tensor]:
-        """Apply the operation on the provided inputs."""
+    ) -> Tensor:
+        """Perform the operation on the provided input tensors."""
 
     def infer_shape(
         self,
         *args: TensorSpec,
         **kwargs: TensorSpec,
     ) -> TensorSpec:
-        """Infer operation output shape from input tensor shapes."""
+        """Infer operation output shape from the provided input tensors."""
 
 
-class _OperationLayer(Operation, Layer, _OperationBase, Interface):
-    pass
+class _OperationBaseLayer(Operation, Layer, Interface):
+
+    #: Names of input tensors
+    input_names = Property(List(Str))
+
+    def _get_input_names(self) -> list[str]: ...
 
 
-def layer(cls) -> type[_OperationLayer]:
-    """Transform callable class into an ACETONE layer."""
+class ParameterError(Exception):
+    """Invalid parameter kind or value."""
+
+
+class UnboundInputError(Exception):
+    """Raise when input value or specification not set."""
+
+    def __init__(self, message: str, name: str):
+        super().__init__(message)
+        self.name = name
+
+
+def _add_traits_for_parameters(
+    cls: type[HasTraits],
+    *parameters: Parameter,
+    ptype: type,
+) -> None:
+    """Add traits supporting information for a set of parameter.
+
+    Add a trait supporting the specified `ptype` for each of the specified `parameters`.
+    args-like and kwargs-like parameters will respectively support a list and dict of
+    `ptype`.
+
+    Parameters
+    ----------
+    cls: a trait-based class to which parameters will be added
+    parameters : list of parameters to consider
+    ptype : type of trait instance
+
+    """
+    for p in parameters:
+        # Ignore parameters with no usable name for tag
+        if p.kind == Parameter.POSITIONAL_ONLY:
+            continue
+        # Ignore not-to-be bound self parameter on methods
+        if p.name == "self":
+            continue
+        match p.kind:
+            case Parameter.POSITIONAL_OR_KEYWORD | Parameter.KEYWORD_ONLY:
+                cls.add_class_trait(
+                    p.name,
+                    Trait(
+                        Supports(
+                            ptype,
+                            is_input=True,
+                        ),
+                    ),
+                )
+            case Parameter.VAR_POSITIONAL:
+                cls.add_class_trait(
+                    p.name,
+                    Trait(
+                        List(
+                            Supports(ptype),
+                            is_input=True,
+                            is_args=True,
+                        ),
+                    ),
+                )
+            case Parameter.VAR_KEYWORD:
+                cls.add_class_trait(
+                    p.name,
+                    Trait(
+                        Dict(
+                            Str(),
+                            Supports(ptype),
+                            is_input=True,
+                            is_kwargs=True,
+                        ),
+                    ),
+                )
+
+
+def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
+    """Transform a callable Operation into an ACETONE layer."""
     # TODO Support additional parameters, T.B.D.
     # TODO Support no input/output names (just operation(MyClass))
     # TODO Support decorating functions (operation()(my_func)
@@ -68,38 +147,64 @@ def layer(cls) -> type[_OperationLayer]:
     # TODO Check return type to select appropriate action
     # TODO Validate the args and kwargs contain the required inputs
 
-    bound_parameters = []
-    operation_signature = signature(cls.__call__)
-    for name, parameter in operation_signature.parameters.items():
-        if name == "self":
-            continue
-        if parameter.kind in [
-            Parameter.POSITIONAL_ONLY,
-            Parameter.POSITIONAL_OR_KEYWORD,
-            Parameter.KEYWORD_ONLY,
-        ]:
-            bound_parameters.append(name)
-
     # Create a new class that inherits from both Operation and the decorated class
     @wraps(cls, updated=())
     @provides(Layer)
     @provides(Operation)
+    @provides(_OperationBaseLayer)
     class OperationLayer(cls, Layer, ABCHasTraits):
 
-        input_names: list[str] = List(Str(), value=bound_parameters)
+        input_names: list[str] = Property(List(Str()))
 
-        output_names: list[str] = List(Str(), value=["output"])
+        @cached_property
+        def _get_input_names(self) -> list[str]:
+            return list(self.trait_get(is_input=True).keys())
+
+        def _collect_inputs_specifications(
+            self: Self,
+            *,
+            strict: bool = True,
+        ) -> tuple[list[TensorSpec], dict[str, TensorSpec]]:
+            """Collect tensor specification for all layer inputs.
+
+            Parameters
+            ----------
+            strict: bool (default: True) Ensure a specification is available for all
+                    known inputs.
+
+            Returns
+            -------
+            [list[TensorSpec], dict[str, TensorSpec]]
+            A list of positional and keyword specifications for each input
+
+            """
+            args: list[TensorSpec] = []
+            kwargs: dict[str, TensorSpec] = {}
+            for t, v in self.trait_get(is_input=True).items():
+                d = self.trait(t)
+                if getattr(d, "is_args", False):
+                    args.extend(v)
+                elif getattr(d, "is_kwargs", False):
+                    kwargs.update(v)
+                else:
+                    kwargs[t] = v
+            # Ensure all inputs are bound in strict mode
+            if strict:
+                checklist = {f"_{i}": v for i, v in enumerate(args)}
+                checklist.update(kwargs)
+                for n, v in checklist.items():
+                    if v is None:
+                        raise UnboundInputError(n, f"Unbound input {n}")
+            return args, kwargs
 
         def validate_inputs(
             self: Self,
-            *args: TensorSpec,
-            **kwargs: TensorSpec,
         ) -> bool:
             """Validate the provided inputs against operation requirements."""
-            # TODO Validate using the registered Spec where appropriate
+            args, kwargs = self._collect_inputs_specifications()
             is_valid = True
             if callable(getattr(cls, "validate_inputs", None)):
-                is_valid = is_valid and self.validate_inputs(*args, **kwargs)
+                is_valid = is_valid and cls.validate_inputs(*args, **kwargs)
             for i in self.input_names:
                 if callable(v := getattr(self, f"_validate_{i}", None)):
                     is_valid = is_valid and v(**{i: kwargs[i]})
@@ -109,23 +214,13 @@ def layer(cls) -> type[_OperationLayer]:
             self: Self,
             *args: Tensor,
             **kwargs: Tensor,
-        ) -> dict[str, Tensor]:
+        ) -> Tensor:
             """Apply the operation on the provided inputs."""
             # TODO Check inputs have the correct shape, if specified
             # TODO Match inputs with the operation expected ones
-            if not self.validate_inputs(*args, **kwargs):
+            if not self.validate_inputs():
                 raise Exception("Invalid inputs")
-            outputs = super().__call__(*args, **kwargs)
-            match outputs:
-                case tuple():
-                    return dict(zip(self.output_names, outputs, strict=True))
-                case dict():
-                    return outputs
-                case Tensor():
-                    return {self.output_names[0]: outputs}
-                case _:
-                    msg = f"Unsupported operation output type: {type(outputs)}"
-                    raise ValueError(msg)
+            return super().__call__(*args, **kwargs)
 
         def forward_path_layer(
             self: Self,
@@ -143,7 +238,7 @@ def layer(cls) -> type[_OperationLayer]:
             else:
                 input_tensors.append(Tensor(inputs))
             # Call operation and collect output
-            return next(iter(self.__call__(*input_tensors).values())).data
+            return self.__call__(*input_tensors).data
 
         def infer_shape(
             self,
@@ -151,57 +246,15 @@ def layer(cls) -> type[_OperationLayer]:
             """Infer operation output shape from input tensor shapes."""
             # TODO Tag unbound inputs
             # Collect input shapes from tagged traits for inputs
-            args: list[TensorSpec] = []
-            kwargs: dict[str, TensorSpec] = {}
-            for n, v in self.trait_get(is_input=True).items():
-                t = self.trait(n)
-                if getattr(t, "is_args", False):
-                    args.extend(v)
-                elif getattr(t, "is_kwargs", False):
-                    kwargs.update(v)
-                else:
-                    kwargs[n] = v
+            args, kwargs = self._collect_inputs_specifications(strict=True)
             # Defer computation to wrapped class
             return super().infer_shape(*args, **kwargs)
 
-    # Add traits to capture tensor information for each input
-    for i in bound_parameters:
-        OperationLayer.add_class_trait(
-            i,
-            Trait(Supports(TensorSpec, is_input=True)),
-        )
-    # Add trait to capture tensor information for args-based inputs
-    supports_args = any(
-        p.kind == Parameter.VAR_POSITIONAL
-        for p in signature(cls.__call__).parameters.values()
+    _add_traits_for_parameters(
+        OperationLayer,
+        *signature(cls.__call__).parameters.values(),
+        ptype=TensorSpec,
     )
-    if supports_args:
-        a = next(
-            p
-            for p in signature(cls.__call__).parameters.values()
-            if p.kind == Parameter.VAR_POSITIONAL
-        )
-        OperationLayer.add_class_trait(
-            a.name,
-            Trait(
-                List(Supports(TensorSpec), is_input=True, is_args=True),
-            ),
-        )
-    # Add trait to capture tensor information for kwargs-based inputs
-    supports_kwargs = any(
-        p.kind == Parameter.VAR_KEYWORD
-        for p in signature(cls.__call__).parameters.values()
-    )
-    if supports_kwargs:
-        a = next(
-            p
-            for p in signature(cls.__call__).parameters.values()
-            if p.kind == Parameter.VAR_KEYWORD
-        )
-        OperationLayer.add_class_trait(
-            a.name,
-            Trait(Dict(Str(), Supports(TensorSpec), is_input=True, is_kwargs=True)),
-        )
 
     return OperationLayer
 
@@ -214,7 +267,7 @@ if __name__ == "__main__":
             raise NotImplementedError
 
     @layer
-    class Add(_N):
+    class Add(_N, Operation):
         def _extend_rank(self, *inputs: TensorSpec):
             return max(i.rank for i in inputs)
 
