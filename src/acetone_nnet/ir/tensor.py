@@ -112,9 +112,6 @@ class Tensor(HasTraits):
             return (self.data == other.data).all()
         return False
 
-    def __getitem__(self, item):
-        return self.data.__getitem__(item)
-
 
 # Provide adapters from numpy array
 register_factory(Tensor, np.ndarray, TensorSpec)
