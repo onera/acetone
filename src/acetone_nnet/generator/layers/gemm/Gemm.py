@@ -19,7 +19,6 @@
 ******************************************************************************
 """
 
-
 import numpy as np
 from typing_extensions import Self
 
@@ -35,19 +34,19 @@ class Gemm(Layer):
     """Gemm layer class."""
 
     def __init__(
-            self: Self,
-            original_name : str,
-            idx: int,
-            size: int,
-            alpha: float,
-            beta: float,
-            transA: bool | int,
-            transB: bool | int,
-            weights: np.ndarray,
-            bias: np.ndarray,
-            input_shape: list,
-            output_shape: list,
-            activation_function: ActivationFunctions,
+        self: Self,
+        original_name: str,
+        idx: int,
+        size: int,
+        alpha: float,
+        beta: float,
+        transA: bool | int,
+        transB: bool | int,
+        weights: np.ndarray,
+        bias: np.ndarray,
+        input_shape: list,
+        output_shape: list,
+        activation_function: ActivationFunctions,
     ) -> None:
         """Build a Gemm layer."""
         super().__init__()
@@ -96,13 +95,20 @@ class Gemm(Layer):
         if type(self.size) is not int:
             msg += "Error: size type in Gemm (size must be int)"
             msg += "\n"
-        if self.alpha != [] and (type(self.alpha[0]) is not float and type(self.alpha[0]) is int):
+        if self.alpha != [] and (
+            type(self.alpha[0]) is not float and type(self.alpha[0]) is int
+        ):
             msg += "Error: alpha type in Gemm (alpha must be int or float)"
             msg += "\n"
-        if self.alpha != [] and (type(self.beta[0]) is not float and type(self.beta[0]) is int):
+        if self.alpha != [] and (
+            type(self.beta[0]) is not float and type(self.beta[0]) is int
+        ):
             msg += "Error: beta type in Gemm (beta must be int or float)"
             msg += "\n"
-        if any(type(self.transpo[i]) is not int and type(self.transpo[i]) is not bool for i in range(2)):
+        if any(
+            type(self.transpo[i]) is not int and type(self.transpo[i]) is not bool
+            for i in range(2)
+        ):
             msg += "Error: transpose type in Gemm (must be boolean or int)"
             msg += "\n"
         if type(self.output_height) is not int:
@@ -141,8 +147,10 @@ class Gemm(Layer):
         if self.output_width != self.weights.shape[1 - self.transpo[1]]:
             msg += f"Error: non consistency between output shape and output weight in Gemm ({self.output_width}!={self.weights.shape[1 - self.transpo[1]]})"
             msg += "\n"
-        if any(self.biases.shape[i] != 1 and self.biases.shape[i] != output_shape[3 - i] for i in
-               range(len(self.biases.shape))):
+        if any(
+            self.biases.shape[i] != 1 and self.biases.shape[i] != output_shape[3 - i]
+            for i in range(len(self.biases.shape))
+        ):
             msg = f"Error: biases in Gemm not broadcastable to dim ({self.output_height},{self.output_width})"
             msg += "\n"
         if msg:
@@ -152,19 +160,21 @@ class Gemm(Layer):
         """Generate computation code for layer."""
 
     def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
+        self: Self,
+        input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""
         input_array = input_array.reshape(self.input_height, self.input_width)
         if self.transpo[0]:
             input_array = input_array.transpose()
 
+        w = self.weights
         if self.transpo[1]:
-            self.weights = self.weights.transpose()
+            w = self.weights.transpose()
 
         beta = self.beta if self.beta != [] else 1.0
         alpha = self.alpha if self.alpha != [] else 1.0
 
         return self.activation_function.compute(
-            alpha * np.dot(input_array, self.weights) + beta * self.biases)
+            alpha * np.dot(input_array, w) + beta * self.biases,
+        )
