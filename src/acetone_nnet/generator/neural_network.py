@@ -610,8 +610,8 @@ class CodeGenerator(ABC):
             header_files=header_files,
             source_files=source_files,
         )
-        if self.target_cfg is not None and 'cflags' in self.target_cfg:
-            template.add_compiler_flags(self.target_cfg['cflags'])
+        if self.target_cfg is not None and "cflags" in self.target_cfg:
+            template.add_compiler_flags(self.target_cfg["cflags"])
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))
@@ -940,17 +940,19 @@ class CodeGenerator(ABC):
                             self.data_type_py,
                         )
                     if hasattr(l, "biases"):
-                        l.biases = np.rint(l.biases*(2**m-1)).astype(self.data_type_py)
-#                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
-#                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])
-#                    l.qpost_shift = in_dec + m - out_dec
-                    l.qin = layer_qconf['in']
-                    l.qout = layer_qconf['out']
-                    logging.info(f'Quantize {l.name}_{l.idx} format {l.qparam}')
-                    l.temp_pydtype = self.target_cfg["quantization"]['temp_pydtype']
-                    l.cdtype = self.target_cfg["quantization"]['dtype']
+                        l.biases = np.rint(l.biases * (2**m - 1)).astype(
+                            self.data_type_py,
+                        )
+                    #                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
+                    #                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])
+                    #                    l.qpost_shift = in_dec + m - out_dec
+                    l.qin = layer_qconf["in"]
+                    l.qout = layer_qconf["out"]
+                    logging.info(f"Quantize {l.name}_{l.idx} format {l.qparam}")
+                    l.temp_pydtype = self.target_cfg["quantization"]["temp_pydtype"]
+                    l.cdtype = self.target_cfg["quantization"]["dtype"]
 
-                except KeyError as e:
+                except KeyError:
                     if hasattr(l, "weights") or hasattr(l, "biases"):
                         raise KeyError(
                             f"Cannot quantize layer {l.name}_{l.idx}, missing data in target config",
@@ -1013,7 +1015,7 @@ class CodeGenerator(ABC):
             # FIXME Revert to attribute test once all layers types have been managed
             if (w := getattr(layer, "weights", None)) is not None and isinstance(
                 layer,
-                Conv2D | Gemm | Dense,
+                Conv2D | Gemm | Dense | MatMul,
             ):
                 layer_hash["nb_weights"] = layer.nb_weights
                 layer_hash["weights"] = self.flatten_array_order_c(layer.weights)

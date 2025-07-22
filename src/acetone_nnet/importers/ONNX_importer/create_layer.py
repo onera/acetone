@@ -583,7 +583,7 @@ def create_matmul(
     side = -1
     if left_tensor or right_tensor:
         if right_tensor and not left_tensor:
-            # the weight is the right tensor:  MatMul(W,T)
+            # the weight is the left tensor:  MatMul(W, T)
             side = 1
             input_shape = get_shape(node.input[1], model)
 
@@ -591,16 +591,14 @@ def create_matmul(
             output_shape = matmul_compute_shape(output_shape)
 
             weights = onnx.numpy_helper.to_array(right_tensor)
-            weights = np.reshape(weights, (input_shape[-2], 1, 1, output_shape[-2]))
-            weights = np.moveaxis(weights, 0, 3)
+            weights = np.reshape(weights, (1, 1, output_shape[-2], input_shape[-2]))
             dict_input[idx] = [node.input[1]]
         if left_tensor and not right_tensor:
-            # the weight is the left tensor:  MatMul(T,W)
+            # the weight is the right tensor:  MatMul(T, W)
             side = 0
             input_shape = get_shape(node.input[0], model)
             weights = onnx.numpy_helper.to_array(left_tensor)
-            weights = np.reshape(weights, (output_shape[-1], 1, 1, input_shape[-1]))
-            weights = np.moveaxis(weights, 0, 3)
+            weights = np.reshape(weights, (1, 1, input_shape[-1], output_shape[-1]))
             dict_input[idx] = [node.input[0]]
     else:
         dict_input[idx] = node.input
