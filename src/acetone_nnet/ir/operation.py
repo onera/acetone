@@ -15,7 +15,7 @@ from traits.api import (
     cached_property,
     provides,
 )
-from typing_extensions import Self
+from typing_extensions import Self, override
 
 from acetone_nnet.ir.layer import Layer
 from acetone_nnet.ir.tensor import Tensor, TensorSpec
@@ -33,7 +33,7 @@ class Operation(Interface):
     or a scalar padding value.
     """
 
-    def validate_inputs(
+    def _validate_inputs(
         self,
         *args: TensorSpec,
         **kwargs: TensorSpec,
@@ -47,7 +47,7 @@ class Operation(Interface):
     ) -> Tensor:
         """Perform the operation on the provided input tensors."""
 
-    def infer_shape(
+    def _infer_shape(
         self,
         *args: TensorSpec,
         **kwargs: TensorSpec,
@@ -62,9 +62,18 @@ class _OperationBaseLayer(Operation, Layer, Interface):
 
     def _get_input_names(self) -> list[str]: ...
 
+    @override
+    def infer_shape(self) -> TensorSpec: ...
 
-class ParameterError(Exception):
-    """Invalid parameter kind or value."""
+    @override
+    def validate_inputs(self) -> bool: ...
+
+
+class InvalidInputError(Exception):
+    """Invalid input value or specification."""
+
+    def __init__(self, message: str):
+        super().__init__(message)
 
 
 class UnboundInputError(Exception):
@@ -139,13 +148,9 @@ def _add_traits_for_parameters(
 def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
     """Transform a callable Operation into an ACETONE layer."""
     # TODO Support additional parameters, T.B.D.
-    # TODO Support no input/output names (just operation(MyClass))
-    # TODO Support decorating functions (operation()(my_func)
     # TODO Check for default parameters *args and **kwargs
     # TODO Assert all operations are of the right type
     # TODO Check typing of all parameters as being `Tensor`
-    # TODO Check return type to select appropriate action
-    # TODO Validate the args and kwargs contain the required inputs
 
     # Create a new class that inherits from both Operation and the decorated class
     @wraps(cls, updated=())
@@ -201,10 +206,12 @@ def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
             self: Self,
         ) -> bool:
             """Validate the provided inputs against operation requirements."""
-            args, kwargs = self._collect_inputs_specifications()
+            args, kwargs = self._collect_inputs_specifications(strict=True)
             is_valid = True
-            if callable(getattr(cls, "validate_inputs", None)):
-                is_valid = is_valid and cls.validate_inputs(*args, **kwargs)
+            # Defer to parent for validation, where available
+            if callable(getattr(cls, "_validate_inputs", None)):
+                is_valid = is_valid and cls._validate_inputs(*args, **kwargs)
+            # Defer to parent per-input validation, where available
             for i in self.input_names:
                 if callable(v := getattr(self, f"_validate_{i}", None)):
                     is_valid = is_valid and v(**{i: kwargs[i]})
@@ -219,7 +226,7 @@ def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
             # TODO Check inputs have the correct shape, if specified
             # TODO Match inputs with the operation expected ones
             if not self.validate_inputs():
-                raise Exception("Invalid inputs")
+                raise InvalidInputError("Invalid inputs")
             return super().__call__(*args, **kwargs)
 
         def forward_path_layer(
@@ -231,24 +238,18 @@ def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
             Defaults to picking the first output.
             Defaults to mapping provided inputs to the underlying operation ones in-order.
             """
-            # Convert input arrays into tensors
-            input_tensors: list[Tensor] = []
-            if isinstance(inputs, list):
-                input_tensors.extend(map(Tensor, inputs))
-            else:
-                input_tensors.append(Tensor(inputs))
-            # Call operation and collect output
-            return self.__call__(*input_tensors).data
+            match inputs:
+                case list():
+                    return self.__call__(*map(Tensor, inputs)).data
+                case _:
+                    return self.__call__(Tensor(inputs)).data
 
         def infer_shape(
             self,
         ) -> TensorSpec:
             """Infer operation output shape from input tensor shapes."""
-            # TODO Tag unbound inputs
-            # Collect input shapes from tagged traits for inputs
             args, kwargs = self._collect_inputs_specifications(strict=True)
-            # Defer computation to wrapped class
-            return super().infer_shape(*args, **kwargs)
+            return super()._infer_shape(*args, **kwargs)
 
     _add_traits_for_parameters(
         OperationLayer,
@@ -267,7 +268,8 @@ if __name__ == "__main__":
             raise NotImplementedError
 
     @layer
-    class Add(_N, Operation):
+    @provides(Operation)
+    class Add(_N, HasTraits):
         def _extend_rank(self, *inputs: TensorSpec):
             return max(i.rank for i in inputs)
 
@@ -295,7 +297,7 @@ if __name__ == "__main__":
                 output = output + t
             return Tensor(output)
 
-        def infer_shape(self, *inputs: TensorSpec) -> TensorSpec:
+        def _infer_shape(self, *inputs: TensorSpec) -> TensorSpec:
             input_shapes = self._extend_inputs_ranks(*inputs)
             output_shape = tuple(
                 max(input_shapes[i].shape[d] for i in range(len(input_shapes)))
@@ -304,21 +306,23 @@ if __name__ == "__main__":
             return TensorSpec(shape=output_shape, dtype=str(inputs[0].dtype))
 
     @layer
-    class Matmul(_N):
+    @provides(Operation)
+    class Matmul(_N, HasTraits):
         def __call__(self, a: Tensor, b: Tensor) -> Tensor:
             return Tensor(np.dot(a, b))
 
-        def infer_shape(self, a: TensorSpec, b: TensorSpec) -> TensorSpec:
+        def _infer_shape(self, a: TensorSpec, b: TensorSpec) -> TensorSpec:
             return TensorSpec(shape=(a.shape[-2], b.shape[-1]), dtype=str(a.dtype))
 
     @layer
-    class Input(_N):
+    @provides(Operation)
+    class Input(_N, HasTraits):
         tensor = Instance(Tensor)
 
         def __call__(self) -> Tensor:
             return self.tensor
 
-        def infer_shape(self) -> TensorSpec:
+        def _infer_shape(self) -> TensorSpec:
             return self.tensor
 
     from traits.adaptation.api import register_factory
