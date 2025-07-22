@@ -54,6 +54,15 @@ class TensorSpec(Interface):
         """Size of the tensor."""
         return reduce(mul, self.shape, 1)
 
+    def extend_rank(self, rank: int, *, append: bool) -> "TensorSpec":
+        """Extend rank of tensor to *at least* `rank`."""
+        extended = self.shape
+        extension = tuple(1 for _ in range(rank - self.rank))
+        return TensorSpec(
+            shape=extended + extension if append else extension + extended,
+            dtype=self.dtype,
+        )
+
 
 @provides(TensorSpec)
 class Tensor(HasTraits):
@@ -83,6 +92,17 @@ class Tensor(HasTraits):
             return np.copy(self.data)
         return self.data
 
+    def extend_rank(self, rank: int, *, append: bool) -> "Tensor":
+        """Extend rank of tensor to *at least* `rank`."""
+        extended = self.shape
+        extension = tuple(1 for _ in range(rank - self.rank))
+        return Tensor(
+            data=self.data.reshape(
+                extended + extension if append else extension + extended,
+            ),
+        )
 
-# Provide adapter from numpy array
+
+# Provide adapters from numpy array
 register_factory(Tensor, np.ndarray, TensorSpec)
+register_factory(Tensor, np.ndarray, Tensor)
