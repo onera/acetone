@@ -63,6 +63,11 @@ class TensorSpec(Interface):
             dtype=self.dtype,
         )
 
+    def __eq__(self, other):
+        if isinstance(other, TensorSpec):
+            return self.shape == other.shape and self.dtype == other.dtype
+        return False
+
 
 @provides(TensorSpec)
 class Tensor(HasTraits):
@@ -101,6 +106,14 @@ class Tensor(HasTraits):
                 extended + extension if append else extension + extended,
             ),
         )
+
+    def __eq__(self, other):
+        if isinstance(other, Tensor):
+            return (self.data == other.data).all()
+        return False
+
+    def __getitem__(self, item):
+        return self.data.__getitem__(item)
 
 
 # Provide adapters from numpy array
