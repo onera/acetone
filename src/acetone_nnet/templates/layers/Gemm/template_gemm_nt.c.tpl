@@ -3,12 +3,12 @@
     {
         for (j = 0; j < {{n}}; ++j)
         {
-            register float output =0;
+            register float output = 0;
             for (p = 0; p < {{k}}; ++p)
             {
-                output += {{#alpha}}{{.}}*{{/alpha}}{{A}}[p*{{m}}+i]*({{B}}[j*{{k}}+p]);
+                output += {{#alpha}}{{.}}*{{/alpha}}{{A}}[(i * {{k}}) + p]*({{B}}[(j * {{k}}) + p]);
             }
-            output += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[i];
-            tensor_temp[j*{{m}}+i] = {{{activation_function}}};
+            output += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[j];
+            tensor_temp[i*{{n}}+j] = {{{activation_function}}};
         }
     }

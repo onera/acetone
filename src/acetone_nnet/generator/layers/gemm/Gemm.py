@@ -151,7 +151,7 @@ class Gemm(Layer):
             self.biases.shape[i] != 1 and self.biases.shape[i] != output_shape[3 - i]
             for i in range(len(self.biases.shape))
         ):
-            msg = f"Error: biases in Gemm not broadcastable to dim ({self.output_height},{self.output_width})"
+            msg = f"Error: biases ({self.biases.shape}) in Gemm not broadcastable to dim ({self.output_height},{self.output_width})"
             msg += "\n"
         if msg:
             raise ValueError(msg)
