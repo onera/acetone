@@ -133,7 +133,10 @@ class Add(Layer):
         else:
             output = np.reshape(input_arrays, self.input_shapes[0][1:])
         output = self.activation_function.compute(output + constant)
-        return  np.right_shift(output, self.compute_post_shift()).astype(input_arrays[0].dtype)
+        if np.issubdtype(input_arrays[0].dtype,np.integer):
+            return  np.right_shift(output, self.compute_post_shift()).astype(input_arrays[0].dtype)
+        else:
+            return output
 
 
     def generate_inference_code_layer(self: Self) -> str:
