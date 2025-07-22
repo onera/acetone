@@ -172,7 +172,7 @@ class Broadcast(Layer):
             mustach_hash["constant"] = [constant_dict]
 
         if hasattr(self,'qparam'):
-            mustach_hash["qcast"] = "(short)("
+            mustach_hash["qcast"] = f"({self.cdtype})("
             mustach_hash["qshift"] = f" >> {self.compute_post_shift()})"
 
         with open(self.template_path / "layers" / "template_Broadcast.c.tpl") as template_file:

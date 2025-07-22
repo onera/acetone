@@ -917,6 +917,9 @@ class CodeGenerator(ABC):
                     l.qin = layer_qconf['in']
                     l.qout = layer_qconf['out']
                     logging.info(f'Quantize {l.name}_{l.idx} format {l.qparam}')
+                    l.temp_pydtype = self.target_cfg["quantization"]['temp_pydtype']
+                    l.cdtype = self.target_cfg["quantization"]['dtype']
+
                 except KeyError as e:
                     if hasattr(l, "weights") or hasattr(l, "biases"):
                         raise KeyError(f'Cannot quantize layer {l.name}_{l.idx}, missing data in target config')

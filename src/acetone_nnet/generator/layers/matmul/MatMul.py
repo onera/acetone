@@ -40,8 +40,7 @@ class MatMul(Layer):
             input_shapes: list,
             weights: np.ndarray,
             side: int,
-            activation_function: ActivationFunctions,
-            temp_pydtype=np.int64,
+            activation_function: ActivationFunctions
     ) -> None:
         """Build a MatMul layer."""
         super().__init__()
@@ -56,7 +55,6 @@ class MatMul(Layer):
         self.local_var = "dotproduct"
         self.side = side
         self.input_shapes = input_shapes
-        self.temp_pydtype = temp_pydtype
         if weights is not None:
             self.weights = weights
             self.nb_weights = self.count_elements_array(self.weights)
