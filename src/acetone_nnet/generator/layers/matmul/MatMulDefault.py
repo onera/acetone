@@ -46,8 +46,11 @@ class MatMulDefault(MatMul):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-            f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
+        mustach_hash["activation_function"] = (
+            self.activation_function.write_activation_str(
+                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]",
+            )
+        )
 
         mustach_hash["shared_dimension"] = self.shared_dimension
         mustach_hash["output_channels"] = self.output_channels
@@ -64,11 +67,13 @@ class MatMulDefault(MatMul):
             mustach_hash["output_str_left"] = self.previous_layer[0].output_str
             mustach_hash["output_str_right"] = self.previous_layer[1].output_str
 
-        if hasattr(self,'qpost_shift'):
+        if hasattr(self, "qpost_shift"):
             mustach_hash["qcast"] = "(short)("
             mustach_hash["qshift"] = f" >> {self.qpost_shift})"
 
-        with open(self.template_path / "layers" / "template_MatMul.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "template_MatMul.c.tpl",
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -76,8 +81,8 @@ class MatMulDefault(MatMul):
 
 
 def matmul_default_implementation(
-        old_layer: MatMul,
-        version: str,
+    old_layer: MatMul,
+    version: str,
 ) -> MatMulDefault:
     """Create a MatMul_Default layer using the attributes of old_layer."""
     return MatMulDefault(
@@ -86,7 +91,7 @@ def matmul_default_implementation(
         idx=old_layer.idx,
         size=old_layer.size,
         input_shapes=old_layer.input_shapes,
-        weights=old_layer.weights if hasattr(old_layer, "weights") else None,
+        weights=getattr(old_layer, "weights", None),
         side=old_layer.side,
         activation_function=old_layer.activation_function,
     )
