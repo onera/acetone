@@ -210,7 +210,7 @@ def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
             is_valid = True
             # Defer to parent for validation, where available
             if callable(getattr(cls, "_validate_inputs", None)):
-                is_valid = is_valid and cls._validate_inputs(*args, **kwargs)
+                is_valid = is_valid and cls._validate_inputs(self, *args, **kwargs)
             # Defer to parent per-input validation, where available
             for i in self.input_names:
                 if callable(v := getattr(self, f"_validate_{i}", None)):
