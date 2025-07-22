@@ -592,7 +592,8 @@ class CodeGenerator(ABC):
             header_files=header_files,
             source_files=source_files,
         )
-
+        if self.target_cfg is not None and 'cflags' in self.target_cfg:
+            template.add_compiler_flags(self.target_cfg['cflags'])
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))
@@ -904,16 +905,18 @@ class CodeGenerator(ABC):
             for l in self.layers:
                 try:
                     layer_qconf = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]
-                    qformat = layer_qconf['params']
-                    (_, m) = qform.parse_q_format(qformat)
+                    l.qparam = layer_qconf['params']
+                    (_, m) = qform.parse_q_format(l.qparam)
                     if hasattr(l, "weights"):
                         l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
                     if hasattr(l, "biases"):
                         l.biases = np.rint(l.biases*(2**m-1)).astype(self.data_type_py)
-                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
-                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])                   
-                    l.qpost_shift = in_dec + m - out_dec
-                    logging.info(f'Quantize {l.name}_{l.idx} format {qformat}, post_shift: {l.qpost_shift}')
+#                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
+#                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])                   
+#                    l.qpost_shift = in_dec + m - out_dec
+                    l.qin = layer_qconf['in']
+                    l.qout = layer_qconf['out']
+                    logging.info(f'Quantize {l.name}_{l.idx} format {l.qparam}')
                 except KeyError as e:
                     if hasattr(l, "weights") or hasattr(l, "biases"):
                         raise KeyError(f'Cannot quantize layer {l.name}_{l.idx}, missing data in target config')

@@ -25,6 +25,8 @@ from typing_extensions import Self
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
 
+from acetone_nnet.quantize import qform
+import logging
 
 # Addition of several tensor
 class Add(Layer):
@@ -105,6 +107,18 @@ class Add(Layer):
         if msg:
             raise ValueError(msg)
 
+    def compute_post_shift(self):
+        ''' Q compute the rescaling factor '''
+        if hasattr(self,'qparam'):
+            (_,mparam) = qform.parse_q_format(self.qparam)
+            (_,min) = qform.parse_q_format(self.qin)
+            (_,mout) = qform.parse_q_format(self.qout)
+            qpost_shift = min - mout
+            if qpost_shift < 0 or mparam != min:
+                logging.warning(f'Add {self} q format inconsistency')
+                qpost_shift = 0
+            return qpost_shift
+
     def forward_path_layer(self: Self, input_arrays: np.ndarray) -> np.ndarray:
         """Compute output of layer."""
         if self.constant is None:
@@ -118,7 +132,9 @@ class Add(Layer):
                 output += np.reshape(input_arrays[i], self.input_shapes[i][1:])
         else:
             output = np.reshape(input_arrays, self.input_shapes[0][1:])
-        return self.activation_function.compute(output + constant)
+        output = self.activation_function.compute(output + constant)
+        return  np.right_shift(output, self.compute_post_shift()).astype(input_arrays[0].dtype)
+
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""

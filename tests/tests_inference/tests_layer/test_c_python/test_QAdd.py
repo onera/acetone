@@ -21,16 +21,14 @@ from tests.tests_inference import acetoneTestCase
 
 from onnxscript import opset18 as op
 from onnxscript import script
-from onnx import TensorProto, helper
 import onnx
 import logging
 from onnxscript import FLOAT
-import numpy as np
 
 targetconf = '''
 {
     "name":"AVX",
-    "cflags":"-mavx512vnni",
+    "cflags":"-O1 -mavx512vnni -ftree-vectorize -msse4",
     "quantization":
     {
         "dtype":"short",
@@ -47,8 +45,8 @@ targetconf = '''
             },
             "Add_2":{
                 "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
+                "params":"Q0.10",
+                "out":"Q0.13"
             }
         }
     }  
@@ -61,7 +59,7 @@ def writeconf(conf):
         f.write(conf)
 
 @script(default_opset=op)
-def ONNX_TestAdd(A: FLOAT[10],B: FLOAT[10]) -> FLOAT[10]:
+def ONNX_TestAdd(A: FLOAT[8],B: FLOAT[8]) -> FLOAT[8]:
     ''' ONNX script to define Add model '''
     return A + B
 
@@ -73,7 +71,7 @@ class TestBroadcast(acetoneTestCase.AcetoneTestCase):
         model = ONNX_TestAdd.to_model_proto()
         model = onnx.shape_inference.infer_shapes(model)
         logging.info(ONNX_TestAdd.to_model_proto())
-        acetone_result = acetoneTestCase.run_acetone_for_test("temp", ONNX_TestAdd.to_model_proto(),target="AVX512VNNI")
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, ONNX_TestAdd.to_model_proto(),target="AVX512VNNI")
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
 if __name__ == "__main__":

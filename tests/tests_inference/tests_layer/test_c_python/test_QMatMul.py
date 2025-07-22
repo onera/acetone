@@ -27,14 +27,12 @@ import tensorflow as tf
 import onnx
 import numpy as np
 
-from tests.tests_inference import acetoneTestCase
-
 tf.keras.backend.set_floatx("float32")
 
 targetconf = '''
 {
     "name":"AVX",
-    "cflags":"-mavx512vnni",
+    "cflags":"-O1 -mavx512vnni -ftree-vectorize -msse4",
     "quantization":
     {
         "dtype":"short",
