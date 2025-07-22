@@ -200,13 +200,15 @@ def load_keras(
             add_softmax_layer = True
 
         if layer_keras.__class__.__name__ == "Dense":
+            # Collect and reorder weights from Keras [I,O] into [B,C,I,O]
             weights = data_type_py(layer_keras.get_weights()[0])
-            if len(weights.shape) < 3:
-                for _i in range(3 - len(weights.shape)):
-                    weights = np.expand_dims(weights, axis=-1)
-            weights = np.moveaxis(weights, 2, 0)
-            if len(weights.shape) < 4:
+            # Add O dimension if missing
+            if weights.ndim < 2:
+                weights = np.expand_dims(weights, axis=-1)
+            # Add B and C dimensions if missing
+            while weights.ndim < 4:
                 weights = np.expand_dims(weights, axis=0)
+            # Collect biases
             biases = data_type_py(layer_keras.get_weights()[1])
             current_layer = Dense(
                 original_name=layer_keras.name,

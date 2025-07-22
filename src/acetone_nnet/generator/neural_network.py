@@ -1011,7 +1011,7 @@ class CodeGenerator(ABC):
             # FIXME Revert to attribute test once all layers types have been managed
             if (w := getattr(layer, "weights", None)) is not None and isinstance(
                 layer,
-                Conv2D | Gemm,
+                Conv2D | Gemm | Dense,
             ):
                 layer_hash["nb_weights"] = layer.nb_weights
                 layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
