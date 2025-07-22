@@ -32,7 +32,7 @@ tf.keras.backend.set_floatx("float32")
 targetconf = '''
 {
     "name":"AVX",
-    "cflags":"-O1 -mavx512vnni -ftree-vectorize -msse4",
+    "cflags":"-O1",
     "quantization":
     {
         "dtype":"short",
