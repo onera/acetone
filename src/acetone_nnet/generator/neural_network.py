@@ -943,9 +943,10 @@ class CodeGenerator(ABC):
                         l.biases = np.rint(l.biases * (2**m - 1)).astype(
                             self.data_type_py,
                         )
-                    #                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
-                    #                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])
-                    #                    l.qpost_shift = in_dec + m - out_dec
+                    if hasattr(l, "constant"):
+                        l.constant = np.rint(l.constant * (2**m - 1)).astype(
+                            self.data_type_py,
+                        )
                     l.qin = layer_qconf["in"]
                     l.qout = layer_qconf["out"]
                     logging.info(f"Quantize {l.name}_{l.idx} format {l.qparam}")

@@ -22,7 +22,7 @@ def parse_q_format(q_string: str) -> tuple[int, int] | None:
     #   which is a special character in regex (matches any character).
     # - (\d+) captures one or more digits. This is the second capturing group (for y).
     # - $ asserts position at the end of the string.
-    pattern = r"^Q(\d+)\.(\d+)$"
+    pattern = r"^Q(-?\d+)\.(\d+)$"
 
     # Use re.match() to find a match at the beginning of the string.
     match = re.match(pattern, q_string)
