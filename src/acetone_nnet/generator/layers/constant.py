@@ -21,17 +21,16 @@
 
 from typing import Any
 
+import numpy as np
 import pystache
-from traits.api import HasTraits, Int, Property, Supports, provides
+from traits.api import Int, Property, Supports
 from typing_extensions import Self
 
-from acetone_nnet.ir import Operation, Tensor, TensorSpec, layer
+from acetone_nnet.ir import Layer, Tensor
 from acetone_nnet.versioning.layer_factories import constant_factory
 
 
-@layer
-@provides(Operation)
-class ConstantLayer(HasTraits):
+class ConstantLayer(Layer):
     """Constant tensor layer class."""
 
     #: Constant tensor value
@@ -45,7 +44,7 @@ class ConstantLayer(HasTraits):
     size = Property(Int())
 
     def _get_size(self) -> int:
-        return self._infer_shape().size
+        return self.weights.size
 
     def _set_size(self, size: int) -> None:
         if size != self.size:
@@ -66,15 +65,16 @@ class ConstantLayer(HasTraits):
         else:
             self.original_name = original_name
 
-    def __call__(self) -> Tensor:
-        return self.weights
-
-    def _infer_shape(self) -> TensorSpec:
-        return self.weights
-
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
         raise NotImplementedError
+
+    def forward_path_layer(
+        self: Self,
+        input_array: np.ndarray,
+    ) -> np.ndarray:
+        """Compute output of layer."""
+        return self.weights.data
 
 
 class ConstantLayerDefault(ConstantLayer):
