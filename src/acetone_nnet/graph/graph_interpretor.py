@@ -19,122 +19,112 @@
 ******************************************************************************
 """
 
+from collections import deque
+
+from acetone_nnet.generator.layers import ConstantLayer
 from acetone_nnet.ir import Layer
 
 
-def tri_topo(dnn: list) -> (list[Layer], list[int], int, dict[int, int]):
+def tri_topo(dnn: list) -> tuple[list[Layer], int, dict[int, int]]:
     """Sort the graph (list of nodes) topologically."""
     paths: dict[int, bool] = {}  # Available paths per id
     # The sorted layer list
     sorted_layers: list[Layer] = []
     # the dict stating which layers need to go in a constant
     dict_cst: dict[int, int] = {}
+    # Tag layers as they are visited
+    visited_layers: set[int] = set()
+    # Sort layer topologically
     for layer in dnn:
         # If the node isn't sorted, we sort it
-        if layer.sorted is None:
-            parcours_prof_topo(sorted_layers, layer)
-    for layer in sorted_layers:
-        update_path(layer, paths)
-        # FIXME Assess what to_save is supposed to do
-        # Assign a save space to the layer if it has several children
-        to_save(layer, dict_cst, sorted_layers)
+        if layer.idx not in visited_layers:
+            parcours_prof_topo(sorted_layers, layer, visited_layers)
+    # FIX Prevent constants from being mistaken as Input or Output
+    other_layers, constants = [], []
+    for i in sorted_layers:
+        if isinstance(i, ConstantLayer):
+            constants.append(i)
+        else:
+            other_layers.append(i)
+    sorted_layers = [other_layers[0]] + constants + other_layers[1:]
+    # Allocate temp variable to layers
+    assign_liveliness_index(sorted_layers)
+    dict_cst = assign_cst(sorted_layers)
     # Convert paths
-    max_path = max(paths.keys()) + 1
-    list_path: list[int] = []
-    for path, available in paths.items():
-        list_path.append(path)
-        list_path.append(1 if available else 0)
-    return sorted_layers, list_path, max_path, dict_cst
+    max_path = max(i.path for i in sorted_layers) + 1
+    return sorted_layers, max_path, dict_cst
 
 
-def parcours_prof_topo(sorted_layers: list[Layer], layer: Layer) -> None:
+def parcours_prof_topo(
+    sorted_layers: list[Layer],
+    layer: Layer,
+    visited_layers: set[int],
+) -> None:
     """Sort layer in list of sorted layers."""
     # The node is currently being sorted
-    layer.sorted = 1
+    visited_layers.add(layer.idx)
     for nxt_layer in layer.next_layer:
         # The next_layer need to be found and sorted before the current node
-        if nxt_layer.sorted is None:
-            parcours_prof_topo(sorted_layers, nxt_layer)
-    # The node is sorted
-    layer.sorted = 0
+        if nxt_layer.idx not in visited_layers:
+            parcours_prof_topo(sorted_layers, nxt_layer, visited_layers)
     # And is added to the list of sorted nodes
     sorted_layers.insert(0, layer)
 
 
-def allocate_path_to_layer(layer: Layer, paths: dict[int, bool]) -> None:
-    """Allocate a new or closed path to layer."""
-    # Check if there is a previously closed path available
-    for path, available in paths.items():
-        if available:
-            layer.path = path
-            paths[path] = False
-            break
-    else:
-        # If there is no available path, we create a new one
-        path = len(paths)
-        paths[path] = False
-        layer.path = path
+def assign_liveliness_index(execution_order: list[Layer]) -> dict[int, int]:
+    """Assign unique liveliness index to nodes during execution.
+
+    A node is assigned a unique index while it is lively, that is while its
+    output may be required for the execution of a future node. At any point
+    during execution, all lively nodes will be uniquely identified. The
+    method minimises the overall number of allocated indexes.
+
+    :param execution_order: The order in which nodes will be executed. Nodes
+                            must be topologically sorted.
+    :return: A map of the allocated index to each node.
+    """
+    index_count: int = 0
+    available_indexes: deque[int] = deque()
+    indexes: dict[int, int] = {}
+    # Allocate index to nodes in execution order
+    for n in execution_order:
+        assert n.idx not in indexes
+        # Free the indices of all predecessors' outputs after use
+        for p in n.previous_layer:
+            assert p.idx in indexes
+            # Check all consumers of a tensor have been executed (except the current one)
+            if all(s.idx in indexes for s in p.next_layer if s.idx != n.idx):
+                available_indexes.appendleft(indexes[p.idx])
+        # TODO Assign index before liberating predecessors' outputs
+        # Reuse any available index for the node, or create a new one if none
+        if len(available_indexes) == 0:
+            available_indexes.append(index_count)
+            index_count += 1
+        indexes[n.idx] = available_indexes.popleft()
+        # FIXME Perform allocation outside method
+        n.path = indexes[n.idx]
+    return indexes
 
 
-def update_path(layer: Layer, paths: dict[int, bool]) -> None:
-    """Assign path to layer."""
-    if len(layer.previous_layer) == 0:
-        # if the layer has no previous one, we create a new path
-        allocate_path_to_layer(layer, paths)
-
-    # Every subsequent layer needs to have a path
-    given = False
-    if len(layer.next_layer) > 0:
-        # Allocate the path to the first child, if pathless
-        if layer.next_layer[0].path is None:
-            layer.next_layer[0].path = layer.path
-            given = True
-        # Allocate paths to other children
+def assign_cst(
+    execution_order: list[Layer],
+) -> dict[int, int]:
+    dict_cst: dict[int, int] = {}
+    visited_layers: set[int] = set()
+    index_count: int = 0
+    available_indexes: deque[int] = deque()
+    for layer in execution_order:
+        visited_layers.add(layer.idx)
+        # Free cst if all successors have been visited
+        for parent in layer.previous_layer:
+            if parent.idx in dict_cst and all(
+                s.idx in visited_layers for s in parent.next_layer
+            ):
+                available_indexes.appendleft(dict_cst[parent.idx])
+        # Allocate cst if layer has more than one child
         if len(layer.next_layer) > 1:
-            for nxt_layer in layer.next_layer[1:]:
-                if len(nxt_layer.previous_layer) == 1 and not given:
-                    # Allocate path to child with a single parent, if available
-                    nxt_layer.path = layer.path
-                    given = True
-                elif nxt_layer.path is not None:
-                    # if the layer already has a path, we do nothing
-                    pass
-                else:
-                    # in any other case, the next layer receive a new path
-                    allocate_path_to_layer(nxt_layer, paths)
-
-    # Close path if not allocated to child
-    if not given:
-        if layer.path is None:
-            msg = "Layer has no path"
-            raise AssertionError(msg)
-        paths[layer.path] = True
-
-
-def to_save(layer: Layer, dict_cst: dict[int, int], sorted_layers: list[Layer]) -> None:
-    """Create the dict {idx_layer:idx_cst} saying if a layer must be stored."""
-    for parent in layer.previous_layer:
-        if parent.idx in dict_cst:
-            # if the previous_layer are in the dict, we add one to the number of next_layer already "taken care of"
-            parent.sorted += 1
-
-    if len(layer.next_layer) > 1:
-        # if the layer has more than one child, it must be stored.
-        if len(dict_cst) == 0:
-            dict_cst[layer.idx] = 1  # if the dict is empty, we create the first cst
-
-        else:
-            given = False
-            # Going through the dict, starting from the end (the opened cst are at the end of the dict)
-            for i in range(len(dict_cst) - 1, -1, -1):
-                # extracting the layer at the i-th position
-                idx = list(dict_cst.keys())[i]
-                past_layer = sorted_layers[idx]
-                # if the layer is complete, we can re-use the same constant
-                if past_layer.sorted == len(past_layer.next_layer):
-                    past_layer.sorted = 0
-                    dict_cst[layer.idx] = dict_cst[past_layer.idx]
-                    given = True
-                    break
-            if not given:  # if no constant have been attributed, we create a new one
-                dict_cst[layer.idx] = list(dict_cst.values())[-1] + 1
+            if len(available_indexes) == 0:
+                available_indexes.append(index_count)
+                index_count += 1
+            dict_cst[layer.idx] = available_indexes.popleft()
+    return dict_cst

@@ -18,6 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
 from acetone_nnet.ir import Layer
 from acetone_nnet.versioning.layer_factories import LayerFactory, implemented
 
@@ -29,6 +30,7 @@ def register_factory(name: str, factory: LayerFactory) -> None:
         raise KeyError(msg)
     implemented[name] = factory
 
+
 def list_all_implementations() -> dict[str, list[str]]:
     implem = {}
     for layer_name in implemented:
@@ -37,11 +39,9 @@ def list_all_implementations() -> dict[str, list[str]]:
     return implem
 
 
-
-
 def versioning(
-        layers: list[Layer],
-        version: dict[int, str],
+    layers: list[Layer],
+    version: dict[int, str | None],
 ) -> list[Layer]:
     """Check layers and change the layer version if needed."""
     keys = list(version.keys())

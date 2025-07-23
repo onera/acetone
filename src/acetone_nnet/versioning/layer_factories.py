@@ -18,20 +18,21 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
 from collections.abc import Callable
 
 from acetone_nnet.ir import Layer
 
 LayerVariant = Callable[[Layer, str], Layer]
 
+
 class LayerFactory:
     """Build Layer implementation."""
 
-    def __init__(self, layer_name:str) -> None:
+    def __init__(self, layer_name: str) -> None:
         """Build default Layer factory."""
         self.layer_name = layer_name
-        self.implementations: dict[str | None, LayerVariant] = {
-        }
+        self.implementations: dict[str | None, LayerVariant] = {}
 
     @property
     def list_implementations(self) -> list[str]:
@@ -59,12 +60,14 @@ class LayerFactory:
 
         return self.implementations[version](layer, version)
 
+
 add_factory = LayerFactory("Add")
 average_factory = LayerFactory("Average")
 average_pooling_factory = LayerFactory("AveragePooling2D")
 batch_normalization_factory = LayerFactory("BatchNormalization")
 concatenate_factory = LayerFactory("Concatenate")
 constant_pad_factory = LayerFactory("ConstantPad")
+constant_factory = LayerFactory("Constant")
 conv2d_factory = LayerFactory("Conv2D")
 dense_factory = LayerFactory("Dense")
 divide_factory = LayerFactory("Divide")
@@ -95,38 +98,39 @@ transpose_factory = LayerFactory("Transpose")
 wrap_pad_factory = LayerFactory("WrapPad")
 
 implemented: dict[str, LayerFactory] = {
-    "Add":add_factory,
-    "Average":average_factory,
-    "AveragePooling2D":average_pooling_factory,
+    "Add": add_factory,
+    "Average": average_factory,
+    "AveragePooling2D": average_pooling_factory,
     "BatchNormalization": batch_normalization_factory,
     "Concatenate": concatenate_factory,
-    "ConstantPad":constant_pad_factory,
+    "Constant": constant_factory,
+    "ConstantPad": constant_pad_factory,
     "Conv2D": conv2d_factory,
     "Dense": dense_factory,
-    "Divide":divide_factory,
-    "EdgePad":edge_pad_factory,
+    "Divide": divide_factory,
+    "EdgePad": edge_pad_factory,
     "Flatten": flatten_factory,
     "Gather": gather_factory,
     "GatherElements": gather_elements_factory,
     "Gemm": gemm_factory,
     "Input_layer": input_factory,
     "MatMul": matmul_factory,
-    "MaxPooling2D":max_pooling_factory,
-    "Maximum":maximum_factory,
-    "Minimum":minimum_factory,
-    "Multiply":multiply_factory,
-    "ReduceMax":reduce_max_factory,
-    "ReduceMean":reduce_mean_factory,
-    "ReduceMin":reduce_min_factory,
-    "ReduceProd":reduce_prod_factory,
-    "ReduceSum":reduce_sum_factory,
-    "ReflectPad":reflect_pad_factory,
-    "ResizeCubic":resize_cubic_factory,
-    "ResizeLinear":resize_linear_factory,
-    "ResizeNearest":resize_nearest_factory,
+    "MaxPooling2D": max_pooling_factory,
+    "Maximum": maximum_factory,
+    "Minimum": minimum_factory,
+    "Multiply": multiply_factory,
+    "ReduceMax": reduce_max_factory,
+    "ReduceMean": reduce_mean_factory,
+    "ReduceMin": reduce_min_factory,
+    "ReduceProd": reduce_prod_factory,
+    "ReduceSum": reduce_sum_factory,
+    "ReflectPad": reflect_pad_factory,
+    "ResizeCubic": resize_cubic_factory,
+    "ResizeLinear": resize_linear_factory,
+    "ResizeNearest": resize_nearest_factory,
     "Softmax": softmax_factory,
-    "Subtract":subtract_factory,
+    "Subtract": subtract_factory,
     "Tile": tile_factory,
     "Transpose": transpose_factory,
-    "WrapPad":wrap_pad_factory,
+    "WrapPad": wrap_pad_factory,
 }

@@ -475,7 +475,7 @@ def load_keras(
             l_temp = current_layer
             layers.append(l_temp)
 
-    layers, list_road, max_road, dict_cst = graph_interpretor.tri_topo(layers)
+    layers, max_road, dict_cst = graph_interpretor.tri_topo(layers)
     layers = [x.find_output_str(dict_cst) for x in layers]
     print("Finished model initialization.")
     return layers, data_type, data_type_py, data_format, max_road, dict_cst

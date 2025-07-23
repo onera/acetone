@@ -136,7 +136,7 @@ def load_onnx(
     data_type, data_type_py = find_data_type(str(data_type))
 
     # Sorting the graph and adding the road to the layers
-    layers, list_road, max_road, dict_cst = tri_topo(layers)
+    layers, max_road, dict_cst = tri_topo(layers)
     layers = [x.find_output_str(dict_cst) for x in layers]
     data_format = "channels_first"
 

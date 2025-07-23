@@ -7,9 +7,7 @@
 {{/path}}
 
 {{#cst}}
-    {{#name}}
 {{data_type}} cst_{{name}}[{{size}}] __attribute__((aligned({{page_size}})));
-    {{/name}}
 {{/cst}}
 
 {{#temp_size}}
