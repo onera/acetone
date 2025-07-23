@@ -7,9 +7,7 @@ extern {{data_type}} output_{{.}}[{{path_size}}];
 {{/path}}
 
 {{#cst}}
-    {{#name}}
 extern {{data_type}} cst_{{name}}[{{size}}];
-    {{/name}}
 {{/cst}}
 
 {{#temp_size}}
