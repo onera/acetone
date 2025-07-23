@@ -48,6 +48,7 @@ from .layers import (
     BatchNormalization,
     Broadcast,
     Concatenate,
+    ConstantLayer,
     Conv2D,
     Conv2D6loops,
     Conv2DGemmTarget,
@@ -80,7 +81,7 @@ class CodeGenerator(ABC):
         target: str = "generic",
         target_page_size: int = 4096,
         nb_tests: int | str = 0,
-        versions: dict[int, str] | dict[str, str] | None = None,
+        versions: dict[int | str, str] | None = None,
         normalize: bool | str = False,
         debug_mode: str | None = None,
         verbose: bool = False,
@@ -124,43 +125,7 @@ class CodeGenerator(ABC):
 
         self.default_implementations = {
             "Conv2D": "6loops",
-            "BatchNormalization": "default",
-            "Concatenate": "default",
-            "Dense": "default",
-            "Flatten": "default",
-            "Gather": "default",
-            "GatherElements": "default",
-            "Gemm": "default",
-            "Input_layer": "default",
-            "MatMul": "default",
-            "Softmax": "default",
-            "Tile": "default",
-            "Transpose": "default",
-            "ReduceMax": "default",
-            "ReduceMean": "default",
-            "ReduceMin": "default",
-            "ReduceProd": "default",
-            "ReduceSum": "default",
-            "ResizeCubic": "default",
-            "ResizeLinear": "default",
-            "ResizeNearest": "default",
-            "Add": "default",
-            "Average": "default",
-            "Divide": "default",
-            "Maximum": "default",
-            "Minimum": "default",
-            "Multiply": "default",
-            "Subtract": "default",
-            "ConstantPad": "default",
-            "EdgePad": "default",
-            "ReflectPad": "default",
-            "WrapPad": "default",
-            "AveragePooling2D": "default",
-            "MaxPooling2D": "default",
         }
-        self.default_implementations = dict(
-            sorted(self.default_implementations.items()),
-        )
         self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
@@ -249,8 +214,8 @@ class CodeGenerator(ABC):
 
     def select_layers_implementation(
         self: Self,
-        versions: dict[int, str] | dict[str, str] | None,
-    ) -> dict[int, str]:
+        versions: dict[int | str, str] | None,
+    ) -> dict[int, str | None]:
         """Create the dictionary used for the versioning.
 
         Parameters
@@ -265,19 +230,18 @@ class CodeGenerator(ABC):
             Name of selected implementation for each layer, if not the default one.
 
         """
-        selected_implementations = {}
+        selected_implementations: dict[int, str | None] = {}
         for layer in self.layers:
-            # Select the default implementation per layer type, if specified
-            d = self.default_implementations.get(layer.name, None)
-            if d is not None:
-                selected_implementations[layer.idx] = d
-
             # Select the implementation based in priority on layer id, or type
             if versions is not None:
                 for k in [layer.idx, layer.name]:
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
                         break
+                else:
+                    # Select the default implementation per layer type, if specified
+                    d = self.default_implementations.get(layer.name, None)
+                    selected_implementations[layer.idx] = d
         return selected_implementations
 
     def load_debug_target(
@@ -434,11 +398,6 @@ class CodeGenerator(ABC):
 
                     # Compute layer output
                     layer_output = layer.forward_path_layer(forward_inputs)
-                    # Fused layer computation is the responsibility of the layer
-                    # if layer.activation_function:
-                    #     layer_output = layer.activation_function.compute(
-                    #         layer_output,
-                    #     )
 
                     # Write Layer output into successors' input
                     for successor in layer.next_layer:
