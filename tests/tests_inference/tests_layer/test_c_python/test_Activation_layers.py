@@ -402,13 +402,7 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
 
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
 
-        # Increase absolute test tolerance for Exp function
-        self.assertListAlmostEqual(
-            acetone_result[0],
-            acetone_result[1],
-            atol=0,
-            rtol=5e-05,
-        )
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
     def testLogONNX(self):
         model_input_name = "X"

@@ -5,12 +5,8 @@ from typing import Any, Self
 import numpy as np
 import onnx
 import pystache
-try:
-    from keras.engine.functional import Functional
-    from keras.engine.sequential import Sequential
-except ImportError:
-    from keras import Model as Functional
-    from keras import Sequential
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
 
 from acetone_nnet import templates
 from acetone_nnet.generator.layers import (

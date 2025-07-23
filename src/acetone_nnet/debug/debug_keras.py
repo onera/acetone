@@ -23,12 +23,8 @@ from pathlib import Path
 
 import keras
 import numpy as np
-try:
-    from keras.engine.functional import Functional
-    from keras.engine.sequential import Sequential
-except ImportError:
-    from keras import Model as Functional
-    from keras import Sequential
+from keras.engine.functional import Functional
+from keras.engine.sequential import Sequential
 
 
 def extract_node_outputs(model: Sequential | Functional) -> list[str]:

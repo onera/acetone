@@ -31,6 +31,7 @@ from acetone_nnet.cli.generate import cli_acetone
 
 class AcetoneTestCase(unittest.TestCase):
     """TestCase class for inference tests."""
+
     def setUp(self) -> None:
         """Create a temp_dir."""
         self.tmpdir = tempfile.TemporaryDirectory()
@@ -71,18 +72,27 @@ def create_initializer_tensor(
     )
 
 
-def read_output_c(path_to_output: str, target: str, trimline: int=-2) -> np.ndarray:
+def read_output_c(path_to_output: str) -> np.ndarray:
     """Read the output file of the C code."""
     with open(path_to_output) as f:
         line = f.readline()
-        words = line[:trimline].split(" ")
-        if target=='generic':
-            return np.array(list(map(float.fromhex, words)))
-        else:
-            return np.array(list(map(int, words)))
+        line = line[:-2].split(" ")
+        line = list(map(float.fromhex, line))
+        line = np.array(line)
+    f.close()
+    return line
 
-def read_output_python(path_to_output: str, target: str) -> np.ndarray:
-    return read_output_c(path_to_output, target, trimline=-3)
+
+def read_output_python(path_to_output: str) -> np.ndarray:
+    """Read the output file of the python code."""
+    with open(path_to_output) as f:
+        line = f.readline()
+        line = line[:-3].split(" ")
+        line = list(map(float.fromhex, line))
+        line = np.array(line)
+    f.close()
+    return line
+
 
 def create_dataset(tmpdir: str, shape: tuple):
     """Create a random dataset."""
@@ -104,7 +114,6 @@ def run_acetone_for_test(
     normalize=False,
     run_generated=True,
     run_reference=True,
-    target='generic',
 ):
     cli_acetone(
         model_file=model,
@@ -114,12 +123,10 @@ def run_acetone_for_test(
         output_dir=tmpdir_name,
         test_dataset_file=datatest_path,
         normalize=normalize,
-        target=target,
-        verbose=True
     )
 
     if run_reference:
-        output_python = read_output_python(tmpdir_name + "/output_python.txt", target).flatten()
+        output_python = read_output_python(tmpdir_name + "/output_python.txt").flatten()
     else:
         output_python = None
 
@@ -136,7 +143,7 @@ def run_acetone_for_test(
             print("\nC code inference failed")
             return np.array([]), output_python
 
-        output_c = read_output_c(tmpdir_name + "/output_c.txt",target).flatten()
+        output_c = read_output_c(tmpdir_name + "/output_c.txt").flatten()
     else:
         output_c = None
 

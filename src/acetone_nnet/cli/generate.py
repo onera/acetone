@@ -22,6 +22,7 @@
 import argparse
 import logging
 import pathlib
+
 from acetone_nnet import CodeGenerator
 
 
@@ -34,16 +35,14 @@ def cli_acetone(
     target: str = "generic",
     target_page_size: int = 4096,
     test_dataset_file: str | None = None,
-    verbose:bool = False,
-    to_hex:bool = True,
     *,
     normalize: bool = False,
 ) -> None:
-    logging.basicConfig(level=logging.INFO if verbose else logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
     """Generate code with ACETONE."""
     logging.info("C CODE GENERATOR FOR NEURAL NETWORKS")
-    logging.info(f'Target {target} selected')
+    print(target, " selected")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+
     net = CodeGenerator(
         file=model_file,
         test_dataset=test_dataset_file,
@@ -53,8 +52,6 @@ def cli_acetone(
         target=target,
         target_page_size=target_page_size,
         versions={"Conv2D": conv_algorithm},
-        verbose=verbose,
-        to_hex=to_hex
     )
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)
@@ -120,13 +117,6 @@ def acetone_generate() -> None:
         help="page size of the target in bytes",
     )
 
-    parser.add_argument(
-        "--verbose",
-        default=False,
-        type=bool,
-        help="verbose logging at INFO level else WARNING level",
-    )
-
     args = parser.parse_args()
 
     cli_acetone(
@@ -139,7 +129,6 @@ def acetone_generate() -> None:
         test_dataset_file=args.dataset,
         normalize=args.normalize,
         target_page_size=args.target_page_size,
-        verbose=args.verbose
     )
 
 

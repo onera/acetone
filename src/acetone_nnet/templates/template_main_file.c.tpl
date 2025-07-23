@@ -55,9 +55,9 @@ int main(int argc, char** argv)
     {
         for (j = 0; j < nn_output_size; ++j)
         {
-            fprintf(fp,"{{format}} ", predictions[i][j]);
+            fprintf(fp,"%a ", predictions[i][j]);
             {{#verbose}}
-            printf("{{format}} ", predictions[i][j]);
+            printf("%.9g ", predictions[i][j]);
             {{/verbose}}
             if (j == nn_output_size - 1)
             {
