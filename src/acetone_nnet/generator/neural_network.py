@@ -372,7 +372,10 @@ class CodeGenerator(ABC):
                 ) -> np.ndarray | list[np.ndarray]:
                     # Prepare inputs for computation
                     inputs: np.ndarray | list[np.ndarray] = []
-                    if not target.previous_layer:
+                    # FIXME Only Input layer should get the inputs
+                    if isinstance(target, ConstantLayer):
+                        inputs = []
+                    elif not target.previous_layer:
                         inputs.append(target_inputs[target.idx][target.idx])
                     else:
                         inputs.extend(
@@ -381,7 +384,11 @@ class CodeGenerator(ABC):
                                 for p in target.previous_layer
                             ],
                         )
-                    return inputs if len(inputs) > 1 else inputs[0]
+                    if inputs and len(inputs) > 1:
+                        return inputs
+                    if inputs:
+                        return inputs[0]
+                    return inputs
 
                 # Forward computation layer by layer
                 #   (Assumes layers are topologically sorted)
