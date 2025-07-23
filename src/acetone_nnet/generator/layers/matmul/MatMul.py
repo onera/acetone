@@ -19,28 +19,28 @@
 ******************************************************************************
 """
 
+import logging
 
 import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
-
 from acetone_nnet.quantize import qform
-import logging
+
 
 class MatMul(Layer):
     """MatMul layer class."""
 
     def __init__(
-            self: Self,
-            original_name : str,
-            idx: int,
-            size: int,
-            input_shapes: list,
-            weights: np.ndarray,
-            side: int,
-            activation_function: ActivationFunctions
+        self: Self,
+        original_name: str,
+        idx: int,
+        size: int,
+        input_shapes: list,
+        weights: np.ndarray,
+        side: int,
+        activation_function: ActivationFunctions,
     ) -> None:
         """Build a MatMul layer."""
         super().__init__()
@@ -108,21 +108,32 @@ class MatMul(Layer):
             if self.weights.shape[-1] != self.input_shapes[-2]:
                 msg = f"Error: non consistency between weight shape and input shape in MatMul ({self.weights.shape[-1]}!={self.input_shapes[-2]})"
                 msg += "\n"
-            if self.size != self.weights.shape[-2] * self.input_shapes[-1] * self.output_channels:
+            if (
+                self.size
+                != self.weights.shape[-2] * self.input_shapes[-1] * self.output_channels
+            ):
                 msg = f"Error: size value in MatMul ({self.size} !={self.weights.shape[-2] * self.input_shapes[-1]})"
                 msg += "\n"
         elif self.side == 0:
             if self.weights.shape[-2] != self.input_shapes[-1]:
                 msg = f"Error: non consistency between weight shape and input shape in MatMul ({self.weights.shape[-2]}!={self.input_shapes[-1]})"
                 msg += "\n"
-            if self.size != self.weights.shape[-1] * self.input_shapes[-2] * self.output_channels:
+            if (
+                self.size
+                != self.weights.shape[-1] * self.input_shapes[-2] * self.output_channels
+            ):
                 msg = f"Error: size value in MatMul ({self.size} !={self.weights.shape[-1] * self.input_shapes[-2]})"
                 msg += "\n"
         elif self.side == 2:
             if self.input_shapes[1][-2] != self.input_shapes[0][-1]:
                 msg = f"Error: non consistency between weight shape and input shape in MatMul ({self.input_shapes[1][-2]}!={self.input_shapes[0][-1]})"
                 msg += "\n"
-            if self.size != self.input_shapes[1][-1] * self.input_shapes[0][-2] * self.output_channels:
+            if (
+                self.size
+                != self.input_shapes[1][-1]
+                * self.input_shapes[0][-2]
+                * self.output_channels
+            ):
                 msg = f"Error: size value in MatMul ({self.size} !={self.input_shapes[1][-1] * self.input_shapes[0][-2]})"
                 msg += "\n"
         else:
@@ -135,20 +146,22 @@ class MatMul(Layer):
         """Generate computation code for layer."""
 
     def compute_post_shift(self):
-        ''' Q compute the rescaling factor '''
-        if hasattr(self,'qparam'):
-            (_,mparam) = qform.parse_q_format(self.qparam)
-            (_,min) = qform.parse_q_format(self.qin)
-            (_,mout) = qform.parse_q_format(self.qout)
+        """Q compute the rescaling factor"""
+        if hasattr(self, "qparam"):
+            (_, mparam) = qform.parse_q_format(self.qparam)
+            (_, min) = qform.parse_q_format(self.qin)
+            (_, mout) = qform.parse_q_format(self.qout)
             qpost_shift = min + mparam - mout
             if qpost_shift < 0:
-                logging.warning(f'MatMul {self} qpost_shift invalid {qpost_shift}, take 0')
+                logging.warning(
+                    f"MatMul {self} qpost_shift invalid {qpost_shift}, take 0",
+                )
                 qpost_shift = 0
             return qpost_shift
 
     def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray | list[np.ndarray],
+        self: Self,
+        input_array: np.ndarray | list[np.ndarray],
     ) -> np.ndarray:
         """Compute output of layer."""
         out = np.array([])
@@ -156,17 +169,17 @@ class MatMul(Layer):
             input_1 = input_array[0].reshape(self.input_shapes[0])
             input_2 = input_array[1].reshape(self.input_shapes[1])
             out = self.activation_function.compute(np.matmul(input_1, input_2))
-        else: 
+        else:
             input_1 = input_array.reshape(self.input_shapes)
-            weights = np.moveaxis(self.weights, 3, 0)
-            weights = np.reshape(weights, (1, 1, weights.shape[-1], weights.shape[0]))
             if self.side == 1:
-                out = np.matmul(weights, input_1)
+                out = np.matmul(self.weights, input_1)
             elif self.side == 0:
-                if np.issubdtype(input_1.dtype,np.integer):
-                    out = np.matmul(input_1, weights, dtype=self.temp_pydtype )
-                    out = np.right_shift(out, self.compute_post_shift()).astype(input_1.dtype)
+                if np.issubdtype(input_1.dtype, np.integer):
+                    out = np.matmul(input_1, self.weights, dtype=self.temp_pydtype)
+                    out = np.right_shift(out, self.compute_post_shift()).astype(
+                        input_1.dtype,
+                    )
                 else:
-                    out = np.matmul(input_1, weights)
+                    out = np.matmul(input_1, self.weights)
             out = self.activation_function.compute(out)
         return out  # Case should not be happening

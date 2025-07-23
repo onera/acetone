@@ -28,6 +28,7 @@ from typing import Any
 import numpy as np
 import onnx
 import pystache
+
 try:
     from keras.engine.functional import Functional
     from keras.engine.sequential import Sequential
@@ -37,6 +38,11 @@ except ImportError:
 from typing_extensions import Self
 
 from acetone_nnet import templates
+from acetone_nnet.importers.parser import parser
+from acetone_nnet.quantize import qform
+from acetone_nnet.templates.template_makefile import TemplateMakefile
+from acetone_nnet.versioning.versioning import versioning
+
 from .layers import (
     AveragePooling2D,
     BatchNormalization,
@@ -60,10 +66,7 @@ from .layers import (
     ResizeNearest,
     Softmax,
 )
-from acetone_nnet.importers.parser import parser
-from acetone_nnet.templates.template_makefile import TemplateMakefile
-from acetone_nnet.versioning.versioning import versioning
-from acetone_nnet.quantize import qform
+
 
 class CodeGenerator(ABC):
     """Main module of ACETONE."""
@@ -92,16 +95,22 @@ class CodeGenerator(ABC):
         self.verbose = verbose
         self.to_hex = to_hex
         self.target_cfg = None
-        if target != 'generic':
+        if target != "generic":
             try:
-                self.target_cfg = json.loads((Path('.') / (target+'.json')).read_text())
+                self.target_cfg = json.loads(
+                    (Path((target + ".json"))).read_text(),
+                )
                 self.to_hex = False
                 logging.info(f'Target configuration {self.target_cfg["name"]} loaded')
             except json.JSONDecodeError as e:
-                logging.warning(f'Target configuration file {target+".json"} parse error: {e}')
-            except FileNotFoundError as e:
-                logging.warning(f'Target configuration file {target+".json"} not found, continue')
-        
+                logging.warning(
+                    f'Target configuration file {target+".json"} parse error: {e}',
+                )
+            except FileNotFoundError:
+                logging.warning(
+                    f'Target configuration file {target+".json"} not found, continue',
+                )
+
         if not self.normalize:
             l, dtype, dtype_py, data_format, maxpath, dict_cst = parser(
                 file_to_parse=self.file,
@@ -149,14 +158,24 @@ class CodeGenerator(ABC):
             "AveragePooling2D": "default",
             "MaxPooling2D": "default",
         }
-        self.default_implementations = dict(sorted(self.default_implementations.items()))
+        self.default_implementations = dict(
+            sorted(self.default_implementations.items()),
+        )
         self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
-        self.data_type = self.target_cfg['quantization']['dtype'] if self.target_cfg is not None else dtype
-        self.data_type_py = np.dtype(self.target_cfg['quantization']['pydtype']) if self.target_cfg is not None else dtype_py
-        logging.info(f'C type {self.data_type}')
-        logging.info(f'py dtype {self.data_type_py}')
+        self.data_type = (
+            self.target_cfg["quantization"]["dtype"]
+            if self.target_cfg is not None
+            else dtype
+        )
+        self.data_type_py = (
+            np.dtype(self.target_cfg["quantization"]["pydtype"])
+            if self.target_cfg is not None
+            else dtype_py
+        )
+        logging.info(f"C type {self.data_type}")
+        logging.info(f"py dtype {self.data_type_py}")
         self.quantize_layers()
         self.maxpath = maxpath
         self.data_format = data_format
@@ -165,10 +184,7 @@ class CodeGenerator(ABC):
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)
 
-        self.test_dataset = self._initialise_dataset(
-            test_dataset,
-            int(nb_tests)
-        )
+        self.test_dataset = self._initialise_dataset(test_dataset, int(nb_tests))
 
         self.files_to_gen = [
             "inference.c",
@@ -231,7 +247,6 @@ class CodeGenerator(ABC):
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
 
-
     def select_layers_implementation(
         self: Self,
         versions: dict[int, str] | dict[str, str] | None,
@@ -288,7 +303,7 @@ class CodeGenerator(ABC):
         match dataset_or_path:
             case None:
                 # Create random dataset for graph.
-                if np.issubdtype(self.data_type_py,np.integer):
+                if np.issubdtype(self.data_type_py, np.integer):
                     d = np.random.default_rng(seed=10).integers(
                         np.iinfo(self.data_type_py).min,
                         np.iinfo(self.data_type_py).max,
@@ -331,11 +346,11 @@ class CodeGenerator(ABC):
                 test_dataset.append(list(map(dtype, contents)))
         return np.array(test_dataset)
 
-    def get_input_shape(self:Self)->list[int]:
+    def get_input_shape(self: Self) -> list[int]:
         """Return the input shape of the model."""
         return self.layers[0].input_shape
 
-    def generate_dataset(self:Self) -> np.ndarray:
+    def generate_dataset(self: Self) -> np.ndarray:
         """Generate a dataset for the model."""
         input_shape = self.get_input_shape()
 
@@ -346,11 +361,10 @@ class CodeGenerator(ABC):
         self.test_dataset = dataset
         return dataset
 
-
     def compute_inference(
         self: Self,
         c_files_directory: str,
-        dataset_or_path: np.ndarray | str | Path | None= None,
+        dataset_or_path: np.ndarray | str | Path | None = None,
     ) -> tuple[list, list] | np.ndarray:
         """Perform inference pass on test dataset."""
         if self.read_ext_input:
@@ -358,7 +372,7 @@ class CodeGenerator(ABC):
                 dataset_or_path=dataset_or_path,
                 nb_tests=self.nb_tests,
                 data_type=self.data_type_py,
-                )
+            )
         else:
             dataset = self.test_dataset
 
@@ -436,18 +450,18 @@ class CodeGenerator(ABC):
                     # Debug Mode
                     if self.debug_mode and layer.idx in self.debug_target:
                         # Add the inference result of the layer to debug_output
-                            debug_output.append(layer_output)
-                            if (self.data_format == "channels_last") and hasattr(
-                                layer,
-                                "output_channels",
-                            ):
-                                debug_output[-1] = np.transpose(
-                                    debug_output[-1],
-                                    (1, 2, 0),
-                                )
-                            debug_output[-1] = debug_output[-1].flatten()
+                        debug_output.append(layer_output)
+                        if (self.data_format == "channels_last") and hasattr(
+                            layer,
+                            "output_channels",
+                        ):
+                            debug_output[-1] = np.transpose(
+                                debug_output[-1],
+                                (1, 2, 0),
+                            )
+                        debug_output[-1] = debug_output[-1].flatten()
 
-                            targets.append(str(layer.name) + " " + str(layer.idx))
+                        targets.append(str(layer.name) + " " + str(layer.idx))
 
                 nn_output = layer_output
 
@@ -472,17 +486,16 @@ class CodeGenerator(ABC):
         return nn_output
 
     def data2c(self, d):
-        if np.issubdtype(self.data_type_py,np.integer):
+        if np.issubdtype(self.data_type_py, np.integer):
             return str(d)
-        elif self.to_hex:
+        if self.to_hex:
             return float.hex(float(d)).replace("0000000p", "p")
-        else:
-            return str(float(d))
+        return str(float(d))
 
     def c2data(self, c):
         return float.fromhex(c) if self.to_hex else float(c)
 
-    def flatten_array_order_c(self:Self, array: np.ndarray) -> str:
+    def flatten_array_order_c(self: Self, array: np.ndarray) -> str:
         """Generate C flat array initializer in C order."""
         flattened_aray = array.flatten(order="C")
         s = "\n        {"
@@ -491,7 +504,8 @@ class CodeGenerator(ABC):
 
         return s
 
-    def flatten_array(self:Self, array: np.ndarray) -> str:
+    # TODO Scheduled for removal
+    def flatten_array(self: Self, array: np.ndarray) -> str:
         """Generate C flat array initializer in Fortran order."""
         s = "\n        {"
         shape = array.shape
@@ -499,7 +513,7 @@ class CodeGenerator(ABC):
             for _i in range(4 - len(shape)):
                 shape = (1, *shape)
             array = np.reshape(array, shape)
-        s_array=[]
+        s_array = []
         for j in range(shape[3]):
             for k in range(shape[0]):
                 for f in range(shape[1]):
@@ -565,8 +579,12 @@ class CodeGenerator(ABC):
                     {
                         "data_type": self.data_type,
                         "read_input": self.read_ext_input,
-                        "verbose":self.verbose,
-                        "format":"%d" if np.issubdtype(self.data_type_py,np.integer) else "%a" if self.to_hex else "%9g",
+                        "verbose": self.verbose,
+                        "format": (
+                            "%d"
+                            if np.issubdtype(self.data_type_py, np.integer)
+                            else "%a" if self.to_hex else "%9g"
+                        ),
                     },
                 ),
             )
@@ -592,8 +610,8 @@ class CodeGenerator(ABC):
             header_files=header_files,
             source_files=source_files,
         )
-        if self.target_cfg is not None and 'cflags' in self.target_cfg:
-            template.add_compiler_flags(self.target_cfg['cflags'])
+        if self.target_cfg is not None and "cflags" in self.target_cfg:
+            template.add_compiler_flags(self.target_cfg["cflags"])
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))
@@ -732,7 +750,11 @@ class CodeGenerator(ABC):
         if self.debug_mode in ["time"]:
             mustach_hash["time"] = True
 
-        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype'] if self.target_cfg is not None else self.data_type 
+        mustach_hash["temp_data_type"] = (
+            self.target_cfg["quantization"]["temp_dtype"]
+            if self.target_cfg is not None
+            else self.data_type
+        )
 
         # Generate parameters per layer
         mustach_hash["layers"] = []
@@ -814,7 +836,11 @@ class CodeGenerator(ABC):
             "data_type": self.data_type,
             "path": list(range(self.maxpath)),
         }
-        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype'] if self.target_cfg is not None else self.data_type 
+        mustach_hash["temp_data_type"] = (
+            self.target_cfg["quantization"]["temp_dtype"]
+            if self.target_cfg is not None
+            else self.data_type
+        )
 
         self.nb_weights_max = 1
         self.nb_biases_max = 1
@@ -904,25 +930,33 @@ class CodeGenerator(ABC):
         if self.target_cfg is not None:
             for l in self.layers:
                 try:
-                    layer_qconf = self.target_cfg['quantization']['layers'][l.name+'_'+str(l.idx)]
-                    l.qparam = layer_qconf['params']
+                    layer_qconf = self.target_cfg["quantization"]["layers"][
+                        l.name + "_" + str(l.idx)
+                    ]
+                    l.qparam = layer_qconf["params"]
                     (_, m) = qform.parse_q_format(l.qparam)
                     if hasattr(l, "weights"):
-                        l.weights = np.rint(l.weights*(2**m-1)).astype(self.data_type_py)
+                        l.weights = np.rint(l.weights * (2**m - 1)).astype(
+                            self.data_type_py,
+                        )
                     if hasattr(l, "biases"):
-                        l.biases = np.rint(l.biases*(2**m-1)).astype(self.data_type_py)
-#                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
-#                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])                   
-#                    l.qpost_shift = in_dec + m - out_dec
-                    l.qin = layer_qconf['in']
-                    l.qout = layer_qconf['out']
-                    logging.info(f'Quantize {l.name}_{l.idx} format {l.qparam}')
-                    l.temp_pydtype = self.target_cfg["quantization"]['temp_pydtype']
-                    l.cdtype = self.target_cfg["quantization"]['dtype']
+                        l.biases = np.rint(l.biases * (2**m - 1)).astype(
+                            self.data_type_py,
+                        )
+                    #                    (_, in_dec) = qform.parse_q_format(layer_qconf['in'])
+                    #                    (_, out_dec) = qform.parse_q_format(layer_qconf['out'])
+                    #                    l.qpost_shift = in_dec + m - out_dec
+                    l.qin = layer_qconf["in"]
+                    l.qout = layer_qconf["out"]
+                    logging.info(f"Quantize {l.name}_{l.idx} format {l.qparam}")
+                    l.temp_pydtype = self.target_cfg["quantization"]["temp_pydtype"]
+                    l.cdtype = self.target_cfg["quantization"]["dtype"]
 
-                except KeyError as e:
+                except KeyError:
                     if hasattr(l, "weights") or hasattr(l, "biases"):
-                        raise KeyError(f'Cannot quantize layer {l.name}_{l.idx}, missing data in target config')
+                        raise KeyError(
+                            f"Cannot quantize layer {l.name}_{l.idx}, missing data in target config",
+                        )
 
     def generate_globalvars_file(
         self: Self,
@@ -963,7 +997,11 @@ class CodeGenerator(ABC):
 
         # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
         mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
-        mustach_hash["temp_data_type"] = self.target_cfg['quantization']['temp_dtype'] if self.target_cfg is not None else self.data_type 
+        mustach_hash["temp_data_type"] = (
+            self.target_cfg["quantization"]["temp_dtype"]
+            if self.target_cfg is not None
+            else self.data_type
+        )
 
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
@@ -974,9 +1012,10 @@ class CodeGenerator(ABC):
             to_print = False
             layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
 
-            if hasattr(layer, "weights"):
+            # FIXME Revert to attribute test once all layers types have been managed
+            if (w := getattr(layer, "weights", None)) is not None:
                 layer_hash["nb_weights"] = layer.nb_weights
-                layer_hash["weights"] = self.flatten_array(layer.weights)
+                layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
                 to_print = True
 
             if hasattr(layer, "biases"):
