@@ -112,6 +112,9 @@ class Tensor(HasTraits):
             return (self.data == other.data).all()
         return False
 
+    def flatten(self, *args, **kwargs):
+        return self.data.flatten(*args, **kwargs)
+
 
 # Provide adapters from numpy array
 register_factory(Tensor, np.ndarray, TensorSpec)
