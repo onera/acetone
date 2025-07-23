@@ -1,5 +1,6 @@
 from functools import wraps
 from inspect import Parameter, signature
+from typing import TypeVar
 
 import numpy as np
 from traits.api import (
@@ -145,7 +146,10 @@ def _add_traits_for_parameters(
                 )
 
 
-def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
+T = TypeVar("T", bound=_OperationBaseLayer)
+
+
+def layer(cls: type[T]) -> type[T]:
     """Transform a callable Operation into an ACETONE layer."""
     # TODO Support additional parameters, T.B.D.
     # TODO Check for default parameters *args and **kwargs
@@ -217,32 +221,23 @@ def layer(cls: type[Operation]) -> type[_OperationBaseLayer]:
                     is_valid = is_valid and v(**{i: kwargs[i]})
             return is_valid
 
-        def __call__(
-            self: Self,
-            *args: Tensor,
-            **kwargs: Tensor,
-        ) -> Tensor:
-            """Apply the operation on the provided inputs."""
-            # TODO Check inputs have the correct shape, if specified
-            # TODO Match inputs with the operation expected ones
-            if not self.validate_inputs():
-                raise InvalidInputError("Invalid inputs")
-            return super().__call__(*args, **kwargs)
-
         def forward_path_layer(
             self: Self,
             inputs: np.ndarray | list[np.ndarray],
         ) -> np.ndarray:
             """Call the underlying operation.
 
-            Defaults to picking the first output.
             Defaults to mapping provided inputs to the underlying operation ones in-order.
             """
+            # TODO Check inputs have the correct shape, if specified
+            # TODO Match inputs with the operation expected ones
+            if not self.validate_inputs():
+                raise InvalidInputError("Invalid inputs")
             match inputs:
                 case list():
-                    return self.__call__(*map(Tensor, inputs)).data
+                    return super().__call__(*map(Tensor, inputs)).data
                 case _:
-                    return self.__call__(Tensor(inputs)).data
+                    return super().__call__(Tensor(inputs)).data
 
         def infer_shape(
             self,
