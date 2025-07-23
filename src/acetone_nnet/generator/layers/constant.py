@@ -26,6 +26,7 @@ from traits.api import HasTraits, Instance, Int, Property, provides
 from typing_extensions import Self
 
 from acetone_nnet.ir import Operation, Tensor, TensorSpec, layer
+from acetone_nnet.versioning.layer_factories import constant_factory
 
 
 @layer
@@ -115,14 +116,14 @@ def constant_default_implementation(
     )
 
 
-# input_factory.register_implementation(
-#     None,
-#     input_default_implementation,
-# )
-# input_factory.register_implementation(
-#     "default",
-#     input_default_implementation,
-# )
+constant_factory.register_implementation(
+    None,
+    constant_default_implementation,
+)
+constant_factory.register_implementation(
+    "default",
+    constant_default_implementation,
+)
 
 if __name__ == "__main__":
     pass
