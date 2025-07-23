@@ -35,7 +35,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
     def testGatherElements1(self):
         in_shape = list(np.random.randint(1, 100, size=3))
         in_shape = (1, int(in_shape[0]), int(in_shape[1]), int(in_shape[2]))
-        out_shape = (1, int(np.random.randint(1, in_shape[1])), int(in_shape[2]), int(in_shape[3]))
+        out_shape = (1, int(np.random.randint(1, 1+in_shape[1])), int(in_shape[2]), int(in_shape[3]))
 
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -47,7 +47,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
                                                out_shape)
 
         indices_name = "indice"
-        indices = indices = np.random.randint(in_shape[1], size=out_shape)
+        indices = np.random.randint(in_shape[1], size=out_shape)
         indices_initializer = acetoneTestCase.create_initializer_tensor(name=indices_name,
                                                                         tensor_array=indices,
                                                                         data_type=onnx.TensorProto.INT32)
@@ -78,7 +78,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
     def testGatherElements2(self):
         in_shape = list(np.random.randint(1, 100, size=3))
         in_shape = (1, int(in_shape[0]), int(in_shape[1]), int(in_shape[2]))
-        out_shape = (1, int(in_shape[1]), int(np.random.randint(1, in_shape[2])), int(in_shape[3]))
+        out_shape = (1, int(in_shape[1]), int(np.random.randint(1, 1+in_shape[2])), int(in_shape[3]))
 
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -90,7 +90,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
                                                out_shape)
 
         indices_name = "indice"
-        indices = indices = np.random.randint(in_shape[2], size=out_shape)
+        indices = np.random.randint(in_shape[2], size=out_shape)
         indices_initializer = acetoneTestCase.create_initializer_tensor(name=indices_name,
                                                                         tensor_array=indices,
                                                                         data_type=onnx.TensorProto.INT32)
@@ -121,7 +121,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
     def testGatherElements3(self):
         in_shape = list(np.random.randint(1, 100, size=3))
         in_shape = (1, int(in_shape[0]), int(in_shape[1]), int(in_shape[2]))
-        out_shape = (1, int(in_shape[1]), int(in_shape[2]), int(np.random.randint(1, in_shape[3])))
+        out_shape = (1, int(in_shape[1]), int(in_shape[2]), int(np.random.randint(1, 1+in_shape[3])))
 
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
@@ -133,7 +133,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
                                                out_shape)
 
         indices_name = "indice"
-        indices = indices = np.random.randint(in_shape[3], size=out_shape)
+        indices = np.random.randint(in_shape[3], size=out_shape)
         indices_initializer = acetoneTestCase.create_initializer_tensor(name=indices_name,
                                                                         tensor_array=indices,
                                                                         data_type=onnx.TensorProto.INT32)
