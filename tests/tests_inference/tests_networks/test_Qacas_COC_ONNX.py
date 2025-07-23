@@ -113,7 +113,7 @@ class TestQAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         writeconf(target_conf) # writes target config AVX512VNNI.json in the CWD
 
         c_result, py_result = acetoneTestCase.run_acetone_for_test(
-            "temp",
+            self.tmpdir_name,
             model_path,
             target='AVX512VNNI'
         )
