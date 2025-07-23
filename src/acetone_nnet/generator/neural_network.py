@@ -840,8 +840,8 @@ class CodeGenerator(ABC):
                     layer.size,
                 )
 
-        for cst in written:
-            mustach_hash["cst"].append({"name": cst, "size": written[cst]})
+        for cst, s in written.items():
+            mustach_hash["cst"].append({"name": cst, "size": s})
 
         # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
         mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
@@ -892,7 +892,7 @@ class CodeGenerator(ABC):
             for l in self.layers:
                 try:
                     layer_qconf = self.target_cfg["quantization"]["layers"][
-                        l.name + "_" + str(l.idx)
+                        l.original_name
                     ]
                     l.qparam = layer_qconf["params"]
                     (_, m) = qform.parse_q_format(l.qparam)
