@@ -125,6 +125,10 @@ class Broadcast(Layer):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
+        if hasattr(self,'qparam'):
+            mustach_hash["quantize"] = True
+            mustach_hash["qshiftr"] = self.compute_post_shift()
+
         mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
 
         mustach_hash["output_channels"] = self.output_channels
@@ -170,10 +174,6 @@ class Broadcast(Layer):
             constant_dict["cst_channels"] = self.input_shapes[-1][1]
             constant_dict["operator"] = self.specific_operator
             mustach_hash["constant"] = [constant_dict]
-
-        if hasattr(self,'qparam'):
-            mustach_hash["qcast"] = f"({self.cdtype})("
-            mustach_hash["qshift"] = f" >> {self.compute_post_shift()})"
 
         with open(self.template_path / "layers" / "template_Broadcast.c.tpl") as template_file:
             template = template_file.read()

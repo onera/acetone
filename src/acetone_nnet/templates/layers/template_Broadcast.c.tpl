@@ -26,8 +26,10 @@
             }
         }
     }
-    
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = {{qcast}}{{{activation_function}}}{{{qshift}}};
+        {{#quantize}}
+        tensor_temp[k] >>= {{qshiftr}};
+        {{/quantize}}
+        output_{{road}}[k] = {{{activation_function}}};
     }
