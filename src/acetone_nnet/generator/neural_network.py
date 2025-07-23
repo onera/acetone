@@ -372,10 +372,7 @@ class CodeGenerator(ABC):
                 ) -> np.ndarray | list[np.ndarray]:
                     # Prepare inputs for computation
                     inputs: np.ndarray | list[np.ndarray] = []
-                    # FIXME Only Input layer should get the inputs
-                    if isinstance(target, ConstantLayer):
-                        inputs = []
-                    elif not target.previous_layer:
+                    if not target.previous_layer:
                         inputs.append(target_inputs[target.idx][target.idx])
                     else:
                         inputs.extend(
@@ -384,11 +381,9 @@ class CodeGenerator(ABC):
                                 for p in target.previous_layer
                             ],
                         )
-                    if inputs and len(inputs) > 1:
+                    if len(inputs) > 1:
                         return inputs
-                    if inputs:
-                        return inputs[0]
-                    return inputs
+                    return inputs[0]
 
                 # Forward computation layer by layer
                 #   (Assumes layers are topologically sorted)
@@ -978,10 +973,14 @@ class CodeGenerator(ABC):
             to_print = False
             layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
 
-            # FIXME Revert to attribute test once all layers types have been managed
             if (w := getattr(layer, "weights", None)) is not None:
                 layer_hash["nb_weights"] = layer.nb_weights
                 layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
+                to_print = True
+
+            if isinstance(layer, ConstantLayer):
+                layer_hash["nb_weights"] = layer.constant.size
+                layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
                 to_print = True
 
             if hasattr(layer, "biases"):

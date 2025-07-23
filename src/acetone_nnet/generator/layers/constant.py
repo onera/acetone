@@ -34,17 +34,17 @@ class ConstantLayer(Layer):
     """Constant tensor layer class."""
 
     #: Constant tensor value
-    weights = Supports(Tensor)
+    constant = Supports(Tensor)
 
     @property
     def nb_weights(self) -> int:
-        return self.weights.size
+        return self.constant.size
 
     #: Output tensor size, used as redundant check
     size = Property(Int())
 
     def _get_size(self) -> int:
-        return self.weights.size
+        return self.constant.size
 
     def _set_size(self, size: int) -> None:
         if size != self.size:
@@ -74,7 +74,7 @@ class ConstantLayer(Layer):
         input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""
-        return self.weights.data
+        return self.constant.data
 
 
 class ConstantLayerDefault(ConstantLayer):
@@ -116,7 +116,7 @@ def constant_default_implementation(
         name=original.name,
         original_name=original.original_name,
         size=original.size,
-        weights=original.weights,
+        constant=original.constant,
     )
 
 
