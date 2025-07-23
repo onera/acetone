@@ -18,8 +18,8 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+from sys import version_info
 
-from .debug_keras import debug_keras
 from .debug_onnx import debug_onnx
 from .debug_tools import (
     compare_result,
@@ -29,6 +29,15 @@ from .debug_tools import (
 )
 
 __all__ = (
-    "debug_keras", "debug_onnx",
-    "compare_result", "extract_outputs_c", "extract_outputs_python", "reorder_outputs",
+    "compare_result",
+    "debug_onnx",
+    "extract_outputs_c",
+    "extract_outputs_python",
+    "reorder_outputs",
 )
+
+if (3, 12) > version_info >= (3, 10):
+    from .debug_keras import debug_keras
+    __all__ += ("debug_keras",)
+
+

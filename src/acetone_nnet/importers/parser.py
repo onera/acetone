@@ -20,11 +20,15 @@
 """
 
 from pathlib import Path
+from sys import version_info
 from typing import Any
 
 import onnx
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
+
+if (3, 12) > version_info >= (3, 10):
+    from keras.engine.functional import Functional
+    from keras.engine.sequential import Sequential
+
 from acetone_nnet.generator import Layer
 
 
@@ -54,7 +58,7 @@ def parser(
             from .ONNX_importer.parser_ONNX import load_onnx
             return load_onnx(file_to_parse, debug)
 
-        if "h5" in extension[-4:]:
+        if (3, 12) > version_info >= (3, 10) and "h5" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
             from .H5_importer.parser_h5 import load_keras
             return load_keras(str(file_to_parse), debug)
@@ -64,9 +68,12 @@ def parser(
             from .NNET_importer.parser_NNET import load_nnet
             return load_nnet(str(file_to_parse), normalize)
 
-        print(f"\nError: model description . {extension[-4:]} not supported")
-        raise TypeError("Error: model description ." + extension[
-                                                       -4:] + " not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
+        m = f"Error: model description .{extension[-4:]} not supported\n"
+        m += "Only description supported are: .nnet,"
+        if (3, 12) > version_info >= (3, 10):
+            m += " .h5,"
+        m+= " .json, .onnx"
+        raise TypeError(m)
 
     # TODO Conditional import/test if onnx is available
     if type(file_to_parse) is onnx.ModelProto:
@@ -74,10 +81,14 @@ def parser(
         return load_onnx(file_to_parse, debug)
 
     # TODO Conditional import/test if keras is available
-    if type(file_to_parse) is Functional or type(file_to_parse) is Sequential:
+    if ((3, 12) > version_info >= (3, 10) and
+            (type(file_to_parse) is Functional or type(file_to_parse) is Sequential)):
         from .H5_importer.parser_h5 import load_keras
         return load_keras(file_to_parse, debug)
 
-    print("\nError: model description .", type(file_to_parse), "not supported")
-    raise TypeError("Error: model description .", type(file_to_parse),
-                    "not supported\nOnly description supported are: .nnet, .h5, .json, .onnx\n")
+    m = f"Error: model description {type(file_to_parse)} not supported\n"
+    m += "Only description supported are: .nnet,"
+    if (3, 12) > version_info >= (3, 10):
+        m += " .h5,"
+    m += " .json, .onnx"
+    raise TypeError(m)

@@ -23,13 +23,16 @@ import json
 import warnings
 from abc import ABC
 from pathlib import Path
+from sys import version_info
 from typing import Any
 
 import numpy as np
 import onnx
 import pystache
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
+
+if (3, 12) >= version_info >= (3, 10):
+    from keras.engine.functional import Functional
+    from keras.engine.sequential import Sequential
 from typing_extensions import Self
 
 from acetone_nnet import templates
@@ -60,13 +63,16 @@ from acetone_nnet.importers.parser import parser
 from acetone_nnet.templates.template_makefile import TemplateMakefile
 from acetone_nnet.versioning.versioning import versioning
 
+MODEL_TYPE = str | Path | onnx.ModelProto
+if (3, 12) > version_info >= (3, 10):
+    MODEL_TYPE = MODEL_TYPE | Sequential | Functional
 
 class CodeGenerator(ABC):
     """Main module of ACETONE."""
 
     def __init__(
         self: Self,
-        file: str | Path | onnx.ModelProto | Functional | Sequential,
+        file: MODEL_TYPE,
         test_dataset: str | np.ndarray | Path | None = None,
         external_input: bool | None = False,
         function_name: str = "inference",
@@ -181,8 +187,7 @@ class CodeGenerator(ABC):
         ### Checking argument type ###
         if not isinstance(
             self.file,
-            str | Path | onnx.ModelProto | Functional | Sequential,
-        ):
+            MODEL_TYPE):
             msg = "Error: model type.\n Format must be: path to model, model ONNX or model Keras"
             raise TypeError(msg)
         if not (
