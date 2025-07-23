@@ -103,6 +103,7 @@ implemented: dict[str, LayerFactory] = {
     "AveragePooling2D": average_pooling_factory,
     "BatchNormalization": batch_normalization_factory,
     "Concatenate": concatenate_factory,
+    "Constant": constant_factory,
     "ConstantPad": constant_pad_factory,
     "Conv2D": conv2d_factory,
     "Dense": dense_factory,

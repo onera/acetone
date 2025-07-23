@@ -22,7 +22,7 @@
 from typing import Any
 
 import pystache
-from traits.api import HasTraits, Instance, Int, Property, provides
+from traits.api import HasTraits, Int, Property, Supports, provides
 from typing_extensions import Self
 
 from acetone_nnet.ir import Operation, Tensor, TensorSpec, layer
@@ -35,7 +35,11 @@ class ConstantLayer(HasTraits):
     """Constant tensor layer class."""
 
     #: Constant tensor value
-    weights = Instance(Tensor)
+    weights = Supports(Tensor)
+
+    @property
+    def nb_weights(self) -> int:
+        return self.weights.size
 
     #: Output tensor size, used as redundant check
     size = Property(Int())
@@ -56,7 +60,7 @@ class ConstantLayer(HasTraits):
     ) -> None:
         super().__init__(**kwargs)
         self.size = size
-        self.name = "Input_layer"
+        self.name = "Constant"
         if original_name == "":
             self.original_name = f"{self.name}_{self.idx}"
         else:

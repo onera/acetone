@@ -58,6 +58,7 @@ from .broadcast import (
     SubtractDefault,
 )
 from .concatenate import Concatenate, ConcatenateDefault
+from .constant import ConstantLayer, ConstantLayerDefault
 from .convolution import (
     Conv2D,
     Conv2D6loops,
