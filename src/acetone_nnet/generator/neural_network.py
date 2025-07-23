@@ -943,7 +943,7 @@ class CodeGenerator(ABC):
                         l.biases = np.rint(l.biases * (2**m - 1)).astype(
                             self.data_type_py,
                         )
-                    if hasattr(l, "constant"):
+                    if hasattr(l, "constant") and l.constant is not None:
                         l.constant = np.rint(l.constant * (2**m - 1)).astype(
                             self.data_type_py,
                         )
