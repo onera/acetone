@@ -316,14 +316,14 @@ if __name__ == "__main__":
 
     @layer
     @provides(Operation)
-    class Input(_N, HasTraits):
-        tensor = Instance(Tensor)
+    class Constant(_N, HasTraits):
+        weights = Instance(Tensor)
 
         def __call__(self) -> Tensor:
-            return self.tensor
+            return self.weights
 
         def _infer_shape(self) -> TensorSpec:
-            return self.tensor
+            return self.weights
 
     from traits.adaptation.api import register_factory
 
@@ -336,8 +336,8 @@ if __name__ == "__main__":
     a = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
     b = np.array([[10], [20], [30]])
 
-    ia = Input(tensor=Tensor(a))
-    ib = Input(tensor=Tensor(b))
+    ia = Constant(tensor=Tensor(a))
+    ib = Constant(tensor=Tensor(b))
 
     m = Matmul(a=ia, b=ib)
     print(m.infer_shape().shape)
