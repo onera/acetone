@@ -21,6 +21,7 @@
 
 from collections import deque
 
+from acetone_nnet.generator.layers import ConstantLayer
 from acetone_nnet.ir import Layer
 
 
@@ -38,6 +39,14 @@ def tri_topo(dnn: list) -> tuple[list[Layer], int, dict[int, int]]:
         # If the node isn't sorted, we sort it
         if layer.idx not in visited_layers:
             parcours_prof_topo(sorted_layers, layer, visited_layers)
+    # FIX Prevent constants from being mistaken as Input or Output
+    other_layers, constants = [], []
+    for i in sorted_layers:
+        if isinstance(i, ConstantLayer):
+            constants.append(i)
+        else:
+            other_layers.append(i)
+    sorted_layers = [other_layers[0]] + constants + other_layers[1:]
     # Allocate temp variable to layers
     assign_liveliness_index(sorted_layers)
     dict_cst = assign_cst(sorted_layers)
