@@ -105,7 +105,6 @@ def writeconf(conf):
 
 class TestQAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
     """Inference test for Quantized ACAS COC, ONNX model."""
-    @unittest.expectedFailure
     def test_Qacas_coc_onnx_python(self) -> None:
         """Tests Acas COC, ONNX model, compare between python et C code."""
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"
