@@ -20,25 +20,27 @@
 import tempfile
 import unittest
 
-import acetone_nnet
 import numpy as np
 import onnx
-from acetone_nnet import Layer
 from keras.engine.functional import Functional
 from keras.engine.sequential import Sequential
 
+import acetone_nnet
+from acetone_nnet import Layer
+
 
 def create_initializer_tensor(
-        name: str,
-        tensor_array: np.ndarray,
-        data_type: onnx.TensorProto = onnx.TensorProto.FLOAT,
+    name: str,
+    tensor_array: np.ndarray,
+    data_type: onnx.TensorProto = onnx.TensorProto.FLOAT,
 ) -> onnx.TensorProto:
     """Create a TensorProto."""
     return onnx.helper.make_tensor(
         name=name,
         data_type=data_type,
         dims=tensor_array.shape,
-        vals=tensor_array.flatten().tolist())
+        vals=tensor_array.flatten().tolist(),
+    )
 
 
 class ImporterTestCase(unittest.TestCase):
@@ -54,22 +56,24 @@ class ImporterTestCase(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def import_layers(
-            self,
-            file: str | onnx.ModelProto | Functional | Sequential,
-            versions: dict[int, str] | dict[str, str] | None = None,
+        self,
+        file: str | onnx.ModelProto | Functional | Sequential,
+        versions: dict[int, str] | dict[str, str] | None = None,
     ) -> acetone_nnet.generator.CodeGenerator:
         """Create the CodeGenerator object from the file."""
-        return acetone_nnet.CodeGenerator(file=file,
-                                          test_dataset_file=None,
-                                          function_name="inference",
-                                          nb_tests=1,
-                                          versions=versions,
-                                          normalize=False)
+        return acetone_nnet.CodeGenerator(
+            file=file,
+            test_dataset_file=None,
+            function_name="inference",
+            nb_tests=1,
+            versions=versions,
+            normalize=False,
+        )
 
     def assert_layers_equals(
-            self,
-            actual: Layer,
-            desired: Layer,
+        self,
+        actual: Layer,
+        desired: Layer,
     ) -> None:
         """Compare two layers."""
         mismatched_type = []
@@ -85,10 +89,12 @@ class ImporterTestCase(unittest.TestCase):
 
         if actual != desired:
             if type(actual) is type(desired):
-                err_msg = ("Type mismatch: "
-                           + type(actual).__name__
-                           + " and "
-                           + type(desired).__name__)
+                err_msg = (
+                    "Type mismatch: "
+                    + type(actual).__name__
+                    + " and "
+                    + type(desired).__name__
+                )
             else:
                 keys = list(actual.__dict__.keys())
                 mismatched_keys = []
@@ -98,21 +104,23 @@ class ImporterTestCase(unittest.TestCase):
                 err_msg = "Attribute mismatch: \n"
                 msg = []
                 for mismatch in mismatched_keys:
-                    msg.append(mismatch
-                               + " ("
-                               + str(actual.__dict__[mismatch])
-                               + " and "
-                               + str(desired.__dict__[mismatch])
-                               + ")")
+                    msg.append(
+                        mismatch
+                        + " ("
+                        + str(actual.__dict__[mismatch])
+                        + " and "
+                        + str(desired.__dict__[mismatch])
+                        + ")",
+                    )
                 err_msg += "\n".join(msg)
 
             raise AssertionError(err_msg)
 
     def assert_list_layers_equals(
-            self,
-            actual: list,
-            desired: list,
-            verbose: bool = True,
+        self,
+        actual: list,
+        desired: list,
+        verbose: bool = True,
     ) -> None:
         """Compare two lis of layers."""
         if len(actual) != len(desired):
@@ -139,11 +147,16 @@ class ImporterTestCase(unittest.TestCase):
             layer2 = desired[i]
             if layer1 != layer2:
                 layer_msg = "Layer " + str(i) + "\n"
-                if type(layer1) is type(layer2):
-                    layer_msg += ("Type mismatch: "
-                                  + type(layer1).__name__
-                                  + " and "
-                                  + type(layer2).__name__)
+                if not isinstance(layer1, type(layer2)) or not isinstance(
+                    layer2,
+                    type(layer1),
+                ):
+                    layer_msg += (
+                        "Type mismatch: "
+                        + type(layer1).__name__
+                        + " and "
+                        + type(layer2).__name__
+                    )
                 else:
                     keys = list(layer1.__dict__.keys())
                     mismatched_keys = []
@@ -152,29 +165,30 @@ class ImporterTestCase(unittest.TestCase):
                             continue
 
                         if type(layer1.__dict__[attribute]) is np.ndarray:
-                            if (layer1.__dict__[attribute] != layer2.__dict__[attribute]).any():
+                            if not (
+                                layer1.__dict__[attribute] == layer2.__dict__[attribute]
+                            ).all():
                                 mismatched_keys.append(attribute)
                         elif layer1.__dict__[attribute] != layer2.__dict__[attribute]:
                             mismatched_keys.append(attribute)
-                    layer_msg += "Attribut mismatch: \n"
+                    layer_msg += "Attribute mismatch: \n"
                     msg = []
                     for mismatch in mismatched_keys:
-                        msg.append(mismatch
-                                   + " ("
-                                   + str(layer1.__dict__[mismatch])
-                                   + " and "
-                                   + str(layer2.__dict__[mismatch])
-                                   + ")")
+                        msg.append(
+                            mismatch
+                            + " ("
+                            + str(layer1.__dict__[mismatch])
+                            + " and "
+                            + str(layer2.__dict__[mismatch])
+                            + ")",
+                        )
                     layer_msg += "\n".join(msg)
                 err_msg.append(layer_msg)
 
         if err_msg and verbose:
             nb_err = len(err_msg)
             err_msg = "\n".join(err_msg)
-            err_msg = ("Mismatch Layers: "
-                       + str(nb_err)
-                       + "/"
-                       + str(length)
-                       + "\n"
-                       + err_msg)
+            err_msg = (
+                "Mismatch Layers: " + str(nb_err) + "/" + str(length) + "\n" + err_msg
+            )
             raise AssertionError(err_msg)

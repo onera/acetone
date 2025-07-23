@@ -54,10 +54,8 @@ class ResizeLinearDefault(ResizeLinear):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        if self.activation_function.name != "linear":
-            mustach_hash["linear"] = True
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
+            f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
 
         mustach_hash["output_channels"] = self.output_channels
         mustach_hash["output_height"] = self.output_height
@@ -85,12 +83,6 @@ class ResizeLinearDefault(ResizeLinear):
             mustach_hash["coordinate_transformation_mode_y"] = self.coordinate_transformation_mode_mapping[
                 self.coordinate_transformation_mode]("j", 3, "y")
             dimension = "2D"
-
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]",
-                self.idx,
-                f"j + {self.output_width}*(i + {self.output_height}*f)")
 
         with open(self.template_dict[dimension]) as template_file:
             template = template_file.read()

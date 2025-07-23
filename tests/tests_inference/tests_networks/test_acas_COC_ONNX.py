@@ -51,7 +51,6 @@ class TestAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         )
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
-    @unittest.expectedFailure
     def test_acas_coc_onnx_python_ref(self) -> None:
         """Tests Acas COC, ONNX model, compare between onnx et C code."""
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"

@@ -35,21 +35,23 @@ class GemmDefault(Gemm):
         super().__init__(**kwargs)
         self.version = version
 
-        self.algo_gemm_mapping = {(0, 0): self.write_gemm_nn,
-                                  (0, 1): self.write_gemm_nt,
-                                  (1, 1): self.write_gemm_tt,
-                                  (1, 0): self.write_gemm_tn}
+        self.algo_gemm_mapping = {
+            (0, 0): self.write_gemm_nn,
+            (0, 1): self.write_gemm_nt,
+            (1, 1): self.write_gemm_tt,
+            (1, 0): self.write_gemm_tn,
+        }
 
     # The various ways to compute the operation:
 
     # None of the tensor ar transposed
     def write_gemm_nn(
-            self: Self,
-            m: int,
-            n: int,
-            k: int,
-            a: str,
-            b: str,
+        self: Self,
+        m: int,
+        n: int,
+        k: int,
+        a: str,
+        b: str,
     ) -> str:
         """Generate computation code for nn gemm."""
         mustach_hash = {}
@@ -62,31 +64,27 @@ class GemmDefault(Gemm):
         mustach_hash["k"] = k
         mustach_hash["A"] = a
         mustach_hash["B"] = b
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
+        mustach_hash["activation_function"] = (
+            self.activation_function.write_activation_str("output")
+        )
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output",
-                self.idx,
-                f"i*{self.ldC} + j")
 
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
-        with open(self.template_path / "layers" / "Gemm" / "template_gemm_nn.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "Gemm" / "template_gemm_nn.c.tpl"
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
     def write_gemm_nt(
-            self: Self,
-            m: int,
-            n: int,
-            k: int,
-            a: str,
-            b: str,
+        self: Self,
+        m: int,
+        n: int,
+        k: int,
+        a: str,
+        b: str,
     ) -> str:
         """Generate computation code for nt gemm."""
         mustach_hash = {}
@@ -98,31 +96,27 @@ class GemmDefault(Gemm):
         mustach_hash["k"] = k
         mustach_hash["A"] = a
         mustach_hash["B"] = b
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
+        mustach_hash["activation_function"] = (
+            self.activation_function.write_activation_str("output")
+        )
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output",
-                self.idx,
-                f"i*{self.ldC} + j")
 
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
-        with open(self.template_path / "layers" / "Gemm" / "template_gemm_nt.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "Gemm" / "template_gemm_nt.c.tpl"
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
     def write_gemm_tn(
-            self: Self,
-            m: int,
-            n: int,
-            k: int,
-            a: str,
-            b: str,
+        self: Self,
+        m: int,
+        n: int,
+        k: int,
+        a: str,
+        b: str,
     ) -> str:
         """Generate computation code for tn gemm."""
         mustach_hash = {}
@@ -134,31 +128,27 @@ class GemmDefault(Gemm):
         mustach_hash["k"] = k
         mustach_hash["A"] = a
         mustach_hash["B"] = b
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("output")
+        mustach_hash["activation_function"] = (
+            self.activation_function.write_activation_str("output")
+        )
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output",
-                self.idx,
-                f"i*{self.ldC} + j")
 
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
-        with open(self.template_path / "layers" / "Gemm" / "template_gemm_tn.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "Gemm" / "template_gemm_tn.c.tpl"
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
         return pystache.render(template, mustach_hash)
 
     def write_gemm_tt(
-            self: Self,
-            m: int,
-            n: int,
-            k: int,
-            a: str,
-            b: str,
+        self: Self,
+        m: int,
+        n: int,
+        k: int,
+        a: str,
+        b: str,
     ) -> str:
         """Generate computation code for tt gemm."""
         mustach_hash = {}
@@ -170,19 +160,15 @@ class GemmDefault(Gemm):
         mustach_hash["k"] = k
         mustach_hash["A"] = a
         mustach_hash["B"] = b
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("sum")
+        mustach_hash["activation_function"] = (
+            self.activation_function.write_activation_str("sum")
+        )
         mustach_hash["alpha"] = self.alpha
         mustach_hash["beta"] = self.beta
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                f"output_{self.path}",
-                self.idx,
-                f"i*{self.ldC} + j")
 
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
-        with open(self.template_path / "layers" / "Gemm" / "template_gemm_tt.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "Gemm" / "template_gemm_tt.c.tpl"
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -204,17 +190,21 @@ class GemmDefault(Gemm):
                 self.output_height,
                 self.output_width,
                 self.input_height,
+                self.previous_layer[0].output_str,
                 f"weights_{self.name}_{self.idx:02d}",
-                self.previous_layer[0].output_str)
+            )
         else:
             mustach_hash["gemm_code"] = self.algo_gemm_mapping[self.transpo](
                 self.output_height,
                 self.output_width,
                 self.input_width,
+                self.previous_layer[0].output_str,
                 f"weights_{self.name}_{self.idx:02d}",
-                self.previous_layer[0].output_str)
+            )
 
-        with open(self.template_path / "layers" / "Gemm" / "template_Gemm.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "Gemm" / "template_Gemm.c.tpl"
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -222,8 +212,8 @@ class GemmDefault(Gemm):
 
 
 def gemm_default_implementation(
-        old_layer: Gemm,
-        version: str,
+    old_layer: Gemm,
+    version: str,
 ) -> GemmDefault:
     """Create a Gemm_Default layer using the attributes of old_layer."""
     return GemmDefault(

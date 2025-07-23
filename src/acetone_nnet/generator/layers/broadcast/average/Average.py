@@ -23,7 +23,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 # Average of several tensor
@@ -51,11 +51,11 @@ class Average(Layer):
             self.original_name = original_name
         self.specific_operator = " + "
         self.input_shapes = input_shapes
+        self.activation_function = activation_function
 
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.output_channels = output_shape[1]
-        self.activation_function = activation_function
         self.constant = constant
         if constant is not None:
             self.constant_size = self.count_elements_array(self.constant)
@@ -84,10 +84,6 @@ class Average(Layer):
                 if "int" not in type(shape).__name__:
                     msg += "Error: input_shape in Broadcast (all dim must be int)"
                     msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Broadcast "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if type(self.constant) is not np.ndarray and self.constant is not None:
             msg += "Error: constant type in Broadcast"
             msg += "\n"

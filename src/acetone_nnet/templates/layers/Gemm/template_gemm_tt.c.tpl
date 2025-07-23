@@ -6,17 +6,9 @@
             float register sum = 0;
             for (p = 0; p < {{k}}; ++p)
             {
-                sum += {{#alpha}}{{.}}*{{/alpha}}{{A}}[p*{{m}} +i]*{{#direct}}*{{/direct}}({{B}}[p*{{n}}+j]);
+                sum += {{#alpha}}{{.}}*{{/alpha}}{{A}}[p*{{m}} +i]*{{#direct}}*{{/direct}}({{B}}[j*{{k}}+p]);
             }
-            sum += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[i];
-        {{^fused_layer}}
-            tensor_temp[j*{{n}}+i] = {{{activation_function}}};
-        {{/fused_layer}}
-        {{#fused_layer}}
-            {{^linear}}
-            sum = {{{activation_function}}};
-            {{/linear}}
-            tensor_temp[j*{{n}}+i] = {{{fused_layer}}};
-        {{/fused_layer}}            
+            sum += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[j];
+            tensor_temp[i*{{n}}+j] = {{{activation_function}}};
         }
     }

@@ -26,7 +26,7 @@ import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 # The class of the Layers which compute operation with broadcast numpy style
@@ -50,9 +50,8 @@ class Broadcast(Layer):
         super().__init__()
         self.idx = idx
         self.size = size
-        self.name = ""
-        self.original_name = original_name
         self.input_shapes = input_shapes
+        self.original_name = original_name
 
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
@@ -87,10 +86,6 @@ class Broadcast(Layer):
                 if "int" not in type(shape).__name__:
                     msg += "Error: input_shape in Broadcast (all dim must be int)"
                     msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Broadcast "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if type(self.constant) is not np.ndarray and self.constant is not None:
             msg += "Error: constant type in Broadcast"
             msg += "\n"
@@ -129,6 +124,10 @@ class Broadcast(Layer):
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
+
+        if hasattr(self,'qparam'):
+            mustach_hash["quantize"] = True
+            mustach_hash["qshiftr"] = self.compute_post_shift()
 
         mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
 

@@ -20,24 +20,23 @@
 """
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 class Dense(Layer):
     """Dense layer class."""
 
     def __init__(
-            self: Self,
-            original_name : str,
-            idx: int,
-            size: int,
-            weights: np.ndarray,
-            biases: np.ndarray,
-            activation_function: ActivationFunctions,
+        self: Self,
+        original_name: str,
+        idx: int,
+        size: int,
+        weights: np.ndarray,
+        biases: np.ndarray,
+        activation_function: ActivationFunctions,
     ) -> None:
         """Build a Dense layer."""
         super().__init__()
@@ -59,21 +58,11 @@ class Dense(Layer):
 
         ### Checking argument type ###
         msg = ""
-        if type(self.idx) is not int:
-            msg += "Error: idx type in Dense (idx must be int)"
-            msg += "\n"
-        if type(self.size) is not int:
-            msg += "Error: size type in Dense (size must be int)"
-            msg += "\n"
         if type(self.weights) is not np.ndarray:
             msg += "Error: weights in Dense (weights must be an numpy array)"
             msg += "\n"
         if type(self.biases) is not np.ndarray:
             msg += "Error: biases in Dense (biases must be an numpy array)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Dense "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
             msg += "\n"
         if msg:
             raise TypeError(msg)
@@ -81,12 +70,16 @@ class Dense(Layer):
         ### Checking value consistency ###
         msg = ""
         if self.size != self.weights.shape[-1]:
-            msg += (f"Error: non consistency between weight shape and output shape in Dense "
-                    f"({self.size}!={self.weights.shape[-1]})")
+            msg += (
+                f"Error: non consistency between weight shape and output shape in Dense "
+                f"({self.size}!={self.weights.shape[-1]})"
+            )
             msg += "\n"
         if self.size != self.biases.shape[0]:
-            msg += (f"Error: non consistency between biases shape and output shape in Dense "
-                    f"({self.size}!={self.weights.shape[-1]})")
+            msg += (
+                f"Error: non consistency between biases shape and output shape in Dense "
+                f"({self.size}!={self.weights.shape[-1]})"
+            )
             msg += "\n"
         if msg:
             raise ValueError(msg)
@@ -95,8 +88,8 @@ class Dense(Layer):
         """Generate computation code for layer."""
 
     def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
+        self: Self,
+        input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""
         input_array = input_array.reshape(self.previous_layer[0].size)

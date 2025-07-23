@@ -18,6 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+
 from typing import Any
 
 import numpy as np
@@ -35,7 +36,6 @@ from acetone_nnet.generator.activation_functions import (
 )
 from acetone_nnet.generator.layers import (
     Add,
-    AddBias,
     Average,
     AveragePooling2D,
     BatchNormalization,
@@ -73,8 +73,8 @@ from acetone_nnet.generator.layers import (
 
 
 def create_resize_obj(
-        mode: bytes,
-        **kwargs: object,
+    mode: bytes,
+    **kwargs: object,
 ) -> ResizeCubic | ResizeLinear | ResizeNearest:
     """Create a resize layer."""
     if mode == b"nearest":
@@ -90,8 +90,8 @@ def create_resize_obj(
 
 
 def create_pad_obj(
-        mode: bytes,
-        **kwargs: object,
+    mode: bytes,
+    **kwargs: object,
 ) -> ConstantPad | EdgePad | WrapPad | ReflectPad:
     """Create a Pad layer."""
     if mode == b"constant":
@@ -111,8 +111,8 @@ def create_pad_obj(
 
 # Go find the constant named initializer_name in model(an onnx model)
 def look_for_initializer(
-        initializer_name: str,
-        model: onnx.ModelProto,
+    initializer_name: str,
+    model: onnx.ModelProto,
 ) -> onnx.TensorProto | list:
     """Find the initializer named initializer_name."""
     if initializer_name == "":
@@ -140,16 +140,22 @@ def get_shape(shape_name: str, model: onnx.ModelProto) -> list[int]:
     shape_length = 4
     for info in model.graph.value_info:
         if shape_name == info.name:
-            shape = [info.type.tensor_type.shape.dim[i].dim_value
-                     for i in range(len(info.type.tensor_type.shape.dim))]
+            shape = [
+                info.type.tensor_type.shape.dim[i].dim_value
+                for i in range(len(info.type.tensor_type.shape.dim))
+            ]
     for input_layer in model.graph.input:
         if shape_name == input_layer.name:
-            shape = [input_layer.type.tensor_type.shape.dim[i].dim_value for i in
-                     range(len(input_layer.type.tensor_type.shape.dim))]
+            shape = [
+                input_layer.type.tensor_type.shape.dim[i].dim_value
+                for i in range(len(input_layer.type.tensor_type.shape.dim))
+            ]
     for output in model.graph.output:
         if shape_name == output.name:
-            shape = [output.type.tensor_type.shape.dim[i].dim_value for i in
-                     range(len(output.type.tensor_type.shape.dim))]
+            shape = [
+                output.type.tensor_type.shape.dim[i].dim_value
+                for i in range(len(output.type.tensor_type.shape.dim))
+            ]
     for i in range(len(shape)):
         if shape[i] == 0:
             shape[i] = 1
@@ -170,16 +176,19 @@ def find_size(output_shape: list) -> int:
 
 ###### Functions to create a Layer ######
 
+
 # Create an input layers
 def create_input_layer(
-        input_layer: onnx.NodeProto,
-        idx: int,
-        dict_output: dict,
+    input_layer: onnx.NodeProto,
+    idx: int,
+    dict_output: dict,
 ) -> InputLayer:
     """Create an Input layer."""
     dict_output[input_layer.name] = idx
-    output_shape = [input_layer.type.tensor_type.shape.dim[i].dim_value for i in
-                    range(len(input_layer.type.tensor_type.shape.dim))]
+    output_shape = [
+        input_layer.type.tensor_type.shape.dim[i].dim_value
+        for i in range(len(input_layer.type.tensor_type.shape.dim))
+    ]
     size = find_size(output_shape)
 
     return InputLayer(
@@ -193,11 +202,11 @@ def create_input_layer(
 
 # Create a layer Softmax
 def create_softmax(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Softmax:
     """Create a Softmax layer."""
     onnx_version_change_implementation = 13
@@ -225,11 +234,11 @@ def create_softmax(
 
 # Create a layer Conv
 def create_conv(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Conv2D:
     """Create a Conv2D layer."""
     input_shape = get_shape(node.input[0], model)
@@ -237,8 +246,10 @@ def create_conv(
     size = find_size(output_shape)
     dict_input[idx] = [node.input[0]]
     dict_output[node.output[0]] = idx
-    initializers = [look_for_initializer(initializer_name, model)
-                    for initializer_name in node.input[1:]]
+    initializers = [
+        look_for_initializer(initializer_name, model)
+        for initializer_name in node.input[1:]
+    ]
     attributes = extract_attributes(node)
     if "dilations" not in attributes:
         attributes["dilations"] = [1]
@@ -259,6 +270,8 @@ def create_conv(
         biases = onnx.numpy_helper.to_array(initializers[1])
     else:
         biases = np.zeros(output_shape[1])
+    # Collect weights from ONNX, in the expected FCHW format
+    weights = onnx.numpy_helper.to_array(initializers[0])
 
     return Conv2D(
         conv_algorithm="specs",
@@ -273,7 +286,7 @@ def create_conv(
         nb_filters=initializers[0].dims[0],
         input_shape=input_shape,
         output_shape=output_shape,
-        weights=np.moveaxis(onnx.numpy_helper.to_array(initializers[0]), 0, 3),
+        weights=weights,
         biases=biases,
         activation_function=Linear(),
     )
@@ -281,11 +294,11 @@ def create_conv(
 
 # Create a layer Concat
 def create_concat(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Concatenate:
     """Create a Concatenate layer."""
     input_shapes = []
@@ -309,8 +322,8 @@ def create_concat(
 
 # Create a layer Resize
 def resize_set_default_attributes_values(
-        attributes: dict[str, Any],
-        input_shape: list[int] | np.ndarray,
+    attributes: dict[str, Any],
+    input_shape: list[int] | np.ndarray,
 ) -> dict[str, Any]:
     """Set default value in attributes."""
     if "axes" not in attributes:
@@ -337,11 +350,11 @@ def resize_set_default_attributes_values(
 
 
 def create_resize(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> ResizeCubic | ResizeLinear | ResizeNearest:
     """Create a Resize layer."""
     input_shape = get_shape(node.input[0], model)
@@ -349,8 +362,10 @@ def create_resize(
     size = find_size(output_shape)
     dict_input[idx] = [node.input[0]]
     dict_output[node.output[0]] = idx
-    initializers = [look_for_initializer(initializer_name, model)
-                    for initializer_name in node.input[1:]]
+    initializers = [
+        look_for_initializer(initializer_name, model)
+        for initializer_name in node.input[1:]
+    ]
     attributes = extract_attributes(node)
     attributes = resize_set_default_attributes_values(attributes, input_shape)
 
@@ -387,11 +402,11 @@ def create_resize(
 
 # create a layer Pad
 def create_pad(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> ConstantPad | EdgePad | WrapPad | ReflectPad:
     """Create a Pad layer."""
     input_shape = get_shape(node.input[0], model)
@@ -399,8 +414,10 @@ def create_pad(
     size = find_size(output_shape)
     dict_input[idx] = [node.input[0]]
     dict_output[node.output[0]] = idx
-    initializers = [look_for_initializer(initializer_name, model)
-                    for initializer_name in node.input[1:]]
+    initializers = [
+        look_for_initializer(initializer_name, model)
+        for initializer_name in node.input[1:]
+    ]
     attributes = extract_attributes(node)
 
     initializer_length = 2
@@ -418,21 +435,21 @@ def create_pad(
         original_name=node.name,
         idx=idx,
         size=size,
-        pads=list(map(int,onnx.numpy_helper.to_array(initializers[0]))),
+        pads=list(map(int, onnx.numpy_helper.to_array(initializers[0]))),
         constant_value=float(onnx.numpy_helper.to_array(initializers[1])),
         axes=axes,
-        input_shape=list(map(int,input_shape)),
+        input_shape=list(map(int, input_shape)),
         activation_function=Linear(),
     )
 
 
 # create a layer Gather
 def create_gather(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Gather:
     """Create a Gather layer."""
     input_shape = get_shape(node.input[0], model)
@@ -460,11 +477,11 @@ def create_gather(
 
 # create a layer Gather
 def create_gather_elements(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> GatherElements:
     """Create a GatherElements layer."""
     input_shape = get_shape(node.input[0], model)
@@ -492,11 +509,11 @@ def create_gather_elements(
 
 # create a layer Gemm
 def create_gemm(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Gemm:
     """Create a Gemm layer."""
     input_shape = get_shape(node.input[0], model)
@@ -535,7 +552,7 @@ def create_gemm(
 
 
 def matmul_compute_shape(
-        shape: list,
+    shape: list,
 ) -> list:
     """Compute the shape of input/output tensor for MatMul(W,T)."""
     count_value = 3
@@ -549,11 +566,11 @@ def matmul_compute_shape(
 
 
 def create_matmul(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> MatMul:
     """Create a MatMul layer."""
     output_shape = get_shape(node.output[0], model)
@@ -566,7 +583,7 @@ def create_matmul(
     side = -1
     if left_tensor or right_tensor:
         if right_tensor and not left_tensor:
-            # the weight is the right tensor:  MatMul(W,T)
+            # the weight is the left tensor:  MatMul(W, T)
             side = 1
             input_shape = get_shape(node.input[1], model)
 
@@ -574,16 +591,14 @@ def create_matmul(
             output_shape = matmul_compute_shape(output_shape)
 
             weights = onnx.numpy_helper.to_array(right_tensor)
-            weights = np.reshape(weights, (input_shape[-2], 1, 1, output_shape[-2]))
-            weights = np.moveaxis(weights, 0, 3)
+            weights = np.reshape(weights, (1, 1, output_shape[-2], input_shape[-2]))
             dict_input[idx] = [node.input[1]]
         if left_tensor and not right_tensor:
-            # the weight is the left tensor:  MatMul(T,W)
+            # the weight is the right tensor:  MatMul(T, W)
             side = 0
             input_shape = get_shape(node.input[0], model)
             weights = onnx.numpy_helper.to_array(left_tensor)
-            weights = np.reshape(weights, (output_shape[-1], 1, 1, input_shape[-1]))
-            weights = np.moveaxis(weights, 0, 3)
+            weights = np.reshape(weights, (1, 1, input_shape[-1], output_shape[-1]))
             dict_input[idx] = [node.input[0]]
     else:
         dict_input[idx] = node.input
@@ -605,11 +620,11 @@ def create_matmul(
 
 
 def create_batch_norm(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> BatchNormalization:
     """Create a BatchNorm layer."""
     output_shape = get_shape(node.output[0], model)
@@ -641,11 +656,11 @@ def create_batch_norm(
 
 
 def create_transpose(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Transpose:
     """Create a Transpose layer."""
     input_shape = get_shape(node.input[0], model)
@@ -665,11 +680,11 @@ def create_transpose(
 
 
 def create_tile(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Tile:
     """Create a Tile layer."""
     input_shape = get_shape(node.input[0], model)
@@ -695,11 +710,11 @@ def create_tile(
 
 
 def create_reduce_sum(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> ReduceSum:
     """Create a ReduceSum layer."""
     onnx_version_change_implementation = 13
@@ -742,11 +757,11 @@ def create_reduce_sum(
 
 
 def create_reduce_max(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> ReduceMax:
     """Create a ReduceMax layer."""
     onnx_version_change_implementation = 18
@@ -789,11 +804,11 @@ def create_reduce_max(
 
 
 def create_reduce_min(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> ReduceMin:
     """Create a ReduceMin layer."""
     onnx_version_change_implementation = 18
@@ -836,11 +851,11 @@ def create_reduce_min(
 
 
 def create_reduce_mean(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> ReduceMean:
     """Create a ReduceMean layer."""
     onnx_version_change_implementation = 18
@@ -883,11 +898,11 @@ def create_reduce_mean(
 
 
 def create_reduce_prod(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> ReduceProd:
     """Create a ReduceReduceProd layer."""
     onnx_version_change_implementation = 18
@@ -931,13 +946,14 @@ def create_reduce_prod(
 
 ### Pooling layers ###
 
+
 # Create a layer MaxPool
 def create_max_pool(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> MaxPooling2D:
     """Create a MaxPool layer."""
     input_shape = get_shape(node.input[0], model)
@@ -972,11 +988,11 @@ def create_max_pool(
 
 # create a layer AveragePool
 def create_average_pool(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> AveragePooling2D:
     """Create an AveragePool layer."""
     input_shape = get_shape(node.input[0], model)
@@ -1011,11 +1027,11 @@ def create_average_pool(
 
 # Create a layer GlobalAveragePool
 def create_global_average_pool(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> AveragePooling2D:
     """Create a GlobalAveragePool layer."""
     input_shape = get_shape(node.input[0], model)
@@ -1038,13 +1054,14 @@ def create_global_average_pool(
 
 ### Broadcasts layers ###
 
+
 # create a layer Add
 def create_add(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Add:
     """Create an Add layer."""
     constant_length = 4
@@ -1083,11 +1100,11 @@ def create_add(
 
 # create a layer Div
 def create_div(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Divide:
     """Create a Divide layer."""
     constant_length = 4
@@ -1128,11 +1145,11 @@ def create_div(
 
 # create a layer Mul
 def create_mul(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Multiply:
     """Create Multiply layer."""
     constant_length = 4
@@ -1171,11 +1188,11 @@ def create_mul(
 
 # create a layer Sub
 def create_sub(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Subtract:
     """Create a Subtract layer."""
     constant_length = 4
@@ -1214,11 +1231,11 @@ def create_sub(
 
 # create a layer Max
 def create_max(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Maximum:
     """Create a Max layer."""
     input_shapes = []
@@ -1240,11 +1257,11 @@ def create_max(
 
 # create a layer Min
 def create_min(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Minimum:
     """Create a Min layer."""
     input_shapes = []
@@ -1266,11 +1283,11 @@ def create_min(
 
 # create a layer Average
 def create_avg(
-        node: onnx.NodeProto,
-        idx: int,
-        dict_input: dict,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> Average:
     """Create an Average layer."""
     input_shapes = []
@@ -1291,50 +1308,53 @@ def create_avg(
 
 
 ###### Dict of all the functions ######
-layer_type = {"Softmax": create_softmax,
-              "Conv": create_conv,
-              "Resize": create_resize,
-              "Pad": create_pad,
-              "Concat": create_concat,
-              "Gather": create_gather,
-              "GatherElements": create_gather_elements,
-              "Gemm": create_gemm,
-              "MatMul": create_matmul,
-              "Transpose": create_transpose,
-              "Tile": create_tile,
-              "ReduceSum": create_reduce_sum,
-              "ReduceMax": create_reduce_max,
-              "ReduceMin": create_reduce_min,
-              "ReduceMean": create_reduce_mean,
-              "ReduceProd": create_reduce_prod,
-              "MaxPool": create_max_pool,
-              "AveragePool": create_average_pool,
-              "GlobalAveragePool": create_global_average_pool,
-              "Add": create_add,
-              "Mul": create_mul,
-              "Div": create_div,
-              "Sub": create_sub,
-              "Max": create_max,
-              "Min": create_min,
-              "Mean": create_avg}
+layer_type = {
+    "Softmax": create_softmax,
+    "Conv": create_conv,
+    "Resize": create_resize,
+    "Pad": create_pad,
+    "Concat": create_concat,
+    "Gather": create_gather,
+    "GatherElements": create_gather_elements,
+    "Gemm": create_gemm,
+    "MatMul": create_matmul,
+    "Transpose": create_transpose,
+    "Tile": create_tile,
+    "ReduceSum": create_reduce_sum,
+    "ReduceMax": create_reduce_max,
+    "ReduceMin": create_reduce_min,
+    "ReduceMean": create_reduce_mean,
+    "ReduceProd": create_reduce_prod,
+    "MaxPool": create_max_pool,
+    "AveragePool": create_average_pool,
+    "GlobalAveragePool": create_global_average_pool,
+    "Add": create_add,
+    "Mul": create_mul,
+    "Div": create_div,
+    "Sub": create_sub,
+    "Max": create_max,
+    "Min": create_min,
+    "Mean": create_avg,
+}
 
 
 ###### Function to deal with the 'non important' layers of the graph ######
 
+
 # Do the operation: Dropout.input = Dropout.output
 def bypass(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> None:
     """Bypass the layer (output=input)."""
     dict_output[node.output[0]] = dict_output.pop(node.input[0])
 
 
 def create_initializer(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
 ) -> None:
     """Change a constant layer into an initializer."""
     const = model.graph.initializer.add()
@@ -1344,22 +1364,25 @@ def create_initializer(
 
 
 ###### Dict of all the functions ######
-unused_layers = {"Dropout": bypass,
-                 "Constant": create_initializer,
-                 "Unsqueeze": bypass,
-                 "Reshape": bypass,
-                 "LRN": bypass,
-                 "Shape": bypass,
-                 "Flatten": bypass}
+unused_layers = {
+    "Dropout": bypass,
+    "Constant": create_initializer,
+    "Unsqueeze": bypass,
+    "Reshape": bypass,
+    "LRN": bypass,
+    "Shape": bypass,
+    "Flatten": bypass,
+}
 
 
 ###### Function to fuse to ONNX layers ######
 
+
 def fuse_relu(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer ReLu with the prior layer."""
     layers[dict_output[node.input[0]]].activation_function = ReLu()
@@ -1367,10 +1390,10 @@ def fuse_relu(
 
 
 def fuse_tanh(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer TanH with the prior layer."""
     layers[dict_output[node.input[0]]].activation_function = TanH()
@@ -1378,10 +1401,10 @@ def fuse_tanh(
 
 
 def fuse_sigmoid(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer Sigmoid with the prior layer."""
     layers[dict_output[node.input[0]]].activation_function = Sigmoid()
@@ -1389,10 +1412,10 @@ def fuse_sigmoid(
 
 
 def fuse_exp(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer Exp with the prior layer."""
     layers[dict_output[node.input[0]]].activation_function = Exponential()
@@ -1400,10 +1423,10 @@ def fuse_exp(
 
 
 def fuse_log(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer Log with the prior layer."""
     layers[dict_output[node.input[0]]].activation_function = Logarithm()
@@ -1411,10 +1434,10 @@ def fuse_log(
 
 
 def fuse_clip(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer Clip with the prior layer."""
     mini, maxi = float("-inf"), float("inf")
@@ -1430,10 +1453,10 @@ def fuse_clip(
 
 
 def fuse_leaky_relu(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer  Leaky ReLu with the prior layer."""
     attribute = extract_attributes(node)
@@ -1447,10 +1470,10 @@ def fuse_leaky_relu(
 
 # Fuse a BatchNormalization layer with the previous Conv2D layer
 def fuse_batch_normalization(
-        node: onnx.NodeProto,
-        dict_output: dict,
-        model: onnx.ModelProto,
-        layers: list,
+    node: onnx.NodeProto,
+    dict_output: dict,
+    model: onnx.ModelProto,
+    layers: list,
 ) -> None:
     """Fuse the activation layer ReLu with the prior layer."""
     attributes = extract_attributes(node)
@@ -1465,10 +1488,10 @@ def fuse_batch_normalization(
     weights = layers[dict_output[node.input[0]]].weights
     biases = layers[dict_output[node.input[0]]].biases
 
-    for z in range(len(weights[0, 0, 0, :])):
+    for z in range(len(weights[:, 0, 0, 0])):
         alpha = scale[z] / np.sqrt(var[z] + attributes["epsilon"])
         b = bias[z] - (mean[z] * alpha)
-        weights[:, :, :, z] = alpha * weights[:, :, :, z]
+        weights[z, :, :, :] = alpha * weights[z, :, :, :]
         biases[z] = alpha * biases[z] + b
 
     layers[dict_output[node.input[0]]].weights = weights
@@ -1478,10 +1501,12 @@ def fuse_batch_normalization(
 
 
 ###### Dict of all the functions ######
-activation_layers = {"Relu": fuse_relu,
-                     "Tanh": fuse_tanh,
-                     "Sigmoid": fuse_sigmoid,
-                     "Clip": fuse_clip,
-                     "Exp": fuse_exp,
-                     "Log": fuse_log,
-                     "LeakyRelu": fuse_leaky_relu}
+activation_layers = {
+    "Relu": fuse_relu,
+    "Tanh": fuse_tanh,
+    "Sigmoid": fuse_sigmoid,
+    "Clip": fuse_clip,
+    "Exp": fuse_exp,
+    "Log": fuse_log,
+    "LeakyRelu": fuse_leaky_relu,
+}

@@ -22,7 +22,8 @@ from pathlib import Path
 
 import numpy as np
 import onnx
-from acetone_nnet.generator import Layer
+
+from acetone_nnet.graph.graph_interpretor import tri_topo
 from acetone_nnet.importers.ONNX_importer.create_layer import (
     activation_layers,
     create_batch_norm,
@@ -31,7 +32,7 @@ from acetone_nnet.importers.ONNX_importer.create_layer import (
     layer_type,
     unused_layers,
 )
-from acetone_nnet.graph.graph_interpretor import tri_topo
+from acetone_nnet.ir import Layer
 
 
 def find_data_type(
@@ -81,8 +82,9 @@ def load_onnx(
     idx = 0
 
     # Creating and adding all the input layers to the list
-    layers.append(create_input_layer(model.graph.input[0], idx, dict_output))
-    idx += 1
+    for i in model.graph.input:
+        layers.append(create_input_layer(i, idx, dict_output))
+        idx += 1
 
     # Going through all the nodes to create the layers and add them to the list
     for node in model.graph.node:

@@ -31,7 +31,6 @@ from .activation_functions import (
     Sigmoid,
     TanH,
 )
-from .Layer import Layer
 from .layers import (
     Add,
     AddDefault,

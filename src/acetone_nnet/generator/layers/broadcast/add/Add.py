@@ -23,8 +23,10 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
+from acetone_nnet.quantize import qform
+import logging
 
 # Addition of several tensor
 class Add(Layer):
@@ -44,6 +46,7 @@ class Add(Layer):
         Layer.__init__(self)
         self.idx = idx
         self.size = size
+        self.activation_function = activation_function
         self.name = "Add"
         if original_name == "":
             self.original_name = f"{self.name}_{self.idx}"
@@ -55,7 +58,6 @@ class Add(Layer):
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.output_channels = output_shape[1]
-        self.activation_function = activation_function
         self.constant = constant
         if constant is not None:
             self.constant_size = self.count_elements_array(self.constant)
@@ -64,12 +66,6 @@ class Add(Layer):
 
         ### Checking argument type ###
         msg = ""
-        if type(self.idx) is not int:
-            msg += "Error: idx type in Broadcast (idx must be int)"
-            msg += "\n"
-        if type(self.size) is not int:
-            msg += "Error: size type in Broadcast (size must be int)"
-            msg += "\n"
         if type(self.output_channels) is not int:
             msg += "Error: output channels type in Broadcast (must be int)"
             msg += "\n"
@@ -84,10 +80,6 @@ class Add(Layer):
                 if "int" not in type(shape).__name__:
                     msg += "Error: input_shape in Broadcast (all dim must be int)"
                     msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Broadcast "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if type(self.constant) is not np.ndarray and self.constant is not None:
             msg += "Error: constant type in Broadcast"
             msg += "\n"
@@ -115,10 +107,22 @@ class Add(Layer):
         if msg:
             raise ValueError(msg)
 
+    def compute_post_shift(self):
+        ''' Q compute the rescaling factor '''
+        if hasattr(self,'qparam'):
+            (_,mparam) = qform.parse_q_format(self.qparam)
+            (_,min) = qform.parse_q_format(self.qin)
+            (_,mout) = qform.parse_q_format(self.qout)
+            qpost_shift = min - mout
+            if qpost_shift < 0 or mparam != min:
+                logging.warning(f'Add {self} q format inconsistency')
+                qpost_shift = 0
+            return qpost_shift
+
     def forward_path_layer(self: Self, input_arrays: np.ndarray) -> np.ndarray:
         """Compute output of layer."""
         if self.constant is None:
-            constant = np.zeros(1)
+            constant = np.zeros(1,dtype=input_arrays[0].dtype)
         else:
             constant = np.reshape(self.constant, self.input_shapes[-1][1:])
             self.input_shapes = np.delete(self.input_shapes, -1, axis=0)
@@ -128,7 +132,12 @@ class Add(Layer):
                 output += np.reshape(input_arrays[i], self.input_shapes[i][1:])
         else:
             output = np.reshape(input_arrays, self.input_shapes[0][1:])
-        return self.activation_function.compute(output + constant)
+        output = self.activation_function.compute(output + constant)
+        if np.issubdtype(input_arrays[0].dtype,np.integer):
+            return  np.right_shift(output, self.compute_post_shift()).astype(input_arrays[0].dtype)
+        else:
+            return output
+
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""

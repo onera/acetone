@@ -42,12 +42,12 @@ class AcetoneTestCase(unittest.TestCase):
         self.tmpdir.cleanup()
 
     def assertListAlmostEqual(
-            self,
-            first: np.ndarray,
-            second: np.ndarray,
-            rtol: float = 5e-06,
-            atol: float = 5e-06,
-            err_msg: str = "",
+        self,
+        first: np.ndarray,
+        second: np.ndarray,
+        rtol: float = 5e-06,
+        atol: float = 5e-06,
+        err_msg: str = "",
     ) -> None:
         return np.testing.assert_allclose(
             first,
@@ -59,9 +59,9 @@ class AcetoneTestCase(unittest.TestCase):
 
 
 def create_initializer_tensor(
-        name: str,
-        tensor_array: np.ndarray,
-        data_type: onnx.TensorProto = onnx.TensorProto.FLOAT,
+    name: str,
+    tensor_array: np.ndarray,
+    data_type: onnx.TensorProto = onnx.TensorProto.FLOAT,
 ) -> onnx.TensorProto:
     """Create a TensorProto."""
     return onnx.helper.make_tensor(
@@ -72,26 +72,18 @@ def create_initializer_tensor(
     )
 
 
-def read_output_c(path_to_output: str) -> np.ndarray:
+def read_output_c(path_to_output: str, target: str, trimline: int = -2) -> np.ndarray:
     """Read the output file of the C code."""
     with open(path_to_output) as f:
         line = f.readline()
-        line = line[:-2].split(" ")
-        line = list(map(float.fromhex, line))
-        line = np.array(line)
-    f.close()
-    return line
+        words = line[:trimline].split(" ")
+        if target == "generic":
+            return np.array(list(map(float.fromhex, words)))
+        return np.array(list(map(int, words)))
 
 
-def read_output_python(path_to_output: str) -> np.ndarray:
-    """Read the output file of the python code."""
-    with open(path_to_output) as f:
-        line = f.readline()
-        line = line[:-3].split(" ")
-        line = list(map(float.fromhex, line))
-        line = np.array(line)
-    f.close()
-    return line
+def read_output_python(path_to_output: str, target: str) -> np.ndarray:
+    return read_output_c(path_to_output, target, trimline=-3)
 
 
 def create_dataset(tmpdir: str, shape: tuple):
@@ -99,7 +91,7 @@ def create_dataset(tmpdir: str, shape: tuple):
     dataset = np.float32(np.random.default_rng(seed=10).random((1, *shape)))
     with open(tmpdir + "/dataset.txt", "w") as filehandle:
         row = (dataset[0]).flatten(order="C")
-        row = [float(f).hex().replace('0000000p','p') for f in row]
+        row = [float(f).hex().replace("0000000p", "p") for f in row]
         json.dump(row, filehandle)
         filehandle.write("\n")
     filehandle.close()
@@ -114,6 +106,7 @@ def run_acetone_for_test(
     normalize=False,
     run_generated=True,
     run_reference=True,
+    target="generic",
 ):
     cli_acetone(
         model_file=model,
@@ -123,10 +116,15 @@ def run_acetone_for_test(
         output_dir=tmpdir_name,
         test_dataset_file=datatest_path,
         normalize=normalize,
+        target=target,
+        verbose=True,
     )
 
     if run_reference:
-        output_python = read_output_python(tmpdir_name + "/output_python.txt").flatten()
+        output_python = read_output_python(
+            tmpdir_name + "/output_python.txt",
+            target,
+        ).flatten()
     else:
         output_python = None
 
@@ -143,7 +141,7 @@ def run_acetone_for_test(
             print("\nC code inference failed")
             return np.array([]), output_python
 
-        output_c = read_output_c(tmpdir_name + "/output_c.txt").flatten()
+        output_c = read_output_c(tmpdir_name + "/output_c.txt", target).flatten()
     else:
         output_c = None
 

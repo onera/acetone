@@ -20,11 +20,10 @@
 """
 
 import numpy as np
-import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 class Transpose(Layer):
@@ -82,10 +81,6 @@ class Transpose(Layer):
             msg += "\n"
         if not isinstance(self.input_width, int):
             msg += "Error: input width type in Transpose (must be int)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Transpose "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
             msg += "\n"
         if msg:
             raise TypeError(msg)

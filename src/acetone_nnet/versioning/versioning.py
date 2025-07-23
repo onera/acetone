@@ -18,7 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-from acetone_nnet.generator import Layer
+from acetone_nnet.ir import Layer
 from acetone_nnet.versioning.layer_factories import LayerFactory, implemented
 
 
@@ -33,9 +33,9 @@ def list_all_implementations() -> dict[str, list[str]]:
     implem = {}
     for layer_name in implemented:
         implem[layer_name] = implemented[layer_name].list_implementations
-        
+
     return implem
-    
+
 
 
 
@@ -56,7 +56,7 @@ def versioning(
                 layer.previous_layer = layers[j].previous_layer
                 layer.sorted = layers[j].sorted
                 layer.output_str = layers[j].output_str
-                layer.fused_layer = layers[j].fused_layer
+                layer.activation_function = layers[j].activation_function
 
                 layers[j] = layer
 
