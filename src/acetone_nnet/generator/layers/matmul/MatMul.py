@@ -172,14 +172,18 @@ class MatMul(Layer):
         else:
             input_1 = input_array.reshape(self.input_shapes)
             if self.side == 1:
-                out = np.matmul(self.weights, input_1)
+                if np.issubdtype(input_1.dtype, np.integer):
+                    out = np.matmul(self.weights, input_1, dtype=self.temp_pydtype)
+                else:
+                    out = np.matmul(self.weights, input_1)
             elif self.side == 0:
                 if np.issubdtype(input_1.dtype, np.integer):
                     out = np.matmul(input_1, self.weights, dtype=self.temp_pydtype)
-                    out = np.right_shift(out, self.compute_post_shift()).astype(
-                        input_1.dtype,
-                    )
                 else:
                     out = np.matmul(input_1, self.weights)
+            if np.issubdtype(input_1.dtype, np.integer):
+                out = np.right_shift(out, self.compute_post_shift()).astype(
+                    input_1.dtype,
+                )
             out = self.activation_function.compute(out)
         return out  # Case should not be happening
