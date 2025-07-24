@@ -603,19 +603,11 @@ def create_matmul(
     input_shape = []
     dict_input[idx] = []
 
-    for operand in [0, 1]:
-        name, shape = None, None
-        if i := look_for_initializer(node.input[operand], model):
-            name = i.name
-            init = onnx.numpy_helper.to_array(i)
-            shape = init.shape
-        else:
-            name = node.input[operand]
-            shape = get_shape(name, model, extend=False)
-        # FIX Invalid extension for 1-D tensor if right operand
-        if operand == 1 and len(shape) < 2:
-            shape = (*tuple(shape), 1)
-        # Ensure all inputs are 4-D tensors
+    inputs = _collect_node_inputs(model, node)
+    # FIX Invalid extension for 1-D tensor if right operand
+    if len(inputs[1][1]) < 2:
+        inputs[1] = (inputs[1][0], (*tuple(inputs[1][1]), 1))
+    for name, shape in inputs:
         while len(shape) < 4:
             shape = (1, *tuple(shape))
         dict_input[idx].append(name)
