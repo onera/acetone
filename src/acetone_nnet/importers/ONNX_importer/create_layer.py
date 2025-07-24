@@ -1064,6 +1064,20 @@ def create_global_average_pool(
 
 
 ### Broadcasts layers ###
+def _collect_node_inputs(
+    model: onnx.ModelProto,
+    node: onnx.NodeProto,
+) -> list[tuple[str, tuple[int, ...]]]:
+    collected = []
+    for inp in node.input:
+        if i := look_for_initializer(inp, model):
+            name = i.name
+            shape = onnx.numpy_helper.to_array(i).shape
+        else:
+            name = inp
+            shape = get_shape(name, model, extend=False)
+        collected.append((name, shape))
+    return collected
 
 
 # create a layer Add
@@ -1075,29 +1089,17 @@ def create_add(
     model: onnx.ModelProto,
 ) -> Add:
     """Create an Add layer."""
-    constant_length = 4
-
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
     dict_input[idx] = []
-    constant = np.zeros(get_shape(node.input[0], model))
     input_shapes = []
-    for input_value in node.input:
-        cst = look_for_initializer(input_value, model)
-        if cst:
-            constant = constant + onnx.numpy_helper.to_array(cst)
-        else:
-            dict_input[idx].append(input_value)
-            input_shapes.append(get_shape(input_value, model))
-    if constant.any():
-        if len(constant.shape) < constant_length:
-            for _i in range(4 - len(constant.shape)):
-                constant = np.expand_dims(constant, axis=0)
-        input_shapes.append(constant.shape)
-    else:
-        constant = None
-    input_shapes = np.array(input_shapes)
+    inputs = _collect_node_inputs(model, node)
+    for name, shape in inputs:
+        while len(shape) < 4:
+            shape = (1, *shape)
+        input_shapes.append(list(shape))
+        dict_input[idx].append(name)
     return Add(
         original_name=node.name,
         idx=idx,
@@ -1105,7 +1107,6 @@ def create_add(
         input_shapes=input_shapes,
         output_shape=output_shape,
         activation_function=Linear(),
-        constant=constant,
     )
 
 
