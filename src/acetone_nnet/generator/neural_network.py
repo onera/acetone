@@ -70,6 +70,7 @@ MODEL_TYPE = str | Path | onnx.ModelProto
 if (3, 12) > version_info >= (3, 10):
     MODEL_TYPE = MODEL_TYPE | Sequential | Functional
 
+
 class CodeGenerator(ABC):
     """Main module of ACETONE."""
 
@@ -150,10 +151,7 @@ class CodeGenerator(ABC):
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)
 
-        self.test_dataset = self._initialise_dataset(
-            test_dataset,
-            int(nb_tests)
-        )
+        self.test_dataset = self._initialise_dataset(test_dataset, int(nb_tests))
 
         self.files_to_gen = [
             "inference.c",
@@ -182,9 +180,7 @@ class CodeGenerator(ABC):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        if not isinstance(
-            self.file,
-            MODEL_TYPE):
+        if not isinstance(self.file, MODEL_TYPE):
             msg = "Error: model type.\n Format must be: path to model, model ONNX or model Keras"
             raise TypeError(msg)
         if not (
@@ -204,7 +200,6 @@ class CodeGenerator(ABC):
         if not (isinstance(self.read_ext_input, bool) or self.read_ext_input is None):
             msg = "Error: external_input typr.\n Must be: bool"
             raise TypeError(msg)
-
 
         ### Checking value consistency ###
 
@@ -859,6 +854,10 @@ class CodeGenerator(ABC):
             if hasattr(layer, "weights"):
                 layer_hash["nb_weights"] = layer.nb_weights
                 self.nb_weights_max = max(layer.nb_weights, self.nb_weights_max)
+                to_print = True
+
+            if isinstance(layer, ConstantLayer):
+                layer_hash["nb_weights"] = layer.nb_weights
                 to_print = True
 
             if hasattr(layer, "biases"):
