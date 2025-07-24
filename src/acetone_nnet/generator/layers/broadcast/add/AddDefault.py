@@ -32,7 +32,7 @@ from .Add import Add
 class AddDefault(Add, Broadcast):
     """Add layer with default implementation class."""
 
-    def __init__(self: Self, version:str, **kwargs: Any) -> None:
+    def __init__(self: Self, version: str, **kwargs: Any) -> None:
         """Build an Add layer with default implementation."""
         Add.__init__(self, **kwargs)
         Broadcast.__init__(self, **kwargs)
@@ -48,9 +48,10 @@ class AddDefault(Add, Broadcast):
         """Generate computation code for layer."""
         return Broadcast.generate_inference_code_layer(self)
 
+
 def add_default_implementation(
-        old_layer: Add,
-        version: str,
+    old_layer: Add,
+    version: str,
 ) -> AddDefault:
     """Create an Add_Default layer using the parameters of old_layer."""
     return AddDefault(
@@ -59,10 +60,15 @@ def add_default_implementation(
         idx=old_layer.idx,
         size=old_layer.size,
         input_shapes=old_layer.input_shapes,
-        output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
+        output_shape=[
+            1,
+            old_layer.output_channels,
+            old_layer.output_height,
+            old_layer.output_width,
+        ],
         activation_function=old_layer.activation_function,
-        constant=old_layer.constant,
     )
+
 
 add_factory.register_implementation(
     None,

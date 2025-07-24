@@ -40,6 +40,7 @@ from acetone_nnet.generator.layers import (
     AveragePooling2D,
     BatchNormalization,
     Concatenate,
+    ConstantLayer,
     ConstantPad,
     Conv2D,
     Divide,
@@ -134,7 +135,12 @@ def extract_attributes(node: onnx.NodeProto) -> dict[str, Any]:
 
 # Find the shape of shape_name in model (an onnx model)
 # Depend on the characteristics of the model. Need value_info in the model
-def get_shape(shape_name: str, model: onnx.ModelProto) -> list[int]:
+def get_shape(
+    shape_name: str,
+    model: onnx.ModelProto,
+    *,
+    extend=True,
+) -> list[int]:
     """Compute the shape of a tensor."""
     shape = []
     shape_length = 4
@@ -159,7 +165,7 @@ def get_shape(shape_name: str, model: onnx.ModelProto) -> list[int]:
     for i in range(len(shape)):
         if shape[i] == 0:
             shape[i] = 1
-    if shape and len(shape) <= shape_length:
+    if extend and shape and len(shape) <= shape_length:
         shape = [1 for _i in range(4 - len(shape))] + shape
     return shape
 
@@ -197,6 +203,24 @@ def create_input_layer(
         size=size,
         input_shape=output_shape,
         data_format="channels_first",
+    )
+
+
+def create_initializer_layer(
+    idx: int,
+    initializer: onnx.TensorProto,
+    dict_output: dict[str, int],
+) -> ConstantLayer:
+    """Create a constant layer from an initializer."""
+    name = initializer.name
+    weights = onnx.numpy_helper.to_array(initializer)
+    dict_output[name] = idx
+    return ConstantLayer(
+        idx=idx,
+        name="Constant",
+        original_name=name,
+        constant=weights,
+        size=weights.size,
     )
 
 
@@ -576,45 +600,24 @@ def create_matmul(
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    right_tensor = look_for_initializer(node.input[0], model)
-    left_tensor = look_for_initializer(node.input[1], model)
     input_shape = []
-    weights = []
-    side = -1
-    if left_tensor or right_tensor:
-        if right_tensor and not left_tensor:
-            # the weight is the left tensor:  MatMul(W, T)
-            side = 1
-            input_shape = get_shape(node.input[1], model)
+    dict_input[idx] = []
 
-            input_shape = matmul_compute_shape(input_shape)
-            output_shape = matmul_compute_shape(output_shape)
+    inputs = _collect_node_inputs(model, node)
+    # FIX Invalid extension for 1-D tensor if right operand
+    if len(inputs[1][1]) < 2:
+        inputs[1] = (inputs[1][0], (*tuple(inputs[1][1]), 1))
+    for name, shape in inputs:
+        while len(shape) < 4:
+            shape = (1, *tuple(shape))
+        dict_input[idx].append(name)
+        input_shape.append(shape)
 
-            weights = onnx.numpy_helper.to_array(right_tensor)
-            weights = np.reshape(weights, (1, 1, output_shape[-2], input_shape[-2]))
-            dict_input[idx] = [node.input[1]]
-        if left_tensor and not right_tensor:
-            # the weight is the right tensor:  MatMul(T, W)
-            side = 0
-            input_shape = get_shape(node.input[0], model)
-            weights = onnx.numpy_helper.to_array(left_tensor)
-            weights = np.reshape(weights, (1, 1, input_shape[-1], output_shape[-1]))
-            dict_input[idx] = [node.input[0]]
-    else:
-        dict_input[idx] = node.input
-        input_shape = []
-        for input_value in node.input:
-            input_shape.append(get_shape(input_value, model))
-        side = 2
-        weights = None
-        # to check
     return MatMul(
         original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=input_shape,
-        weights=weights,
-        side=side,
         activation_function=Linear(),
     )
 
@@ -1053,6 +1056,20 @@ def create_global_average_pool(
 
 
 ### Broadcasts layers ###
+def _collect_node_inputs(
+    model: onnx.ModelProto,
+    node: onnx.NodeProto,
+) -> list[tuple[str, tuple[int, ...]]]:
+    collected = []
+    for inp in node.input:
+        if i := look_for_initializer(inp, model):
+            name = i.name
+            shape = onnx.numpy_helper.to_array(i).shape
+        else:
+            name = inp
+            shape = get_shape(name, model, extend=False)
+        collected.append((name, shape))
+    return collected
 
 
 # create a layer Add
@@ -1064,29 +1081,17 @@ def create_add(
     model: onnx.ModelProto,
 ) -> Add:
     """Create an Add layer."""
-    constant_length = 4
-
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
     dict_input[idx] = []
-    constant = np.zeros(get_shape(node.input[0], model))
     input_shapes = []
-    for input_value in node.input:
-        cst = look_for_initializer(input_value, model)
-        if cst:
-            constant = constant + onnx.numpy_helper.to_array(cst)
-        else:
-            dict_input[idx].append(input_value)
-            input_shapes.append(get_shape(input_value, model))
-    if constant.any():
-        if len(constant.shape) < constant_length:
-            for _i in range(4 - len(constant.shape)):
-                constant = np.expand_dims(constant, axis=0)
-        input_shapes.append(constant.shape)
-    else:
-        constant = None
-    input_shapes = np.array(input_shapes)
+    inputs = _collect_node_inputs(model, node)
+    for name, shape in inputs:
+        while len(shape) < 4:
+            shape = (1, *shape)
+        input_shapes.append(list(shape))
+        dict_input[idx].append(name)
     return Add(
         original_name=node.name,
         idx=idx,
@@ -1094,7 +1099,6 @@ def create_add(
         input_shapes=input_shapes,
         output_shape=output_shape,
         activation_function=Linear(),
-        constant=constant,
     )
 
 

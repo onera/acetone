@@ -70,6 +70,7 @@ MODEL_TYPE = str | Path | onnx.ModelProto
 if (3, 12) > version_info >= (3, 10):
     MODEL_TYPE = MODEL_TYPE | Sequential | Functional
 
+
 class CodeGenerator(ABC):
     """Main module of ACETONE."""
 
@@ -150,10 +151,7 @@ class CodeGenerator(ABC):
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)
 
-        self.test_dataset = self._initialise_dataset(
-            test_dataset,
-            int(nb_tests)
-        )
+        self.test_dataset = self._initialise_dataset(test_dataset, int(nb_tests))
 
         self.files_to_gen = [
             "inference.c",
@@ -182,9 +180,7 @@ class CodeGenerator(ABC):
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
-        if not isinstance(
-            self.file,
-            MODEL_TYPE):
+        if not isinstance(self.file, MODEL_TYPE):
             msg = "Error: model type.\n Format must be: path to model, model ONNX or model Keras"
             raise TypeError(msg)
         if not (
@@ -204,7 +200,6 @@ class CodeGenerator(ABC):
         if not (isinstance(self.read_ext_input, bool) or self.read_ext_input is None):
             msg = "Error: external_input typr.\n Must be: bool"
             raise TypeError(msg)
-
 
         ### Checking value consistency ###
 
@@ -414,19 +409,20 @@ class CodeGenerator(ABC):
 
                     # Debug Mode
                     if self.debug_mode and layer.idx in self.debug_target:
-                        # Add the inference result of the layer to debug_output
-                        debug_output.append(layer_output)
-                        if (self.data_format == "channels_last") and hasattr(
-                            layer,
-                            "output_channels",
-                        ):
-                            debug_output[-1] = np.transpose(
-                                debug_output[-1],
-                                (1, 2, 0),
-                            )
-                        debug_output[-1] = debug_output[-1].flatten()
+                        if not isinstance(layer, ConstantLayer):
+                            # Add the inference result of the layer to debug_output
+                            debug_output.append(layer_output)
+                            if (self.data_format == "channels_last") and hasattr(
+                                layer,
+                                "output_channels",
+                            ):
+                                debug_output[-1] = np.transpose(
+                                    debug_output[-1],
+                                    (1, 2, 0),
+                                )
+                            debug_output[-1] = debug_output[-1].flatten()
 
-                        targets.append(str(layer.name) + " " + str(layer.idx))
+                            targets.append(str(layer.name) + " " + str(layer.idx))
 
                 nn_output = layer_output
 
@@ -861,6 +857,10 @@ class CodeGenerator(ABC):
                 self.nb_weights_max = max(layer.nb_weights, self.nb_weights_max)
                 to_print = True
 
+            if isinstance(layer, ConstantLayer):
+                layer_hash["nb_weights"] = layer.nb_weights
+                to_print = True
+
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
                 self.nb_biases_max = max(layer.nb_biases, self.nb_biases_max)
@@ -898,7 +898,10 @@ class CodeGenerator(ABC):
                     layer_qconf = self.target_cfg["quantization"]["layers"][
                         l.original_name
                     ]
-                    l.qparam = layer_qconf["params"]
+                    if isinstance(l, ConstantLayer):
+                        l.qparam = layer_qconf["out"]
+                    else:
+                        l.qparam = layer_qconf["params"]
                     (_, m) = qform.parse_q_format(l.qparam)
                     if hasattr(l, "weights"):
                         l.weights = np.rint(l.weights * (2**m - 1)).astype(

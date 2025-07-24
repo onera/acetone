@@ -23,10 +23,10 @@ from typing import Any
 
 import numpy as np
 import pystache
-from traits.api import Int, Property, Supports
+from traits.api import Array, Int, Property
 from typing_extensions import Self
 
-from acetone_nnet.ir import Layer, Tensor
+from acetone_nnet.ir import Layer
 from acetone_nnet.versioning.layer_factories import constant_factory
 
 
@@ -34,7 +34,7 @@ class ConstantLayer(Layer):
     """Constant tensor layer class."""
 
     #: Constant tensor value
-    constant = Supports(Tensor)
+    constant = Array()
 
     @property
     def nb_weights(self) -> int:
@@ -74,7 +74,7 @@ class ConstantLayer(Layer):
         input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""
-        return self.constant.data
+        return self.constant
 
 
 class ConstantLayerDefault(ConstantLayer):

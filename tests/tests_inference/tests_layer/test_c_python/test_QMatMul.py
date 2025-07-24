@@ -40,6 +40,9 @@ targetconf = """
             "X":{
                 "out":"Q0.15"
             },
+            "W0":{
+                "out":"Q0.15"
+            },
             "Matmul":{
                 "in":"Q0.15",
                 "params":"Q0.15",
@@ -62,17 +65,23 @@ class TestQMatMul(acetoneTestCase.AcetoneTestCase):
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(
-            model_input_name, onnx.TensorProto.FLOAT, [None, 1, 1, 5],
+            model_input_name,
+            onnx.TensorProto.FLOAT,
+            [None, 1, 1, 5],
         )
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(
-            model_output_name, onnx.TensorProto.FLOAT, [None, 1, 1, 50],
+            model_output_name,
+            onnx.TensorProto.FLOAT,
+            [None, 1, 1, 50],
         )
 
         matmul_W = np.random.rand(5, 50).astype(np.float32)
         matmul_W_name = "W0"
         matmul_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
-            matmul_W_name, matmul_W, onnx.TensorProto.FLOAT,
+            matmul_W_name,
+            matmul_W,
+            onnx.TensorProto.FLOAT,
         )
 
         matmul_node_name = "Matmul"

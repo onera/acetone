@@ -54,7 +54,6 @@ def versioning(
                 layer.path = layers[j].path
                 layer.next_layer = layers[j].next_layer
                 layer.previous_layer = layers[j].previous_layer
-                layer.sorted = layers[j].sorted
                 layer.output_str = layers[j].output_str
                 layer.activation_function = layers[j].activation_function
 

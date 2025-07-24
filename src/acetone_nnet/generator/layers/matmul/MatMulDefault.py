@@ -57,16 +57,9 @@ class MatMulDefault(MatMul):
         mustach_hash["output_height"] = self.output_height
         mustach_hash["output_width"] = self.output_width
 
-        if self.side == 0:
-            mustach_hash["output_str_left"] = self.previous_layer[0].output_str
-            mustach_hash["output_str_right"] = f"weights_{self.name}_{self.idx:02d}"
-        elif self.side == 1:
-            mustach_hash["output_str_right"] = self.previous_layer[0].output_str
-            mustach_hash["output_str_left"] = f"weights_{self.name}_{self.idx:02d}"
-        elif self.side == 2:
-            mustach_hash["output_str_left"] = self.previous_layer[0].output_str
-            mustach_hash["output_str_right"] = self.previous_layer[1].output_str
-        if hasattr(self,'qparam'):
+        mustach_hash["output_str_left"] = self.previous_layer[0].output_str
+        mustach_hash["output_str_right"] = self.previous_layer[1].output_str
+        if hasattr(self, "qparam"):
             mustach_hash["qcast"] = f"({self.cdtype})("
             mustach_hash["qshift"] = f" >> {self.compute_post_shift()})"
 
@@ -90,8 +83,6 @@ def matmul_default_implementation(
         idx=old_layer.idx,
         size=old_layer.size,
         input_shapes=old_layer.input_shapes,
-        weights=getattr(old_layer, "weights", None),
-        side=old_layer.side,
         activation_function=old_layer.activation_function,
     )
 
