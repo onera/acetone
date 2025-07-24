@@ -40,6 +40,7 @@ from acetone_nnet.generator.layers import (
     AveragePooling2D,
     BatchNormalization,
     Concatenate,
+    ConstantLayer,
     ConstantPad,
     Conv2D,
     Divide,
@@ -197,6 +198,24 @@ def create_input_layer(
         size=size,
         input_shape=output_shape,
         data_format="channels_first",
+    )
+
+
+def create_initializer_layer(
+    idx: int,
+    initializer: onnx.TensorProto,
+    dict_output: dict[str, int],
+) -> ConstantLayer:
+    """Create a constant layer from an initializer."""
+    name = initializer.name
+    weights = onnx.numpy_helper.to_array(initializer)
+    dict_output[name] = idx
+    return ConstantLayer(
+        idx=idx,
+        name="Constant",
+        original_name=name,
+        constant=weights,
+        size=weights.size,
     )
 
 
