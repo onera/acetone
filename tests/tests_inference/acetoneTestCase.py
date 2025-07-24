@@ -32,6 +32,19 @@ from acetone_nnet.cli.generate import cli_acetone
 class AcetoneTestCase(unittest.TestCase):
     """TestCase class for inference tests."""
 
+    def _redirect_generated_code(self, target: str | Path) -> None:
+        """Redirect test output to the selected folder.
+
+        Used to check the generated code for a failing test.
+        """
+        from shutil import rmtree
+
+        target = Path(target)
+        if target.exists():
+            rmtree(target)
+        target.mkdir(parents=True, exist_ok=True)
+        self.tmpdir_name = str(target)
+
     def setUp(self) -> None:
         """Create a temp_dir."""
         self.tmpdir = tempfile.TemporaryDirectory()
