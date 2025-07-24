@@ -135,7 +135,12 @@ def extract_attributes(node: onnx.NodeProto) -> dict[str, Any]:
 
 # Find the shape of shape_name in model (an onnx model)
 # Depend on the characteristics of the model. Need value_info in the model
-def get_shape(shape_name: str, model: onnx.ModelProto) -> list[int]:
+def get_shape(
+    shape_name: str,
+    model: onnx.ModelProto,
+    *,
+    extend=True,
+) -> list[int]:
     """Compute the shape of a tensor."""
     shape = []
     shape_length = 4
@@ -160,7 +165,7 @@ def get_shape(shape_name: str, model: onnx.ModelProto) -> list[int]:
     for i in range(len(shape)):
         if shape[i] == 0:
             shape[i] = 1
-    if shape and len(shape) <= shape_length:
+    if extend and shape and len(shape) <= shape_length:
         shape = [1 for _i in range(4 - len(shape))] + shape
     return shape
 
@@ -602,10 +607,17 @@ def create_matmul(
         name, shape = None, None
         if i := look_for_initializer(node.input[operand], model):
             name = i.name
-            shape = onnx.numpy_helper.to_array(i).shape
+            init = onnx.numpy_helper.to_array(i)
+            shape = init.shape
         else:
             name = node.input[operand]
-            shape = get_shape(name, model)
+            shape = get_shape(name, model, extend=False)
+        # FIX Invalid extension for 1-D tensor if right operand
+        if operand == 1 and len(shape) < 2:
+            shape = (*tuple(shape), 1)
+        # Ensure all inputs are 4-D tensors
+        while len(shape) < 4:
+            shape = (1, *tuple(shape))
         dict_input[idx].append(name)
         input_shape.append(shape)
 

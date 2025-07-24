@@ -58,24 +58,6 @@ class MatMul(Layer):
         self.output_width = self.input_shapes[1][-1]
         self.shared_dimension = self.input_shapes[0][-1]
 
-        ####### Checking the instantiation#######
-
-        ### Checking argument type ###
-        msg = ""
-        if type(self.input_shapes[0]) is list:
-            for input_shape in self.input_shapes:
-                if any(type(shape) is not int for shape in input_shape):
-                    msg = "Error: input_shape in MatMul (all dim must be int)"
-                    msg += "\n"
-        elif any(type(shape) is not int for shape in self.input_shapes):
-            msg = "Error: input_shape in MatMul (all dim must be int)"
-            msg += "\n"
-        if hasattr(self, "weights") and type(self.weights) is not np.ndarray:
-            msg = "Error: weights in MatMul (weights must be an numpy array)"
-            msg += "\n"
-        if msg:
-            raise TypeError(msg)
-
         ### Checking value consistency ###
         msg = ""
         if self.input_shapes[1][-2] != self.input_shapes[0][-1]:
