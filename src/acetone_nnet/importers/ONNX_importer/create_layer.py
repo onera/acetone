@@ -595,45 +595,25 @@ def create_matmul(
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_output[node.output[0]] = idx
-    right_tensor = look_for_initializer(node.input[0], model)
-    left_tensor = look_for_initializer(node.input[1], model)
     input_shape = []
-    weights = []
-    side = -1
-    if left_tensor or right_tensor:
-        if right_tensor and not left_tensor:
-            # the weight is the left tensor:  MatMul(W, T)
-            side = 1
-            input_shape = get_shape(node.input[1], model)
+    dict_input[idx] = []
 
-            input_shape = matmul_compute_shape(input_shape)
-            output_shape = matmul_compute_shape(output_shape)
+    for operand in [0, 1]:
+        name, shape = None, None
+        if i := look_for_initializer(node.input[operand], model):
+            name = i.name
+            shape = onnx.numpy_helper.to_array(i).shape
+        else:
+            name = node.input[operand]
+            shape = get_shape(name, model)
+        dict_input[idx].append(name)
+        input_shape.append(shape)
 
-            weights = onnx.numpy_helper.to_array(right_tensor)
-            weights = np.reshape(weights, (1, 1, output_shape[-2], input_shape[-2]))
-            dict_input[idx] = [node.input[1]]
-        if left_tensor and not right_tensor:
-            # the weight is the right tensor:  MatMul(T, W)
-            side = 0
-            input_shape = get_shape(node.input[0], model)
-            weights = onnx.numpy_helper.to_array(left_tensor)
-            weights = np.reshape(weights, (1, 1, input_shape[-1], output_shape[-1]))
-            dict_input[idx] = [node.input[0]]
-    else:
-        dict_input[idx] = node.input
-        input_shape = []
-        for input_value in node.input:
-            input_shape.append(get_shape(input_value, model))
-        side = 2
-        weights = None
-        # to check
     return MatMul(
         original_name=node.name,
         idx=idx,
         size=size,
         input_shapes=input_shape,
-        weights=weights,
-        side=side,
         activation_function=Linear(),
     )
 

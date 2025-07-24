@@ -38,8 +38,6 @@ class MatMul(Layer):
         idx: int,
         size: int,
         input_shapes: list,
-        weights: np.ndarray,
-        side: int,
         activation_function: ActivationFunctions,
     ) -> None:
         """Build a MatMul layer."""
@@ -53,38 +51,17 @@ class MatMul(Layer):
             self.original_name = original_name
         self.activation_function = activation_function
         self.local_var = "dotproduct"
-        self.side = side
         self.input_shapes = input_shapes
-        if weights is not None:
-            self.weights = weights
-            self.nb_weights = self.count_elements_array(self.weights)
 
-        if self.side == 0:
-            self.output_channels = self.input_shapes[1]
-            self.output_height = self.input_shapes[-2]
-            self.output_width = self.weights.shape[-1]
-            self.shared_dimension = self.input_shapes[-1]
-        elif self.side == 1:
-            self.output_channels = self.input_shapes[1]
-            self.output_width = self.input_shapes[-1]
-            self.output_height = self.weights.shape[-2]
-            self.shared_dimension = self.input_shapes[-2]
-        elif self.side == 2:
-            self.output_channels = self.input_shapes[0][1]
-            self.output_height = self.input_shapes[0][-2]
-            self.output_width = self.input_shapes[1][-1]
-            self.shared_dimension = self.input_shapes[0][-1]
+        self.output_channels = self.input_shapes[0][1]
+        self.output_height = self.input_shapes[0][-2]
+        self.output_width = self.input_shapes[1][-1]
+        self.shared_dimension = self.input_shapes[0][-1]
 
         ####### Checking the instantiation#######
 
         ### Checking argument type ###
         msg = ""
-        if type(self.idx) is not int:
-            msg = "Error: idx type in MatMul (idx must be int)"
-            msg += "\n"
-        if type(self.size) is not int:
-            msg = "Error: size type in MatMul (size must be int)"
-            msg += "\n"
         if type(self.input_shapes[0]) is list:
             for input_shape in self.input_shapes:
                 if any(type(shape) is not int for shape in input_shape):
@@ -96,48 +73,21 @@ class MatMul(Layer):
         if hasattr(self, "weights") and type(self.weights) is not np.ndarray:
             msg = "Error: weights in MatMul (weights must be an numpy array)"
             msg += "\n"
-        if type(side) is not int:
-            msg = "Error: side type in MatMul (side must be a boolean)"
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 
         ### Checking value consistency ###
         msg = ""
-        if self.side == 1:
-            if self.weights.shape[-1] != self.input_shapes[-2]:
-                msg = f"Error: non consistency between weight shape and input shape in MatMul ({self.weights.shape[-1]}!={self.input_shapes[-2]})"
-                msg += "\n"
-            if (
-                self.size
-                != self.weights.shape[-2] * self.input_shapes[-1] * self.output_channels
-            ):
-                msg = f"Error: size value in MatMul ({self.size} !={self.weights.shape[-2] * self.input_shapes[-1]})"
-                msg += "\n"
-        elif self.side == 0:
-            if self.weights.shape[-2] != self.input_shapes[-1]:
-                msg = f"Error: non consistency between weight shape and input shape in MatMul ({self.weights.shape[-2]}!={self.input_shapes[-1]})"
-                msg += "\n"
-            if (
-                self.size
-                != self.weights.shape[-1] * self.input_shapes[-2] * self.output_channels
-            ):
-                msg = f"Error: size value in MatMul ({self.size} !={self.weights.shape[-1] * self.input_shapes[-2]})"
-                msg += "\n"
-        elif self.side == 2:
-            if self.input_shapes[1][-2] != self.input_shapes[0][-1]:
-                msg = f"Error: non consistency between weight shape and input shape in MatMul ({self.input_shapes[1][-2]}!={self.input_shapes[0][-1]})"
-                msg += "\n"
-            if (
-                self.size
-                != self.input_shapes[1][-1]
-                * self.input_shapes[0][-2]
-                * self.output_channels
-            ):
-                msg = f"Error: size value in MatMul ({self.size} !={self.input_shapes[1][-1] * self.input_shapes[0][-2]})"
-                msg += "\n"
-        else:
-            msg += f"Error: side value in Matmul (0 is Input*Weight, 1 is Weight*Input, 2 is Input_1*Input_2, {self.side} is not implemented)"
+        if self.input_shapes[1][-2] != self.input_shapes[0][-1]:
+            msg = f"Error: non consistency between weight shape and input shape in MatMul ({self.input_shapes[1][-2]}!={self.input_shapes[0][-1]})"
+            msg += "\n"
+        if (
+            self.size
+            != self.input_shapes[1][-1]
+            * self.input_shapes[0][-2]
+            * self.output_channels
+        ):
+            msg = f"Error: size value in MatMul ({self.size} !={self.input_shapes[1][-1] * self.input_shapes[0][-2]})"
             msg += "\n"
         if msg:
             raise ValueError(msg)
@@ -165,25 +115,18 @@ class MatMul(Layer):
     ) -> np.ndarray:
         """Compute output of layer."""
         out = np.array([])
-        if self.side == 2:
-            input_1 = input_array[0].reshape(self.input_shapes[0])
-            input_2 = input_array[1].reshape(self.input_shapes[1])
-            out = self.activation_function.compute(np.matmul(input_1, input_2))
+        input_1 = input_array[0].reshape(self.input_shapes[0])
+        input_2 = input_array[1].reshape(self.input_shapes[1])
+        quantized = any(np.issubdtype(i.dtype, np.integer) for i in input_array)
+        if quantized:
+            qtype = (
+                input_1.dtype
+                if np.issubdtype(input_1.dtype, np.integer)
+                else input_2.dtype
+            )
+            out = np.matmul(input_1, input_2, dtype=self.temp_pydtype)
+            out = np.right_shift(out, self.compute_post_shift()).astype(qtype)
         else:
-            input_1 = input_array.reshape(self.input_shapes)
-            if self.side == 1:
-                if np.issubdtype(input_1.dtype, np.integer):
-                    out = np.matmul(self.weights, input_1, dtype=self.temp_pydtype)
-                else:
-                    out = np.matmul(self.weights, input_1)
-            elif self.side == 0:
-                if np.issubdtype(input_1.dtype, np.integer):
-                    out = np.matmul(input_1, self.weights, dtype=self.temp_pydtype)
-                else:
-                    out = np.matmul(input_1, self.weights)
-            if np.issubdtype(input_1.dtype, np.integer):
-                out = np.right_shift(out, self.compute_post_shift()).astype(
-                    input_1.dtype,
-                )
-            out = self.activation_function.compute(out)
+            out = np.matmul(input_1, input_2)
+        out = self.activation_function.compute(out)
         return out  # Case should not be happening

@@ -897,7 +897,10 @@ class CodeGenerator(ABC):
                     layer_qconf = self.target_cfg["quantization"]["layers"][
                         l.original_name
                     ]
-                    l.qparam = layer_qconf["params"]
+                    if isinstance(l, ConstantLayer):
+                        l.qparam = layer_qconf["out"]
+                    else:
+                        l.qparam = layer_qconf["params"]
                     (_, m) = qform.parse_q_format(l.qparam)
                     if hasattr(l, "weights"):
                         l.weights = np.rint(l.weights * (2**m - 1)).astype(
