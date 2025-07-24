@@ -16,7 +16,6 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-import unittest
 
 import onnx
 import onnxruntime as rt
@@ -70,12 +69,17 @@ class TestAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         )
 
         # Compute Acetone debug outputs
-        generator = acetone_nnet.CodeGenerator(file=model_path,
-                                               test_dataset=dataset,
-                                               nb_tests=1,
-                                               debug_mode="onnx")
+        generator = acetone_nnet.CodeGenerator(
+            file=model_path,
+            test_dataset=dataset,
+            nb_tests=1,
+            debug_mode="onnx",
+        )
         acetone_outputs, acetone_layers = generator.compute_inference("")
-        acetone_outputs, acetone_layers = debug.reorder_outputs(acetone_outputs, acetone_layers)
+        acetone_outputs, acetone_layers = debug.reorder_outputs(
+            acetone_outputs,
+            acetone_layers,
+        )
 
         # Compute Acetone reference output
         _, acetone_reference = acetoneTestCase.run_acetone_for_test(
@@ -97,14 +101,12 @@ class TestAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         self.assertListAlmostEqual(acetone_reference, reference_output)
 
         # Compare
-        same = debug.compare_result(
+        assert debug.compare_result(
             acetone_result=acetone_outputs,
             reference_result=onnx_outputs,
             targets=acetone_layers,
             verbose=True,
         )
-
-        assert same
 
     def test_acas_coc_onnx_python(self) -> None:
         """Tests Acas COC, ONNX model, compare between python et C code."""

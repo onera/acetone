@@ -409,19 +409,20 @@ class CodeGenerator(ABC):
 
                     # Debug Mode
                     if self.debug_mode and layer.idx in self.debug_target:
-                        # Add the inference result of the layer to debug_output
-                        debug_output.append(layer_output)
-                        if (self.data_format == "channels_last") and hasattr(
-                            layer,
-                            "output_channels",
-                        ):
-                            debug_output[-1] = np.transpose(
-                                debug_output[-1],
-                                (1, 2, 0),
-                            )
-                        debug_output[-1] = debug_output[-1].flatten()
+                        if not isinstance(layer, ConstantLayer):
+                            # Add the inference result of the layer to debug_output
+                            debug_output.append(layer_output)
+                            if (self.data_format == "channels_last") and hasattr(
+                                layer,
+                                "output_channels",
+                            ):
+                                debug_output[-1] = np.transpose(
+                                    debug_output[-1],
+                                    (1, 2, 0),
+                                )
+                            debug_output[-1] = debug_output[-1].flatten()
 
-                        targets.append(str(layer.name) + " " + str(layer.idx))
+                            targets.append(str(layer.name) + " " + str(layer.idx))
 
                 nn_output = layer_output
 
