@@ -17,15 +17,15 @@
 ******************************************************************************
 """
 
+import logging
+
+import onnx
+from onnxscript import FLOAT, script
+from onnxscript import opset18 as op
+
 from tests.tests_inference import acetoneTestCase
 
-from onnxscript import opset18 as op
-from onnxscript import script
-import onnx
-import logging
-from onnxscript import FLOAT
-
-targetconf = '''
+targetconf = """
 {
     "name":"AVX",
     "cflags":"-O1",
@@ -37,13 +37,13 @@ targetconf = '''
         "temp_pydtype":"int32",
         "layers":
         {
-            "Input_layer_0":{
+            "A":{
                 "out":"Q0.15"
             },
-            "Input_layer_1":{
+            "B":{
                 "out":"Q0.15"
             },
-            "Add_2":{
+            "n0":{
                 "in":"Q0.15",
                 "params":"Q0.10",
                 "out":"Q0.13"
@@ -51,17 +51,20 @@ targetconf = '''
         }
     }  
 }
-'''
+"""
+
 
 def writeconf(conf):
-    ''' writes target config file to CWD '''
-    with open('AVX512VNNI.json','w') as f:
+    """Writes target config file to CWD"""
+    with open("AVX512VNNI.json", "w") as f:
         f.write(conf)
 
+
 @script(default_opset=op)
-def ONNX_TestAdd(A: FLOAT[8],B: FLOAT[8]) -> FLOAT[8]:
-    ''' ONNX script to define Add model '''
+def ONNX_TestAdd(A: FLOAT[8], B: FLOAT[8]) -> FLOAT[8]:
+    """ONNX script to define Add model"""
     return A + B
+
 
 class TestBroadcast(acetoneTestCase.AcetoneTestCase):
 
@@ -71,8 +74,11 @@ class TestBroadcast(acetoneTestCase.AcetoneTestCase):
         model = ONNX_TestAdd.to_model_proto()
         model = onnx.shape_inference.infer_shapes(model)
         logging.info(ONNX_TestAdd.to_model_proto())
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, ONNX_TestAdd.to_model_proto(),target="AVX512VNNI")
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name, ONNX_TestAdd.to_model_proto(), target="AVX512VNNI",
+        )
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+
 
 if __name__ == "__main__":
     acetoneTestCase.main()
