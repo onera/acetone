@@ -11,7 +11,7 @@ extern {{data_type}} cst_{{name}}[{{size}}];
 {{/cst}}
 
 {{#temp_size}}
-extern {{data_type}} tensor_temp[{{temp_size}}];
+extern {{temp_data_type}} tensor_temp[{{temp_size}}];
 
 {{/temp_size}}
 {{#layers}}

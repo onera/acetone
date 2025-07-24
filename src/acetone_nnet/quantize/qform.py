@@ -1,5 +1,6 @@
 import re
 
+
 def parse_q_format(q_string: str) -> tuple[int, int] | None:
     """
     Parses a string in the Qx.y format using a regular expression.
@@ -42,4 +43,3 @@ def parse_q_format(q_string: str) -> tuple[int, int] | None:
     else:
         # If the pattern does not match, return None.
         return None
-
