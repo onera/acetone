@@ -85,9 +85,6 @@ class Layer(ABCHasTraits):
     #: Identifier for tensor inputs/outputs liveliness
     path = Union(None, Int)
 
-    #: Index in topologically layer order
-    sorted = Union(None, Int)
-
     # FIXME Should be at worst a computed property,
     #  at best an explicit access to the layer output
     #: Allocated output variable name
