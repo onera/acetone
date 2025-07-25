@@ -20,6 +20,7 @@
 """
 
 from abc import abstractmethod
+from collections.abc import Callable
 
 import numpy as np
 from typing_extensions import Self
@@ -34,6 +35,10 @@ class ActivationFunctions:
         self.name = ""
         self.comment = ""
 
+    def as_lambda(self) -> Callable:
+        """Return the activation function as a lambda for code generation."""
+        return lambda x: self.write_activation_str(x)
+
     @abstractmethod
     def compute(self: Self, z: np.ndarray) -> np.ndarray:
         """Compute the python output."""
@@ -43,15 +48,17 @@ class ActivationFunctions:
         """Generate the string to print."""
 
     def __eq__(
-            self: Self,
-            other,
+        self: Self,
+        other,
     ) -> bool:
         """Eq method for layers."""
         if type(self) is type(other):
             keys = list(self.__dict__.keys())
             for key in keys:
-                if (key in ("previous_layer", "next_layer")
-                        or type(self.__dict__[key]) is dict):
+                if (
+                    key in ("previous_layer", "next_layer")
+                    or type(self.__dict__[key]) is dict
+                ):
                     continue
 
                 if type(self.__dict__[key]) is np.ndarray:
@@ -218,8 +225,13 @@ class Clip(ActivationFunctions):
 
         ### Checking value consistency ###
         if self.min > self.max:
-            raise ValueError("Error: min and max values in Clip ("
-                             + str(self.min) + " > " + str(self.max) + ")")
+            raise ValueError(
+                "Error: min and max values in Clip ("
+                + str(self.min)
+                + " > "
+                + str(self.max)
+                + ")",
+            )
 
     def compute(self: Self, z: np.ndarray) -> np.ndarray:
         """Compute the python output."""
@@ -229,6 +241,19 @@ class Clip(ActivationFunctions):
         """Generate the string to print."""
         # output = condition ? value_if_true : value_if_false
         # output = input > max ? max : (input < min ? min : input)
-        return (local_var + " > " + str(self.max) + " ? " + str(self.max) + " : ("
-                + local_var + " < " + str(self.min) + " ? " + str(self.min) + " : "
-                + local_var + ")")
+        return (
+            local_var
+            + " > "
+            + str(self.max)
+            + " ? "
+            + str(self.max)
+            + " : ("
+            + local_var
+            + " < "
+            + str(self.min)
+            + " ? "
+            + str(self.min)
+            + " : "
+            + local_var
+            + ")"
+        )

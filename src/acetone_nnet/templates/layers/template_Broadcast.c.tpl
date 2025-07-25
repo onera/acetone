@@ -28,5 +28,5 @@
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = {{{activation_function}}};
+        output_{{road}}[k] = {{#activation}}tensor_temp[k]{{/activation}};
     }

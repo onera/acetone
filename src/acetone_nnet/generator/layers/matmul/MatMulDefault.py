@@ -46,11 +46,7 @@ class MatMulDefault(MatMul):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = (
-            self.activation_function.write_activation_str(
-                f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]",
-            )
-        )
+        mustach_hash["activation"] = self.activation_function.as_lambda()
 
         mustach_hash["shared_dimension"] = self.shared_dimension
         mustach_hash["output_channels"] = self.output_channels

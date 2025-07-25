@@ -10,11 +10,10 @@
                 {
                     tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] += {{output_str_left}}[k + {{shared_dimension}}*(i + {{output_height}}*f)]*{{output_str_right}}[j + {{output_width}}*(k + {{shared_dimension}}*f)];
                 }
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
             }
         }
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = tensor_temp[k];
+        output_{{road}}[k] = {{#activation}}tensor_temp[k]{{/activation}};
     }
