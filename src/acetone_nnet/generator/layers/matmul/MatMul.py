@@ -19,14 +19,11 @@
 ******************************************************************************
 """
 
-import logging
-
 import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
-from acetone_nnet.quantize import qform
 
 
 class MatMul(Layer):
@@ -77,20 +74,6 @@ class MatMul(Layer):
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
 
-    def compute_post_shift(self):
-        """Q compute the rescaling factor"""
-        if hasattr(self, "qparam"):
-            (_, mparam) = qform.parse_q_format(self.qparam)
-            (_, min) = qform.parse_q_format(self.qin)
-            (_, mout) = qform.parse_q_format(self.qout)
-            qpost_shift = min + mparam - mout
-            if qpost_shift < 0:
-                logging.warning(
-                    f"MatMul {self} qpost_shift invalid {qpost_shift}, take 0",
-                )
-                qpost_shift = 0
-            return qpost_shift
-
     def forward_path_layer(
         self: Self,
         input_array: np.ndarray | list[np.ndarray],
@@ -99,16 +82,7 @@ class MatMul(Layer):
         out = np.array([])
         input_1 = input_array[0].reshape(self.input_shapes[0])
         input_2 = input_array[1].reshape(self.input_shapes[1])
-        quantized = any(np.issubdtype(i.dtype, np.integer) for i in input_array)
-        if quantized:
-            qtype = (
-                input_1.dtype
-                if np.issubdtype(input_1.dtype, np.integer)
-                else input_2.dtype
-            )
-            out = np.matmul(input_1, input_2, dtype=self.temp_pydtype)
-            out = np.right_shift(out, self.compute_post_shift()).astype(qtype)
-        else:
-            out = np.matmul(input_1, input_2)
-        out = self.activation_function.compute(out)
-        return out  # Case should not be happening
+        out = np.matmul(
+            input_1, input_2, dtype=getattr(self, "temp_pydtype", input_1.dtype),
+        )
+        return self.activation_function.compute(out)

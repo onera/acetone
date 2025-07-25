@@ -28,8 +28,5 @@
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        {{#quantize}}
-        tensor_temp[k] >>= {{qshiftr}};
-        {{/quantize}}
-        output_{{road}}[k] = {{{activation_function}}};
+        output_{{road}}[k] = {{#activation}}tensor_temp[k]{{/activation}};
     }

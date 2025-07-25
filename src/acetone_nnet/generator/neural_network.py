@@ -38,6 +38,7 @@ from typing_extensions import Self
 from acetone_nnet import templates
 from acetone_nnet.importers.parser import parser
 from acetone_nnet.quantize import qform
+from acetone_nnet.quantize.activation import QuantizeShiftActivation
 from acetone_nnet.templates.template_makefile import TemplateMakefile
 from acetone_nnet.versioning.versioning import versioning
 
@@ -902,6 +903,17 @@ class CodeGenerator(ABC):
                         l.qparam = layer_qconf["out"]
                     else:
                         l.qparam = layer_qconf["params"]
+
+                        # Add  activation
+                        l.activation_function = QuantizeShiftActivation(
+                            ctype=self.target_cfg["quantization"]["dtype"],
+                            pytype=self.data_type_py,
+                            qparam=layer_qconf["params"],
+                            qin=layer_qconf["in"],
+                            qout=layer_qconf["out"],
+                            activation_function=l.activation_function,
+                        )
+
                     (_, m) = qform.parse_q_format(l.qparam)
                     if hasattr(l, "weights"):
                         l.weights = np.rint(l.weights * (2**m - 1)).astype(
