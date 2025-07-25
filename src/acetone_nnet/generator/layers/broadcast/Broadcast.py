@@ -37,14 +37,14 @@ class Broadcast(Layer):
     """Broadcast layer base class."""
 
     def __init__(
-            self: Self,
-            original_name : str,
-            idx: int,
-            size: int,
-            input_shapes: list[np.ndarray],
-            output_shape: list[int],
-            activation_function: ActivationFunctions,
-            constant: np.ndarray | float | None = None,
+        self: Self,
+        original_name: str,
+        idx: int,
+        size: int,
+        input_shapes: list[np.ndarray],
+        output_shape: list[int],
+        activation_function: ActivationFunctions,
+        constant: np.ndarray | float | None = None,
     ) -> None:
         """Instantiate a Broadcast base layer."""
         super().__init__()
@@ -95,20 +95,31 @@ class Broadcast(Layer):
         ### Checking value consistency ###
         msg = ""
         if self.size != self.output_channels * self.output_height * self.output_width:
-            msg += (f"Error: size value in Broadcast "
-                    f"({self.size}!={self.output_channels * self.output_height * self.output_width})")
+            msg += (
+                f"Error: size value in Broadcast "
+                f"({self.size}!={self.output_channels * self.output_height * self.output_width})"
+            )
             msg += "\n"
         if (self.output_channels, self.output_height, self.output_width) != (
-                np.max(self.input_shapes[:, 1]), np.max(self.input_shapes[:, 2]), np.max(self.input_shapes[:, 3])):
-            msg += (f"Error: non consistency between inputs shape and output shape in Broadcast "
-                    f"(({np.max(self.input_shapes[:, 1])},{np.max(self.input_shapes[:, 2])},{np.max(self.input_shapes[:, 3])}!=({self.output_channels}, {self.output_height}, {self.output_width}))")
+            np.max(self.input_shapes[:, 1]),
+            np.max(self.input_shapes[:, 2]),
+            np.max(self.input_shapes[:, 3]),
+        ):
+            msg += (
+                f"Error: non consistency between inputs shape and output shape in Broadcast "
+                f"(({np.max(self.input_shapes[:, 1])},{np.max(self.input_shapes[:, 2])},{np.max(self.input_shapes[:, 3])}!=({self.output_channels}, {self.output_height}, {self.output_width}))"
+            )
             msg += "\n"
         for shape in self.input_shapes:
-            if (shape[1] != 1 and shape[1] != self.output_channels) or (
-                    shape[2] != 1 and shape[2] != self.output_height) or (
-                    shape[3] != 1 and shape[3] != self.output_width):
-                msg += (f"Error: input shape in Broadcast not broadcastable to shape "
-                        f"({self.output_channels}, {self.output_height}, {self.output_width})")
+            if (
+                (shape[1] != 1 and shape[1] != self.output_channels)
+                or (shape[2] != 1 and shape[2] != self.output_height)
+                or (shape[3] != 1 and shape[3] != self.output_width)
+            ):
+                msg += (
+                    f"Error: input shape in Broadcast not broadcastable to shape "
+                    f"({self.output_channels}, {self.output_height}, {self.output_width})"
+                )
                 msg += "\n"
         if msg:
             raise ValueError(msg)
@@ -125,11 +136,9 @@ class Broadcast(Layer):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        if hasattr(self,'qparam'):
-            mustach_hash["quantize"] = True
-            mustach_hash["qshiftr"] = self.compute_post_shift()
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
+        mustach_hash["activation_function"] = (
+            self.activation_function.write_activation_str("tensor_temp[k]")
+        )
 
         mustach_hash["output_channels"] = self.output_channels
         mustach_hash["output_height"] = self.output_height
@@ -175,7 +184,9 @@ class Broadcast(Layer):
             constant_dict["operator"] = self.specific_operator
             mustach_hash["constant"] = [constant_dict]
 
-        with open(self.template_path / "layers" / "template_Broadcast.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "template_Broadcast.c.tpl",
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -183,7 +194,7 @@ class Broadcast(Layer):
 
     @abstractmethod
     def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
+        self: Self,
+        input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""

@@ -75,7 +75,9 @@ class TestBroadcast(acetoneTestCase.AcetoneTestCase):
         model = onnx.shape_inference.infer_shapes(model)
         logging.info(ONNX_TestAdd.to_model_proto())
         acetone_result = acetoneTestCase.run_acetone_for_test(
-            self.tmpdir_name, ONNX_TestAdd.to_model_proto(), target="AVX512VNNI",
+            self.tmpdir_name,
+            ONNX_TestAdd.to_model_proto(),
+            target="AVX512VNNI",
         )
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
