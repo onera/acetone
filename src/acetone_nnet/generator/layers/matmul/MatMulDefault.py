@@ -59,9 +59,6 @@ class MatMulDefault(MatMul):
 
         mustach_hash["output_str_left"] = self.previous_layer[0].output_str
         mustach_hash["output_str_right"] = self.previous_layer[1].output_str
-        if hasattr(self, "qparam"):
-            mustach_hash["qcast"] = f"({self.cdtype})("
-            mustach_hash["qshift"] = f" >> {self.compute_post_shift()})"
 
         with open(
             self.template_path / "layers" / "template_MatMul.c.tpl",

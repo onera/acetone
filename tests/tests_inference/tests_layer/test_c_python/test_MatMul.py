@@ -17,15 +17,9 @@
 ******************************************************************************
 """
 
-from tests.tests_inference import acetoneTestCase
-acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
-import sys
-sys.path.append(acetoneTestCase_path)
-import acetoneTestCase
-
-import tensorflow as tf
-import onnx
 import numpy as np
+import onnx
+import tensorflow as tf
 
 from tests.tests_inference import acetoneTestCase
 
@@ -38,19 +32,25 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
     def test_MatMul0(self):
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
-        X = onnx.helper.make_tensor_value_info(model_input_name,
-                                               onnx.TensorProto.FLOAT,
-                                               [None, 1, 1, 5])
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name,
+            onnx.TensorProto.FLOAT,
+            [None, 1, 1, 5],
+        )
         model_output_name = "Y"
-        Y = onnx.helper.make_tensor_value_info(model_output_name,
-                                               onnx.TensorProto.FLOAT,
-                                               [None, 1, 1, 50])
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name,
+            onnx.TensorProto.FLOAT,
+            [None, 1, 1, 50],
+        )
 
         matmul_W = np.random.rand(5, 50).astype(np.float32)
         matmul_W_name = "W0"
-        matmul_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(matmul_W_name,
-                                                                                matmul_W,
-                                                                                onnx.TensorProto.FLOAT)
+        matmul_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            matmul_W_name,
+            matmul_W,
+            onnx.TensorProto.FLOAT,
+        )
 
         matmul_node_name = "Matmul"
         matmul_node = onnx.helper.make_node(
@@ -77,26 +77,35 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
         onnx.checker.check_model(model_def)
         onnx.save(model_def, self.tmpdir_name + "/model.onnx")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name,
+            self.tmpdir_name + "/model.onnx",
+        )
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
     def test_MatMul1(self):
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
-        X = onnx.helper.make_tensor_value_info(model_input_name,
-                                               onnx.TensorProto.FLOAT,
-                                               [None, 1, 5, 1])
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name,
+            onnx.TensorProto.FLOAT,
+            [None, 1, 5, 1],
+        )
         model_output_name = "Y"
-        Y = onnx.helper.make_tensor_value_info(model_output_name,
-                                               onnx.TensorProto.FLOAT,
-                                               [None, 1, 50, 1])
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name,
+            onnx.TensorProto.FLOAT,
+            [None, 1, 50, 1],
+        )
 
         matmul_W = np.random.rand(50, 5).astype(np.float32)
         matmul_W_name = "W0"
-        matmul_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(matmul_W_name,
-                                                                                matmul_W,
-                                                                                onnx.TensorProto.FLOAT)
+        matmul_W_initializer_tensor = acetoneTestCase.create_initializer_tensor(
+            matmul_W_name,
+            matmul_W,
+            onnx.TensorProto.FLOAT,
+        )
 
         matmul_node_name = "Matmul"
         matmul_node = onnx.helper.make_node(
@@ -123,20 +132,27 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
         onnx.checker.check_model(model_def)
         onnx.save(model_def, self.tmpdir_name + "/model.onnx")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name,
+            self.tmpdir_name + "/model.onnx",
+        )
 
         self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
 
     def test_MatMul2(self):
         # IO tensors (ValueInfoProto).
         model_input_name = "X"
-        X = onnx.helper.make_tensor_value_info(model_input_name,
-                                               onnx.TensorProto.FLOAT,
-                                               [None, 3, 10, 10])
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name,
+            onnx.TensorProto.FLOAT,
+            [None, 3, 10, 10],
+        )
         model_output_name = "Y"
-        Y = onnx.helper.make_tensor_value_info(model_output_name,
-                                               onnx.TensorProto.FLOAT,
-                                               [None, 3, 10, 10])
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name,
+            onnx.TensorProto.FLOAT,
+            [None, 3, 10, 10],
+        )
 
         matmul_node_name = "Matmul"
         matmul_node = onnx.helper.make_node(
@@ -160,7 +176,10 @@ class TestMatMul(acetoneTestCase.AcetoneTestCase):
         onnx.checker.check_model(model_def)
         onnx.save(model_def, self.tmpdir_name + "/model.onnx")
 
-        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name,
+            self.tmpdir_name + "/model.onnx",
+        )
 
         self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
 
