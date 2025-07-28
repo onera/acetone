@@ -32,7 +32,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
         in_shape = (1, int(in_shape[0]), int(in_shape[1]), int(in_shape[2]))
         out_shape = (
             1,
-            int(np.random.randint(1, in_shape[1])),
+            int(np.random.randint(1, 1+in_shape[1])),
             int(in_shape[2]),
             int(in_shape[3]),
         )
@@ -96,7 +96,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
         out_shape = (
             1,
             int(in_shape[1]),
-            int(np.random.randint(1, in_shape[2])),
+            int(np.random.randint(1, 1+in_shape[2])),
             int(in_shape[3]),
         )
 
@@ -160,7 +160,7 @@ class TestGatherElements(acetoneTestCase.AcetoneTestCase):
             1,
             int(in_shape[1]),
             int(in_shape[2]),
-            int(np.random.randint(1, in_shape[3])),
+            int(np.random.randint(1, 1+in_shape[3])),
         )
 
         model_input_name = "X"
