@@ -90,7 +90,4 @@ class MatMul(Layer):
             out_i64 = np.matmul(input_1, input_2, dtype=np.int64)
             if out.all() != out_i64.all():
                 logging.warning("MatMul integer overflow !!!")
-        out_no_overflow = np.matmul(
-            input_1, input_2, dtype=np.int64,
-        )
         return self.activation_function.compute(out)
