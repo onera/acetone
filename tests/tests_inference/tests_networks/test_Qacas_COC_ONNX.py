@@ -22,117 +22,115 @@ from tests.tests_inference import acetoneTestCase
 
 target_conf = """
 {
-    "name":"AVX",
-    "cflags":"-O1",
-    "quantization":
-    {
-        "dtype":"short",
-        "temp_dtype":"int",
-        "pydtype":"int16",
-        "temp_pydtype":"int32",
-        "layers":
-        {
-            "X":{
-                "out":"Q0.15"
-            },
-            "W0":{
-                "out":"Q-3.18"
-            },
-            "MatMul_13":{
-                "in":"Q0.15",
-                "params":"Q-3.18",
-                "out":"Q2.13"
-            },
-            "B0": {
-                "out":"Q0.15"
-            },
-            "Add_14":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "W1": {
-                "out":"Q0.15"
-            },
-            "MatMul_15":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "B1": {
-                "out":"Q0.15"
-            },
-            "Add_16":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "W2": {
-                "out":"Q0.15"
-            },
-            "MatMul_17":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "B2": {
-                "out":"Q0.15"
-            },
-            "Add_18":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "W3": {
-                "out":"Q0.15"
-            },
-            "MatMul_19":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "B3": {
-                "out":"Q0.15"
-            },
-            "Add_20":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "W4": {
-                "out":"Q0.15"
-            },
-            "MatMul_21":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "B4": {
-                "out":"Q0.15"
-            },
-            "Add_22":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "W5": {
-                "out":"Q0.15"
-            },
-            "MatMul_23":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            },
-            "B5": {
-                "out":"Q0.15"
-            },
-            "Add_24":{
-                "in":"Q0.15",
-                "params":"Q0.15",
-                "out":"Q2.13"
-            }
-        }
+  "name": "AVX",
+  "cflags": "-O1",
+  "quantization": {
+    "dtype": "short",
+    "temp_dtype": "int",
+    "pydtype": "int16",
+    "temp_pydtype": "int32",
+    "layers": {
+      "X": {
+        "out": "Q0.15"
+      },
+      "W0": {
+        "out": "Q-2.17"
+      },
+      "MatMul_13": {
+        "out": "Q-2.17",
+        "in": "Q0.15",
+        "params": "Q-2.17"
+      },
+      "B0": {
+        "out": "Q-2.17"
+      },
+      "Add_14": {
+        "out": "Q0.15",
+        "in": "Q-2.17",
+        "params": "Q-2.17"
+      },
+      "W1": {
+        "out": "Q5.10"
+      },
+      "MatMul_15": {
+        "out": "Q1.14",
+        "in": "Q0.15",
+        "params": "Q5.10"
+      },
+      "B1": {
+        "out": "Q5.10"
+      },
+      "Add_16": {
+        "out": "Q1.14",
+        "in": "Q1.14",
+        "params": "Q5.10"
+      },
+      "W2": {
+        "out": "Q2.13"
+      },
+      "MatMul_17": {
+        "out": "Q2.13",
+        "in": "Q1.14",
+        "params": "Q2.13"
+      },
+      "B2": {
+        "out": "Q2.13"
+      },
+      "Add_18": {
+        "out": "Q2.13",
+        "in": "Q2.13",
+        "params": "Q2.13"
+      },
+      "W3": {
+        "out": "Q2.13"
+      },
+      "MatMul_19": {
+        "out": "Q3.12",
+        "in": "Q2.13",
+        "params": "Q2.13"
+      },
+      "B3": {
+        "out": "Q2.13"
+      },
+      "Add_20": {
+        "out": "Q3.12",
+        "in": "Q3.12",
+        "params": "Q2.13"
+      },
+      "W4": {
+        "out": "Q2.13"
+      },
+      "MatMul_21": {
+        "out": "Q3.12",
+        "in": "Q3.12",
+        "params": "Q2.13"
+      },
+      "B4": {
+        "out": "Q2.13"
+      },
+      "Add_22": {
+        "out": "Q3.12",
+        "in": "Q3.12",
+        "params": "Q2.13"
+      },
+      "W5": {
+        "out": "Q14.1"
+      },
+      "MatMul_23": {
+        "out": "Q14.1",
+        "in": "Q3.12",
+        "params": "Q14.1"
+      },
+      "B5": {
+        "out": "Q14.1"
+      },
+      "Add_24": {
+        "out": "Q15.0",
+        "in": "Q14.1",
+        "params": "Q14.1"
+      }
     }
+  }
 }
 """
 
