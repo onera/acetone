@@ -903,30 +903,38 @@ class CodeGenerator(ABC):
                         l.qparam = layer_qconf["out"]
                     else:
                         l.qparam = layer_qconf["params"]
-
-                        # Add  activation
-                        l.activation_function = QuantizeShiftActivation(
-                            ctype=self.target_cfg["quantization"]["dtype"],
-                            pytype=self.data_type_py,
-                            qparam=layer_qconf["params"],
-                            qin=layer_qconf["in"],
-                            qout=layer_qconf["out"],
-                            activation_function=l.activation_function,
-                        )
+                        if isinstance(l, MatMul): # Add  activation
+                            l.activation_function = QuantizeShiftActivation(
+                                ctype=self.target_cfg["quantization"]["dtype"],
+                                pytype=self.data_type_py,
+                                qparam=layer_qconf["params"],
+                                qin=layer_qconf["in"],
+                                qout=layer_qconf["out"],
+                                activation_function=l.activation_function,
+                            )
 
                     (_, m) = qform.parse_q_format(l.qparam)
                     if hasattr(l, "weights"):
-                        l.weights = np.rint(l.weights * (2**m - 1)).astype(
+                        weights = np.rint(l.weights * (2**m))
+                        l.weights = weights.astype(
                             self.data_type_py,
                         )
+                        if (weights!=l.weights).all():
+                            logging.warning("Weights MSB truncated")
                     if hasattr(l, "biases"):
-                        l.biases = np.rint(l.biases * (2**m - 1)).astype(
+                        biases = np.rint(l.biases * (2**m))
+                        l.biases = biases.astype(
                             self.data_type_py,
                         )
+                        if (biases!=l.biases).all():
+                            logging.warning("Biases MSB truncated")
                     if hasattr(l, "constant") and l.constant is not None:
-                        l.constant = np.rint(l.constant * (2**m - 1)).astype(
+                        constant = np.rint(l.constant * (2**m))
+                        l.constant = constant.astype(
                             self.data_type_py,
                         )
+                        if (constant!=l.constant).all():
+                            logging.warning("Constant MSB truncated")
                     l.qin = layer_qconf["in"]
                     l.qout = layer_qconf["out"]
                     logging.info(f"Quantize {l.name}_{l.idx} format {l.qparam}")

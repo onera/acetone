@@ -19,6 +19,8 @@
 
 from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
+import numpy as np
+import tempfile
 
 target_conf = """
 {
@@ -37,33 +39,33 @@ target_conf = """
         "out": "Q-2.17"
       },
       "MatMul_13": {
-        "out": "Q-2.17",
+        "out": "Q-1.16",
         "in": "Q0.15",
         "params": "Q-2.17"
       },
       "B0": {
-        "out": "Q-2.17"
+        "out": "Q-1.16"
       },
       "Add_14": {
-        "out": "Q0.15",
-        "in": "Q-2.17",
-        "params": "Q-2.17"
+        "out": "Q-1.16",
+        "in": "Q-1.16",
+        "params": "Q-1.16"
       },
       "W1": {
         "out": "Q5.10"
       },
       "MatMul_15": {
         "out": "Q1.14",
-        "in": "Q0.15",
+        "in": "Q-1.16",
         "params": "Q5.10"
       },
       "B1": {
-        "out": "Q5.10"
+        "out": "Q1.14"
       },
       "Add_16": {
         "out": "Q1.14",
         "in": "Q1.14",
-        "params": "Q5.10"
+        "params": "Q1.14"
       },
       "W2": {
         "out": "Q2.13"
@@ -90,12 +92,12 @@ target_conf = """
         "params": "Q2.13"
       },
       "B3": {
-        "out": "Q2.13"
+        "out": "Q3.12"
       },
       "Add_20": {
         "out": "Q3.12",
         "in": "Q3.12",
-        "params": "Q2.13"
+        "params": "Q3.12"
       },
       "W4": {
         "out": "Q2.13"
@@ -106,28 +108,28 @@ target_conf = """
         "params": "Q2.13"
       },
       "B4": {
-        "out": "Q2.13"
+        "out": "Q3.12"
       },
       "Add_22": {
         "out": "Q3.12",
         "in": "Q3.12",
-        "params": "Q2.13"
+        "params": "Q3.12"
       },
       "W5": {
         "out": "Q14.1"
       },
       "MatMul_23": {
-        "out": "Q14.1",
+        "out": "Q15.0",
         "in": "Q3.12",
         "params": "Q14.1"
       },
       "B5": {
-        "out": "Q14.1"
+        "out": "Q15.0"
       },
       "Add_24": {
         "out": "Q15.0",
-        "in": "Q14.1",
-        "params": "Q14.1"
+        "in": "Q15.0",
+        "params": "Q15.0"
       }
     }
   }
@@ -148,15 +150,26 @@ class TestQAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"
 
         writeconf(target_conf)  # writes target config AVX512VNNI.json in the CWD
-
+        fdata = np.random.rand(1,5)
+        idata = np.round(fdata*(2**15-1)).astype(np.int16)
         c_result, py_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
             target="AVX512VNNI",
+            datatest_path=idata
         )
-
+        tmp = tempfile.TemporaryDirectory()
+        cf_result, pyf_result = acetoneTestCase.run_acetone_for_test(
+            tmp.name,
+            model_path,
+            datatest_path=fdata
+        )
+        tmp.cleanup()
         self.assertListAlmostEqual(c_result, py_result)
+        self.assertListAlmostEqual(cf_result, pyf_result)
 
+        self.assertListAlmostEqual(c_result, cf_result, rtol=5.e-4)
+        self.assertListAlmostEqual(py_result, pyf_result, rtol=5.e-4)
 
 if __name__ == "__main__":
     acetoneTestCase.main()

@@ -88,6 +88,6 @@ class MatMul(Layer):
         """ checks that matmul does not overflow in low precision integer """
         if np.issubdtype(input_1.dtype,np.integer):
             out_i64 = np.matmul(input_1, input_2, dtype=np.int64)
-            if out.all() != out_i64.all():
+            if (out != out_i64).all():
                 logging.warning("MatMul integer overflow !!!")
         return self.activation_function.compute(out)

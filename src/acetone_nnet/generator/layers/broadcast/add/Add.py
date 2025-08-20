@@ -126,7 +126,7 @@ class Add(Layer):
                     .reshape(self.input_shapes[0][1:])
                     .astype(dtype=np.int64))
                 out_i64 += np.reshape(input_arrays[i], self.input_shapes[i][1:]).astype(dtype=np.int64)
-                if output.all() != out_i64.all():
+                if (output != out_i64).all():
                     logging.warning("Add integer overflow !!!")
         else:
             output = np.reshape(input_arrays, self.input_shapes[0][1:]).astype(
