@@ -154,13 +154,17 @@ class TanH(ActivationFunctions):
 
     def compute(self: Self, z: np.ndarray) -> np.ndarray:
         """Compute the python output."""
-        return (np.exp(z) - np.exp(-z)) / (np.exp(z) + np.exp(-z))
+        isnegz = z < 0
+        exp2z = np.exp(2.*z,dtype=z.dtype)
+        expm2z = np.exp(-2.*z,dtype=z.dtype)
+        x = (exp2z - 1.) / (exp2z + 1.)
+        y = (1 - expm2z) / (1 + expm2z)
+        ''' stable algorithm: shall only compute negative input exponent '''
+        return np.where(isnegz,x,y)
 
     def write_activation_str(self: Self, local_var: str) -> str:
         """Generate the string to print."""
-        s = "(exp(" + local_var + ")-exp(-" + local_var + "))/"
-        return s + "(exp(" + local_var + ")+exp(-" + local_var + "))"
-
+        return f"{local_var} < 0 ? (expf(2.*{local_var}) - 1.) / (expf(2.*{local_var}) + 1.) : (1. - expf(-2.*{local_var})) / (1. + expf(-2.*{local_var}))"
 
 class Linear(ActivationFunctions):
     """Linear layer."""
