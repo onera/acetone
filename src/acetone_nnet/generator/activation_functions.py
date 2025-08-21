@@ -84,12 +84,16 @@ class Sigmoid(ActivationFunctions):
 
     def compute(self: Self, z: np.ndarray) -> np.ndarray:
         """Compute the python output."""
-        return 1 / (1 + np.exp(-z))
+        isnegz = z < 0
+        expmz = np.exp(z,dtype=z.dtype)
+        x = expmz/(1+expmz)
+        y = 1 / (1 + np.exp(-z,dtype=z.dtype))
+        ''' stable algorithm: shall only compute negative input exponent '''
+        return np.where(isnegz,x,y)
 
     def write_activation_str(self: Self, local_var: str) -> str:
         """Generate the string to print."""
-        return "1 / (1 + exp(-" + local_var + "))"
-
+        return f"local_var < 0 ? expf({local_var})/(1+expf({local_var}) : 1 / (1 + expf(-{local_var}))"
 
 class ReLu(ActivationFunctions):
     """ReLu layer."""
