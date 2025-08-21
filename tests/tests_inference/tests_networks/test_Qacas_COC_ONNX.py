@@ -150,10 +150,10 @@ class TestQAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"
 
         writeconf(target_conf)  # writes target config AVX512VNNI.json in the CWD
-        fdata = np.random.rand(1,5)
-        idata = np.round(fdata*(2**15-1)).astype(np.int16)
+        fdata = np.random.rand(100,1,5) # 100 samples
+        idata = np.round(fdata*(np.iinfo(np.int16).max-1)).astype(np.int16)
         c_result, py_result = acetoneTestCase.run_acetone_for_test(
-            self.tmpdir_name,
+            "temp",
             model_path,
             target="AVX512VNNI",
             datatest_path=idata

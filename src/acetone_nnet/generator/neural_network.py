@@ -281,6 +281,7 @@ class CodeGenerator(ABC):
                     )
             case np.ndarray() as dataset:
                 d = dataset
+                self.nb_tests = dataset.shape[0]
             case Path() | str() as path:
                 d = self._load_dataset(Path(path), self.data_type_py, nb_tests)
             case _:
