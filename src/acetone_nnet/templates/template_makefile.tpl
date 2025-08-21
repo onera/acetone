@@ -5,6 +5,11 @@ CFLAGS =
 CFLAGS += {{.}}
 {{/compiler_flags}}
 
+LDFLAGS =
+{{#linker_flags}}
+LDFLAGS += {{.}}
+{{/linker_flags}}
+
 SRC =
 {{#source_files}}
 SRC += {{.}}
@@ -21,7 +26,7 @@ EXEC = {{executable_name}}
 all: $(EXEC)
 
 $(EXEC): $(OBJ)
-	$(CC) $(LDFLAGS)  -o $@ $(OBJ) $(LBLIBS) $(CFLAGS)
+	$(CC) $(LDFLAGS)  -o $@ $(OBJ) $(LBLIBS) $(CFLAGS) $(LDFLAGS)
 
 clean:
 	rm $(EXEC) *.o

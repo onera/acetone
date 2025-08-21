@@ -78,17 +78,19 @@ class CodeGenerator(ABC):
     def __init__(
         self: Self,
         file: MODEL_TYPE,
-        test_dataset: str | np.ndarray | Path | None = None,
-        external_input: bool | None = False,
         function_name: str = "inference",
+        nb_tests: int | str = 0,
+        test_dataset: str | np.ndarray | Path | None = None,
+        *,
+        external_input: bool | None = False,
         target: str = "generic",
         target_page_size: int = 4096,
-        nb_tests: int | str = 0,
         versions: dict[int | str, str] | None = None,
         normalize: bool | str = False,
         debug_mode: str | None = None,
         verbose: bool = False,
         to_hex: bool = True,
+        makefile_properties: dict[str, str] | None = None,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -171,6 +173,10 @@ class CodeGenerator(ABC):
             self.files_to_gen.append("target.h")
 
         self.target_page_size = target_page_size
+
+        self.makefile_properties = makefile_properties
+        if self.makefile_properties is None:
+            self.makefile_properties = {}
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -551,6 +557,15 @@ class CodeGenerator(ABC):
                 ),
             )
 
+
+    def _get_makefile_properties(self) -> dict[str, str | list[str]]:
+        """Get makefile properties."""
+        return {
+            "compiler": self.makefile_properties.get("compiler", "gcc"),
+            "linker_flags": self.makefile_properties.get("linker_flags", []),
+            "compiler_flags": self.makefile_properties.get("compiler_flags",["-g", "-w", "-lm"])
+        }
+
     def generate_makefile(
         self: Self,
         output_dir: Path,
@@ -564,11 +579,13 @@ class CodeGenerator(ABC):
             elif ".h" in filename:
                 header_files.append(filename)
 
+        properties = self._get_makefile_properties()
         # Configure Makefile template
         template = TemplateMakefile(
             self.function_name,
-            compiler="gcc",
-            compiler_flags=["-g", "-w", "-lm"],
+            compiler=properties["compiler"],
+            compiler_flags=properties["compiler_flags"],
+            linker_flags=properties["linker_flags"],
             header_files=header_files,
             source_files=source_files,
         )
