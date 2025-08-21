@@ -578,8 +578,11 @@ class CodeGenerator(ABC):
             header_files=header_files,
             source_files=source_files,
         )
-        if self.target_cfg is not None and "cflags" in self.target_cfg:
-            template.add_compiler_flags(self.target_cfg["cflags"])
+        if self.target_cfg is not None:
+            if "cflags" in self.target_cfg:
+                template.add_compiler_flags(self.target_cfg["cflags"])
+            if "ldflags" in self.target_cfg:
+                template.add_linker_flags(self.target_cfg["ldflags"])
         if self.bin_dataset:
             template.set_binary_test_dataset()
         # Generate Makefile
