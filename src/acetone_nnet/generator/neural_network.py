@@ -573,7 +573,8 @@ class CodeGenerator(ABC):
         template = TemplateMakefile(
             self.function_name,
             compiler="gcc",
-            compiler_flags=["-g", "-w", "-lm"],
+            compiler_flags=["-g", "-w"],
+            linker_flags=["-lm"],
             header_files=header_files,
             source_files=source_files,
         )

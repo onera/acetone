@@ -7,7 +7,7 @@ CFLAGS += {{.}}
 
 LDFLAGS =
 {{#linker_flags}}
-CFLAGS += {{.}}
+LDFLAGS += {{.}}
 {{/linker_flags}}
 
 SRC =
@@ -31,7 +31,7 @@ test_dataset.o: test_dataset.dat
 {{/bin_dataset}}
 
 $(EXEC): $(OBJ)
-	$(CC) -o $@ $(CFLAGS) $(OBJ) $(LBLIBS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LBLIBS) $(LDFLAGS)
 
 clean:
 	rm $(EXEC) *.o
