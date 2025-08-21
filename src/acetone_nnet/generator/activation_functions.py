@@ -93,7 +93,7 @@ class Sigmoid(ActivationFunctions):
 
     def write_activation_str(self: Self, local_var: str) -> str:
         """Generate the string to print."""
-        return f"local_var < 0 ? expf({local_var})/(1+expf({local_var}) : 1 / (1 + expf(-{local_var}))"
+        return f"({local_var} < 0) ? (expf({local_var}) / (1. + expf({local_var}))) : (1. / (1. + expf(-{local_var})))"
 
 class ReLu(ActivationFunctions):
     """ReLu layer."""
@@ -140,7 +140,7 @@ class LeakyReLu(ActivationFunctions):
     def write_activation_str(self: Self, local_var: str) -> str:
         """Generate the string to print."""
         # output = condition ? value_if_true : value_if_false
-        return f"{local_var} > 0 ? {local_var} : {self.alpha!s}*{local_var}"
+        return f"{local_var} > 0. ? {local_var} : {self.alpha!s}*{local_var}"
 
 
 class TanH(ActivationFunctions):
@@ -164,7 +164,7 @@ class TanH(ActivationFunctions):
 
     def write_activation_str(self: Self, local_var: str) -> str:
         """Generate the string to print."""
-        return f"{local_var} < 0 ? (expf(2.*{local_var}) - 1.) / (expf(2.*{local_var}) + 1.) : (1. - expf(-2.*{local_var})) / (1. + expf(-2.*{local_var}))"
+        return f"({local_var} < 0.) ? (expf(2.*{local_var}) - 1.) / (expf(2.*{local_var}) + 1.) : (1. - expf(-2.*{local_var})) / (1. + expf(-2.*{local_var}))"
 
 class Linear(ActivationFunctions):
     """Linear layer."""
