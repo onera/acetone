@@ -13,6 +13,7 @@ class TemplateMakefile(TemplateSpec):
     executable_name: str
     compiler: str = field(default="gcc")
     compiler_flags: list[str] = field(default_factory=list)
+    linker_flags: list[str] = field(default_factory=list)
     source_files: list[str] = field(default_factory=list)
     header_files: list[str] = field(default_factory=list)
 
@@ -28,3 +29,9 @@ class TemplateMakefile(TemplateSpec):
 
     def add_compiler_flags(self, *flags: str) -> None:
         self.compiler_flags.extend(flags)
+
+    def add_linker_flags(self, *flags: str) -> None:
+        self.linker_flags.extend(flags)
+
+    def set_binary_test_dataset(self, target : str = "elf64-x86-64") -> None:
+        self.bin_dataset = target

@@ -89,6 +89,7 @@ class CodeGenerator(ABC):
         debug_mode: str | None = None,
         verbose: bool = False,
         to_hex: bool = True,
+        bin_dataset: bool = False,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -99,6 +100,7 @@ class CodeGenerator(ABC):
         self.verbose = verbose
         self.to_hex = to_hex
         self.target_cfg = None
+        self.bin_dataset = bin_dataset
         if target != "generic":
             try:
                 self.target_cfg = json.loads(
@@ -508,8 +510,10 @@ class CodeGenerator(ABC):
                     },
                 ),
             )
-
-        if not self.read_ext_input:
+        if self.bin_dataset:
+            with Path.open(output_dir / "test_dataset.dat", "w+") as test_dataset_bin:
+                self.test_dataset.tofile(test_dataset_bin)
+        elif not self.read_ext_input:
             # Generate test source file
             dataset = "{"
             if self.test_dataset is not None:
@@ -575,6 +579,8 @@ class CodeGenerator(ABC):
         )
         if self.target_cfg is not None and "cflags" in self.target_cfg:
             template.add_compiler_flags(self.target_cfg["cflags"])
+        if self.bin_dataset:
+            template.set_binary_test_dataset()
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))

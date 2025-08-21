@@ -150,19 +150,21 @@ class TestQAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         model_path = MODELS_DIR / "acas" / "acas_COC" / "nn_acas_COC.onnx"
 
         writeconf(target_conf)  # writes target config AVX512VNNI.json in the CWD
-        fdata = np.random.rand(100,1,5) # 100 samples
+        fdata = np.random.rand(100,1,5).astype(np.float32) # 100 samples
         idata = np.round(fdata*(np.iinfo(np.int16).max-1)).astype(np.int16)
         c_result, py_result = acetoneTestCase.run_acetone_for_test(
             self.tmpdir_name,
             model_path,
             target="AVX512VNNI",
-            datatest_path=idata
+            datatest_path=idata,
+            bin_dataset=True
         )
         tmp = tempfile.TemporaryDirectory()
         cf_result, pyf_result = acetoneTestCase.run_acetone_for_test(
             tmp.name,
             model_path,
-            datatest_path=fdata
+            datatest_path=fdata,
+            bin_dataset=True
         )
         tmp.cleanup()
         self.assertListAlmostEqual(c_result, py_result)
