@@ -153,7 +153,7 @@ class TestQAcasCOCONNX(acetoneTestCase.AcetoneTestCase):
         fdata = np.random.rand(100,1,5) # 100 samples
         idata = np.round(fdata*(np.iinfo(np.int16).max-1)).astype(np.int16)
         c_result, py_result = acetoneTestCase.run_acetone_for_test(
-            "temp",
+            self.tmpdir_name,
             model_path,
             target="AVX512VNNI",
             datatest_path=idata
