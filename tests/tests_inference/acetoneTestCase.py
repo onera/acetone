@@ -120,6 +120,7 @@ def run_acetone_for_test(
     run_generated=True,
     run_reference=True,
     target="generic",
+    bin_dataset=False
 ):
     cli_acetone(
         model_file=model,
@@ -130,7 +131,8 @@ def run_acetone_for_test(
         test_dataset_file=datatest_path,
         normalize=normalize,
         target=target,
-        verbose=True,
+        bin_dataset=bin_dataset,
+        verbose=True
     )
 
     if run_reference:

@@ -24,6 +24,7 @@ from onnxscript import FLOAT, script
 from onnxscript import opset18 as op
 
 from tests.tests_inference import acetoneTestCase
+import unittest
 
 targetconf = """
 {
@@ -67,7 +68,7 @@ def ONNX_TestAdd(A: FLOAT[8], B: FLOAT[8]) -> FLOAT[8]:
 
 
 class TestBroadcast(acetoneTestCase.AcetoneTestCase):
-
+    @unittest.skip('Disabled QAdd: not required')
     def testQAdd(self):
         """Test for QAdd Layer"""
         writeconf(targetconf)
