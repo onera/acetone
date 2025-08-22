@@ -1,6 +1,6 @@
 #include "inference.h"
 {{#zero}}
-{{data_type}} zero = 0.0f;
+const {{data_type}} zero = 0.0f;
 {{/zero}}
 
 {{#layers}}
