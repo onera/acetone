@@ -583,6 +583,8 @@ class CodeGenerator(ABC):
                 template.add_compiler_flags(self.target_cfg["cflags"])
             if "ldflags" in self.target_cfg:
                 template.add_linker_flags(self.target_cfg["ldflags"])
+            if "compiler" in self.target_cfg:
+                template.set_compiler(self.target_cfg["compiler"])
         if self.bin_dataset:
             template.set_binary_test_dataset()
         # Generate Makefile

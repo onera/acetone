@@ -33,5 +33,8 @@ class TemplateMakefile(TemplateSpec):
     def add_linker_flags(self, *flags: str) -> None:
         self.linker_flags.extend(flags)
 
+    def set_compiler(self, compiler: str) -> None:
+        self.compiler = compiler
+
     def set_binary_test_dataset(self, target : str = "elf64-x86-64") -> None:
         self.bin_dataset = target
