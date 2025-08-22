@@ -975,6 +975,8 @@ class CodeGenerator(ABC):
             "page_size": self.target_page_size,
         }
         mustach_hash["layers"] = []
+        if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
+            mustach_hash["zero"] = True
 
         for layer in self.layers:
             to_print = False
@@ -1065,9 +1067,6 @@ class CodeGenerator(ABC):
             if self.target_cfg is not None
             else self.data_type
         )
-
-        if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
-            mustach_hash["zero"] = True
 
         template = Path(
             self.template_path + "template_global_var_file.c.tpl",

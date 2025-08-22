@@ -14,7 +14,4 @@
 {{temp_data_type}} tensor_temp[{{temp_size}}] __attribute__((aligned({{page_size}})));
 
 {{/temp_size}}
-{{#zero}}
-{{data_type}} zero = 0.0f;
 
-{{/zero}}

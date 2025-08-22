@@ -1,4 +1,7 @@
 #include "inference.h"
+{{#zero}}
+{{data_type}} zero = 0.0f;
+{{/zero}}
 
 {{#layers}}
     {{#nb_weights}}
