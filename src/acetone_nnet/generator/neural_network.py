@@ -160,6 +160,7 @@ class CodeGenerator(ABC):
             "inference.c",
             "inference.h",
             "global_vars.c",
+            "parameters.c",
             "main.c",
             "Makefile",
             "test_dataset.h",
@@ -610,6 +611,8 @@ class CodeGenerator(ABC):
         logging.info("Generated function header file.")
         self.generate_globalvars_file(c_files_directory)
         logging.info("Generated globalvars .c file.")
+        self.generate_parameter_file(c_files_directory)
+        logging.info("Generated parameter .c file.")
         self.generate_main_file(c_files_directory)
         logging.info("Generated main file.")
         self.generate_makefile(c_files_directory)
@@ -906,6 +909,8 @@ class CodeGenerator(ABC):
             header_file.write(pystache.render(template, mustach_hash))
 
     def quantize_layers(self):
+        ''' use the target_cfg file fixed point notation Qn.m to quantize MatMul and Add parameters
+         and compute the rescaling (integer shift right) in MatMul '''
         if self.target_cfg is not None:
             for l in self.layers:
                 try:
@@ -959,6 +964,62 @@ class CodeGenerator(ABC):
                         raise KeyError(
                             f"Cannot quantize layer {l.name}_{l.idx}, missing data in target config",
                         )
+    def generate_parameter_file(
+        self: Self,
+        output_dir: Path
+    ) -> None:
+        """Generate C Code for layer data."""
+        mustach_hash = {
+            "data_type": self.data_type,
+            "path": list(range(self.maxpath)),
+            "page_size": self.target_page_size,
+        }
+        mustach_hash["layers"] = []
+
+        for layer in self.layers:
+            to_print = False
+            layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
+
+            if (w := getattr(layer, "weights", None)) is not None:
+                layer_hash["nb_weights"] = layer.nb_weights
+                layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
+                to_print = True
+
+            if isinstance(layer, ConstantLayer):
+                layer_hash["nb_weights"] = layer.constant.size
+                layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
+                to_print = True
+
+            if hasattr(layer, "biases"):
+                layer_hash["nb_biases"] = layer.nb_biases
+                layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
+                to_print = True
+
+            if type(layer) is Conv2DIndirectGemm:
+                layer_hash["patches_size"] = layer.patches_size
+                layer_hash["patches"] = layer.create_ppatches()
+                to_print = True
+
+            if issubclass(type(layer), BatchNormalization):
+                layer_hash["channels"] = layer.output_channels
+                layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
+                layer_hash["var"] = self.flatten_array_order_c(layer.var)
+                layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
+                to_print = True
+
+            if issubclass(type(layer), Broadcast) and layer.constant is not None:
+                layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
+                layer_hash["constant_size"] = layer.constant_size
+                to_print = True
+
+            if to_print:
+                mustach_hash["layers"].append(layer_hash)
+        template = Path(
+            self.template_path + "template_parameter_file.c.tpl",
+        ).read_text()
+        with (output_dir / "parameters.c").open("a+") as parameter_file:
+            parameter_file.write(pystache.render(template, mustach_hash))
+        
 
     def generate_globalvars_file(
         self: Self,
@@ -1007,47 +1068,6 @@ class CodeGenerator(ABC):
 
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
-
-        mustach_hash["layers"] = []
-
-        for layer in self.layers:
-            to_print = False
-            layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
-
-            if (w := getattr(layer, "weights", None)) is not None:
-                layer_hash["nb_weights"] = layer.nb_weights
-                layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
-                to_print = True
-
-            if isinstance(layer, ConstantLayer):
-                layer_hash["nb_weights"] = layer.constant.size
-                layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
-                to_print = True
-
-            if hasattr(layer, "biases"):
-                layer_hash["nb_biases"] = layer.nb_biases
-                layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
-                to_print = True
-
-            if type(layer) is Conv2DIndirectGemm:
-                layer_hash["patches_size"] = layer.patches_size
-                layer_hash["patches"] = layer.create_ppatches()
-                to_print = True
-
-            if issubclass(type(layer), BatchNormalization):
-                layer_hash["channels"] = layer.output_channels
-                layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
-                layer_hash["var"] = self.flatten_array_order_c(layer.var)
-                layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
-                to_print = True
-
-            if issubclass(type(layer), Broadcast) and layer.constant is not None:
-                layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
-                layer_hash["constant_size"] = layer.constant_size
-                to_print = True
-
-            if to_print:
-                mustach_hash["layers"].append(layer_hash)
 
         template = Path(
             self.template_path + "template_global_var_file.c.tpl",
