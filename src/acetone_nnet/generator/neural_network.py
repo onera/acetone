@@ -588,6 +588,7 @@ class CodeGenerator(ABC):
                 template.set_compiler(self.target_cfg["compiler"])
         if self.bin_dataset:
             template.set_binary_test_dataset()
+            template.symtab = self.symtab
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))
@@ -975,53 +976,58 @@ class CodeGenerator(ABC):
             "page_size": self.target_page_size,
         }
         mustach_hash["layers"] = []
+        symtab={}
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
+            symtab["zero"] = np.array([0.],dtype=np.float32)
 
         for layer in self.layers:
-            to_print = False
             layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
 
             if (w := getattr(layer, "weights", None)) is not None:
                 layer_hash["nb_weights"] = layer.nb_weights
                 layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
-                to_print = True
+                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
 
             if isinstance(layer, ConstantLayer):
                 layer_hash["nb_weights"] = layer.constant.size
                 layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
-                to_print = True
+                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
                 layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
-                to_print = True
+                symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
 
             if type(layer) is Conv2DIndirectGemm:
                 layer_hash["patches_size"] = layer.patches_size
                 layer_hash["patches"] = layer.create_ppatches()
-                to_print = True
 
             if issubclass(type(layer), BatchNormalization):
                 layer_hash["channels"] = layer.output_channels
                 layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
                 layer_hash["var"] = self.flatten_array_order_c(layer.var)
                 layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
-                to_print = True
 
             if issubclass(type(layer), Broadcast) and layer.constant is not None:
                 layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
                 layer_hash["constant_size"] = layer.constant_size
-                to_print = True
 
-            if to_print:
+            if len(layer_hash.keys()) > 2:
                 mustach_hash["layers"].append(layer_hash)
         template = Path(
             self.template_path + "template_parameter_file.c.tpl",
         ).read_text()
-        with (output_dir / "parameters.c").open("a+") as parameter_file:
-            parameter_file.write(pystache.render(template, mustach_hash))
-        
+        if self.bin_dataset:
+            with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
+                self.symtab=""
+                for s in symtab.keys():
+                    self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
+                    symtab[s].tofile(parameters_bin)
+        else:
+            with (output_dir / "parameters.c").open("a+") as parameter_file:
+                parameter_file.write(pystache.render(template, mustach_hash))
+
 
     def generate_globalvars_file(
         self: Self,
