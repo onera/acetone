@@ -90,7 +90,7 @@ class CodeGenerator(ABC):
         debug_mode: str | None = None,
         verbose: bool = False,
         to_hex: bool = True,
-        makefile_properties: dict[str, str] | None = None,
+        makefile_properties: dict[str, str | list[str]] | None = None,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -207,6 +207,12 @@ class CodeGenerator(ABC):
         if not (isinstance(self.read_ext_input, bool) or self.read_ext_input is None):
             msg = "Error: external_input typr.\n Must be: bool"
             raise TypeError(msg)
+        if not isinstance(self.to_hex, bool):
+            msg = "Error: to_hex typr.\n Must be: bool"
+            raise TypeError(msg)
+        if not isinstance(self.makefile_properties, dict | None):
+            msg = "Error: makefile_properties dict.\n Must be: dict[str, str | list(str)]"
+            raise TypeError(msg)
 
         ### Checking value consistency ###
 
@@ -238,16 +244,16 @@ class CodeGenerator(ABC):
         """
         selected_implementations: dict[int, str | None] = {}
         for layer in self.layers:
+            # Select the default implementation per layer type, if specified
+            d = self.default_implementations.get(layer.name, None)
+            selected_implementations[layer.idx] = d
+
             # Select the implementation based in priority on layer id, or type
             if versions is not None:
                 for k in [layer.idx, layer.name]:
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
                         break
-                else:
-                    # Select the default implementation per layer type, if specified
-                    d = self.default_implementations.get(layer.name, None)
-                    selected_implementations[layer.idx] = d
         return selected_implementations
 
     def load_debug_target(
