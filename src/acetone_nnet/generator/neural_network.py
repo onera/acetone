@@ -244,16 +244,16 @@ class CodeGenerator(ABC):
         """
         selected_implementations: dict[int, str | None] = {}
         for layer in self.layers:
+            # Select the default implementation per layer type, if specified
+            d = self.default_implementations.get(layer.name, None)
+            selected_implementations[layer.idx] = d
+
             # Select the implementation based in priority on layer id, or type
             if versions is not None:
                 for k in [layer.idx, layer.name]:
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
                         break
-                else:
-                    # Select the default implementation per layer type, if specified
-                    d = self.default_implementations.get(layer.name, None)
-                    selected_implementations[layer.idx] = d
         return selected_implementations
 
     def load_debug_target(
