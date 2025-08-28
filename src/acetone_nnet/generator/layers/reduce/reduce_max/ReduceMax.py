@@ -23,7 +23,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 class ReduceMax(Layer):
@@ -107,12 +107,6 @@ class ReduceMax(Layer):
             msg += "\n"
         if type(self.input_width) is not int:
             msg += "Error: input width type in Reduce (must be int)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += (
-                "Error: activation function type in Reduce "
-                "(activation function must be a sub-classe of acetone_nnet Activation Function)"
-            )
             msg += "\n"
         if msg:
             raise TypeError(msg)

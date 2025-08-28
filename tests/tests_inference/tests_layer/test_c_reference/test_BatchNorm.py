@@ -38,10 +38,8 @@ class TestBatchNormalization(acetoneTestCase.AcetoneTestCase):
         kernel_size = (3, 3)
 
         input = Input(testshape)
-        x1 = Conv2D(filters=filters, kernel_size=kernel_size, activation=None, bias_initializer="he_normal",
-                    padding="same", data_format="channels_last")(input)
         out = BatchNormalization(axis=-1, gamma_initializer="he_normal", beta_initializer="he_normal",
-                                 moving_mean_initializer="he_normal", moving_variance_initializer="ones")(x1)
+                                 moving_mean_initializer="he_normal", moving_variance_initializer="ones")(input)
 
         model = keras.Model(input, out)
         dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)

@@ -23,9 +23,6 @@ import numpy as np
 from typing_extensions import Any, Self
 
 from acetone_nnet.generator.layers.broadcast.Broadcast import Broadcast
-from acetone_nnet.versioning.default_implementations import (
-    default_implementations_manager,
-)
 from acetone_nnet.versioning.layer_factories import subtract_factory
 
 from .Subtract import Subtract
@@ -75,4 +72,3 @@ subtract_factory.register_implementation(
     "default",
     subtract_default_implementation,
 )
-default_implementations_manager.set_as_default("Subtract", "default")

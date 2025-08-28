@@ -19,35 +19,82 @@
 ******************************************************************************
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from abc import abstractmethod
 from pathlib import Path
+from typing import ClassVar
 
 import numpy as np
+from traits.api import (
+    ABCHasTraits,
+    BaseStr,
+    DefaultValue,
+    Instance,
+    Int,
+    List,
+    Str,
+    Union,
+)
 from typing_extensions import Self
 
 from acetone_nnet import templates
+from acetone_nnet.generator.activation_functions import ActivationFunctions, Linear
 
 
-@dataclass
-class Layer(ABC):
+class Name(BaseStr):
+    """Trait defining a non-empty, string name."""
+
+    info_text = "a non-empty string"
+
+    def get_default_value(self: Self) -> tuple[int, str]:
+        """Prevent unspecified name on init."""
+        return DefaultValue.disallow, ""
+
+    def validate(self: Self, owner: object, name: str, value: str) -> str | None:
+        """Validate Name is a non-empty string."""
+        value = super().validate(owner, name, value)  # type: ignore[misc]
+        if len(value) > 0:
+            return value
+        self.error(owner, name, value)
+        return None
+
+
+class Layer(ABCHasTraits):
     """Base class for inference layer."""
 
-    def __init__(self: Self) -> None:
-        """Build a non-specific layer."""
-        self.idx = 0
-        self.size = 0
-        self.name = ""
-        self.original_name = ""
-        self.next_layer: list[Layer] = []
-        self.previous_layer: list[Layer] = []
-        self.path: int | None = None
-        self.sorted: int | None = None
-        self.output_str = ""
-        self.fused_layer = None
-        self.template_path = Path(templates.__file__).parent
+    #: The unique index of the layer in its model
+    idx = Int(default_value=0)
 
-        super().__init__()
+    # FIXME Should be at worst a computed property,
+    #  at best an explicit access to the layer output
+    #: The size of the layer output
+    size = Int(default_value=0)
+
+    #: Internal layer name (may be used as op sub-type)
+    name = Name()
+
+    #: Importer layer name
+    original_name = Str()
+
+    #: Preceding layers in the model
+    previous_layer = List(Instance("Layer", allow_none=False))
+
+    #: Succeeding layers in the model
+    next_layer = List(Instance("Layer", allow_none=False))
+
+    # FIXME Code generation concern, we might need a memory allocator
+    #: Identifier for tensor inputs/outputs liveliness
+    path = Union(None, Int)
+
+    # FIXME Should be at worst a computed property,
+    #  at best an explicit access to the layer output
+    #: Allocated output variable name
+    output_str = Str()
+
+    #: Fused activation layer, if any
+    activation_function = Instance(ActivationFunctions, factory=Linear)
+
+    #: Root path to code generator templates
+    template_path: ClassVar[Path] = Path(templates.__file__).parent
 
     @abstractmethod
     def generate_inference_code_layer(self: Self) -> str:
@@ -55,8 +102,8 @@ class Layer(ABC):
 
     @abstractmethod
     def forward_path_layer(
-            self: Self,
-            inputs: np.ndarray | list[np.ndarray],
+        self: Self,
+        inputs: np.ndarray | list[np.ndarray],
     ) -> np.ndarray:
         """Compute output of layer."""
 
@@ -67,13 +114,13 @@ class Layer(ABC):
 
     @staticmethod
     def compute_padding(
-            padding: str | list,
-            in_height: int,
-            in_width: int,
-            kernel_h: int,
-            kernel_w: int,
-            strides: int,
-            dilation_rate: int = 1,
+        padding: str | list,
+        in_height: int,
+        in_width: int,
+        kernel_h: int,
+        kernel_w: int,
+        strides: int,
+        dilation_rate: int = 1,
     ) -> tuple[int, int, int, int]:
         """Compute required padding given input and kernel dimensions."""
         pad_right, pad_left, pad_bottom, pad_top = 0, 0, 0, 0
@@ -118,7 +165,7 @@ class Layer(ABC):
 
     # Give to the layer a string saying were the output will be saved
     # (either in a 'cst' or in an 'output_road')
-    def find_output_str(self: Self, dict_cst: dict[int,int]) -> Self:
+    def find_output_str(self: Self, dict_cst: dict[int, int]) -> Self:
         """Give to the layer a string saying were the output will be saved."""
         # dict_cst is the dict linking a layer to it's cst
         # This cst represent where the output must be saved if needed
@@ -132,8 +179,8 @@ class Layer(ABC):
         return self
 
     def __eq__(
-            self: Self,
-            other: object,
+        self: Self,
+        other: object,
     ) -> bool:
         """Eq method for layers."""
         # compare two layers and say if they are equals
@@ -142,8 +189,10 @@ class Layer(ABC):
 
         keys = list(self.__dict__.keys())
         for key in keys:
-            if (key in ("previous_layer", "next_layer")
-                    or type(self.__dict__[key]) is dict):
+            if (
+                key in ("previous_layer", "next_layer", "original_name")
+                or type(self.__dict__[key]) is dict
+            ):
                 continue
 
             if type(self.__dict__[key]) is np.ndarray:

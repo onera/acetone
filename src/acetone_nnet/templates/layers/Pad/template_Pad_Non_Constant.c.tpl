@@ -15,9 +15,9 @@
                 {{^linear}}
                 tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{{activation_function}}};
                 {{/linear}}
-                {{#fused_layer}}
-                tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{{fused_layer}}};
-                {{/fused_layer}}
+                {{#activation_function}}
+                tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{{activation_function}}};
+                {{/activation_function}}
             }
         }
     }

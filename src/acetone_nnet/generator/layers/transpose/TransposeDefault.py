@@ -73,12 +73,6 @@ class TransposeDefault(Transpose):
             mustach_hash["b"] = indices[self.perm[2]]
             mustach_hash["c"] = indices[self.perm[1]]
 
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output_" + str(self.path) + "[j]",
-                self.idx,
-                "j")
-
         with open(self.template_path / "layers" / "template_Transpose.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()

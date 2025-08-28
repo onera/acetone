@@ -22,9 +22,6 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.default_implementations import (
-    default_implementations_manager,
-)
 from acetone_nnet.versioning.layer_factories import gather_elements_factory
 
 from .GatherElements import GatherElements
@@ -76,7 +73,7 @@ class GatherElementsDefault(GatherElements):
 
 def gather_elements_default_implementation(
         old_layer: GatherElements,
-        version: str
+        version: str,
 ) -> GatherElementsDefault:
     """Create a GatherElements_Default layer using the parameters of old_layer."""
     return GatherElementsDefault(
@@ -100,4 +97,3 @@ gather_elements_factory.register_implementation(
     "default",
     gather_elements_default_implementation,
 )
-default_implementations_manager.set_as_default("GatherElements", "default")

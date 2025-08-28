@@ -47,12 +47,7 @@
                 s = y - y0;
 
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = b_1*a*s*(1 + s*(s - 2)) + b0*(s*s*(a*(s - 1) + 2*s - 3) + 1) + b1*s*(s*(-s*(2 + a) + 2*a + 3) - a) + b2*a*s*s*(1 - s);
-                {{#linear}}
                 tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
-                {{/linear}}
-                {{#fused_layer}}
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{fused_layer}}};
-                {{/fused_layer}}
             }
         }
     }

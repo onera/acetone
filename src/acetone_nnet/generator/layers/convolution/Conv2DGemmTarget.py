@@ -22,8 +22,6 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.layer_factories import conv2d_factory
-
 from . import Conv2D
 from .Conv2DGemm import Conv2DGemm
 
@@ -65,16 +63,9 @@ class Conv2DGemmTarget(Conv2DGemm):
         mustach_hash["activation_function"] = (
             self.activation_function.write_activation_str("output")
         )
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                "output", self.idx, f"i*{self.ldC} + j"
-            )
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
 
         with open(
-            self.template_path / "layers" / "Conv" / "template_Conv_gemm_target.c.tpl"
+            self.template_path / "layers" / "Conv" / "template_Conv_gemm_target.c.tpl",
         ) as template_file:
             template = template_file.read()
         template_file.close()
@@ -104,7 +95,7 @@ class Conv2DGemmTarget(Conv2DGemm):
         mustach_hash["output_str"] = output_str
 
         with open(
-            self.template_path / "layers" / "Conv" / "template_im2col.c.tpl"
+            self.template_path / "layers" / "Conv" / "template_im2col.c.tpl",
         ) as template_file:
             template = template_file.read()
         template_file.close()
@@ -140,7 +131,7 @@ class Conv2DGemmTarget(Conv2DGemm):
             )
 
         with open(
-            self.template_path / "layers" / "Conv" / "template_Conv_std_gemm.c.tpl"
+            self.template_path / "layers" / "Conv" / "template_Conv_std_gemm.c.tpl",
         ) as template_file:
             template = template_file.read()
         template_file.close()

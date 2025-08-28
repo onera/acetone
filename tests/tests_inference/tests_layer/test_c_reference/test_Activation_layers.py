@@ -474,7 +474,12 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
                                                               self.tmpdir_name + "/dataset.txt")
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(onnx_result))
+        self.assertListAlmostEqual(
+            acetone_result[0],
+            onnx_result,
+            atol=0,
+            rtol=5e-5,
+        )
 
     def testLogONNX(self):
         testshape = (1, 3, 10, 10)

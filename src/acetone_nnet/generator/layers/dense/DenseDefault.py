@@ -60,16 +60,6 @@ class DenseDefault(Dense):
 
         mustach_hash["prev_size"] = self.previous_layer[0].size
 
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                self.local_var,
-                self.idx,
-                "i",
-            )
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
         with open(self.template_path / "layers" / "template_Dense.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()

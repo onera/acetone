@@ -22,7 +22,6 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.default_implementations import default_implementations_manager
 from acetone_nnet.versioning.layer_factories import conv2d_factory
 
 from .Conv2D import Conv2D
@@ -64,15 +63,6 @@ class Conv2D6loops(Conv2D):
         mustach_hash["input_height"] = self.input_height
         mustach_hash["input_width"] = self.input_width
 
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                self.local_var,
-                self.idx,
-                f"j + {self.output_width}*(i + {self.output_height}*f)")
-
-            if self.activation_function.name == "linear":
-                mustach_hash["linear"] = True
-
         with open(self.template_path / "layers" / "Conv" / "template_Conv_6loops.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
@@ -106,4 +96,3 @@ def conv2d_6loops_implementation(
 
 conv2d_factory.register_implementation(None, conv2d_6loops_implementation)
 conv2d_factory.register_implementation("6loops", conv2d_6loops_implementation)
-default_implementations_manager.set_as_default("Conv2D", "6loops")

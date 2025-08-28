@@ -32,7 +32,6 @@ from .activation_functions import (
     Silu,
     TanH,
 )
-from .Layer import Layer
 from .layers import (
     ActivationLayer,
     Add,

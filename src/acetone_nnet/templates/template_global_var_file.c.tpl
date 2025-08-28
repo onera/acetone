@@ -7,13 +7,11 @@
 {{/path}}
 
 {{#cst}}
-    {{#name}}
 {{data_type}} cst_{{name}}[{{size}}] __attribute__((aligned({{page_size}})));
-    {{/name}}
 {{/cst}}
 
 {{#temp_size}}
-{{data_type}} tensor_temp[{{temp_size}}] __attribute__((aligned({{page_size}})));
+{{temp_data_type}} tensor_temp[{{temp_size}}] __attribute__((aligned({{page_size}})));
 
 {{/temp_size}}
 {{#zero}}

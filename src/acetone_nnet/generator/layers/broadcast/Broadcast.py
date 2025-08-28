@@ -26,7 +26,7 @@ import pystache
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 # The class of the Layers which compute operation with broadcast numpy style
@@ -37,22 +37,21 @@ class Broadcast(Layer):
     """Broadcast layer base class."""
 
     def __init__(
-            self: Self,
-            original_name : str,
-            idx: int,
-            size: int,
-            input_shapes: list[np.ndarray],
-            output_shape: list[int],
-            activation_function: ActivationFunctions,
-            constant: np.ndarray | float | None = None,
+        self: Self,
+        original_name: str,
+        idx: int,
+        size: int,
+        input_shapes: list[np.ndarray],
+        output_shape: list[int],
+        activation_function: ActivationFunctions,
+        constant: np.ndarray | float | None = None,
     ) -> None:
         """Instantiate a Broadcast base layer."""
         super().__init__()
         self.idx = idx
         self.size = size
-        self.name = ""
-        self.original_name = original_name
         self.input_shapes = input_shapes
+        self.original_name = original_name
 
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
@@ -87,10 +86,6 @@ class Broadcast(Layer):
                 if "int" not in type(shape).__name__:
                     msg += "Error: input_shape in Broadcast (all dim must be int)"
                     msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Broadcast "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
-            msg += "\n"
         if type(self.constant) is not np.ndarray and self.constant is not None:
             msg += "Error: constant type in Broadcast"
             msg += "\n"
@@ -100,20 +95,31 @@ class Broadcast(Layer):
         ### Checking value consistency ###
         msg = ""
         if self.size != self.output_channels * self.output_height * self.output_width:
-            msg += (f"Error: size value in Broadcast "
-                    f"({self.size}!={self.output_channels * self.output_height * self.output_width})")
+            msg += (
+                f"Error: size value in Broadcast "
+                f"({self.size}!={self.output_channels * self.output_height * self.output_width})"
+            )
             msg += "\n"
         if (self.output_channels, self.output_height, self.output_width) != (
-                np.max(self.input_shapes[:, 1]), np.max(self.input_shapes[:, 2]), np.max(self.input_shapes[:, 3])):
-            msg += (f"Error: non consistency between inputs shape and output shape in Broadcast "
-                    f"(({np.max(self.input_shapes[:, 1])},{np.max(self.input_shapes[:, 2])},{np.max(self.input_shapes[:, 3])}!=({self.output_channels}, {self.output_height}, {self.output_width}))")
+            np.max(self.input_shapes[:, 1]),
+            np.max(self.input_shapes[:, 2]),
+            np.max(self.input_shapes[:, 3]),
+        ):
+            msg += (
+                f"Error: non consistency between inputs shape and output shape in Broadcast "
+                f"(({np.max(self.input_shapes[:, 1])},{np.max(self.input_shapes[:, 2])},{np.max(self.input_shapes[:, 3])}!=({self.output_channels}, {self.output_height}, {self.output_width}))"
+            )
             msg += "\n"
         for shape in self.input_shapes:
-            if (shape[1] != 1 and shape[1] != self.output_channels) or (
-                    shape[2] != 1 and shape[2] != self.output_height) or (
-                    shape[3] != 1 and shape[3] != self.output_width):
-                msg += (f"Error: input shape in Broadcast not broadcastable to shape "
-                        f"({self.output_channels}, {self.output_height}, {self.output_width})")
+            if (
+                (shape[1] != 1 and shape[1] != self.output_channels)
+                or (shape[2] != 1 and shape[2] != self.output_height)
+                or (shape[3] != 1 and shape[3] != self.output_width)
+            ):
+                msg += (
+                    f"Error: input shape in Broadcast not broadcastable to shape "
+                    f"({self.output_channels}, {self.output_height}, {self.output_width})"
+                )
                 msg += "\n"
         if msg:
             raise ValueError(msg)
@@ -130,7 +136,7 @@ class Broadcast(Layer):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
+        mustach_hash["activation"] = self.activation_function.as_lambda()
 
         mustach_hash["output_channels"] = self.output_channels
         mustach_hash["output_height"] = self.output_height
@@ -176,7 +182,9 @@ class Broadcast(Layer):
             constant_dict["operator"] = self.specific_operator
             mustach_hash["constant"] = [constant_dict]
 
-        with open(self.template_path / "layers" / "template_Broadcast.c.tpl") as template_file:
+        with open(
+            self.template_path / "layers" / "template_Broadcast.c.tpl",
+        ) as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -184,7 +192,7 @@ class Broadcast(Layer):
 
     @abstractmethod
     def forward_path_layer(
-            self: Self,
-            input_array: np.ndarray,
+        self: Self,
+        input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""

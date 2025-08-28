@@ -48,7 +48,6 @@ from .generator import (
     GatherElements,
     Gemm,
     InputLayer,
-    Layer,
     LeakyReLu,
     Linear,
     Logarithm,
@@ -76,6 +75,7 @@ from .generator import (
     Transpose,
     WrapPad,
 )
+from .ir import Layer
 from .versioning import layer_factories
 from .versioning.versioning import list_all_implementations, register_factory
 

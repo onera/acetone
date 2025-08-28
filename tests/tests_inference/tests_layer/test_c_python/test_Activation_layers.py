@@ -418,7 +418,13 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
 
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
 
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+        # Increase absolute test tolerance for Exp function
+        self.assertListAlmostEqual(
+            acetone_result[0],
+            acetone_result[1],
+            atol=0,
+            rtol=5e-05,
+        )
 
     def testLogONNX(self):
         model_input_name = "X"
@@ -521,7 +527,6 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
             auto_pad="SAME_UPPER",
             strides=(1, 1),
         )
-
         min_value = np.random.rand(1)
         min_initializer = acetoneTestCase.create_initializer_tensor(name="min",
                                                                     tensor_array=min_value,

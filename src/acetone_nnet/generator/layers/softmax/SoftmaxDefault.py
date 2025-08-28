@@ -83,11 +83,7 @@ class SoftmaxDefault(Softmax):
                 mustach_hash["reduced_position_2"] = f"j + {self.output_width}*(i + {self.output_height}*f)"
                 mustach_hash["softmax_indice"] = f"i + {self.output_height}*f"
 
-        if self.fused_layer:
-            mustach_hash["fused_layer"] = self.fused_layer.write_activation_str(
-                f"output_{self.path}[j]",
-                self.idx,
-                "j")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(f"output_{self.path}[j]")
 
         with open(self.template_path / "layers" / "template_Softmax.c.tpl") as template_file:
             template = template_file.read()

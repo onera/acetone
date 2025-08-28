@@ -6,9 +6,7 @@
     for (j = 0; j < {{size}}; ++j)
     {
         output_{{road}}[j] = exp({{output_str}}[j])/sum;
-        {{#fused_layer}}
-        output_{{road}}[j] = {{{fused_layer}}};
-        {{/fused_layer}}
+        output_{{road}}[j] = {{{activation_function}}};
     }
     {{/1D}}
     {{^1D}}

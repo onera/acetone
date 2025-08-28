@@ -9,6 +9,7 @@
   * Adrien GAUFFRIAU          : <Adrien.Gauffriau@airbus.com>
   * Benjamin LESAGE           : <benjamin.lesage@onera.fr>
   * Claire PAGETTI            : <Claire.Pagetti@onera.fr>
+  * Nicolas VALOT             : <nicolas.valot@airbus.com>
   
 **************************************************
 

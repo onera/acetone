@@ -22,9 +22,6 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.default_implementations import (
-    default_implementations_manager,
-)
 from acetone_nnet.versioning.layer_factories import batch_normalization_factory
 
 from .BatchNormalization import BatchNormalization
@@ -52,9 +49,8 @@ class BatchNormalizationDefault(BatchNormalization):
         mustach_hash["output_str"] = output_str
         mustach_hash["path"] = self.path
 
-        if self.activation_function.name != "linear":
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-                f"output_{self.path}[k + {self.output_height * self.output_width}*f]")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
+            f"output_{self.path}[k + {self.output_height * self.output_width}*f]")
 
         mustach_hash["input_channels"] = self.output_channels
         mustach_hash["channel_size"] = self.output_height * self.output_width
@@ -95,4 +91,3 @@ batch_normalization_factory.register_implementation(
     "default",
     batch_normalization_default_implementation,
 )
-default_implementations_manager.set_as_default("BatchNormalization", "default")

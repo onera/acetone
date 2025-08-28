@@ -25,7 +25,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 class Pooling2D(Layer):
@@ -49,7 +49,6 @@ class Pooling2D(Layer):
         self.original_name = original_name
         self.idx = idx
         self.size = size
-        self.name = ""
         self.padding = padding
         self.strides = strides
         self.pool_size = pool_size
@@ -113,10 +112,6 @@ class Pooling2D(Layer):
             msg += "\n"
         if type(self.output_width) is not int:
             msg += "Error: output width type in Pooling (must be int)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in Pooling "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
             msg += "\n"
         if msg:
             raise TypeError(msg)

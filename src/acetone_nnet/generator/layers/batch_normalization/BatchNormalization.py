@@ -23,7 +23,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 class BatchNormalization(Layer):
@@ -96,10 +96,6 @@ class BatchNormalization(Layer):
             msg += "\n"
         if type(self.biases) is not np.ndarray:
             msg += "Error: biases in BatchNormalization (biases must be an numpy array)"
-            msg += "\n"
-        if not isinstance(self.activation_function, ActivationFunctions):
-            msg += ("Error: activation function type in BatchNormalization "
-                    "(activation function must be a sub-classe of acetone_nnet Activation Function)")
             msg += "\n"
         if msg:
             raise TypeError(msg)
