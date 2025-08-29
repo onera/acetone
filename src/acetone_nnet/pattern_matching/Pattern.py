@@ -24,7 +24,7 @@ from dataclasses import dataclass
 
 from typing_extensions import Self
 
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 
 @dataclass

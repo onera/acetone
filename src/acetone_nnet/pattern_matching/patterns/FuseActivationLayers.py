@@ -21,8 +21,8 @@
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import Linear
-from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import ActivationLayer
+from acetone_nnet.ir import Layer
 from acetone_nnet.pattern_matching.Pattern import (
     Pattern,
     update_dict_cst,
@@ -80,6 +80,8 @@ class FuseActivationLayer(Pattern):
         layer.activation_function = activation_layer.activation_function
         update_dict_cst(activation_layer,layer,dict_cst)
 
+        print(activation_layer)
+        print(layer.next_layer)
         layer.next_layer.remove(activation_layer)
         update_next_layers(activation_layer, layer)
         layer.original_name += f" fused with {activation_layer.original_name}"

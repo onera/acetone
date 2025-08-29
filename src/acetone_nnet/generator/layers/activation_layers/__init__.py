@@ -20,7 +20,9 @@
 """
 
 from .ActivationLayer import ActivationLayer
+from .ActivationLayerDefault import ActivationLayerDefault
 
 __all__ = (
     "ActivationLayer",
+    "ActivationLayerDefault",
 )

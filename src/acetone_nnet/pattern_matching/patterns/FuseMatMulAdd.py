@@ -22,8 +22,8 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import Linear
-from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import Add, Dense, MatMul
+from acetone_nnet.ir import Layer
 from acetone_nnet.pattern_matching.Pattern import (
     Pattern,
     update_dict_cst,
@@ -106,8 +106,6 @@ class MatMulAddToDense(Pattern):
         dense.previous_layer = matmul.previous_layer
         dense.path = matmul.path
         dense.output_str = add.output_str
-        dense.sorted = matmul.sorted
-        dense.fused_layer = add.fused_layer
         update_dict_cst(add, dense, dict_cst)
 
         # Updating the parents

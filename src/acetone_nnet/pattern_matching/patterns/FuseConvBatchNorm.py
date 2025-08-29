@@ -23,8 +23,8 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import Linear
-from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import BatchNormalization, Conv2D
+from acetone_nnet.ir import Layer
 from acetone_nnet.pattern_matching.Pattern import (
     Pattern,
     update_dict_cst,
@@ -87,10 +87,10 @@ class FuseConvBatchNorm(Pattern):
         var = batch_norm.var
         epsilon = batch_norm.epsilon
 
-        for z in range(len(weights[0, 0, 0, :])):
+        for z in range(len(weights[:, 0, 0, 0])):
             alpha = scale[z] / np.sqrt(var[z] + epsilon)
             B = bias[z] - (mean[z] * alpha)
-            weights[:, :, :, z] = alpha * weights[:, :, :, z]
+            weights[z, :, :, :] = alpha * weights[z, :, :, :]
             biases[z] = alpha * biases[z] + B
 
         conv.weights = weights

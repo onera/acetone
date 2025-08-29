@@ -21,13 +21,13 @@
 from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import Linear, Sigmoid, Silu
-from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import ActivationLayer, Multiply
+from acetone_nnet.ir import Layer
 from acetone_nnet.pattern_matching.Pattern import (
     Pattern,
+    update_dict_cst,
     update_indices,
     update_next_layers,
-    update_dict_cst,
 )
 from acetone_nnet.pattern_matching.PatternMatcher import pattern_matcher
 
@@ -105,8 +105,6 @@ class SigmoidMultiplyToSilu(Pattern):
         silu.previous_layer = [layer]
         silu.path = multiply.path
         silu.output_str = multiply.output_str
-        silu.sorted = multiply.sorted
-        silu.fused_layer = multiply.fused_layer
 
         # Updating the parents
         layer.next_layer.remove(multiply)

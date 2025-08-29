@@ -19,7 +19,7 @@
 ******************************************************************************
 """
 
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 from acetone_nnet.pattern_matching.Pattern import Pattern
 
 

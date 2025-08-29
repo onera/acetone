@@ -132,10 +132,20 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
+        self.maxpath = maxpath
+        self.data_format = data_format
+        self.dict_cst = dict_cst
+        self.layers: list[Any] = l
+
+        if self.optimization:
+            self.layers, self.log = pattern_matcher.match(self.layers, self.dict_cst)
+
+        if self.log:
+            logging.info(f"Pattern Matching:\n {self.log}")
+
         self.default_implementations = {
             "Conv2D": "6loops",
         }
-        self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
         self.data_type = (
@@ -151,17 +161,8 @@ class CodeGenerator(ABC):
         logging.info(f"C type {self.data_type}")
         logging.info(f"py dtype {self.data_type_py}")
         self.quantize_layers()
-        self.maxpath = maxpath
-        self.data_format = data_format
-        self.dict_cst = dict_cst
 
-        self.layers: list[Any] = l
-        if self.optimization:
-            self.layers, self.log = pattern_matcher.match(self.layers, self.dict_cst)
 
-        if self.verbose and self.log:
-            print("Changes:")
-            print(self.log)
 
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
@@ -389,7 +390,6 @@ class CodeGenerator(ABC):
                     nn_input = np.transpose(np.reshape(nn_input, shape), (2, 0, 1))
                 if self.normalize:
                     nn_input = self.Normalizer.pre_processing(nn_input)
-
                 # Inputs per layer and predecessor
                 # - li[i][j] is an input for i computed from preceding layer j
                 # - li[i][i] is the input for layers with no predecessors
@@ -457,6 +457,7 @@ class CodeGenerator(ABC):
                             targets.append(str(layer.name) + " " + str(layer.idx))
 
                 nn_output = layer_output
+                print(layer_output)
 
                 # Write results in text files to compare prediction.
                 if (self.data_format == "channels_last") and hasattr(

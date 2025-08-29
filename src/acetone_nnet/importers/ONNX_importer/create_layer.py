@@ -186,7 +186,7 @@ def find_size(output_shape: list) -> int:
 
 # Create an input layers
 def create_input_layer(
-    input_layer: onnx.NodeProto,
+    input_layer: onnx.ValueInfoProto,
     idx: int,
     dict_output: dict,
 ) -> InputLayer:
@@ -1367,6 +1367,7 @@ def create_activation_layer(
 ###### Dict of all the functions ######
 layer_type = {
     "Softmax": create_softmax,
+    "BatchNormalization": create_batch_norm,
     "Conv": create_conv,
     "Resize": create_resize,
     "Pad": create_pad,
