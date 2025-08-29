@@ -111,8 +111,6 @@ class Add(Layer):
 
     def forward_path_layer(self: Self, input_arrays: np.ndarray) -> np.ndarray:
         """Compute output of layer."""
-
-        print("----------------------------------------------#####################################################")
         output = (
             np.copy(input_arrays[0])
             .reshape(self.input_shapes[0][1:])
@@ -120,12 +118,7 @@ class Add(Layer):
         )
         if len(self.previous_layer) > 1:
             for i in range(1, len(input_arrays)):
-                print(i,output, type(output.flatten()[0]))
-                print(i,np.reshape(input_arrays[i], self.input_shapes[i][1:]))
                 output += np.reshape(input_arrays[i], self.input_shapes[i][1:])
-                print(i,output, type(output.flatten()[0]))
-
-        print(output, type(output.flatten()[0]))
         return self.activation_function.compute(output)
 
     def generate_inference_code_layer(self: Self) -> str:

@@ -21,7 +21,7 @@
 import numpy as np
 import onnx
 
-from acetone_nnet.generator.Layer import Layer
+from acetone_nnet.ir import Layer
 
 from .ONNX_exporter.exporter_onnx import onnx_exporter
 

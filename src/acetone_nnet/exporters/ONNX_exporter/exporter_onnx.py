@@ -23,8 +23,8 @@ import onnx
 from onnx import helper
 
 from acetone_nnet.generator.activation_functions import Linear
-from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import ActivationLayer
+from acetone_nnet.ir import Layer
 
 from .acetone_to_onnx_layer import (
     export_input,

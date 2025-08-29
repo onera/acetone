@@ -28,8 +28,15 @@ import onnxruntime as rt
 
 def clean_inputs(model: onnx.ModelProto) -> None:
     """Remove unused inputs from an ONNX model."""
-    while len(model.graph.input) != 1:
+    initializers = [ini.name for ini in model.graph.initializer]
+    new_inputs = []
+    for i in model.graph.input:
+        if i.name not in initializers:
+            new_inputs.append(i)
+
+    while len(model.graph.input) > 0:
         model.graph.input.pop()
+    model.graph.input.extend(new_inputs)
 
 
 def extract_node_outputs(

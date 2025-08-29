@@ -111,7 +111,7 @@ def acetone_generate() -> None:
     parser.add_argument(
         "--optimization",
         help="Activate model optimization on the internal representation.",
-        default=True,
+        default=False,
     )
 
     parser.add_argument(

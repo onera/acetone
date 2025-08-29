@@ -92,7 +92,7 @@ class CodeGenerator(ABC):
         verbose: bool = False,
         to_hex: bool = True,
         makefile_properties: dict[str, str | list[str]] | None = None,
-        optimization: bool = True,
+        optimization: bool = False,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -160,7 +160,6 @@ class CodeGenerator(ABC):
         )
         logging.info(f"C type {self.data_type}")
         logging.info(f"py dtype {self.data_type_py}")
-        self.quantize_layers()
 
 
 
@@ -193,6 +192,8 @@ class CodeGenerator(ABC):
         self.makefile_properties = makefile_properties
         if self.makefile_properties is None:
             self.makefile_properties = {}
+
+        self.quantize_layers()
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -457,7 +458,6 @@ class CodeGenerator(ABC):
                             targets.append(str(layer.name) + " " + str(layer.idx))
 
                 nn_output = layer_output
-                print(layer_output)
 
                 # Write results in text files to compare prediction.
                 if (self.data_format == "channels_last") and hasattr(
@@ -774,7 +774,9 @@ class CodeGenerator(ABC):
                 layer_hash["cst"] = True
                 layer_hash["cst_name"] = self.dict_cst[layer.idx]
 
-            if self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target:
+            if (self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target
+                    and not isinstance(layer, ConstantLayer)):
+                print(layer.name, layer.idx)
                 layer_hash["debug_layer"] = True
                 layer_hash["name"] = layer.name
                 layer_hash["idx"] = layer.idx

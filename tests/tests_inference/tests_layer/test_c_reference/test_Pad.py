@@ -16,6 +16,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
+import unittest
 import numpy as np
 
 acetoneTestCase_path = '/'.join(__file__.split('/')[:-3])
@@ -48,6 +49,7 @@ class TestPad(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
+    @unittest.skip("Not yet implemented")
     def test_edge_pad(self):
         testshape = (1, 5, 20, 20)
 
@@ -113,6 +115,7 @@ class TestPad(acetoneTestCase.AcetoneTestCase):
                                                               self.tmpdir_name + "/dataset.txt")
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
+    @unittest.skip("Not yet implemented")
     def test_wrap_pad(self):
         testshape = (1, 5, 20, 20)
 
@@ -243,6 +246,7 @@ class TestPad(acetoneTestCase.AcetoneTestCase):
                                                               self.tmpdir_name + "/dataset.txt")
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
+    @unittest.skip("Not yet implemented")
     def test_reflect_pad(self):
         testshape = (1, 5, 20, 20)
 

@@ -26,7 +26,6 @@ from onnxruntime_extensions import onnx_op
 
 from acetone_nnet import MatMul
 from acetone_nnet.generator.activation_functions import Linear
-from acetone_nnet.generator.Layer import Layer
 from acetone_nnet.generator.layers import (
     ActivationLayer,
     Add,
@@ -62,13 +61,14 @@ from acetone_nnet.generator.layers import (
     Transpose,
     WrapPad,
 )
+from acetone_nnet.ir import Layer
 
 ###### Utility functions ######
 
 def create_initializer_tensor(
         name: str,
         tensor_array: np.ndarray,
-        data_type: onnx.TensorProto.data_type = onnx.TensorProto.FLOAT,
+        data_type: onnx.TensorProto.DataType = onnx.TensorProto.FLOAT,
 ) -> onnx.TensorProto:
     """Create a TensorProto."""
     return onnx.helper.make_tensor(
@@ -884,11 +884,11 @@ def export_input(
 ) -> onnx.ValueInfoProto:
     """Export ACETONE Input layer to ONNX input value info."""
     tensor_dtype = np_dtype_to_tensor_dtype(np.dtype(datatype_py.__name__))
-
+    shape = getattr(input_layer,"input_shape", None)
     return make_tensor_value_info(
         name=f"{input_layer.name}_{input_layer.idx}",
         elem_type=tensor_dtype,
-        shape=input_layer.input_shape,
+        shape=shape,
     )
 
 def export_output(
