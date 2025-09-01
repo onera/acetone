@@ -91,6 +91,7 @@ class CodeGenerator(ABC):
         debug_mode: str | None = None,
         verbose: bool = False,
         to_hex: bool = True,
+        bin_dataset: bool = False,
         makefile_properties: dict[str, str | list[str]] | None = None,
         custom_generation_functions: dict[str, list[tuple[str, Callable]]] | None = None,
         **kwargs,
@@ -103,6 +104,7 @@ class CodeGenerator(ABC):
         self.verbose = verbose
         self.to_hex = to_hex
         self.target_cfg = None
+        self.bin_dataset = bin_dataset
         if target != "generic":
             try:
                 self.target_cfg = json.loads(
@@ -158,6 +160,18 @@ class CodeGenerator(ABC):
 
         self.test_dataset = self._initialise_dataset(test_dataset, int(nb_tests))
 
+        self.files_to_gen = [
+            "inference.c",
+            "inference.h",
+            "global_vars.c",
+            "parameters.c",
+            "main.c",
+            "Makefile",
+            "test_dataset.h",
+        ]
+        if not self.read_ext_input:
+            self.files_to_gen.append("test_dataset.c")
+
         self.target = target
         self.target_page_size = target_page_size
 
@@ -205,7 +219,9 @@ class CodeGenerator(ABC):
             msg = "Error: to_hex typr.\n Must be: bool"
             raise TypeError(msg)
         if not isinstance(self.makefile_properties, dict | None):
-            msg = "Error: makefile_properties dict.\n Must be: dict[str, str | list(str)]"
+            msg = (
+                "Error: makefile_properties dict.\n Must be: dict[str, str | list(str)]"
+            )
             raise TypeError(msg)
 
         ### Checking value consistency ###
@@ -236,8 +252,9 @@ class CodeGenerator(ABC):
             generation_functions["Main"] = [
                 lambda s, path: s.generate_main_file(path),
                 lambda s, path: s.generate_test_dataset_header_file(path),
+                lambda s, path: s.generate_parameter_file(path),
             ]
-            file_names.extend(["main.c","test_dataset.h"])
+            file_names.extend(["main.c","test_dataset.h","parameters.c"])
 
         if not self.read_ext_input and "TestValues" not in custom_generation_functions:
             file_names.append("test_dataset.c")
@@ -338,6 +355,7 @@ class CodeGenerator(ABC):
                     )
             case np.ndarray() as dataset:
                 d = dataset
+                self.nb_tests = dataset.shape[0]
             case Path() | str() as path:
                 d = self._load_dataset(Path(path), self.data_type_py, nb_tests)
             case _:
@@ -564,21 +582,24 @@ class CodeGenerator(ABC):
                     },
                 ),
             )
-        logging.info("Generated test_dataset header file.")
+            logging.info("Generated test_dataset header file.")
 
     def generate_test_dataset_value_file(
-        self: Self,
-        output_dir: Path,
+            self: Self,
+            output_dir: Path,
     ) -> None:
         """Generate C code for graph test dataset."""
-        # Generate test source file
-        dataset = "{"
-        if self.test_dataset is not None:
-            dataset += ",".join(
-                map(self.flatten_array_order_c, self.test_dataset),
-            )
-        dataset += "};\n"
-
+        if self.bin_dataset:
+            with Path.open(output_dir / "test_dataset.dat", "w+") as test_dataset_bin:
+                self.test_dataset.tofile(test_dataset_bin)
+        elif not self.read_ext_input:
+            # Generate test source file
+            dataset = "{"
+            if self.test_dataset is not None:
+                dataset += ",".join(
+                    map(self.flatten_array_order_c, self.test_dataset),
+                )
+            dataset += "};\n"
         template = (
             Path(self.template_path) / "template_test_dataset_source.c.tpl"
         ).read_text()
@@ -615,13 +636,14 @@ class CodeGenerator(ABC):
             )
         logging.info("Generated main file.")
 
-
     def _get_makefile_properties(self) -> dict[str, str | list[str]]:
         """Get makefile properties."""
         return {
             "compiler": self.makefile_properties.get("compiler", "gcc"),
             "linker_flags": self.makefile_properties.get("linker_flags", []),
-            "compiler_flags": self.makefile_properties.get("compiler_flags",["-g", "-w", "-lm"])
+            "compiler_flags": self.makefile_properties.get(
+                "compiler_flags", ["-g", "-w", "-lm"],
+            ),
         }
 
     def generate_makefile(
@@ -647,8 +669,16 @@ class CodeGenerator(ABC):
             header_files=header_files,
             source_files=source_files,
         )
-        if self.target_cfg is not None and "cflags" in self.target_cfg:
-            template.add_compiler_flags(self.target_cfg["cflags"])
+        if self.target_cfg is not None:
+            if "cflags" in self.target_cfg:
+                template.add_compiler_flags(self.target_cfg["cflags"])
+            if "ldflags" in self.target_cfg:
+                template.add_linker_flags(self.target_cfg["ldflags"])
+            if "compiler" in self.target_cfg:
+                template.set_compiler(self.target_cfg["compiler"])
+        if self.bin_dataset:
+            template.set_binary_test_dataset()
+            template.symtab = self.symtab
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))
@@ -960,6 +990,9 @@ class CodeGenerator(ABC):
         logging.info("Generated function header file.")
 
     def quantize_layers(self):
+        """Use the target_cfg file fixed point notation Qn.m to quantize MatMul and Add parameters
+        and compute the rescaling (integer shift right) in MatMul
+        """
         if self.target_cfg is not None:
             for l in self.layers:
                 try:
@@ -970,30 +1003,38 @@ class CodeGenerator(ABC):
                         l.qparam = layer_qconf["out"]
                     else:
                         l.qparam = layer_qconf["params"]
-
-                        # Add  activation
-                        l.activation_function = QuantizeShiftActivation(
-                            ctype=self.target_cfg["quantization"]["dtype"],
-                            pytype=self.data_type_py,
-                            qparam=layer_qconf["params"],
-                            qin=layer_qconf["in"],
-                            qout=layer_qconf["out"],
-                            activation_function=l.activation_function,
-                        )
+                        if isinstance(l, MatMul):  # Add  activation
+                            l.activation_function = QuantizeShiftActivation(
+                                ctype=self.target_cfg["quantization"]["dtype"],
+                                pytype=self.data_type_py,
+                                qparam=layer_qconf["params"],
+                                qin=layer_qconf["in"],
+                                qout=layer_qconf["out"],
+                                activation_function=l.activation_function,
+                            )
 
                     (_, m) = qform.parse_q_format(l.qparam)
                     if hasattr(l, "weights"):
-                        l.weights = np.rint(l.weights * (2**m - 1)).astype(
+                        weights = np.rint(l.weights * (2**m))
+                        l.weights = weights.astype(
                             self.data_type_py,
                         )
+                        if (weights != l.weights).all():
+                            logging.warning("Weights MSB truncated")
                     if hasattr(l, "biases"):
-                        l.biases = np.rint(l.biases * (2**m - 1)).astype(
+                        biases = np.rint(l.biases * (2**m))
+                        l.biases = biases.astype(
                             self.data_type_py,
                         )
+                        if (biases != l.biases).all():
+                            logging.warning("Biases MSB truncated")
                     if hasattr(l, "constant") and l.constant is not None:
-                        l.constant = np.rint(l.constant * (2**m - 1)).astype(
+                        constant = np.rint(l.constant * (2**m))
+                        l.constant = constant.astype(
                             self.data_type_py,
                         )
+                        if (constant != l.constant).all():
+                            logging.warning("Constant MSB truncated")
                     l.qin = layer_qconf["in"]
                     l.qout = layer_qconf["out"]
                     logging.info(f"Quantize {l.name}_{l.idx} format {l.qparam}")
@@ -1005,6 +1046,67 @@ class CodeGenerator(ABC):
                         raise KeyError(
                             f"Cannot quantize layer {l.name}_{l.idx}, missing data in target config",
                         )
+
+    def generate_parameter_file(self: Self, output_dir: Path) -> None:
+        """Generate C Code for layer data."""
+        mustach_hash = {
+            "data_type": self.data_type,
+            "path": list(range(self.maxpath)),
+            "page_size": self.target_page_size,
+        }
+        mustach_hash["layers"] = []
+        symtab = {}
+        if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
+            mustach_hash["zero"] = True
+            symtab["zero"] = np.array([0.0], dtype=np.float32)
+
+        for layer in self.layers:
+            layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
+
+            if (w := getattr(layer, "weights", None)) is not None:
+                layer_hash["nb_weights"] = layer.nb_weights
+                layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
+                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
+
+            if isinstance(layer, ConstantLayer):
+                layer_hash["nb_weights"] = layer.constant.size
+                layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
+                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
+
+            if hasattr(layer, "biases"):
+                layer_hash["nb_biases"] = layer.nb_biases
+                layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
+                symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
+
+            if type(layer) is Conv2DIndirectGemm:
+                layer_hash["patches_size"] = layer.patches_size
+                layer_hash["patches"] = layer.create_ppatches()
+
+            if issubclass(type(layer), BatchNormalization):
+                layer_hash["channels"] = layer.output_channels
+                layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
+                layer_hash["var"] = self.flatten_array_order_c(layer.var)
+                layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
+
+            if issubclass(type(layer), Broadcast) and layer.constant is not None:
+                layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
+                layer_hash["constant_size"] = layer.constant_size
+
+            if len(layer_hash.keys()) > 2:
+                mustach_hash["layers"].append(layer_hash)
+        template = Path(
+            self.template_path + "template_parameter_file.c.tpl",
+        ).read_text()
+        if self.bin_dataset:
+            with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
+                self.symtab = ""
+                for s in symtab:
+                    self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
+                    symtab[s].tofile(parameters_bin)
+        else:
+            with (output_dir / "parameters.c").open("a+") as parameter_file:
+                parameter_file.write(pystache.render(template, mustach_hash))
+        logging.info("Generated parameter .c file.")
 
     def generate_globalvars_file(
         self: Self,
@@ -1050,50 +1152,6 @@ class CodeGenerator(ABC):
             if self.target_cfg is not None
             else self.data_type
         )
-
-        if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
-            mustach_hash["zero"] = True
-
-        mustach_hash["layers"] = []
-
-        for layer in self.layers:
-            to_print = False
-            layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
-
-            if (w := getattr(layer, "weights", None)) is not None:
-                layer_hash["nb_weights"] = layer.nb_weights
-                layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
-                to_print = True
-
-            if isinstance(layer, ConstantLayer):
-                layer_hash["nb_weights"] = layer.constant.size
-                layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
-                to_print = True
-
-            if hasattr(layer, "biases"):
-                layer_hash["nb_biases"] = layer.nb_biases
-                layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
-                to_print = True
-
-            if type(layer) is Conv2DIndirectGemm:
-                layer_hash["patches_size"] = layer.patches_size
-                layer_hash["patches"] = layer.create_ppatches()
-                to_print = True
-
-            if issubclass(type(layer), BatchNormalization):
-                layer_hash["channels"] = layer.output_channels
-                layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
-                layer_hash["var"] = self.flatten_array_order_c(layer.var)
-                layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
-                to_print = True
-
-            if issubclass(type(layer), Broadcast) and layer.constant is not None:
-                layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
-                layer_hash["constant_size"] = layer.constant_size
-                to_print = True
-
-            if to_print:
-                mustach_hash["layers"].append(layer_hash)
 
         template = Path(
             self.template_path + "template_global_var_file.c.tpl",

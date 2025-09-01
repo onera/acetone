@@ -5,7 +5,7 @@ from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions, Linear
 from acetone_nnet.quantize import qform
-
+import logging
 
 class QuantizeShiftActivation(ActivationFunctions):
     """Cast and shift quantized layer output."""
@@ -30,8 +30,11 @@ class QuantizeShiftActivation(ActivationFunctions):
 
     def compute(self: Self, z: np.ndarray) -> np.ndarray:
         """Compute the python output."""
-        out = np.right_shift(z, self.shift).astype(self.pytype)
-        return self.activation.compute(out)
+        out = np.right_shift(z, self.shift)
+        out1 = out.astype(self.pytype)
+        if (out!=out1).all():
+            logging.warning(f"Q Activation shift truncated MSB {out}, {out1}")
+        return self.activation.compute(out1)
 
     def write_activation_str(self: Self, var: str) -> str:
         """Generate the string to print."""
