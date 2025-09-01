@@ -78,12 +78,13 @@ class CodeGenerator(ABC):
     def __init__(
         self: Self,
         file: MODEL_TYPE,
-        test_dataset: str | np.ndarray | Path | None = None,
-        external_input: bool | None = False,
         function_name: str = "inference",
+        nb_tests: int | str = 0,
+        test_dataset: str | np.ndarray | Path | None = None,
+        *,
+        external_input: bool | None = False,
         target: str = "generic",
         target_page_size: int = 4096,
-        nb_tests: int | str = 0,
         versions: dict[int | str, str] | None = None,
         normalize: bool | str = False,
         debug_mode: str | None = None,
@@ -175,6 +176,10 @@ class CodeGenerator(ABC):
 
         self.target_page_size = target_page_size
 
+        self.makefile_properties = makefile_properties
+        if self.makefile_properties is None:
+            self.makefile_properties = {}
+
         ##### Debug Mode #####
         self.debug_mode = debug_mode
         if self.debug_mode:
@@ -203,6 +208,12 @@ class CodeGenerator(ABC):
             raise TypeError(msg)
         if not (isinstance(self.read_ext_input, bool) or self.read_ext_input is None):
             msg = "Error: external_input typr.\n Must be: bool"
+            raise TypeError(msg)
+        if not isinstance(self.to_hex, bool):
+            msg = "Error: to_hex typr.\n Must be: bool"
+            raise TypeError(msg)
+        if not isinstance(self.makefile_properties, dict | None):
+            msg = "Error: makefile_properties dict.\n Must be: dict[str, str | list(str)]"
             raise TypeError(msg)
 
         ### Checking value consistency ###
@@ -235,16 +246,16 @@ class CodeGenerator(ABC):
         """
         selected_implementations: dict[int, str | None] = {}
         for layer in self.layers:
+            # Select the default implementation per layer type, if specified
+            d = self.default_implementations.get(layer.name, None)
+            selected_implementations[layer.idx] = d
+
             # Select the implementation based in priority on layer id, or type
             if versions is not None:
                 for k in [layer.idx, layer.name]:
                     if k in versions:
                         selected_implementations[layer.idx] = versions[k]
                         break
-                else:
-                    # Select the default implementation per layer type, if specified
-                    d = self.default_implementations.get(layer.name, None)
-                    selected_implementations[layer.idx] = d
         return selected_implementations
 
     def load_debug_target(
@@ -557,6 +568,15 @@ class CodeGenerator(ABC):
                 ),
             )
 
+
+    def _get_makefile_properties(self) -> dict[str, str | list[str]]:
+        """Get makefile properties."""
+        return {
+            "compiler": self.makefile_properties.get("compiler", "gcc"),
+            "linker_flags": self.makefile_properties.get("linker_flags", []),
+            "compiler_flags": self.makefile_properties.get("compiler_flags",["-g", "-w", "-lm"])
+        }
+
     def generate_makefile(
         self: Self,
         output_dir: Path,
@@ -570,6 +590,7 @@ class CodeGenerator(ABC):
             elif ".h" in filename:
                 header_files.append(filename)
 
+        properties = self._get_makefile_properties()
         # Configure Makefile template
         template = TemplateMakefile(
             self.function_name,
