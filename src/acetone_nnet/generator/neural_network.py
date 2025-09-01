@@ -91,6 +91,7 @@ class CodeGenerator(ABC):
         verbose: bool = False,
         to_hex: bool = True,
         bin_dataset: bool = False,
+        makefile_properties: dict[str, str | list[str]] | None = None,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -213,7 +214,9 @@ class CodeGenerator(ABC):
             msg = "Error: to_hex typr.\n Must be: bool"
             raise TypeError(msg)
         if not isinstance(self.makefile_properties, dict | None):
-            msg = "Error: makefile_properties dict.\n Must be: dict[str, str | list(str)]"
+            msg = (
+                "Error: makefile_properties dict.\n Must be: dict[str, str | list(str)]"
+            )
             raise TypeError(msg)
 
         ### Checking value consistency ###
@@ -568,13 +571,14 @@ class CodeGenerator(ABC):
                 ),
             )
 
-
     def _get_makefile_properties(self) -> dict[str, str | list[str]]:
         """Get makefile properties."""
         return {
             "compiler": self.makefile_properties.get("compiler", "gcc"),
             "linker_flags": self.makefile_properties.get("linker_flags", []),
-            "compiler_flags": self.makefile_properties.get("compiler_flags",["-g", "-w", "-lm"])
+            "compiler_flags": self.makefile_properties.get(
+                "compiler_flags", ["-g", "-w", "-lm"],
+            ),
         }
 
     def generate_makefile(
@@ -594,9 +598,9 @@ class CodeGenerator(ABC):
         # Configure Makefile template
         template = TemplateMakefile(
             self.function_name,
-            compiler="gcc",
-            compiler_flags=["-g", "-w"],
-            linker_flags=["-lm"],
+            compiler=properties["compiler"],
+            compiler_flags=properties["compiler_flags"],
+            linker_flags=properties["linker_flags"],
             header_files=header_files,
             source_files=source_files,
         )
@@ -931,8 +935,9 @@ class CodeGenerator(ABC):
             header_file.write(pystache.render(template, mustach_hash))
 
     def quantize_layers(self):
-        ''' use the target_cfg file fixed point notation Qn.m to quantize MatMul and Add parameters
-         and compute the rescaling (integer shift right) in MatMul '''
+        """Use the target_cfg file fixed point notation Qn.m to quantize MatMul and Add parameters
+        and compute the rescaling (integer shift right) in MatMul
+        """
         if self.target_cfg is not None:
             for l in self.layers:
                 try:
@@ -943,7 +948,7 @@ class CodeGenerator(ABC):
                         l.qparam = layer_qconf["out"]
                     else:
                         l.qparam = layer_qconf["params"]
-                        if isinstance(l, MatMul): # Add  activation
+                        if isinstance(l, MatMul):  # Add  activation
                             l.activation_function = QuantizeShiftActivation(
                                 ctype=self.target_cfg["quantization"]["dtype"],
                                 pytype=self.data_type_py,
@@ -959,21 +964,21 @@ class CodeGenerator(ABC):
                         l.weights = weights.astype(
                             self.data_type_py,
                         )
-                        if (weights!=l.weights).all():
+                        if (weights != l.weights).all():
                             logging.warning("Weights MSB truncated")
                     if hasattr(l, "biases"):
                         biases = np.rint(l.biases * (2**m))
                         l.biases = biases.astype(
                             self.data_type_py,
                         )
-                        if (biases!=l.biases).all():
+                        if (biases != l.biases).all():
                             logging.warning("Biases MSB truncated")
                     if hasattr(l, "constant") and l.constant is not None:
                         constant = np.rint(l.constant * (2**m))
                         l.constant = constant.astype(
                             self.data_type_py,
                         )
-                        if (constant!=l.constant).all():
+                        if (constant != l.constant).all():
                             logging.warning("Constant MSB truncated")
                     l.qin = layer_qconf["in"]
                     l.qout = layer_qconf["out"]
@@ -986,10 +991,8 @@ class CodeGenerator(ABC):
                         raise KeyError(
                             f"Cannot quantize layer {l.name}_{l.idx}, missing data in target config",
                         )
-    def generate_parameter_file(
-        self: Self,
-        output_dir: Path
-    ) -> None:
+
+    def generate_parameter_file(self: Self, output_dir: Path) -> None:
         """Generate C Code for layer data."""
         mustach_hash = {
             "data_type": self.data_type,
@@ -997,10 +1000,10 @@ class CodeGenerator(ABC):
             "page_size": self.target_page_size,
         }
         mustach_hash["layers"] = []
-        symtab={}
+        symtab = {}
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
-            symtab["zero"] = np.array([0.],dtype=np.float32)
+            symtab["zero"] = np.array([0.0], dtype=np.float32)
 
         for layer in self.layers:
             layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
@@ -1041,14 +1044,13 @@ class CodeGenerator(ABC):
         ).read_text()
         if self.bin_dataset:
             with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
-                self.symtab=""
-                for s in symtab.keys():
+                self.symtab = ""
+                for s in symtab:
                     self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
                     symtab[s].tofile(parameters_bin)
         else:
             with (output_dir / "parameters.c").open("a+") as parameter_file:
                 parameter_file.write(pystache.render(template, mustach_hash))
-
 
     def generate_globalvars_file(
         self: Self,
