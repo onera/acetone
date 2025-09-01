@@ -640,9 +640,9 @@ class CodeGenerator(ABC):
         """Get makefile properties."""
         return {
             "compiler": self.makefile_properties.get("compiler", "gcc"),
-            "linker_flags": self.makefile_properties.get("linker_flags", []),
+            "linker_flags": self.makefile_properties.get("linker_flags", ["-lm"]),
             "compiler_flags": self.makefile_properties.get(
-                "compiler_flags", ["-g", "-w", "-lm"],
+                "compiler_flags", ["-g", "-w"],
             ),
         }
 
