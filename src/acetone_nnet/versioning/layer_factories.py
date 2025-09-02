@@ -96,6 +96,7 @@ subtract_factory = LayerFactory("Subtract")
 tile_factory = LayerFactory("Tile")
 transpose_factory = LayerFactory("Transpose")
 wrap_pad_factory = LayerFactory("WrapPad")
+lstm_factory = LayerFactory("LSTM")
 
 implemented: dict[str, LayerFactory] = {
     "Add": add_factory,
@@ -133,4 +134,5 @@ implemented: dict[str, LayerFactory] = {
     "Tile": tile_factory,
     "Transpose": transpose_factory,
     "WrapPad": wrap_pad_factory,
+    "LSTM": lstm_factory
 }
