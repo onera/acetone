@@ -160,26 +160,12 @@ class CodeGenerator(ABC):
 
         self.test_dataset = self._initialise_dataset(test_dataset, int(nb_tests))
 
-        self.files_to_gen = [
-            "inference.c",
-            "inference.h",
-            "global_vars.c",
-            "parameters.c",
-            "main.c",
-            "Makefile",
-            "test_dataset.h",
-        ]
-        if not self.read_ext_input:
-            self.files_to_gen.append("test_dataset.c")
-
         self.target = target
         self.target_page_size = target_page_size
 
         if custom_generation_functions is None:
             custom_generation_functions = {}
         self.files_to_gen, self.generation_functions = self.select_generation_functions(custom_generation_functions)
-
-
 
 
         self.makefile_properties = makefile_properties
@@ -242,12 +228,6 @@ class CodeGenerator(ABC):
         file_names = []
         generation_functions = {}
 
-        if "Makefile" not in custom_generation_functions:
-            generation_functions["Makefile"] = [
-                lambda s, path: s.generate_makefile(path),
-            ]
-            file_names.append("Makefile")
-
         if "Main" not in custom_generation_functions:
             generation_functions["Main"] = [
                 lambda s, path: s.generate_main_file(path),
@@ -255,6 +235,12 @@ class CodeGenerator(ABC):
                 lambda s, path: s.generate_parameter_file(path),
             ]
             file_names.extend(["main.c","test_dataset.h","parameters.c"])
+
+        if "Makefile" not in custom_generation_functions:
+            generation_functions["Makefile"] = [
+                lambda s, path: s.generate_makefile(path),
+            ]
+            file_names.append("Makefile")
 
         if not self.read_ext_input and "TestValues" not in custom_generation_functions:
             file_names.append("test_dataset.c")
@@ -600,16 +586,16 @@ class CodeGenerator(ABC):
                     map(self.flatten_array_order_c, self.test_dataset),
                 )
             dataset += "};\n"
-        template = (
-            Path(self.template_path) / "template_test_dataset_source.c.tpl"
-        ).read_text()
-        with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
-            test_dataset_source.write(
-                pystache.render(
-                    template,
-                    {"data_type": self.data_type, "dataset": dataset},
-                ),
-            )
+            template = (
+                Path(self.template_path) / "template_test_dataset_source.c.tpl"
+            ).read_text()
+            with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
+                test_dataset_source.write(
+                    pystache.render(
+                        template,
+                        {"data_type": self.data_type, "dataset": dataset},
+                    ),
+                )
         logging.info("Generated test_dataset value file.")
 
     def generate_main_file(
