@@ -214,9 +214,8 @@ def export_conv2d(
         dilations=(conv2d_layer.dilation_rate, conv2d_layer.dilation_rate),
     )
 
-    weights_array = np.moveaxis(conv2d_layer.weights, 3, 0)
     weights = create_initializer_tensor(
-        name=weight_name, tensor_array=weights_array, data_type=tensor_dtype,
+        name=weight_name, tensor_array=conv2d_layer.weights, data_type=tensor_dtype,
     )
     biases = create_initializer_tensor(
         name=bias_name, tensor_array=conv2d_layer.biases, data_type=tensor_dtype,
@@ -885,6 +884,10 @@ def export_input(
     """Export ACETONE Input layer to ONNX input value info."""
     tensor_dtype = np_dtype_to_tensor_dtype(np.dtype(datatype_py.__name__))
     shape = getattr(input_layer,"input_shape", None)
+    if type(shape) is not None:
+        for i in range(len(shape)):
+            if shape[i] is None:
+                shape[i] = 1
     return make_tensor_value_info(
         name=f"{input_layer.name}_{input_layer.idx}",
         elem_type=tensor_dtype,

@@ -45,7 +45,7 @@ def extract_node_outputs(
 ) -> list[str]:
     """Get outputs name of layers of an ONNX model."""
     activation = ["Relu", "Tanh", "Sigmoid", "Clip", "Exp", "Log", "LeakyRelu"]
-    ignored = ["Dropout", "Reshape"]
+    ignored = ["Dropout", "Reshape","Flatten"]
     outputs_name = []
     for node in model.graph.node:
         if optimized_model and (node.op_type in activation):
