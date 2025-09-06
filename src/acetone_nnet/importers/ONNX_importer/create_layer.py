@@ -68,6 +68,7 @@ from acetone_nnet.generator.layers import (
     Tile,
     Transpose,
     WrapPad,
+    LSTM
 )
 
 ###### Utility functions ######
@@ -574,6 +575,36 @@ def create_gemm(
         activation_function=Linear(),
     )
 
+# create a layer LSTM
+def create_lstm(
+    node: onnx.NodeProto,
+    idx: int,
+    dict_input: dict,
+    dict_output: dict,
+    model: onnx.ModelProto,
+) -> LSTM:
+    """Create a LSTM layer."""
+    input_shape = get_shape(node.input[0], model)
+    output_shape = get_shape(node.output[0], model)
+    size = find_size(output_shape)
+    dict_input[idx] = [node.input[0]]
+    dict_output[node.output[0]] = idx
+    attributes = extract_attributes(node)
+    b_tensor = look_for_initializer(node.input[1], model)
+    if len(node.input) == 3:
+        c_tensor = look_for_initializer(node.input[2], model)
+    else:
+        c_tensor = np.zeros((1, 1))
+    return LSTM(
+        original_name=node.name,
+        idx=idx,
+        size=size,
+        weights=onnx.numpy_helper.to_array(b_tensor),
+        bias=onnx.numpy_helper.to_array(c_tensor),
+        input_shape=input_shape,
+        output_shape=output_shape,
+        activation_function=Linear(),
+    )
 
 def matmul_compute_shape(
     shape: list,
@@ -1339,6 +1370,7 @@ layer_type = {
     "Max": create_max,
     "Min": create_min,
     "Mean": create_avg,
+    "LSTM": create_lstm,
 }
 
 
