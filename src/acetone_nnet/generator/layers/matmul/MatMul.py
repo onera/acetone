@@ -24,7 +24,7 @@ from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
-
+import logging
 
 class MatMul(Layer):
     """MatMul layer class."""
@@ -85,4 +85,9 @@ class MatMul(Layer):
         out = np.matmul(
             input_1, input_2, dtype=getattr(self, "temp_pydtype", input_1.dtype),
         )
+        """ checks that matmul does not overflow in low precision integer """
+        if np.issubdtype(input_1.dtype,np.integer):
+            out_i64 = np.matmul(input_1, input_2, dtype=np.int64)
+            if (out != out_i64).all():
+                logging.warning("MatMul integer overflow !!!")
         return self.activation_function.compute(out)

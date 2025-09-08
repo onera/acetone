@@ -25,8 +25,18 @@ EXEC = {{executable_name}}
 
 all: $(EXEC)
 
+{{#bin_dataset}}
+test_dataset.o: test_dataset.dat
+	objcopy -I binary  -O {{.}} --add-symbol nn_test_inputs=.rodata:0 --rename-section .data=.rodata $< $@
+
+parameters.o: parameters.dat
+	objcopy -I binary  -O {{.}} {{symtab}} --rename-section .data=.rodata $< $@
+
+{{/bin_dataset}}
+
+
 $(EXEC): $(OBJ)
-	$(CC) $(LDFLAGS)  -o $@ $(OBJ) $(LBLIBS) $(CFLAGS) $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LBLIBS) $(LDFLAGS)
 
 clean:
 	rm $(EXEC) *.o

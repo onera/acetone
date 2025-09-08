@@ -24,7 +24,7 @@ from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
-
+import logging
 
 # Addition of several tensor
 class Add(Layer):
@@ -111,14 +111,27 @@ class Add(Layer):
 
     def forward_path_layer(self: Self, input_arrays: np.ndarray) -> np.ndarray:
         """Compute output of layer."""
-        output = (
-            np.copy(input_arrays[0])
-            .reshape(self.input_shapes[0][1:])
-            .astype(dtype=getattr(self, "temp_pydtype", input_arrays[0].dtype))
-        )
         if len(self.previous_layer) > 1:
+            output = (
+                np.copy(input_arrays[0])
+                .reshape(self.input_shapes[0][1:])
+                .astype(dtype=getattr(self, "temp_pydtype", input_arrays[0].dtype))
+            )
             for i in range(1, len(input_arrays)):
                 output += np.reshape(input_arrays[i], self.input_shapes[i][1:])
+            """ checks that accumulator does not overflow in low precision integer """
+            if np.issubdtype(input_arrays[0].dtype,np.integer):
+                out_i64 = (
+                    np.copy(input_arrays[0])
+                    .reshape(self.input_shapes[0][1:])
+                    .astype(dtype=np.int64))
+                out_i64 += np.reshape(input_arrays[i], self.input_shapes[i][1:]).astype(dtype=np.int64)
+                if (output != out_i64).all():
+                    logging.warning("Add integer overflow !!!")
+        else:
+            output = np.reshape(input_arrays, self.input_shapes[0][1:]).astype(
+                dtype=getattr(self, "temp_pydtype", input_arrays[0].dtype),
+            )
         return self.activation_function.compute(output)
 
     def generate_inference_code_layer(self: Self) -> str:

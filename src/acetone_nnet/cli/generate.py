@@ -36,6 +36,7 @@ def cli_acetone(
     test_dataset_file: str | None = None,
     verbose:bool = False,
     to_hex:bool = True,
+    bin_dataset = False,
     *,
     normalize: bool = False,
     optimization: bool = False,
@@ -57,6 +58,7 @@ def cli_acetone(
         verbose=verbose,
         to_hex=to_hex,
         optimization=optimization,
+        bin_dataset = bin_dataset
     )
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)
@@ -128,6 +130,13 @@ def acetone_generate() -> None:
     )
 
     parser.add_argument(
+        "--bin_dataset",
+        default=False,
+        type=bool,
+        help="generate dataset as a binary file (not source compiled file)",
+    )
+
+    parser.add_argument(
         "--verbose",
         default=False,
         type=bool,
@@ -147,6 +156,7 @@ def acetone_generate() -> None:
         normalize=args.normalize,
         target_page_size=args.target_page_size,
         verbose=args.verbose,
+        bin_dataset=args.bin_dataset,
         optimization=args.optimization,
     )
 
