@@ -48,6 +48,7 @@ from acetone_nnet.generator import (
     Multiply,
     ReLu,
     Sigmoid,
+    Silu,
     Softmax,
     Subtract,
     TanH,
@@ -119,6 +120,8 @@ def create_actv_function_obj(
         return LeakyReLu(0.2)
     if keras_activation_obj == activations.softmax:
         return Linear()
+    if keras_activation_obj == activations.swish:
+        return Silu()
 
     msg = "Activation layer"
     raise TypeError(msg, keras_activation_obj.__name__, "not implemented")

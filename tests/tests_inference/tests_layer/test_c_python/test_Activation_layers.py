@@ -77,6 +77,22 @@ class TestActivation(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
+    def testSilu(self):
+        testshape = (10, 10, 3)
+        filters = 3
+        kernel_size = (3, 3)
+
+        input = Input(testshape)
+        out = Conv2D(filters=filters, kernel_size=kernel_size, activation="silu", bias_initializer="he_normal",
+                     padding="same", data_format="channels_last")(input)
+
+        model = keras.Model(input, out)
+        model.save(self.tmpdir_name + "/model.h5")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.h5")
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+
     def testTanh(self):
         testshape = (10, 10, 3)
         filters = 3

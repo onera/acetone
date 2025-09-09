@@ -38,6 +38,7 @@ from typing_extensions import Self
 
 from acetone_nnet import templates
 from acetone_nnet.importers.parser import parser
+from acetone_nnet.pattern_matching.PatternMatcher import pattern_matcher
 from acetone_nnet.quantize import qform
 from acetone_nnet.quantize.activation import QuantizeShiftActivation
 from acetone_nnet.templates.template_makefile import TemplateMakefile
@@ -93,6 +94,7 @@ class CodeGenerator(ABC):
         to_hex: bool = True,
         bin_dataset: bool = False,
         makefile_properties: dict[str, str | list[str]] | None = None,
+        optimization: bool = False,
         custom_generation_functions: dict[str, list[tuple[str, Callable]]] | None = None,
         **kwargs,
     ) -> None:
@@ -102,6 +104,8 @@ class CodeGenerator(ABC):
         self.normalize = bool(normalize)
         self.template_path = templates.__file__[:-11]
         self.verbose = verbose
+        self.optimization = optimization
+        self.log = ""
         self.to_hex = to_hex
         self.target_cfg = None
         self.bin_dataset = bin_dataset
@@ -132,10 +136,20 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
+        self.maxpath = maxpath
+        self.data_format = data_format
+        self.dict_cst = dict_cst
+        self.layers: list[Any] = l
+
+        if self.optimization:
+            self.layers, self.log = pattern_matcher.match(self.layers, self.dict_cst)
+
+        if self.log:
+            logging.info(f"Pattern Matching:\n {self.log}")
+
         self.default_implementations = {
             "Conv2D": "6loops",
         }
-        self.layers: list[Any] = l
         self.versions = self.select_layers_implementation(versions)
         self.layers = versioning(self.layers, self.versions)
         self.data_type = (
@@ -150,10 +164,11 @@ class CodeGenerator(ABC):
         )
         logging.info(f"C type {self.data_type}")
         logging.info(f"py dtype {self.data_type_py}")
-        self.quantize_layers()
-        self.maxpath = maxpath
-        self.data_format = data_format
-        self.dict_cst = dict_cst
+
+
+
+        self.versions = self.select_layers_implementation(versions)
+        self.layers = versioning(self.layers, self.versions)
 
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)
@@ -171,6 +186,8 @@ class CodeGenerator(ABC):
         self.makefile_properties = makefile_properties
         if self.makefile_properties is None:
             self.makefile_properties = {}
+
+        self.quantize_layers()
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -318,6 +335,10 @@ class CodeGenerator(ABC):
 
         return targets
 
+    def get_input_shape(self:Self) -> list[int]:
+        """Return the input shape of the model."""
+        return self.layers[0].input_shape
+
     def _initialise_dataset(
         self: Self,
         dataset_or_path: np.ndarray | str | Path | None,
@@ -419,7 +440,6 @@ class CodeGenerator(ABC):
                     nn_input = np.transpose(np.reshape(nn_input, shape), (2, 0, 1))
                 if self.normalize:
                     nn_input = self.Normalizer.pre_processing(nn_input)
-
                 # Inputs per layer and predecessor
                 # - li[i][j] is an input for i computed from preceding layer j
                 # - li[i][i] is the input for layers with no predecessors
@@ -812,7 +832,9 @@ class CodeGenerator(ABC):
                 layer_hash["cst"] = True
                 layer_hash["cst_name"] = self.dict_cst[layer.idx]
 
-            if self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target:
+            if (self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target
+                    and not isinstance(layer, ConstantLayer)):
+                print(layer.name, layer.idx)
                 layer_hash["debug_layer"] = True
                 layer_hash["name"] = layer.name
                 layer_hash["idx"] = layer.idx
@@ -957,7 +979,7 @@ class CodeGenerator(ABC):
                 layer_hash["channels"] = layer.output_channels
                 to_print = True
 
-            if issubclass(type(layer), Broadcast) and layer.constant is not None:
+            if isinstance(layer, Broadcast) and layer.constant is not None:
                 layer_hash["constant_size"] = layer.constant_size
                 to_print = True
 

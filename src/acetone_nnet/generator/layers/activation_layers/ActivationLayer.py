@@ -76,18 +76,4 @@ class ActivationLayer(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        input_str = self.previous_layer[0].output_str
-
-        template  = "    //{{name}}_{{idx}}\n"
-        template += "    for (k = 0; k < {{size}}; ++k) output_{{path}}[k] = {{{function_str}}};\n"
-
-        function_str = self.activation_function.write_activation_str(f"{input_str}[k]")
-        mustach_hash = {
-            "name": self.name,
-            "original_name": self.original_name,
-            "idx": self.idx,
-            "size": self.size,
-            "path": self.path,
-            "function_str": function_str,
-        }
-        return pystache.render(template, mustach_hash)
+        raise NotImplementedError

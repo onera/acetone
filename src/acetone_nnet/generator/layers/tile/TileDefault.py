@@ -22,6 +22,9 @@
 import pystache
 from typing_extensions import Any, Self
 
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import tile_factory
 
 from .Tile import Tile
@@ -89,3 +92,4 @@ tile_factory.register_implementation(
     "default",
     tile_default_implementation,
 )
+default_implementations_manager.set_as_default("Tile", "default")
