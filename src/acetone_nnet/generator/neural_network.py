@@ -22,6 +22,7 @@
 import json
 import logging
 from abc import ABC
+from collections.abc import Callable
 from pathlib import Path
 from sys import version_info
 from typing import Any
@@ -94,6 +95,7 @@ class CodeGenerator(ABC):
         bin_dataset: bool = False,
         makefile_properties: dict[str, str | list[str]] | None = None,
         optimization: bool = False,
+        custom_generation_functions: dict[str, list[tuple[str, Callable]]] | None = None,
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -145,11 +147,6 @@ class CodeGenerator(ABC):
         if self.log:
             logging.info(f"Pattern Matching:\n {self.log}")
 
-        self.default_implementations = {
-            "Conv2D": "6loops",
-        }
-        self.versions = self.select_layers_implementation(versions)
-        self.layers = versioning(self.layers, self.versions)
         self.data_type = (
             self.target_cfg["quantization"]["dtype"]
             if self.target_cfg is not None
@@ -163,38 +160,28 @@ class CodeGenerator(ABC):
         logging.info(f"C type {self.data_type}")
         logging.info(f"py dtype {self.data_type_py}")
 
-
-
-        self.versions = self.select_layers_implementation(versions)
-        self.layers = versioning(self.layers, self.versions)
-
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)
 
         self.test_dataset = self._initialise_dataset(test_dataset, int(nb_tests))
 
-        self.files_to_gen = [
-            "inference.c",
-            "inference.h",
-            "global_vars.c",
-            "parameters.c",
-            "main.c",
-            "Makefile",
-            "test_dataset.h",
-        ]
-        if not self.read_ext_input:
-            self.files_to_gen.append("test_dataset.c")
-
         self.target = target
-        if self.target != "generic":
-            self.files_to_gen.append("target.c")
-            self.files_to_gen.append("target.h")
-
         self.target_page_size = target_page_size
+
+        if custom_generation_functions is None:
+            custom_generation_functions = {}
+        self.files_to_gen, self.generation_functions = self.select_generation_functions(custom_generation_functions)
+
 
         self.makefile_properties = makefile_properties
         if self.makefile_properties is None:
             self.makefile_properties = {}
+
+        self.default_implementations = {
+            "Conv2D": "6loops",
+        }
+        self.versions = self.select_layers_implementation(versions)
+        self.layers = versioning(self.layers, self.versions)
 
         self.quantize_layers()
 
@@ -245,6 +232,79 @@ class CodeGenerator(ABC):
         if self.debug_mode and self.debug_mode not in ["keras", "onnx", "time"]:
             msg = "Error: debug mode value.\n Must be one of: keras, onnx, time"
             raise ValueError(msg)
+
+    def select_generation_functions(
+            self:Self,
+            custom_generation_functions:dict[str, list[tuple[str,Callable]]],
+    ) -> (list[str], dict[str, Callable]):
+        """Select and organize generation functions.
+
+        :param custom_generation_functions: A dictionary of custom generation functions
+            indexed by file identifiers. Each key maps to a list of tuples consisting of
+            the file name as a string and the corresponding callable generation function.
+            The keys correspond to the functional categories of the generated files.
+
+        :return: A tuple where the first element is a list of file names to be generated
+            and the second element is a dictionary of generation functions indexed by
+            their functional categories.
+
+        By default, 3 keys are always added to the generation function dict:
+            - Main: the main function and input/output parameters definition
+            - Makefile: the code Makefile
+            - Inference: the code of the inference function
+        Two more keys are added depending on the generator parameters:
+            - TestValues: the declaration of the input values
+            - Target: the declaration of the target architecture
+
+        To change those default parameters, define in the input dict the corresponding keys.
+        Setting the keys to an empty list will disable their generation.
+        """
+        file_names = []
+        generation_functions = {}
+
+        if "Main" not in custom_generation_functions:
+            generation_functions["Main"] = [
+                lambda s, path: s.generate_main_file(path),
+                lambda s, path: s.generate_test_dataset_header_file(path),
+            ]
+            file_names.extend(["main.c","test_dataset.h"])
+
+        if "Inference" not in custom_generation_functions:
+            generation_functions["Inference"] = [
+                lambda s, path: s.generate_function_source_file(path),
+                lambda s, path: s.generate_function_header_file(path),
+                lambda s, path: s.generate_globalvars_file(path),
+                lambda s, path: s.generate_parameter_file(path),
+            ]
+            file_names.extend(["inference.c", "inference.h","global_vars.c","parameters.c"])
+
+        if "Makefile" not in custom_generation_functions:
+            generation_functions["Makefile"] = [
+                lambda s, path: s.generate_makefile(path),
+            ]
+            file_names.append("Makefile")
+
+        if not self.read_ext_input and "TestValues" not in custom_generation_functions:
+            file_names.append("test_dataset.c")
+            generation_functions["TestValues"] = [
+                lambda s, path: s.generate_test_dataset_value_file(path),
+            ]
+
+        if self.target != "generic" and "Target" not in custom_generation_functions:
+            file_names.append("target.c")
+            file_names.append("target.h")
+            generation_functions["Target"] = [
+                lambda s,path: s.generate_target_file(path),
+                lambda s,path: s.generate_target_header_file(path),
+            ]
+
+        for k in custom_generation_functions:
+            name, generation_function = custom_generation_functions.get(k, ("", []))
+            if generation_function:
+                file_names.append(name)
+                generation_functions[k] = generation_function
+
+        return file_names, generation_functions
 
     def select_layers_implementation(
         self: Self,
@@ -523,7 +583,7 @@ class CodeGenerator(ABC):
         s += "}"
         return s
 
-    def generate_test_dataset_files(
+    def generate_test_dataset_header_file(
         self: Self,
         output_dir: Path,
     ) -> None:
@@ -545,6 +605,13 @@ class CodeGenerator(ABC):
                     },
                 ),
             )
+            logging.info("Generated test_dataset header file.")
+
+    def generate_test_dataset_value_file(
+            self: Self,
+            output_dir: Path,
+    ) -> None:
+        """Generate C code for graph test dataset."""
         if self.bin_dataset:
             with Path.open(output_dir / "test_dataset.dat", "w+") as test_dataset_bin:
                 self.test_dataset.tofile(test_dataset_bin)
@@ -556,7 +623,6 @@ class CodeGenerator(ABC):
                     map(self.flatten_array_order_c, self.test_dataset),
                 )
             dataset += "};\n"
-
             template = (
                 Path(self.template_path) / "template_test_dataset_source.c.tpl"
             ).read_text()
@@ -567,6 +633,7 @@ class CodeGenerator(ABC):
                         {"data_type": self.data_type, "dataset": dataset},
                     ),
                 )
+        logging.info("Generated test_dataset value file.")
 
     def generate_main_file(
         self: Self,
@@ -590,6 +657,7 @@ class CodeGenerator(ABC):
                     },
                 ),
             )
+        logging.info("Generated main file.")
 
     def _get_makefile_properties(self) -> dict[str, str | list[str]]:
         """Get makefile properties."""
@@ -637,6 +705,7 @@ class CodeGenerator(ABC):
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))
+        logging.info("Generated Makefile.")
 
     def generate_c_files(
         self: Self,
@@ -651,25 +720,10 @@ class CodeGenerator(ABC):
             if (c_files_directory / file).exists():
                 raise FileExistsError(c_files_directory / file)
 
-        self.generate_function_source_file(c_files_directory)
-        logging.info("Generated function source file.")
-        self.generate_function_header_file(c_files_directory)
-        logging.info("Generated function header file.")
-        self.generate_globalvars_file(c_files_directory)
-        logging.info("Generated globalvars .c file.")
-        self.generate_parameter_file(c_files_directory)
-        logging.info("Generated parameter .c file.")
-        self.generate_main_file(c_files_directory)
-        logging.info("Generated main file.")
-        self.generate_makefile(c_files_directory)
-        logging.info("Generated Makefile.")
-        self.generate_test_dataset_files(c_files_directory)
-        logging.info("Generated test_dataset files.")
-        if self.target != "generic":
-            self.generate_target_file(c_files_directory)
-            logging.info("Generated target file.")
-            self.generate_target_header_file(c_files_directory)
-            logging.info("Generated target header file.")
+        for k in self.generation_functions:
+            for f in self.generation_functions[k]:
+                f(self,c_files_directory)
+
 
     def generate_target_file(self: Self, output_dir: Path) -> None:
         logging.info("Generation of target file")
@@ -681,6 +735,7 @@ class CodeGenerator(ABC):
         ).read_text()
         with (output_dir / "target.c").open("a+") as source_file:
             source_file.write(pystache.render(template, mustach_hash))
+            logging.info("Generated target file.")
 
     def generate_target_header_file(self: Self, output_dir: Path) -> None:
         logging.info("Generation of target header file")
@@ -692,6 +747,7 @@ class CodeGenerator(ABC):
         ).read_text()
         with (output_dir / "target.h").open("a+") as source_file:
             source_file.write(pystache.render(template, mustach_hash))
+            logging.info("Generated target header file.")
 
     def generate_function_source_file(
         self: Self,
@@ -795,7 +851,6 @@ class CodeGenerator(ABC):
 
             if (self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target
                     and not isinstance(layer, ConstantLayer)):
-                print(layer.name, layer.idx)
                 layer_hash["debug_layer"] = True
                 layer_hash["name"] = layer.name
                 layer_hash["idx"] = layer.idx
@@ -852,6 +907,7 @@ class CodeGenerator(ABC):
         template = (Path(self.template_path) / "template_source_file.c.tpl").read_text()
         with (output_dir / "inference.c").open("a+") as source_file:
             source_file.write(pystache.render(template, mustach_hash))
+        logging.info("Generated function source file.")
 
     def generate_function_header_file(
         self: Self,
@@ -955,6 +1011,7 @@ class CodeGenerator(ABC):
         template = (Path(self.template_path) / "template_header_file.c.tpl").read_text()
         with (output_dir / "inference.h").open("a+") as header_file:
             header_file.write(pystache.render(template, mustach_hash))
+        logging.info("Generated function header file.")
 
     def quantize_layers(self):
         """Use the target_cfg file fixed point notation Qn.m to quantize MatMul and Add parameters
@@ -1073,6 +1130,7 @@ class CodeGenerator(ABC):
         else:
             with (output_dir / "parameters.c").open("a+") as parameter_file:
                 parameter_file.write(pystache.render(template, mustach_hash))
+        logging.info("Generated parameter .c file.")
 
     def generate_globalvars_file(
         self: Self,

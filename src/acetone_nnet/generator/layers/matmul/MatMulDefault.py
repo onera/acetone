@@ -22,9 +22,6 @@
 import pystache
 from typing_extensions import Any, Self
 
-from acetone_nnet.versioning.default_implementations import (
-    default_implementations_manager,
-)
 from acetone_nnet.versioning.layer_factories import matmul_factory
 
 from .MatMul import MatMul
@@ -91,4 +88,3 @@ matmul_factory.register_implementation(
     "default",
     matmul_default_implementation,
 )
-default_implementations_manager.set_as_default("MatMul", "default")

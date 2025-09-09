@@ -54,7 +54,7 @@ target_conf = """
       "W1": {
         "out": "Q5.10"
       },
-      "MatMul_15": {
+      "MatMul_16": {
         "out": "Q1.14",
         "in": "Q-1.16",
         "params": "Q5.10"
@@ -62,7 +62,7 @@ target_conf = """
       "B1": {
         "out": "Q1.14"
       },
-      "Add_16": {
+      "Add_17": {
         "out": "Q1.14",
         "in": "Q1.14",
         "params": "Q1.14"
@@ -70,7 +70,7 @@ target_conf = """
       "W2": {
         "out": "Q2.13"
       },
-      "MatMul_17": {
+      "MatMul_19": {
         "out": "Q2.13",
         "in": "Q1.14",
         "params": "Q2.13"
@@ -78,7 +78,7 @@ target_conf = """
       "B2": {
         "out": "Q2.13"
       },
-      "Add_18": {
+      "Add_20": {
         "out": "Q2.13",
         "in": "Q2.13",
         "params": "Q2.13"
@@ -86,7 +86,7 @@ target_conf = """
       "W3": {
         "out": "Q2.13"
       },
-      "MatMul_19": {
+      "MatMul_22": {
         "out": "Q3.12",
         "in": "Q2.13",
         "params": "Q2.13"
@@ -94,7 +94,7 @@ target_conf = """
       "B3": {
         "out": "Q3.12"
       },
-      "Add_20": {
+      "Add_23": {
         "out": "Q3.12",
         "in": "Q3.12",
         "params": "Q3.12"
@@ -102,7 +102,7 @@ target_conf = """
       "W4": {
         "out": "Q2.13"
       },
-      "MatMul_21": {
+      "MatMul_25": {
         "out": "Q3.12",
         "in": "Q3.12",
         "params": "Q2.13"
@@ -110,7 +110,7 @@ target_conf = """
       "B4": {
         "out": "Q3.12"
       },
-      "Add_22": {
+      "Add_26": {
         "out": "Q3.12",
         "in": "Q3.12",
         "params": "Q3.12"
@@ -118,7 +118,7 @@ target_conf = """
       "W5": {
         "out": "Q14.1"
       },
-      "MatMul_23": {
+      "MatMul_28": {
         "out": "Q15.0",
         "in": "Q3.12",
         "params": "Q14.1"
@@ -126,7 +126,7 @@ target_conf = """
       "B5": {
         "out": "Q15.0"
       },
-      "Add_24": {
+      "Add_29": {
         "out": "Q15.0",
         "in": "Q15.0",
         "params": "Q15.0"

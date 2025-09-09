@@ -22,9 +22,6 @@
 import pystache
 from typing_extensions import Self
 
-from acetone_nnet.versioning.default_implementations import (
-    default_implementations_manager,
-)
 from acetone_nnet.versioning.layer_factories import constant_pad_factory
 
 from .ConstantPad import ConstantPad
@@ -101,4 +98,3 @@ constant_pad_factory.register_implementation(
     "default",
     constant_pad_default_implementation,
 )
-default_implementations_manager.set_as_default("ConstantPad", "default")
