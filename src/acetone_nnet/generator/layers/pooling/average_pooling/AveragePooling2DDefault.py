@@ -22,6 +22,9 @@
 import pystache
 from typing_extensions import Self
 
+from acetone_nnet.versioning.default_implementations import (
+    default_implementations_manager,
+)
 from acetone_nnet.versioning.layer_factories import average_pooling_factory
 
 from .AveragePooling2D import AveragePooling2D
@@ -110,3 +113,4 @@ average_pooling_factory.register_implementation(
     "default",
     average_pooling_default_implementation,
 )
+default_implementations_manager.set_as_default("AveragePooling2D", "default")

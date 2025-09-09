@@ -39,6 +39,7 @@ def cli_acetone(
     bin_dataset = False,
     *,
     normalize: bool = False,
+    optimization: bool = False,
 ) -> None:
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
     """Generate code with ACETONE."""
@@ -56,6 +57,7 @@ def cli_acetone(
         versions={"Conv2D": conv_algorithm},
         verbose=verbose,
         to_hex=to_hex,
+        optimization=optimization,
         bin_dataset = bin_dataset
     )
     net.generate_c_files(output_dir)
@@ -108,6 +110,11 @@ def acetone_generate() -> None:
         help="Default variant used for implementation of the Convolution operation.",
         default="std_gemm_nn",
     )
+    parser.add_argument(
+        "--optimization",
+        help="Activate model optimization on the internal representation.",
+        default=False,
+    )
 
     parser.add_argument(
         "--target",
@@ -149,7 +156,8 @@ def acetone_generate() -> None:
         normalize=args.normalize,
         target_page_size=args.target_page_size,
         verbose=args.verbose,
-        bin_dataset=args.bin_dataset
+        bin_dataset=args.bin_dataset,
+        optimization=args.optimization,
     )
 
 

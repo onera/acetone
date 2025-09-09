@@ -23,6 +23,7 @@ from . import debug, generator
 from .cli.compare import cli_compare
 from .generator import (
     ActivationFunctions,
+    ActivationLayer,
     Add,
     Average,
     AveragePooling2D,

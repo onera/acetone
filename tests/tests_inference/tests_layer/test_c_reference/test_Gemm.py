@@ -83,17 +83,129 @@ class TestGemm(acetoneTestCase.AcetoneTestCase):
                                                               self.tmpdir_name + "/dataset.txt")
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
-    def testGemm_nt(self):
-        testshape = (10, 20)
+    def testGemm_nn_1D(self):
+        testshape = (1, 20)
 
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
-                                               [10, 20])
+                                               [1, 20])
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                                onnx.TensorProto.FLOAT,
-                                               [10, 10])
+                                               [1, 10])
+
+        Gemm_W_name = "Gemm_w"
+        Gemm_W = np.random.rand(20, 10).astype(np.float32)
+        Gemm_W_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_W_name,
+                                                                       tensor_array=Gemm_W,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        Gemm_B_name = "Gemm_B"
+        Gemm_B = np.random.rand(10).astype(np.float32)
+        Gemm_B_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_B_name,
+                                                                       tensor_array=Gemm_B,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        gemm_node = onnx.helper.make_node(
+            name="Gemm",
+            op_type="Gemm",
+            inputs=[model_input_name, Gemm_W_name, Gemm_B_name],
+            outputs=[model_output_name],
+            alpha=2.0,
+            beta=2.0,
+            transA=0,
+            transB=0,
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[gemm_node],
+            name="Gemm",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[Gemm_W_initializer, Gemm_B_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None, {input_name: dataset[0]})
+        onnx_result = result[0].ravel().flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
+                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result[0], onnx_result)
+
+    def testGemm_nt(self):
+        testshape = (1, 20)
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [1, 20])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [1, 10])
+
+        Gemm_W_name = "Gemm_w"
+        Gemm_W = np.random.rand(10, 20).astype(np.float32)
+        Gemm_W_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_W_name,
+                                                                       tensor_array=Gemm_W,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        Gemm_B_name = "Gemm_B"
+        Gemm_B = np.random.rand(10).astype(np.float32)
+        Gemm_B_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_B_name,
+                                                                       tensor_array=Gemm_B,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        gemm_node = onnx.helper.make_node(
+            name="Gemm",
+            op_type="Gemm",
+            inputs=[model_input_name, Gemm_W_name, Gemm_B_name],
+            outputs=[model_output_name],
+            alpha=2.0,
+            beta=2.0,
+            transA=0,
+            transB=1,
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[gemm_node],
+            name="Gemm",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[Gemm_W_initializer, Gemm_B_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None, {input_name: dataset[0]})
+        onnx_result = result[0].ravel().flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
+                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result[0], onnx_result)
+
+    def testGemm_nt_1D(self):
+        testshape = (1, 20)
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [1, 20])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [1, 10])
 
         Gemm_W_name = "Gemm_w"
         Gemm_W = np.random.rand(10, 20).astype(np.float32)
@@ -195,6 +307,62 @@ class TestGemm(acetoneTestCase.AcetoneTestCase):
                                                               self.tmpdir_name + "/dataset.txt")
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
+    def testGemm_tn_1D(self):
+        testshape = (20, 1)
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [20, 1])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [1, 10])
+
+        Gemm_W_name = "Gemm_w"
+        Gemm_W = np.random.rand(20, 10).astype(np.float32)
+        Gemm_W_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_W_name,
+                                                                       tensor_array=Gemm_W,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        Gemm_B_name = "Gemm_B"
+        Gemm_B = np.random.rand(10).astype(np.float32)
+        Gemm_B_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_B_name,
+                                                                       tensor_array=Gemm_B,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        gemm_node = onnx.helper.make_node(
+            name="Gemm",
+            op_type="Gemm",
+            inputs=[model_input_name, Gemm_W_name, Gemm_B_name],
+            outputs=[model_output_name],
+            alpha=2.0,
+            beta=2.0,
+            transA=1,
+            transB=0,
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[gemm_node],
+            name="Gemm",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[Gemm_W_initializer, Gemm_B_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None, {input_name: dataset[0]})
+        onnx_result = result[0].ravel().flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
+                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result[0], onnx_result)
+
     def testGemm_tt(self):
         testshape = (20, 10)
 
@@ -206,6 +374,62 @@ class TestGemm(acetoneTestCase.AcetoneTestCase):
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                                onnx.TensorProto.FLOAT,
                                                [10, 10])
+
+        Gemm_W_name = "Gemm_w"
+        Gemm_W = np.random.rand(10, 20).astype(np.float32)
+        Gemm_W_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_W_name,
+                                                                       tensor_array=Gemm_W,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        Gemm_B_name = "Gemm_B"
+        Gemm_B = np.random.rand(10).astype(np.float32)
+        Gemm_B_initializer = acetoneTestCase.create_initializer_tensor(name=Gemm_B_name,
+                                                                       tensor_array=Gemm_B,
+                                                                       data_type=onnx.TensorProto.FLOAT)
+
+        gemm_node = onnx.helper.make_node(
+            name="Gemm",
+            op_type="Gemm",
+            inputs=[model_input_name, Gemm_W_name, Gemm_B_name],
+            outputs=[model_output_name],
+            alpha=2.0,
+            beta=2.0,
+            transA=1,
+            transB=1,
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[gemm_node],
+            name="Gemm",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[Gemm_W_initializer, Gemm_B_initializer],
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None, {input_name: dataset[0]})
+        onnx_result = result[0].ravel().flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
+                                                              self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result[0], onnx_result)
+
+    def testGemm_tt_1D(self):
+        testshape = (20, 1)
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [20, 1])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [1, 10])
 
         Gemm_W_name = "Gemm_w"
         Gemm_W = np.random.rand(10, 20).astype(np.float32)

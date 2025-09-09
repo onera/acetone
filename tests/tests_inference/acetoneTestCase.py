@@ -117,6 +117,8 @@ def run_acetone_for_test(
     datatest_path: str | np.ndarray | None = None,
     conv_algo: str = "std_gemm_nn",
     normalize=False,
+    optimization: bool = False,
+    verbose:bool = True,
     run_generated=True,
     run_reference=True,
     target="generic",
@@ -130,9 +132,10 @@ def run_acetone_for_test(
         output_dir=tmpdir_name,
         test_dataset_file=datatest_path,
         normalize=normalize,
+        verbose=verbose,
+        optimization=optimization,
         target=target,
         bin_dataset=bin_dataset,
-        verbose=True
     )
 
     if run_reference:

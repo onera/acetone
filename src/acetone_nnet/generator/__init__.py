@@ -29,9 +29,11 @@ from .activation_functions import (
     Logarithm,
     ReLu,
     Sigmoid,
+    Silu,
     TanH,
 )
 from .layers import (
+    ActivationLayer,
     Add,
     AddDefault,
     Average,
@@ -117,6 +119,7 @@ __all__ = (
     "ActivationFunctions",
     "Linear",
     "Sigmoid",
+    "Silu",
     "ReLu",
     "TanH",
     "Exponential",
