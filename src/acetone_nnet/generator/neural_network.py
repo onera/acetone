@@ -147,11 +147,6 @@ class CodeGenerator(ABC):
         if self.log:
             logging.info(f"Pattern Matching:\n {self.log}")
 
-        self.default_implementations = {
-            "Conv2D": "6loops",
-        }
-        self.versions = self.select_layers_implementation(versions)
-        self.layers = versioning(self.layers, self.versions)
         self.data_type = (
             self.target_cfg["quantization"]["dtype"]
             if self.target_cfg is not None
@@ -164,11 +159,6 @@ class CodeGenerator(ABC):
         )
         logging.info(f"C type {self.data_type}")
         logging.info(f"py dtype {self.data_type_py}")
-
-
-
-        self.versions = self.select_layers_implementation(versions)
-        self.layers = versioning(self.layers, self.versions)
 
         self.read_ext_input = external_input
         self.nb_tests = int(nb_tests)
@@ -186,6 +176,12 @@ class CodeGenerator(ABC):
         self.makefile_properties = makefile_properties
         if self.makefile_properties is None:
             self.makefile_properties = {}
+
+        self.default_implementations = {
+            "Conv2D": "6loops",
+        }
+        self.versions = self.select_layers_implementation(versions)
+        self.layers = versioning(self.layers, self.versions)
 
         self.quantize_layers()
 
@@ -855,7 +851,6 @@ class CodeGenerator(ABC):
 
             if (self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target
                     and not isinstance(layer, ConstantLayer)):
-                print(layer.name, layer.idx)
                 layer_hash["debug_layer"] = True
                 layer_hash["name"] = layer.name
                 layer_hash["idx"] = layer.idx
