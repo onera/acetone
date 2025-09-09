@@ -765,6 +765,15 @@ class CodeGenerator(ABC):
 
         # Tag Gather-type layers
         if any(isinstance(i, Gather | GatherElements) for i in self.layers):
+
+            def gather_indices_to_str(array: np.ndarray) -> str:
+                """Generate C flat array initializer in C order."""
+                flattened_aray = array.flatten(order="C")
+                s = "\n        {"
+                s += ", ".join([str(int(d)) for d in flattened_aray])
+                s += "}"
+                return s
+
             gather_layers = [
                 i for i in self.layers if isinstance(i, Gather | GatherElements)
             ]
@@ -775,7 +784,7 @@ class CodeGenerator(ABC):
                     {
                         "idx": f"{gather.idx:02d}",
                         "length": len(gather.indices.flatten()),
-                        "list": self.flatten_array_order_c(gather.indices),
+                        "list": gather_indices_to_str(gather.indices),
                     },
                 )
             mustach_hash["indices"] = indices
