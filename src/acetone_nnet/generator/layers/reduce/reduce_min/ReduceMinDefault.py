@@ -79,4 +79,3 @@ reduce_min_factory.register_implementation(
     "default",
     reduce_min_default_implementation,
 )
-default_implementations_manager.set_as_default("ReduceMin", "default")

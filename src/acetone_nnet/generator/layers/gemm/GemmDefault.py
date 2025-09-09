@@ -244,4 +244,3 @@ gemm_factory.register_implementation(
     "default",
     gemm_default_implementation,
 )
-default_implementations_manager.set_as_default("Gemm", "default")

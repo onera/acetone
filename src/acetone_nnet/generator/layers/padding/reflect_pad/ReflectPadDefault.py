@@ -116,4 +116,3 @@ reflect_pad_factory.register_implementation(
     "default",
     reflect_pad_default_implementation,
 )
-default_implementations_manager.set_as_default("ReflectPad", "default")

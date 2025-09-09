@@ -118,4 +118,3 @@ softmax_factory.register_implementation(
     "default",
     softmax_default_implementation,
 )
-default_implementations_manager.set_as_default("Softmax", "default")

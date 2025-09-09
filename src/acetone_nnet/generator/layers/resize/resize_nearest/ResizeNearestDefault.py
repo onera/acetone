@@ -123,4 +123,3 @@ resize_nearest_factory.register_implementation(
     "default",
     resize_nearest_default_implementation,
 )
-default_implementations_manager.set_as_default("ResizeNearest", "default")

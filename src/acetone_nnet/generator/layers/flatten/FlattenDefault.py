@@ -84,4 +84,3 @@ flatten_factory.register_implementation(
     "default",
     flatten_default_implementation,
 )
-default_implementations_manager.set_as_default("Flatten", "default")

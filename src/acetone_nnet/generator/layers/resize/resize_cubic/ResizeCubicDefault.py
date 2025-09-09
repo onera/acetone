@@ -121,4 +121,3 @@ resize_cubic_factory.register_implementation(
     "default",
     resize_cubic_default_implementation,
 )
-default_implementations_manager.set_as_default("ResizeCubic", "default")

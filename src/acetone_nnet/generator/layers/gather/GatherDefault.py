@@ -104,4 +104,3 @@ gather_factory.register_implementation(
     "default",
     gather_default_implementation,
 )
-default_implementations_manager.set_as_default("Gather", "default")

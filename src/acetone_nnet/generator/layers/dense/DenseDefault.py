@@ -92,4 +92,3 @@ dense_factory.register_implementation(
     "default",
     dense_default_implementation,
 )
-default_implementations_manager.set_as_default("Dense", "default")

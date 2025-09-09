@@ -112,4 +112,3 @@ max_pooling_factory.register_implementation(
     "default",
     max_pooling_default_implementation,
 )
-default_implementations_manager.set_as_default("MaxPooling2D", "default")

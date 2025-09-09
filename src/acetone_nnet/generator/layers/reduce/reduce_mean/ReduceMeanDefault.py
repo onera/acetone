@@ -79,4 +79,3 @@ reduce_mean_factory.register_implementation(
     "default",
     reduce_mean_default_implementation,
 )
-default_implementations_manager.set_as_default("ReduceMean", "default")

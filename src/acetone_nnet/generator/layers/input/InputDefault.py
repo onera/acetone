@@ -87,4 +87,3 @@ input_factory.register_implementation(
     "default",
     input_default_implementation,
 )
-default_implementations_manager.set_as_default("Input_layer", "default")

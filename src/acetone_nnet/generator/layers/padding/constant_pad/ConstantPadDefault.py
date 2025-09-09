@@ -101,4 +101,3 @@ constant_pad_factory.register_implementation(
     "default",
     constant_pad_default_implementation,
 )
-default_implementations_manager.set_as_default("ConstantPad", "default")

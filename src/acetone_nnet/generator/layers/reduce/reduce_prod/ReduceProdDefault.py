@@ -79,4 +79,3 @@ reduce_prod_factory.register_implementation(
     "default",
     reduce_prod_default_implementation,
 )
-default_implementations_manager.set_as_default("ReduceProd", "default")

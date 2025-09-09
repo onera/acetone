@@ -92,4 +92,3 @@ tile_factory.register_implementation(
     "default",
     tile_default_implementation,
 )
-default_implementations_manager.set_as_default("Tile", "default")

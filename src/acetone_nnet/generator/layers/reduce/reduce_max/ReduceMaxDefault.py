@@ -78,4 +78,3 @@ reduce_max_factory.register_implementation(
     "default",
     reduce_max_default_implementation,
 )
-default_implementations_manager.set_as_default("ReduceMax", "default")

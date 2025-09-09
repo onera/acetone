@@ -126,4 +126,3 @@ resize_linear_factory.register_implementation(
     "default",
     resize_linear_default_implementation,
 )
-default_implementations_manager.set_as_default("ResizeLinear", "default")

@@ -79,4 +79,3 @@ reduce_sum_factory.register_implementation(
     "default",
     reduce_sum_default_implementation,
 )
-default_implementations_manager.set_as_default("ReduceSum", "default")
