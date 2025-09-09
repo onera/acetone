@@ -131,3 +131,4 @@ class Minimum(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate inference code."""
+        raise NotImplementedError

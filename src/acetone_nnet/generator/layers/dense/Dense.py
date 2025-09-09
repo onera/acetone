@@ -86,6 +86,7 @@ class Dense(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
+        raise NotImplementedError
 
     def forward_path_layer(
         self: Self,
