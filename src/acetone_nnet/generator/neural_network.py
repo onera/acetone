@@ -273,6 +273,15 @@ class CodeGenerator(ABC):
             ]
             file_names.extend(["main.c","test_dataset.h"])
 
+        if "Inference" not in custom_generation_functions:
+            generation_functions["Inference"] = [
+                lambda s, path: s.generate_function_source_file(path),
+                lambda s, path: s.generate_function_header_file(path),
+                lambda s, path: s.generate_globalvars_file(path),
+                lambda s, path: s.generate_parameter_file(path),
+            ]
+            file_names.extend(["inference.c", "inference.h","global_vars.c","parameters.c"])
+
         if "Makefile" not in custom_generation_functions:
             generation_functions["Makefile"] = [
                 lambda s, path: s.generate_makefile(path),
@@ -284,15 +293,6 @@ class CodeGenerator(ABC):
             generation_functions["TestValues"] = [
                 lambda s, path: s.generate_test_dataset_value_file(path),
             ]
-
-        if "Inference" not in custom_generation_functions:
-            generation_functions["Inference"] = [
-                lambda s, path: s.generate_function_source_file(path),
-                lambda s, path: s.generate_function_header_file(path),
-                lambda s, path: s.generate_globalvars_file(path),
-                lambda s, path: s.generate_parameter_file(path),
-            ]
-            file_names.extend(["inference.c", "inference.h","global_vars.c","parameters.c"])
 
         if self.target != "generic" and "Target" not in custom_generation_functions:
             file_names.append("target.c")
