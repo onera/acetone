@@ -21,7 +21,6 @@ import numpy as np
 import onnx
 import tensorflow as tf
 
-from misc.wrap_pad.wrap_pad_test import activation_node
 from tests.tests_inference import acetoneTestCase
 
 tf.keras.backend.set_floatx("float32")
