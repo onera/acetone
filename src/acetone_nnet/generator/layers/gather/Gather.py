@@ -118,41 +118,7 @@ class Gather(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["output_str"] = output_str
-        mustach_hash["road"] = self.path
-        mustach_hash["size"] = self.size
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[position]")
-
-        mustach_hash["indices_len"] = len(self.indices.flatten())
-        mustach_hash["input_width"] = self.input_width
-        mustach_hash["input_height"] = self.input_height
-
-        if self.axis == 1:
-            mustach_hash["channels"] = True
-            mustach_hash["output_height"] = self.output_height
-            mustach_hash["output_width"] = self.output_width
-        elif self.axis == 2:
-            mustach_hash["heights"] = True
-            mustach_hash["output_channels"] = self.output_channels
-            mustach_hash["output_width"] = self.output_width
-        elif self.axis == 3:
-            mustach_hash["widths"] = True
-            mustach_hash["output_channels"] = self.output_channels
-            mustach_hash["output_height"] = self.output_height
-
-        with open(self.template_path / "layers" / "template_Gather.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
+        raise NotImplementedError
 
     def forward_path_layer(
             self: Self,
