@@ -241,7 +241,28 @@ class CodeGenerator(ABC):
             self:Self,
             custom_generation_functions:dict[str, list[tuple[str,Callable]]],
     ) -> (list[str], dict[str, Callable]):
-        """Select generation functions."""
+        """Select and organize generation functions.
+
+        :param custom_generation_functions: A dictionary of custom generation functions
+            indexed by file identifiers. Each key maps to a list of tuples consisting of
+            the file name as a string and the corresponding callable generation function.
+            The keys correspond to the functional categories of the generated files.
+
+        :return: A tuple where the first element is a list of file names to be generated
+            and the second element is a dictionary of generation functions indexed by
+            their functional categories.
+
+        By default, 3 keys are always added to the generation function dict:
+            - Main: the main function and input/output parameters definition
+            - Makefile: the code Makefile
+            - Inference: the code of the inference function
+        Two more keys are added depending on the generator parameters:
+            - TestValues: the declaration of the input values
+            - Target: the declaration of the target architecture
+
+        To change those default parameters, define in the input dict the corresponding keys.
+        Setting the keys to an empty list will disable their generation.
+        """
         file_names = []
         generation_functions = {}
 
@@ -249,9 +270,8 @@ class CodeGenerator(ABC):
             generation_functions["Main"] = [
                 lambda s, path: s.generate_main_file(path),
                 lambda s, path: s.generate_test_dataset_header_file(path),
-                lambda s, path: s.generate_parameter_file(path),
             ]
-            file_names.extend(["main.c","test_dataset.h","parameters.c"])
+            file_names.extend(["main.c","test_dataset.h"])
 
         if "Makefile" not in custom_generation_functions:
             generation_functions["Makefile"] = [
@@ -270,8 +290,9 @@ class CodeGenerator(ABC):
                 lambda s, path: s.generate_function_source_file(path),
                 lambda s, path: s.generate_function_header_file(path),
                 lambda s, path: s.generate_globalvars_file(path),
+                lambda s, path: s.generate_parameter_file(path),
             ]
-            file_names.extend(["inference.c", "inference.h","global_vars.c"])
+            file_names.extend(["inference.c", "inference.h","global_vars.c","parameters.c"])
 
         if self.target != "generic" and "Target" not in custom_generation_functions:
             file_names.append("target.c")
@@ -1170,4 +1191,3 @@ class CodeGenerator(ABC):
                 globalvars_file.write(
                     self.Normalizer.write_normalization_cst_in_globalvars_file(),
                 )
-        logging.info("Generated globalvars .c file.")
