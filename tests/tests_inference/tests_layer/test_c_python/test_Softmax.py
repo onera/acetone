@@ -48,16 +48,17 @@ class TestSoftmax(acetoneTestCase.AcetoneTestCase):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,
                                                onnx.TensorProto.FLOAT,
-                                               [None, 1, 1, 56])
+                                               [None, 56])
         model_output_name = "Y"
         Y = onnx.helper.make_tensor_value_info(model_output_name,
                                                onnx.TensorProto.FLOAT,
-                                               [None, 1, 1, 56])
+                                               [None, 56])
 
         activation_node = onnx.helper.make_node(
             op_type="Softmax",
             inputs=[model_input_name],
             outputs=[model_output_name],
+            axis=-1
         )
 
         graph = onnx.helper.make_graph(

@@ -30,7 +30,6 @@ from acetone_nnet.importers.ONNX_importer.create_layer import (
     create_batch_norm,
     create_initializer_layer,
     create_input_layer,
-    fuse_batch_normalization,
     layer_type,
     unused_layers,
 )
@@ -62,8 +61,7 @@ def find_data_type(
 
 
 def load_onnx(
-    file_to_parse: Path | str | onnx.ModelProto,
-    debug: None | str,
+    file_to_parse: Path | str | onnx.ModelProto
 ) -> (list[Layer], str, type, str, int, dict[int, int]):
     """Load an ONNX model and return the corresponding ACETONE representation."""
     # Loading the model and adding value_info if it's not already in it
@@ -105,21 +103,7 @@ def load_onnx(
 
     # Going through all the nodes to create the layers and add them to the list
     for node in model.graph.node:
-        if node.op_type == "BatchNormalization":
-            if layers[-1].name == "Conv2D" and not debug:
-                fuse_batch_normalization(node, dict_output, model, layers)
-            else:
-                layers.append(
-                    create_batch_norm(
-                        node,
-                        idx,
-                        dict_input,
-                        dict_output,
-                        model,
-                    ),
-                )
-                idx += 1
-        elif node.op_type in layer_type:
+        if node.op_type in layer_type:
             # If the node is a useful layer, we add it to the list
             layers.append(
                 layer_type[node.op_type](

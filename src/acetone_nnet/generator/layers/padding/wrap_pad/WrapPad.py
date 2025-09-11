@@ -19,7 +19,7 @@
 ******************************************************************************
 """
 
-import pystache
+import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.layers.padding.Pad import Pad
@@ -34,57 +34,22 @@ class WrapPad(Pad):
     def __init__(self: Self, **kwargs: int) -> None:
         """Build a WrapPad layer."""
         super().__init__(**kwargs)
+        self.name = "WrapPad"
         self.mode = "wrap"
-
-    def write_padding(self: Self) -> str:
-        """Generate the padding code."""
-        mustach_hash = {}
-
-        mustach_hash["pads_front"] = self.pads[1]
-        mustach_hash["pads_top"] = self.pads[2]
-        mustach_hash["pads_left"] = self.pads[3]
-        mustach_hash["channels_and_pad_front"] = self.input_shape[1] + self.pads[1]
-        mustach_hash["height_and_pad_top"] = self.input_shape[2] + self.pads[2]
-        mustach_hash["width_and_pad_left"] = self.input_shape[3] + self.pads[3]
-        mustach_hash["input_channels"] = self.input_shape[1]
-        mustach_hash["input_width"] = self.input_shape[3]
-        mustach_hash["input_height"] = self.input_shape[2]
-
-        with open(self.template_path / "layers" / "Pad" / "template_Wrap_Pad.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
+        raise NotImplementedError
 
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["size"] = self.size
-        mustach_hash["output_str"] = output_str
-        mustach_hash["road"] = self.path
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-            "tensor_temp[j + " + str(self.output_width) + " * (i + " + str(self.output_height) + " * f)]")
-
-        mustach_hash["output_channels"] = self.output_channels
-        mustach_hash["output_height"] = self.output_height
-        mustach_hash["output_width"] = self.output_width
-        mustach_hash["pads_front"] = self.pads[1]
-        mustach_hash["pads_top"] = self.pads[2]
-        mustach_hash["pads_left"] = self.pads[3]
-        mustach_hash["input_width"] = self.input_shape[3]
-        mustach_hash["input_height"] = self.input_shape[2]
-
-        mustach_hash["change_indice"] = self.write_padding()
-
-        with open(self.template_path / "layers" / "Pad" / "template_Pad_Non_Constant.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
+    def forward_path_layer(
+            self: Self,
+            input_array: np.ndarray,
+    ) -> np.ndarray:
+        """Compute output of layer."""
+        input_array = input_array.reshape(self.input_shape[1], self.input_shape[2], self.input_shape[3])
+        nb_dim = len(self.pads) // 2
+        pad_width = [(self.pads[i], self.pads[i + nb_dim]) for i in
+                     range(1, nb_dim)]  # Constructing the pads accordingly to the numpy nomenclature
+        return self.activation_function.compute(
+            np.pad(input_array, pad_width=pad_width, mode="wrap"),
+        )

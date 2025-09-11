@@ -62,6 +62,7 @@ class LayerFactory:
 
 
 add_factory = LayerFactory("Add")
+activation_layer_factory = LayerFactory("ActivationLayer")
 average_factory = LayerFactory("Average")
 average_pooling_factory = LayerFactory("AveragePooling2D")
 batch_normalization_factory = LayerFactory("BatchNormalization")
@@ -103,6 +104,7 @@ implemented: dict[str, LayerFactory] = {
     "Average": average_factory,
     "AveragePooling2D": average_pooling_factory,
     "BatchNormalization": batch_normalization_factory,
+    "Clip": activation_layer_factory,
     "Concatenate": concatenate_factory,
     "Constant": constant_factory,
     "ConstantPad": constant_pad_factory,
@@ -110,11 +112,15 @@ implemented: dict[str, LayerFactory] = {
     "Dense": dense_factory,
     "Divide": divide_factory,
     "EdgePad": edge_pad_factory,
+    "Exponential": activation_layer_factory,
     "Flatten": flatten_factory,
     "Gather": gather_factory,
     "GatherElements": gather_elements_factory,
     "Gemm": gemm_factory,
+    "Hyperb_tan": activation_layer_factory,
     "Input_layer": input_factory,
+    "Leakyrelu": activation_layer_factory,
+    "Logarithm": activation_layer_factory,
     "MatMul": matmul_factory,
     "MaxPooling2D": max_pooling_factory,
     "Maximum": maximum_factory,
@@ -126,9 +132,12 @@ implemented: dict[str, LayerFactory] = {
     "ReduceProd": reduce_prod_factory,
     "ReduceSum": reduce_sum_factory,
     "ReflectPad": reflect_pad_factory,
+    "Relu": activation_layer_factory,
     "ResizeCubic": resize_cubic_factory,
     "ResizeLinear": resize_linear_factory,
     "ResizeNearest": resize_nearest_factory,
+    "Sigmoid": activation_layer_factory,
+    "Silu": activation_layer_factory,
     "Softmax": softmax_factory,
     "Subtract": subtract_factory,
     "Tile": tile_factory,

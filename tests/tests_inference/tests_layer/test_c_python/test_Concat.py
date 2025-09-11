@@ -385,7 +385,7 @@ class TestConcat(acetoneTestCase.AcetoneTestCase):
             op_type="Concat",
             inputs=[conv1_output_node_name, conv2_output_node_name],
             outputs=[model_output_name],
-            axis=3,
+            axis=-1,
         )
 
         # Create the graph (GraphProto)
@@ -398,6 +398,44 @@ class TestConcat(acetoneTestCase.AcetoneTestCase):
                 conv1_W_initializer_tensor, conv1_B_initializer_tensor,
                 conv2_W_initializer_tensor, conv2_B_initializer_tensor,
             ],
+
+        )
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
+
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
+
+    def testConcat2DInputONNX(self):
+        model_input_name = "X"
+        model_input_height = 32
+        model_input_width = 32
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [model_input_height, model_input_width])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [model_input_height, 2 * model_input_width])
+
+        merging_node = onnx.helper.make_node(
+            name="Merging_node",
+            op_type="Concat",
+            inputs=[model_input_name, model_input_name],
+            outputs=[model_output_name],
+            axis=1,
+        )
+
+        # Create the graph (GraphProto)
+        graph = onnx.helper.make_graph(
+            nodes=[merging_node],
+            name="Concat",
+            inputs=[X],  # Graph input
+            outputs=[Y],  # Graph output
+            initializer=[],
 
         )
         model = onnx.helper.make_model(graph)

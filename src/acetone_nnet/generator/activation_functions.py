@@ -80,7 +80,6 @@ class Sigmoid(ActivationFunctions):
         super().__init__()
         self.name = "sigmoid"
         self.comment = " and apply sigmoid function"
-        # self.layer_type
 
     def compute(self: Self, z: np.ndarray) -> np.ndarray:
         """Compute the python output."""
@@ -94,6 +93,22 @@ class Sigmoid(ActivationFunctions):
     def write_activation_str(self: Self, local_var: str) -> str:
         """Generate the string to print."""
         return f"({local_var} < 0) ? (expf({local_var}) / (1. + expf({local_var}))) : (1. / (1. + expf(-{local_var})))"
+
+class Silu(ActivationFunctions):
+    """Silu layer."""
+    def __init__(self: Self) -> None:
+        """Initiate the class."""
+        super().__init__()
+        self.name = "silu"
+        self.comment = " and apply silu function"
+
+    def compute(self: Self, z: np.ndarray) -> np.ndarray:
+        """Compute the python output."""
+        return z / (1 + np.exp(-z))
+
+    def write_activation_str(self: Self, local_var: str) -> str:
+        """Generate the string to print."""
+        return local_var + " / (1 + exp(-" + local_var + "))"
 
 class ReLu(ActivationFunctions):
     """ReLu layer."""

@@ -4,7 +4,7 @@
                 }
                 if(f >= {{channels_and_pad_front}})
                 {
-                    new_f = -1;
+                    new_f = {{channels}};
                 }
 
                 if(i < {{pads_top}})
@@ -13,7 +13,7 @@
                 }
                 if(i >= {{height_and_pad_top}})
                 {
-                    new_i = -1;
+                    new_i = {{height}};
                 }
 
 
@@ -23,5 +23,5 @@
                 }
                 if(j >= {{width_and_pad_left}})
                 {
-                    new_j = -1;
+                    new_j = {{width}};
                 }

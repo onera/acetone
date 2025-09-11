@@ -39,3 +39,4 @@ class AveragePooling2D(Pooling2D):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
+        raise NotImplementedError

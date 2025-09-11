@@ -87,7 +87,7 @@ def gather_default_implementation(
         size=old_layer.size,
         axis=old_layer.axis,
         indices=old_layer.indices,
-        input_shape=[1, old_layer.output_channels, old_layer.input_height, old_layer.input_width],
+        input_shape=[1, old_layer.input_channels, old_layer.input_height, old_layer.input_width],
         output_shape=[1, old_layer.output_channels, old_layer.output_height, old_layer.output_width],
         activation_function=old_layer.activation_function,
     )

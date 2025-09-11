@@ -28,17 +28,27 @@ import onnxruntime as rt
 
 def clean_inputs(model: onnx.ModelProto) -> None:
     """Remove unused inputs from an ONNX model."""
-    while len(model.graph.input) != 1:
+    initializers = [ini.name for ini in model.graph.initializer]
+    new_inputs = []
+    for i in model.graph.input:
+        if i.name not in initializers:
+            new_inputs.append(i)
+
+    while len(model.graph.input) > 0:
         model.graph.input.pop()
+    model.graph.input.extend(new_inputs)
 
 
-def extract_node_outputs(model: onnx.ModelProto) -> list[str]:
+def extract_node_outputs(
+        model: onnx.ModelProto,
+        optimized_model: bool = False,
+) -> list[str]:
     """Get outputs name of layers of an ONNX model."""
     activation = ["Relu", "Tanh", "Sigmoid", "Clip", "Exp", "Log", "LeakyRelu"]
-    ignored = ["Dropout"]
+    ignored = ["Dropout", "Reshape","Flatten"]
     outputs_name = []
     for node in model.graph.node:
-        if node.op_type in activation:
+        if optimized_model and (node.op_type in activation):
             outputs_name[-1] = node.output[0]
         elif node.op_type in ignored:
             continue
@@ -83,6 +93,7 @@ def debug_onnx(
         to_save: bool = False,
         path: str | Path = "",
         optimize_inputs: bool = False,
+        optimized_model: bool = False,
 ) -> (onnx.ModelProto, list[int], list[np.ndarray]):
     """Debug an ONNX model."""
     # Loading the model
@@ -90,7 +101,7 @@ def debug_onnx(
 
     # Tensor output name and indices for acetone debug
     if not debug_target:
-        inter_layers = extract_node_outputs(model)
+        inter_layers = extract_node_outputs(model, optimized_model)
         targets_indices = []
     else:
         inter_layers = debug_target
@@ -109,7 +120,7 @@ def debug_onnx(
     if optimize_inputs:
         clean_inputs(model)
 
-    onnx.checker.check_model(model)
+    #onnx.checker.check_model(model)
 
     # Save the model
     if to_save:

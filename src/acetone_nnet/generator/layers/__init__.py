@@ -20,6 +20,7 @@
 """
 
 from . import (
+    activation_layers,
     batch_normalization,
     broadcast,
     concatenate,
@@ -39,6 +40,7 @@ from . import (
     tile,
     transpose,
 )
+from .activation_layers import ActivationLayer
 from .batch_normalization import BatchNormalization, BatchNormalizationDefault
 from .broadcast import (
     Add,
@@ -120,6 +122,7 @@ from .tile import Tile, TileDefault
 from .transpose import Transpose, TransposeDefault
 
 __all__ = (
+    activation_layers.__all__,
     dense.__all__,
     flatten.__all__,
     gather.__all__,

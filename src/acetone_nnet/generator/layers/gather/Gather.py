@@ -57,9 +57,10 @@ class Gather(Layer):
             self.original_name = original_name
         self.indices = indices
         self.axis = axis
-        self.output_channels = input_shape[1]
+        self.input_channels = input_shape[1]
         self.input_height = input_shape[2]
         self.input_width = input_shape[3]
+        self.output_channels = output_shape[1]
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.activation_function = activation_function
@@ -118,41 +119,7 @@ class Gather(Layer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
-        mustach_hash = {}
-
-        mustach_hash["name"] = self.name
-        mustach_hash["idx"] = f"{self.idx:02d}"
-        mustach_hash["comment"] = self.activation_function.comment
-        mustach_hash["output_str"] = output_str
-        mustach_hash["road"] = self.path
-        mustach_hash["size"] = self.size
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[position]")
-
-        mustach_hash["indices_len"] = len(self.indices.flatten())
-        mustach_hash["input_width"] = self.input_width
-        mustach_hash["input_height"] = self.input_height
-
-        if self.axis == 1:
-            mustach_hash["channels"] = True
-            mustach_hash["output_height"] = self.output_height
-            mustach_hash["output_width"] = self.output_width
-        elif self.axis == 2:
-            mustach_hash["heights"] = True
-            mustach_hash["output_channels"] = self.output_channels
-            mustach_hash["output_width"] = self.output_width
-        elif self.axis == 3:
-            mustach_hash["widths"] = True
-            mustach_hash["output_channels"] = self.output_channels
-            mustach_hash["output_height"] = self.output_height
-
-        with open(self.template_path / "layers" / "template_Gather.c.tpl") as template_file:
-            template = template_file.read()
-        template_file.close()
-
-        return pystache.render(template, mustach_hash)
+        raise NotImplementedError
 
     def forward_path_layer(
             self: Self,
@@ -160,7 +127,7 @@ class Gather(Layer):
     ) -> np.ndarray:
         """Compute output of layer."""
         input_array = input_array.reshape(
-            self.output_channels,
+            self.input_channels,
             self.input_height,
             self.input_width)
         return np.take(input_array, indices=self.indices, axis=self.axis - 1)

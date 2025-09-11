@@ -18,7 +18,7 @@
 * if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 ******************************************************************************
 """
-
+import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.layers.padding.Pad import Pad
@@ -34,5 +34,20 @@ class ReflectPad(Pad):
         super().__init__(**kwargs)
         self.name = "ReflectPad"
         self.mode = "reflect"
+
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
+        raise NotImplementedError
+
+    def forward_path_layer(
+            self: Self,
+            input_array: np.ndarray,
+    ) -> np.ndarray:
+        """Compute output of layer."""
+        input_array = input_array.reshape(self.input_shape[1], self.input_shape[2], self.input_shape[3])
+        nb_dim = len(self.pads) // 2
+        pad_width = [(self.pads[i], self.pads[i + nb_dim]) for i in
+                     range(1, nb_dim)]  # Constructing the pads accordingly to the numpy nomenclature
+        return self.activation_function.compute(
+            np.pad(input_array, pad_width=pad_width, mode="reflect"),
+        )

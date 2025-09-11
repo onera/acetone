@@ -196,3 +196,4 @@ class Broadcast(Layer):
         input_array: np.ndarray,
     ) -> np.ndarray:
         """Compute output of layer."""
+        raise NotImplementedError
