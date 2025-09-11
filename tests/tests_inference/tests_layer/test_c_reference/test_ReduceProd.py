@@ -17,8 +17,6 @@
 ******************************************************************************
 """
 
-import unittest
-
 import numpy as np
 import onnx
 import onnxruntime as rt
@@ -336,7 +334,7 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
                                                [None, 1, 1, 1])
 
         axes_name = "axes"
-        axes = np.array([1, 2, 3])
+        axes = np.array([1, 2, -1])
         axes_initializer = acetoneTestCase.create_initializer_tensor(name=axes_name,
                                                                      tensor_array=axes,
                                                                      data_type=onnx.TensorProto.INT64)
@@ -421,8 +419,6 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
                                                               self.tmpdir_name + "/dataset.txt")
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
-    # OnnxRuntime seems to not have implemented the noop_with_empty_axes attribut
-    @unittest.expectedFailure
     def testReduceProd_empty_noop_True(self):
         testshape = (1, 3, 10, 10)
 
@@ -444,7 +440,7 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
         ReduceProd_node = onnx.helper.make_node(
             name="ReduceProd",
             op_type="ReduceProd",
-            inputs=[model_input_name],
+            inputs=[model_input_name, axes_name],
             outputs=[model_output_name],
             keepdims=1,
             noop_with_empty_axes=1,
@@ -455,7 +451,7 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
             name="ReduceProd",
             inputs=[X],
             outputs=[Y],
-            initializer=[],
+            initializer=[axes_initializer],
         )
 
         model = onnx.helper.make_model(graph)
@@ -470,6 +466,65 @@ class TestReduceProd(acetoneTestCase.AcetoneTestCase):
         onnx_result = result[0].ravel().flatten()
         acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx",
                                                               self.tmpdir_name + "/dataset.txt")
+        self.assertListAlmostEqual(acetone_result[0], onnx_result)
+
+    def testReduceProd_2DInputs(self):
+        testshape = (10, 10)
+
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(
+            model_input_name,
+            onnx.TensorProto.FLOAT,
+            [10, 10],
+        )
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(
+            model_output_name,
+            onnx.TensorProto.FLOAT,
+            [1, 10],
+        )
+
+        axes_name = "axes"
+        axes = np.array([0])
+        axes_initializer = acetoneTestCase.create_initializer_tensor(
+            name=axes_name,
+            tensor_array=axes,
+            data_type=onnx.TensorProto.INT64,
+        )
+
+        ReduceProd_node = onnx.helper.make_node(
+            name="ReduceProd",
+            op_type="ReduceProd",
+            inputs=[model_input_name, axes_name],
+            outputs=[model_output_name],
+            keepdims=1,
+            noop_with_empty_axes=0,
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[ReduceProd_node],
+            name="ReduceProd",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[axes_initializer],
+        )
+
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        dataset = acetoneTestCase.create_dataset(self.tmpdir_name, testshape)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        sess = rt.InferenceSession(self.tmpdir_name + "/model.onnx")
+        input_name = sess.get_inputs()[0].name
+        result = sess.run(None, {input_name: dataset[0]})
+        onnx_result = result[0].ravel().flatten()
+        acetone_result = acetoneTestCase.run_acetone_for_test(
+            self.tmpdir_name,
+            self.tmpdir_name + "/model.onnx",
+            self.tmpdir_name + "/dataset.txt",
+            run_reference=False,
+        )
         self.assertListAlmostEqual(acetone_result[0], onnx_result)
 
 

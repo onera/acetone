@@ -128,8 +128,7 @@ def create_actv_function_obj(
 
 
 def load_keras(
-    file_to_parse: Functional | Sequential | str,
-    debug: None | str,
+    file_to_parse: Functional | Sequential | str
 ) -> (list[Layer], str, type, str, int, dict[int, int]):
     """Load an H5 model and return the corresponding ACETONE representation."""
     if type(file_to_parse) is str:

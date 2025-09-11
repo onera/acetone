@@ -57,9 +57,10 @@ class Gather(Layer):
             self.original_name = original_name
         self.indices = indices
         self.axis = axis
-        self.output_channels = input_shape[1]
+        self.input_channels = input_shape[1]
         self.input_height = input_shape[2]
         self.input_width = input_shape[3]
+        self.output_channels = output_shape[1]
         self.output_height = output_shape[2]
         self.output_width = output_shape[3]
         self.activation_function = activation_function
@@ -126,7 +127,7 @@ class Gather(Layer):
     ) -> np.ndarray:
         """Compute output of layer."""
         input_array = input_array.reshape(
-            self.output_channels,
+            self.input_channels,
             self.input_height,
             self.input_width)
         return np.take(input_array, indices=self.indices, axis=self.axis - 1)

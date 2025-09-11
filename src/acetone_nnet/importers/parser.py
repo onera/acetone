@@ -34,7 +34,6 @@ from acetone_nnet.ir import Layer
 
 def parser(
         file_to_parse: Any,
-        debug: None | str = None,
         *,
         normalize: bool = False,
 ) -> (list[Layer], str, type, str, int, dict[int, int]):
@@ -56,12 +55,12 @@ def parser(
         if "onnx" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
             from .ONNX_importer.parser_ONNX import load_onnx
-            return load_onnx(file_to_parse, debug)
+            return load_onnx(file_to_parse)
 
         if (3, 12) > version_info >= (3, 10) and "h5" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
             from .H5_importer.parser_h5 import load_keras
-            return load_keras(str(file_to_parse), debug)
+            return load_keras(str(file_to_parse))
 
         if "nnet" in extension[-4:]:
             # FIXME Path-based functions should take a path or string
@@ -78,13 +77,13 @@ def parser(
     # TODO Conditional import/test if onnx is available
     if type(file_to_parse) is onnx.ModelProto:
         from .ONNX_importer.parser_ONNX import load_onnx
-        return load_onnx(file_to_parse, debug)
+        return load_onnx(file_to_parse)
 
     # TODO Conditional import/test if keras is available
     if ((3, 12) > version_info >= (3, 10) and
             (type(file_to_parse) is Functional or type(file_to_parse) is Sequential)):
         from .H5_importer.parser_h5 import load_keras
-        return load_keras(file_to_parse, debug)
+        return load_keras(file_to_parse)
 
     m = f"Error: model description {type(file_to_parse)} not supported\n"
     m += "Only description supported are: .nnet,"

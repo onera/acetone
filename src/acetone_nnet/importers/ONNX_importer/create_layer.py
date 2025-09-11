@@ -140,7 +140,7 @@ def get_shape(
     shape_name: str,
     model: onnx.ModelProto,
     *,
-    extend=True,
+    extend: bool=True,
 ) -> list[int]:
     """Compute the shape of a tensor."""
     shape = []
@@ -164,8 +164,10 @@ def get_shape(
                 for i in range(len(output.type.tensor_type.shape.dim))
             ]
     for i in range(len(shape)):
-        if shape[i] == 0:
+        if shape[i] == 0 or shape[i] is None:
             shape[i] = 1
+        elif shape[i] < 0:
+            shape[i] = len(shape) + shape[i]
     if extend and shape and len(shape) <= shape_length:
         shape = [1 for _i in range(4 - len(shape))] + shape
     return shape
@@ -235,7 +237,7 @@ def create_softmax(
 ) -> Softmax:
     """Create a Softmax layer."""
     onnx_version_change_implementation = 13
-
+    input_shape = get_shape(node.input[0], model, extend=False)
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_input[idx] = node.input
@@ -246,8 +248,11 @@ def create_softmax(
             attributes["axis"] = 1
         else:
             attributes["axis"] = len(output_shape) - 1
-    if attributes["axis"] < 0:
+    elif attributes["axis"] < 0:
         attributes["axis"] = len(output_shape) + attributes["axis"]
+    else:
+        attributes["axis"] = 4 + attributes["axis"] - len(input_shape)
+
     return Softmax(
         original_name=node.name,
         idx=idx,
@@ -330,10 +335,15 @@ def create_concat(
     for input_value in node.input:
         input_shapes.append(get_shape(input_value, model))
     output_shape = get_shape(node.output[0], model)
+    original_len_shape = len(get_shape(node.input[0], model, extend=False))
     size = find_size(output_shape)
     dict_input[idx] = node.input
     dict_output[node.output[0]] = idx
     attributes = extract_attributes(node)
+    if attributes["axis"] < 0:
+        attributes["axis"] = len(output_shape) + attributes["axis"]
+    else:
+        attributes["axis"] = len(input_shapes[0]) + attributes["axis"] - original_len_shape
     return Concatenate(
         original_name=node.name,
         idx=idx,
@@ -479,11 +489,18 @@ def create_gather(
     """Create a Gather layer."""
     input_shape = get_shape(node.input[0], model)
     output_shape = get_shape(node.output[0], model)
+    original_len_shape = len(get_shape(node.input[0], model, extend=False))
     size = find_size(output_shape)
     dict_input[idx] = [node.input[0]]
     dict_output[node.output[0]] = idx
     attributes = extract_attributes(node)
     indices = onnx.numpy_helper.to_array(look_for_initializer(node.input[1], model))
+    if "axis" not in attributes:
+        attributes["axis"] = 0
+    elif attributes["axis"] < 0:
+        attributes["axis"] = len(input_shape) + attributes["axis"]
+    else:
+        attributes["axis"] = len(input_shape) + attributes["axis"] - original_len_shape
     # Adjust indices to positive values from [-s, s-1] to [0, s]
     for i in np.ndindex(indices.shape):
         if indices[i] < 0:
@@ -511,15 +528,24 @@ def create_gather_elements(
     """Create a GatherElements layer."""
     input_shape = get_shape(node.input[0], model)
     output_shape = get_shape(node.output[0], model)
+    original_len_shape = len(get_shape(node.input[0], model, extend=False))
     size = find_size(output_shape)
     dict_input[idx] = [node.input[0]]
     dict_output[node.output[0]] = idx
     attributes = extract_attributes(node)
     indices = onnx.numpy_helper.to_array(look_for_initializer(node.input[1], model))
+    if "axis" not in attributes:
+        attributes["axis"] = 0
+    elif attributes["axis"] < 0:
+        attributes["axis"] = len(input_shape) + attributes["axis"]
+    else:
+        attributes["axis"] = len(input_shape) + attributes["axis"] - original_len_shape
     # Adjust indices to positive values from [-s, s-1] to [0, s]
     for i in np.ndindex(indices.shape):
         if indices[i] < 0:
             indices[i] = input_shape[attributes["axis"]] - abs(indices[i])
+    while len(indices.shape) < len(output_shape):
+        indices = np.expand_dims(indices, axis=0)
     return GatherElements(
         original_name=node.name,
         idx=idx,
@@ -724,6 +750,7 @@ def create_reduce_sum(
     onnx_version_change_implementation = 13
 
     input_shape = get_shape(node.input[0], model)
+    original_len_shape = len(get_shape(node.input[0],model,extend=False))
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_input[idx] = node.input[0]
@@ -747,6 +774,12 @@ def create_reduce_sum(
             )
         else:
             attributes["axes"] = []
+
+    for i in range(len(attributes["axes"])):
+        if attributes["axes"][i] < 0:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i]
+        else:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i] - original_len_shape
 
     return ReduceSum(
         original_name=node.name,
@@ -771,6 +804,7 @@ def create_reduce_max(
     onnx_version_change_implementation = 18
 
     input_shape = get_shape(node.input[0], model)
+    original_len_shape = len(get_shape(node.input[0],model,extend=False))
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_input[idx] = node.input[0]
@@ -794,6 +828,12 @@ def create_reduce_max(
             )
         else:
             attributes["axes"] = []
+
+    for i in range(len(attributes["axes"])):
+        if attributes["axes"][i] < 0:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i]
+        else:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i] - original_len_shape
 
     return ReduceMax(
         original_name=node.name,
@@ -818,6 +858,7 @@ def create_reduce_min(
     onnx_version_change_implementation = 18
 
     input_shape = get_shape(node.input[0], model)
+    original_len_shape = len(get_shape(node.input[0],model,extend=False))
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_input[idx] = node.input[0]
@@ -841,6 +882,12 @@ def create_reduce_min(
             )
         else:
             attributes["axes"] = []
+
+    for i in range(len(attributes["axes"])):
+        if attributes["axes"][i] < 0:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i]
+        else:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i] - original_len_shape
 
     return ReduceMin(
         original_name=node.name,
@@ -865,6 +912,7 @@ def create_reduce_mean(
     onnx_version_change_implementation = 18
 
     input_shape = get_shape(node.input[0], model)
+    original_len_shape = len(get_shape(node.input[0],model,extend=False))
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_input[idx] = node.input[0]
@@ -888,6 +936,12 @@ def create_reduce_mean(
             )
         else:
             attributes["axes"] = []
+
+    for i in range(len(attributes["axes"])):
+        if attributes["axes"][i] < 0:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i]
+        else:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i] - original_len_shape
 
     return ReduceMean(
         original_name=node.name,
@@ -912,6 +966,7 @@ def create_reduce_prod(
     onnx_version_change_implementation = 18
 
     input_shape = get_shape(node.input[0], model)
+    original_len_shape = len(get_shape(node.input[0],model,extend=False))
     output_shape = get_shape(node.output[0], model)
     size = find_size(output_shape)
     dict_input[idx] = node.input[0]
@@ -935,6 +990,12 @@ def create_reduce_prod(
             )
         else:
             attributes["axes"] = []
+
+    for i in range(len(attributes["axes"])):
+        if attributes["axes"][i] < 0:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i]
+        else:
+            attributes["axes"][i] = len(input_shape) + attributes["axes"][i] - original_len_shape
 
     return ReduceProd(
         original_name=node.name,
