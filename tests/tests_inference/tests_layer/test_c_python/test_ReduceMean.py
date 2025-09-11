@@ -1,5 +1,5 @@
 """*******************************************************************************
-* ACETONE: Predictable programMeang framework for ML applications in safety-critical systems
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
 * Copyright (c) 2022. ONERA
 * This file is part of ACETONE
 *
@@ -289,7 +289,7 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
                                                [None, 1, 1, 1])
 
         axes_name = "axes"
-        axes = np.array([1, 2, 3])
+        axes = np.array([1, 2, -1])
         axes_initializer = acetoneTestCase.create_initializer_tensor(name=axes_name,
                                                                      tensor_array=axes,
                                                                      data_type=onnx.TensorProto.INT64)
@@ -385,6 +385,48 @@ class TestReduceMean(acetoneTestCase.AcetoneTestCase):
             outputs=[model_output_name],
             keepdims=1,
             noop_with_empty_axes=1,
+        )
+
+        graph = onnx.helper.make_graph(
+            nodes=[ReduceMean_node],
+            name="ReduceMean",
+            inputs=[X],
+            outputs=[Y],
+            initializer=[axes_initializer],
+        )
+
+        model = onnx.helper.make_model(graph)
+        model = onnx.shape_inference.infer_shapes(model)
+        onnx.checker.check_model(model)
+        onnx.save(model, self.tmpdir_name + "/model.onnx")
+
+        acetone_result = acetoneTestCase.run_acetone_for_test(self.tmpdir_name, self.tmpdir_name + "/model.onnx")
+
+        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])
+
+    def testReduceMean_2DInputs(self):
+        model_input_name = "X"
+        X = onnx.helper.make_tensor_value_info(model_input_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [10, 10])
+        model_output_name = "Y"
+        Y = onnx.helper.make_tensor_value_info(model_output_name,
+                                               onnx.TensorProto.FLOAT,
+                                               [1, 10])
+
+        axes_name = "axes"
+        axes = np.array([0])
+        axes_initializer = acetoneTestCase.create_initializer_tensor(name=axes_name,
+                                                                     tensor_array=axes,
+                                                                     data_type=onnx.TensorProto.INT64)
+
+        ReduceMean_node = onnx.helper.make_node(
+            name="ReduceMean",
+            op_type="ReduceMean",
+            inputs=[model_input_name, axes_name],
+            outputs=[model_output_name],
+            keepdims=1,
+            noop_with_empty_axes=0,
         )
 
         graph = onnx.helper.make_graph(

@@ -24,6 +24,7 @@ from itertools import islice
 from pathlib import Path
 
 import numpy as np
+
 from acetone_nnet.generator import (
     ActivationFunctions,
     Add,
@@ -36,7 +37,6 @@ from acetone_nnet.generator import (
     Dense,
     Flatten,
     InputLayer,
-    Layer,
     LeakyReLu,
     Linear,
     Maximum,
@@ -53,6 +53,7 @@ from acetone_nnet.generator import (
     TanH,
 )
 from acetone_nnet.graph import graph_interpretor
+from acetone_nnet.ir import Layer
 
 
 def create_actv_function_obj(activation_str: str) -> ActivationFunctions:

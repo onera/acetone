@@ -61,8 +61,7 @@ def find_data_type(
 
 
 def load_onnx(
-    file_to_parse: Path | str | onnx.ModelProto,
-    debug: None | str,
+    file_to_parse: Path | str | onnx.ModelProto
 ) -> (list[Layer], str, type, str, int, dict[int, int]):
     """Load an ONNX model and return the corresponding ACETONE representation."""
     # Loading the model and adding value_info if it's not already in it
