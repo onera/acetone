@@ -37,6 +37,7 @@ from . import (
     reduce,
     resize,
     softmax,
+    synchronization_layers,
     tile,
     transpose,
 )
@@ -117,10 +118,20 @@ from .resize import (
     ResizeNearestDefault,
 )
 from .softmax import Softmax, SoftmaxDefault
+from .synchronization_layers import (
+    LiberationLayer,
+    LiberationLayerDefault,
+    WaitingLayer,
+    WaitingLayerDefault,
+    WritingLayer,
+    WritingLayerDefault,
+)
 from .tile import Tile, TileDefault
 from .transpose import Transpose, TransposeDefault
 
 __all__ = (
+    "ConstantLayer",
+    "ConstantLayerDefault",
     activation_layers.__all__,
     dense.__all__,
     flatten.__all__,
@@ -140,4 +151,5 @@ __all__ = (
     pooling.__all__,
     reduce.__all__,
     resize.__all__,
+    synchronization_layers.__all__,
 )

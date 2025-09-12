@@ -78,6 +78,7 @@ gather_factory = LayerFactory("Gather")
 gather_elements_factory = LayerFactory("GatherElements")
 gemm_factory = LayerFactory("Gemm")
 input_factory = LayerFactory("Input_layer")
+liberation_factory = LayerFactory("Liberation_layer")
 matmul_factory = LayerFactory("MatMul")
 max_pooling_factory = LayerFactory("MaxPooling2D")
 maximum_factory = LayerFactory("Maximum")
@@ -96,7 +97,9 @@ softmax_factory = LayerFactory("Softmax")
 subtract_factory = LayerFactory("Subtract")
 tile_factory = LayerFactory("Tile")
 transpose_factory = LayerFactory("Transpose")
+waiting_factory = LayerFactory("Waiting_layer")
 wrap_pad_factory = LayerFactory("WrapPad")
+writing_factory = LayerFactory("Writing_layer")
 
 implemented: dict[str, LayerFactory] = {
     "Add": add_factory,
@@ -119,6 +122,7 @@ implemented: dict[str, LayerFactory] = {
     "Hyperb_tan": activation_layer_factory,
     "Input_layer": input_factory,
     "Leakyrelu": activation_layer_factory,
+    "Liberation_layer": liberation_factory,
     "Logarithm": activation_layer_factory,
     "MatMul": matmul_factory,
     "MaxPooling2D": max_pooling_factory,
@@ -141,5 +145,7 @@ implemented: dict[str, LayerFactory] = {
     "Subtract": subtract_factory,
     "Tile": tile_factory,
     "Transpose": transpose_factory,
+    "Waiting_layer": waiting_factory,
     "WrapPad": wrap_pad_factory,
+    "Writing_layer": writing_factory,
 }
