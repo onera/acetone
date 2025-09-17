@@ -91,19 +91,17 @@ class LiberationLayerDefault(LiberationLayer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
-        output_str = self.previous_layer[0].output_str
-
         mustach_hash = {
             "name": self.name,
             "original_name": self.original_name,
             "idx": f"{self.idx:02d}",
-            "dst_core": f"{self.src_core:02d}",
+            "src_core": f"{self.src_core:02d}",
             "current_core": f"{self.current_core:02d}",
-            "output_str": output_str,
         }
 
         with open(
-            self.template_path / "synchronization_layers" / "template_Liberation.c.tpl"
+            self.template_path / "parallelization" /
+            "synchronization_layers" / "template_Liberation.c.tpl"
         ) as template_file:
             template  = template_file.read()
         template_file.close()

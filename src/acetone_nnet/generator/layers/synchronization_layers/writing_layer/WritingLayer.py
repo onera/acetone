@@ -34,20 +34,21 @@ class WritingLayer(Layer):
             original_name:str,
             idx: int,
             size:int,
-            src_core: int,
             current_core:int,
+            dst_core:int,
     ) -> None:
         """Build a Writing Layer."""
         super().__init__()
         self.idx = idx
-        self.dst_core = src_core
+        self.dst_core = dst_core
         self.current_core = current_core
-        self.name = "WritingLayer"
+        self.name = "Writing_layer"
         if original_name == "":
             self.original_name = f"{self.name}_{self.idx}"
         else:
             self.original_name = original_name
         self.size = size
+        self.output_str = f"comm_{self.current_core:02d}_{self.dst_core:02d}"
 
         ####### Checking the instantiation#######
 
@@ -104,7 +105,8 @@ class WritingLayerDefault(WritingLayer):
             "size": f"{self.size:02d}",
         }
         with open(
-            self.template_path / "synchronization_layers" / "template_Writing.c.tpl"
+            self.template_path / "parallelization" /
+            "synchronization_layers" / "template_Writing.c.tpl"
         ) as template_file:
             template  = template_file.read()
         template_file.close()
@@ -119,7 +121,7 @@ def writing_default_implementation(
         version=version,
         original_name=original.original_name,
         idx=original.idx,
-        src_core=original.dst_core,
+        dst_core=original.dst_core,
         current_core=original.current_core,
         size=original.size,
     )

@@ -3,6 +3,7 @@
 #include <time.h> 
 #include "test_dataset.h" 
 #include "inference.h"
+{{#synch_flags_instantiation}}#include <unistd.h>{{/synch_flags_instantiation}}
 {{#max}}
 
 #define fmax( x, y );
@@ -17,6 +18,7 @@ int main(int argc, char** argv)
 {
     int i;
     int j;
+    {{{synch_flags_instantiation}}}
 
     char *path = argv[1];
     {{#read_input}}

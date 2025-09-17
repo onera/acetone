@@ -96,12 +96,13 @@ class WaitingLayerDefault(WaitingLayer):
             "name": self.name,
             "original_name": self.original_name,
             "idx": f"{self.idx:02d}",
-            "dst_core": f"{self.src_core:02d}",
+            "src_core": f"{self.src_core:02d}",
             "current_core": f"{self.current_core:02d}",
         }
 
         with open(
-            self.template_path / "synchronization_layers" / "template_Waiting.c.tpl"
+            self.template_path / "parallelization" /
+            "synchronization_layers" / "template_Waiting.c.tpl"
         ) as template_file:
             template  = template_file.read()
         template_file.close()

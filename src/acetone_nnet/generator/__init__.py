@@ -45,6 +45,8 @@ from .layers import (
     Broadcast,
     Concatenate,
     ConcatenateDefault,
+    ConstantLayer,
+    ConstantLayerDefault,
     ConstantPad,
     ConstantPadDefault,
     Conv2D,
@@ -69,6 +71,8 @@ from .layers import (
     GemmDefault,
     InputLayer,
     InputLayerDefault,
+    LiberationLayer,
+    LiberationLayerDefault,
     MatMul,
     MatMulDefault,
     Maximum,
@@ -109,8 +113,12 @@ from .layers import (
     TileDefault,
     Transpose,
     TransposeDefault,
+    WaitingLayer,
+    WaitingLayerDefault,
     WrapPad,
     WrapPadDefault,
+    WritingLayer,
+    WritingLayerDefault,
 )
 from .neural_network import CodeGenerator
 
@@ -126,6 +134,5 @@ __all__ = (
     "Logarithm",
     "Clip",
     "LeakyReLu",
-    "Layer",
     layers.__all__,
 )

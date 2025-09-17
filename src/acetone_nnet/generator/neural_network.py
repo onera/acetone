@@ -38,9 +38,11 @@ from typing_extensions import Self
 
 from acetone_nnet import templates
 from acetone_nnet.importers.parser import parser
+from acetone_nnet.ir import Layer
 from acetone_nnet.pattern_matching.PatternMatcher import pattern_matcher
 from acetone_nnet.quantize import qform
 from acetone_nnet.quantize.activation import QuantizeShiftActivation
+from acetone_nnet.scheduler import Edge, Gantt, Graph, Node, scheduler
 from acetone_nnet.templates.template_makefile import TemplateMakefile
 from acetone_nnet.versioning.versioning import versioning
 
@@ -59,6 +61,7 @@ from .layers import (
     Gather,
     GatherElements,
     Gemm,
+    LiberationLayer,
     MatMul,
     MaxPooling2D,
     Pooling2D,
@@ -67,6 +70,8 @@ from .layers import (
     ResizeLinear,
     ResizeNearest,
     Softmax,
+    WaitingLayer,
+    WritingLayer,
 )
 
 MODEL_TYPE = str | Path | onnx.ModelProto
@@ -117,6 +122,8 @@ class CodeGenerator(ABC):
                 self.to_hex = False
                 logging.info(f'Target configuration {self.target_cfg["name"]} loaded')
             except json.JSONDecodeError as e:
+                print("ca marche pas")
+                print(e)
                 logging.warning(
                     f'Target configuration file {target+".json"} parse error: {e}',
                 )
@@ -149,12 +156,12 @@ class CodeGenerator(ABC):
 
         self.data_type = (
             self.target_cfg["quantization"]["dtype"]
-            if self.target_cfg is not None
+            if self.target_cfg is not None and "quantization" in self.target_cfg
             else dtype
         )
         self.data_type_py = (
             np.dtype(self.target_cfg["quantization"]["pydtype"])
-            if self.target_cfg is not None
+            if self.target_cfg is not None and "quantization" in self.target_cfg
             else dtype_py
         )
         logging.info(f"C type {self.data_type}")
@@ -181,9 +188,6 @@ class CodeGenerator(ABC):
             "Conv2D": "6loops",
         }
         self.versions = self.select_layers_implementation(versions)
-        self.layers = versioning(self.layers, self.versions)
-
-        self.quantize_layers()
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -430,6 +434,7 @@ class CodeGenerator(ABC):
         dataset_or_path: np.ndarray | str | Path | None = None,
     ) -> tuple[list, list] | np.ndarray:
         """Perform inference pass on test dataset."""
+        self.quantize_layers()
         if self.read_ext_input:
             dataset = self._initialise_dataset(
                 dataset_or_path=dataset_or_path,
@@ -654,6 +659,7 @@ class CodeGenerator(ABC):
                             if np.issubdtype(self.data_type_py, np.integer)
                             else "%a" if self.to_hex else "%9g"
                         ),
+                        "synch_flags_instantiation": "test",
                     },
                 ),
             )
@@ -719,6 +725,10 @@ class CodeGenerator(ABC):
         for file in self.files_to_gen:
             if (c_files_directory / file).exists():
                 raise FileExistsError(c_files_directory / file)
+
+        self.versions = self.select_layers_implementation(self.versions)
+        self.layers = versioning(self.layers, self.versions)
+        self.quantize_layers()
 
         for k in self.generation_functions:
             for f in self.generation_functions[k]:
@@ -841,7 +851,7 @@ class CodeGenerator(ABC):
 
         mustach_hash["temp_data_type"] = (
             self.target_cfg["quantization"]["temp_dtype"]
-            if self.target_cfg is not None
+            if self.target_cfg is not None and "quantization" in self.target_cfg
             else self.data_type
         )
 
@@ -929,7 +939,7 @@ class CodeGenerator(ABC):
         }
         mustach_hash["temp_data_type"] = (
             self.target_cfg["quantization"]["temp_dtype"]
-            if self.target_cfg is not None
+            if self.target_cfg is not None and "quantization" in self.target_cfg
             else self.data_type
         )
 
@@ -1026,7 +1036,7 @@ class CodeGenerator(ABC):
         """Use the target_cfg file fixed point notation Qn.m to quantize MatMul and Add parameters
         and compute the rescaling (integer shift right) in MatMul
         """
-        if self.target_cfg is not None:
+        if self.target_cfg is not None and "quantization" in self.target_cfg:
             for l in self.layers:
                 try:
                     layer_qconf = self.target_cfg["quantization"]["layers"][
@@ -1182,7 +1192,7 @@ class CodeGenerator(ABC):
         mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
         mustach_hash["temp_data_type"] = (
             self.target_cfg["quantization"]["temp_dtype"]
-            if self.target_cfg is not None
+            if self.target_cfg is not None and "quantization" in self.target_cfg
             else self.data_type
         )
 
@@ -1195,3 +1205,195 @@ class CodeGenerator(ABC):
                 globalvars_file.write(
                     self.Normalizer.write_normalization_cst_in_globalvars_file(),
                 )
+
+    def _acetone_ir_to_graph(self:Self)->Graph:
+        """Create the graph object to schedule."""
+        graph = Graph()
+        nodes = []
+        edges = []
+        for i in range(len(self.layers)):
+            layer = self.layers[i]
+            curr_node = Node(tag=layer.idx, wcet=1)
+            for j in [par.idx for par in layer.previous_layer]:
+                par_node = None
+                for n in nodes:
+                    if n.tag == j:
+                        par_node = n
+                        break
+                if par_node is None:
+                    m = (f"Layer {layer.idx} processed before "
+                         f"previous layer {j} which is not in the graph")
+                    raise ValueError(m)
+                edges.append(Edge(par_node, curr_node, 0))
+            nodes.append(curr_node)
+
+        graph.add_nodes(nodes)
+        graph.add_edges(edges)
+        graph.validate()
+        graph.compute_level()
+        return graph
+
+    def _gantt_to_acetone_ir(self:Self, gantt:Gantt) -> list[list[Layer]]:
+        new_layers = []
+        for sc in gantt.schedules:
+            scheduled_layers = []
+            for node, _ in sc.schedule:
+                layer = None
+                for l in self.layers:
+                    if l.idx == node.tag:
+                        layer = l
+                        break
+                if layer is None:
+                    raise ValueError(f"Layer {node.tag} not found")
+                scheduled_layers.append(l)
+            new_layers.append(scheduled_layers)
+        return new_layers
+
+    @staticmethod
+    def _add_synchronization_layers(layers:list[list[Layer]]) -> None:
+        """Add synchronization layers to the graph."""
+        sync_to_add = []
+        for i in range(len(layers)):
+            for k in range(len(layers[i])):
+                l = layers[i][k]
+                for prec in l.previous_layer:
+                    if prec.idx not in list(map(lambda x: x.idx, layers[i])):
+                        for j in range(len(layers)):
+                            if prec.idx in list(map(lambda x: x.idx, layers[j])):
+                                sync_to_add.append((prec.idx, j, l.idx, i))
+                                break
+
+        for prec_idx, src_core, layer_idx, dst_core in sync_to_add:
+            layer_pos = [l.idx for l in layers[dst_core]].index(layer_idx)
+            layers[dst_core].insert(
+                layer_pos,
+                WaitingLayer(
+                    original_name="",
+                    idx=l.idx * 2,
+                    src_core=src_core,
+                    current_core=dst_core,
+                ),
+            )
+            layers[dst_core].insert(
+                layer_pos + 2,
+                LiberationLayer(
+                    original_name="",
+                    idx=l.idx * 2,
+                    src_core=src_core,
+                    current_core=dst_core,
+                ),
+            )
+            prec_pos = [l.idx for l in layers[src_core]].index(prec_idx)
+            layers[src_core].insert(
+                prec_pos + 1,
+                WritingLayer(
+                    original_name="",
+                    idx=prec_idx * 2 + 1,
+                    dst_core=dst_core,
+                    current_core=src_core,
+                    size=layers[src_core][prec_pos].size,
+                ),
+            )
+
+    def schedule_layers(self:Self) -> list[list[Layer]]:
+        """Schedule the layers on several cores."""
+        # Load target parameters for scheduling
+        layers = self.layers
+        if self.target_cfg is not None and "parallelization" in self.target_cfg:
+
+            try:
+                nb_core = self.target_cfg["parallelization"]["nb_core"]
+            except KeyError:
+                raise KeyError("Cannot schedule with target configuration, missing nb_core")
+            try:
+                heuristic = self.target_cfg["parallelization"]["heuristic"]
+            except KeyError:
+                raise KeyError("Cannot schedule with target configuration, missing heuristic")
+
+            # Create the graph from ACETONE's ir
+            graph = self._acetone_ir_to_graph()
+
+            # Schedule the graph
+            gantt = scheduler(heuristic,graph,nb_core)
+            gantt.clean(graph)
+            gantt.validate(graph)
+            layers = self._gantt_to_acetone_ir(gantt)
+            self._add_synchronization_layers(layers)
+            print("so far so good")
+
+        return layers
+
+    def generate_synchro_mustach_hash(self:Self) -> [list[dict[str, str | int]],
+                                                     list[dict[str, str | int]]]:
+        """Generate the mustach hash for the synchro layers."""
+
+        def next_aligned(n:int, align:int) -> int:
+            """Return the next multiple of align after n."""
+            aligned_int = n + align - 1
+            return aligned_int - (aligned_int % align)
+
+        flags=[]
+        comms=[]
+        if self.target_cfg is not None and "parallelization" in self.target_cfg:
+
+            try:
+                nb_core = self.target_cfg["parallelization"]["nb_core"]
+            except KeyError:
+                raise KeyError("Cannot schedule with target configuration, missing nb_core")
+
+            try:
+                origin = int(
+                    self.target_cfg["parallelization"]["global_memory"]["origin"],
+                    16
+                )
+            except KeyError:
+                raise KeyError("Cannot schedule with target configuration, "
+                               "missing origin in global_memory (as a hexstring)")
+
+            try:
+                length = int(
+                    self.target_cfg["parallelization"]["global_memory"]["length"],
+                    16
+                )
+            except KeyError:
+                raise KeyError("Cannot schedule with target configuration, "
+                               "missing length in global_memory (as a hexstring)")
+
+            for i in range(nb_core):
+                for j in range(nb_core):
+                    if i!=j:
+                        flag = {
+                            "src":i,
+                            "dst":j,
+                        }
+                        comm = {
+                            "src":i,
+                            "dst":j,
+                            "data_type":self.data_type,
+                            "page_size":self.target_page_size,
+                        }
+                        flags.append(flag)
+                        comms.append(comm)
+            pos = origin
+            for flag in flags:
+                flag["address"] = f"0x{pos:0>8X}"
+                pos+=8
+                if pos > origin+length:
+                    raise ValueError("Next var position exceeds global memory")
+            aligned_pos = next_aligned(pos,self.target_page_size)
+            if aligned_pos > origin+length:
+                    raise ValueError("Next var position exceeds global memory")
+            for comm in comms:
+                comm["address"] = f"0x{aligned_pos:0>8X}"
+                comm_layers_size = [
+                    layer.size for layer in self.layers
+                    if (isinstance(layer,WritingLayer)
+                    and layer.current_core==comm["src"]
+                    and layer.dst_core==comm["dst"])
+                ]
+                size = max(comm_layers_size,default=self.target_page_size)
+                aligned_pos = next_aligned(aligned_pos+size,self.target_page_size)
+                if aligned_pos > origin+length:
+                    raise ValueError("Next var position exceeds global memory")
+
+        return flags, comms

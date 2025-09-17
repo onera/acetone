@@ -1,9 +1,9 @@
 // synchronization flags
 {{#flags}}
-volatile int *synchro_{{src}}_{{dst}}=(int*) {{address}};
+extern volatile int *synchro_{{src}}_{{dst}};
 {{\flags}}
 
 // communication tensors
 {{#comm}}
-volatile {{data_type}} *comm_{{src}}_{{dst}} __attribute__((aligned({{page_size}})));
+extern volatile {{data_type}} *comm_{{src}}_{{dst}} __attribute__((aligned({{page_size}})));
 {{/comm}}

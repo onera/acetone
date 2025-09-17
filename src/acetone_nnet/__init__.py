@@ -32,6 +32,7 @@ from .generator import (
     Clip,
     CodeGenerator,
     Concatenate,
+    ConstantLayer,
     ConstantPad,
     Conv2D,
     Conv2D6loops,
@@ -49,6 +50,7 @@ from .generator import (
     Gemm,
     InputLayer,
     LeakyReLu,
+    LiberationLayer,
     Linear,
     Logarithm,
     MatMul,
@@ -73,7 +75,9 @@ from .generator import (
     TanH,
     Tile,
     Transpose,
+    WaitingLayer,
     WrapPad,
+    WritingLayer,
 )
 from .ir import Layer
 from .versioning import layer_factories
