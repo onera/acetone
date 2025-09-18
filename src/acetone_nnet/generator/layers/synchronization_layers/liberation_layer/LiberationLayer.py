@@ -35,6 +35,7 @@ class LiberationLayer(Layer):
             idx: int,
             src_core: int,
             current_core:int,
+            path:int,
     ) -> None:
         """Build a Liberation Layer."""
         super().__init__()
@@ -42,6 +43,7 @@ class LiberationLayer(Layer):
         self.src_core = src_core
         self.current_core = current_core
         self.name = "Liberation_layer"
+        self.path = path
         if original_name == "":
             self.original_name = f"{self.name}_{self.idx}"
         else:
@@ -118,6 +120,7 @@ def liberation_default_implementation(
         idx=original.idx,
         src_core=original.src_core,
         current_core=original.current_core,
+        path=original.path,
     )
 
 liberation_factory.register_implementation(

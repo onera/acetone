@@ -36,6 +36,8 @@ class WritingLayer(Layer):
             size:int,
             current_core:int,
             dst_core:int,
+            path:int,
+            previous_layer:Layer,
     ) -> None:
         """Build a Writing Layer."""
         super().__init__()
@@ -43,6 +45,8 @@ class WritingLayer(Layer):
         self.dst_core = dst_core
         self.current_core = current_core
         self.name = "Writing_layer"
+        self.path = path
+        self.previous_layer.append(previous_layer)
         if original_name == "":
             self.original_name = f"{self.name}_{self.idx}"
         else:
@@ -96,6 +100,7 @@ class WritingLayerDefault(WritingLayer):
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
+        output_str = self.previous_layer[0].output_str
         mustach_hash = {
             "name": self.name,
             "original_name": self.original_name,
@@ -103,6 +108,7 @@ class WritingLayerDefault(WritingLayer):
             "dst_core": f"{self.dst_core:02d}",
             "current_core": f"{self.current_core:02d}",
             "size": f"{self.size:02d}",
+            "output_str": output_str,
         }
         with open(
             self.template_path / "parallelization" /
@@ -124,6 +130,8 @@ def writing_default_implementation(
         dst_core=original.dst_core,
         current_core=original.current_core,
         size=original.size,
+        path=original.path,
+        previous_layer=original.previous_layer[0],
     )
 
 writing_factory.register_implementation(

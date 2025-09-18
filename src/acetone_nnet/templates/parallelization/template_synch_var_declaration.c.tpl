@@ -1,7 +1,7 @@
 // synchronization flags
 {{#flags}}
 extern volatile int *synchro_{{src}}_{{dst}};
-{{\flags}}
+{{/flags}}
 
 // communication tensors
 {{#comm}}

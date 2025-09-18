@@ -1,7 +1,7 @@
 // synchronization flags
 {{#flags}}
 volatile int *synchro_{{src}}_{{dst}} = (volatile int*) {{address}};
-{{\flags}}
+{{/flags}}
 
 // communication tensors
 {{#comm}}

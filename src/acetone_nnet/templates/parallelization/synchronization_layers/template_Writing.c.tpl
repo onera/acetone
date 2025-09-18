@@ -3,6 +3,6 @@
     while(synchro_{{current_core}}_{{dst_core}} != 0);
     for (k = 0; k < {{size}}; ++k)
     {
-        com_{{current_core}}_{{dst_core}}[k] = {{output_str}}[k];
+        comm_{{current_core}}_{{dst_core}}[k] = {{output_str}}[k];
     }
     *synchro_{{current_core}}_{{dst_core}} = 1;
