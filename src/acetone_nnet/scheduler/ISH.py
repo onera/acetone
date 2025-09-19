@@ -1,8 +1,30 @@
+"""Scheduling heuristics for ISH scheduler.
+
+*******************************************************************************
+* ACETONE: Predictable programming framework for ML applications in safety-critical systems
+* Copyright (c) 2022. ONERA
+* This file is part of ACETONE
+*
+* ACETONE is free software ;
+* you can redistribute it and/or modify it under the terms of the GNU Lesser General Public
+* License as published by the Free Software Foundation ;
+* either version 3 of  the License, or (at your option) any later version.
+*
+* ACETONE is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY ;
+* without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See the GNU Lesser General Public License for more details.
+*
+* You should have received a copy of the GNU Lesser General Public License along with this program ;
+* if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
+******************************************************************************
+"""
+
 from .Gantt import Gantt, IdleTimeSlot
 from .Graph import Graph, Node
 
 
-def update_ready_queue(ready_queue, node):
+def update_ready_queue(ready_queue:list[Node], node:Node) -> None:
+    """Update the ready queue with the children of `node` that have no more parents to process."""
     for child in node.children:
         child.parents_to_process -= 1
 
@@ -10,7 +32,33 @@ def update_ready_queue(ready_queue, node):
             ready_queue.append(child)
             ready_queue.sort(key=lambda n: n.level,reverse=True )
 
-def assign_node(node:Node, start_time:float, gantt:Gantt, proc:int, ready_queue:list[Node], graph:Graph):
+def assign_node(
+        node:Node,
+        start_time:float,
+        gantt:Gantt,
+        proc:int,
+        ready_queue:list[Node],
+        graph:Graph,
+) -> None:
+    """Assign a node to a processor and manages its scheduling in the Gantt chart.
+
+    Handles insertion processing before the assignment and ensures
+    correct integration into the ready queue and graph.
+
+    :param node: The node to be assigned to a processor.
+    :type node: Node
+    :param start_time: The starting time for node execution.
+    :type start_time: float
+    :param gantt: The Gantt chart containing all processor schedules.
+    :type gantt: Gantt
+    :param proc: The processor index to which the node is assigned.
+    :type proc: int
+    :param ready_queue: List of nodes available for processing.
+    :type ready_queue: list[Node]
+    :param graph: The graph structure representing the task dependencies.
+    :type graph: Graph
+    :return: None
+    """
     schedule = gantt.schedules[proc]
     idle_time_slot = IdleTimeSlot(schedule.get_ready_time(), start_time)
     found = True
@@ -32,7 +80,22 @@ def assign_node(node:Node, start_time:float, gantt:Gantt, proc:int, ready_queue:
     schedule.add_node(node,start_time)
 
 
-def locate_pe(node:Node, gantt:Gantt, graph:Graph):
+def locate_pe(
+        node:Node,
+        gantt:Gantt,
+        graph:Graph,
+) -> tuple[int, float]:
+    """Locate the best processor for executing the specified node in a task graph.
+
+    :param node: The current computational task represented as a node in the graph.
+    :type node: Node
+    :param gantt: The Gantt chart instance that manages schedules and processors' states.
+    :type gantt: Gantt
+    :param graph: The task graph representing all tasks and their dependencies.
+    :type graph: Graph
+    :return: A tuple containing the selected processor ID and the start time for the task.
+    :rtype: tuple[int, float]
+    """
     proc_first_ready = gantt.first_ready()
     final_proc = proc_first_ready
     start_time = gantt.schedules[final_proc].get_ready_time()

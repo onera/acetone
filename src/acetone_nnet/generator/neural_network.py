@@ -1369,7 +1369,7 @@ class CodeGenerator(ABC):
 
     @staticmethod
     def _add_synchronization_layers(layers:list[list[Layer]]) -> None:
-        """Add synchronization layers to the graph."""
+        """Add synchronization layers to the list of layers."""
         sync_to_add = []
         for i in range(len(layers)):
             for k in range(len(layers[i])):
@@ -1450,7 +1450,7 @@ class CodeGenerator(ABC):
         """Generate the mustach hash for the synchro layers."""
 
         def next_aligned(n:int, align:int) -> int:
-            """Return the next multiple of align after n."""
+            """Return the next multiple of `align` after n."""
             aligned_int = n + align - 1
             return aligned_int - (aligned_int % align)
 
