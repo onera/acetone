@@ -685,6 +685,10 @@ class CodeGenerator(ABC):
             synchro_init = pystache.render(
                 synchro_init_template, {"flags": flags, "main_core": core == 0}
             )
+            outputs = any(True for layer in self.layers[core]
+                if not isinstance(layer, WaitingLayer | ConstantLayer | LiberationLayer | WritingLayer)
+                    and not layer.next_layer
+            )
             with (output_dir / f"core_{core}" / "main.c").open("a+") as main_file:
                 main_file.write(
                     pystache.render(
@@ -701,6 +705,7 @@ class CodeGenerator(ABC):
                                 else "%9g"
                             ),
                             "synch_flags_instantiation": synchro_init,
+                            "outputs": outputs
                         },
                     ),
                 )
@@ -1315,12 +1320,14 @@ class CodeGenerator(ABC):
             logging.info(f"Generated global_vars.c file for core {core_nb}.")
 
     def _acetone_ir_to_graph(self:Self)->Graph:
-        """Create the graph object to schedule."""
+        """Create the graph object to schedule from the Layer objects."""
+        if len(self.layers)>1:
+            raise ValueError("Cannot generate graph: layers already parallelized.")
         graph = Graph()
         nodes = []
         edges = []
-        for i in range(len(self.layers)):
-            layer = self.layers[i]
+        for i in range(len(self.layers[0])):
+            layer = self.layers[0][i]
             curr_node = Node(tag=layer.idx, wcet=1)
             for j in [par.idx for par in layer.previous_layer]:
                 par_node = None
@@ -1342,12 +1349,15 @@ class CodeGenerator(ABC):
         return graph
 
     def _gantt_to_acetone_ir(self:Self, gantt:Gantt) -> list[list[Layer]]:
+        """Reconstruct the Gantt using Layer objects."""
+        if len(self.layers)>1:
+            raise ValueError("Cannot generate graph: layers already parallelized.")
         new_layers = []
         for sc in gantt.schedules:
             scheduled_layers = []
             for node, _ in sc.schedule:
                 layer = None
-                for l in self.layers:
+                for l in self.layers[0]:
                     if l.idx == node.tag:
                         layer = l
                         break
@@ -1432,7 +1442,6 @@ class CodeGenerator(ABC):
             gantt.validate(graph)
             layers = self._gantt_to_acetone_ir(gantt)
             self._add_synchronization_layers(layers)
-            print("so far so good")
 
         return layers
 
@@ -1510,3 +1519,8 @@ class CodeGenerator(ABC):
                     raise ValueError("Next var position exceeds global memory")
 
         return flags, comms
+
+    def parallelize_layers(self:Self) -> None:
+        """Parallelize the layers."""
+        if self.target_cfg is not None and "parallelization" in self.target_cfg:
+            self.layers = self.schedule_layers()

@@ -53,6 +53,7 @@ int main(int argc, char** argv)
 
     printf("   ACETONE framework's inference output: \n");
     {{/verbose}}
+    {{#outputs}}
     for (i = 0; i < nb_samples; ++i)
     {
         for (j = 0; j < nn_output_size; ++j)
@@ -70,6 +71,7 @@ int main(int argc, char** argv)
             }
         }
     }
+    {{/outputs}}
 
     fclose(fp);
     fp = NULL;
