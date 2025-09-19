@@ -61,6 +61,7 @@ from .layers import (
     Gather,
     GatherElements,
     Gemm,
+    InputLayer,
     LiberationLayer,
     MatMul,
     MaxPooling2D,
@@ -107,7 +108,7 @@ class CodeGenerator(ABC):
         self.file = file
         self.function_name = function_name
         self.normalize = bool(normalize)
-        self.template_path = templates.__file__[:-11]
+        self.template_path = Path(templates.__file__[:-11])
         self.verbose = verbose
         self.optimization = optimization
         self.log = ""
@@ -146,10 +147,11 @@ class CodeGenerator(ABC):
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
-        self.layers: list[Any] = l
+        self.layers: list[list[Layer]] = [l]
 
         if self.optimization:
-            self.layers, self.log = pattern_matcher.match(self.layers, self.dict_cst)
+            l, self.log = pattern_matcher.match(self.layers[0], self.dict_cst)
+            self.layers = [l]
 
         if self.log:
             logging.info(f"Pattern Matching:\n {self.log}")
@@ -188,6 +190,8 @@ class CodeGenerator(ABC):
             "Conv2D": "6loops",
         }
         self.versions = self.select_layers_implementation(versions)
+
+        self.quantize_layers()
 
         ##### Debug Mode #####
         self.debug_mode = debug_mode
@@ -303,10 +307,12 @@ class CodeGenerator(ABC):
             ]
 
         for k in custom_generation_functions:
-            name, generation_function = custom_generation_functions.get(k, ("", []))
-            if generation_function:
-                file_names.append(name)
-                generation_functions[k] = generation_function
+            generation_tuples = custom_generation_functions.get(k, [("", [])])
+            generation_functions[k] = []
+            for name, generation_function in generation_tuples:
+                if generation_function:
+                    file_names.append(name)
+                    generation_functions[k].append(generation_function)
 
         return file_names, generation_functions
 
@@ -329,7 +335,8 @@ class CodeGenerator(ABC):
 
         """
         selected_implementations: dict[int, str | None] = {}
-        for layer in self.layers:
+
+        for layer in [layer for core in self.layers for layer in core]:
             # Select the default implementation per layer type, if specified
             d = self.default_implementations.get(layer.name, None)
             selected_implementations[layer.idx] = d
@@ -348,7 +355,7 @@ class CodeGenerator(ABC):
     ) -> list[int]:
         """Identify list of layers indices to debug."""
         targets: list[int] = []
-        for layer in self.layers[1:]:
+        for layer in [layer for core in self.layers for layer in core if not isinstance(layer, InputLayer)]:
             if debug_mode == "keras" and layer.name == "Softmax":
                 targets[-1] = layer.idx
             else:
@@ -358,7 +365,25 @@ class CodeGenerator(ABC):
 
     def get_input_shape(self:Self) -> list[int]:
         """Return the input shape of the model."""
-        return self.layers[0].input_shape
+        return [
+            layer.input_shape for core in self.layers  for layer in core
+                if isinstance(layer, InputLayer)
+        ]
+
+    def get_max_input_size(self:Self) -> int:
+        """Return the maximum size of the input of the model."""
+        return int(max(
+                    [layer.size for core in self.layers  for layer in core
+                     if isinstance(layer, InputLayer)]
+                ))
+
+    def get_max_output_size(self:Self) -> int:
+        """Return the maximum size of the output of the model."""
+        return int(max(
+                    [layer.size for core in self.layers  for layer in core
+                     if not isinstance(layer, WaitingLayer | ConstantLayer | LiberationLayer | WritingLayer)
+                     and not layer.next_layer]
+                ))
 
     def _initialise_dataset(
         self: Self,
@@ -369,16 +394,17 @@ class CodeGenerator(ABC):
         match dataset_or_path:
             case None:
                 # Create random dataset for graph.
+                max_size = self.get_max_input_size()
                 if np.issubdtype(self.data_type_py, np.integer):
                     d = np.random.default_rng(seed=10).integers(
                         np.iinfo(self.data_type_py).min,
                         np.iinfo(self.data_type_py).max,
-                        size=(nb_tests, 1, int(self.layers[0].size)),
+                        size=(nb_tests, 1, max_size),
                         dtype=self.data_type_py,
                     )
                 else:
                     d = np.random.default_rng(seed=10).random(
-                        size=(nb_tests, 1, int(self.layers[0].size)),
+                        size=(nb_tests, 1, max_size),
                         dtype=self.data_type_py,
                     )
             case np.ndarray() as dataset:
@@ -413,10 +439,6 @@ class CodeGenerator(ABC):
                 test_dataset.append(list(map(dtype, contents)))
         return np.array(test_dataset)
 
-    def get_input_shape(self: Self) -> list[int]:
-        """Return the input shape of the model."""
-        return self.layers[0].input_shape
-
     def generate_dataset(self: Self) -> np.ndarray:
         """Generate a dataset for the model."""
         input_shape = self.get_input_shape()
@@ -434,7 +456,8 @@ class CodeGenerator(ABC):
         dataset_or_path: np.ndarray | str | Path | None = None,
     ) -> tuple[list, list] | np.ndarray:
         """Perform inference pass on test dataset."""
-        self.quantize_layers()
+        if len(self.layers) > 1:
+            raise ValueError("Cannot compute python inference on a multi-core model.")
         if self.read_ext_input:
             dataset = self._initialise_dataset(
                 dataset_or_path=dataset_or_path,
@@ -452,12 +475,12 @@ class CodeGenerator(ABC):
 
                 # Prepare graph input
                 if (self.data_format == "channels_last") and (
-                    len(self.layers[0].input_shape) == 4
+                    len(self.layers[0][0].input_shape) == 4
                 ):
                     shape = (
-                        self.layers[0].input_shape[2],
-                        self.layers[0].input_shape[3],
-                        self.layers[0].input_shape[1],
+                        self.layers[0][0].input_shape[2],
+                        self.layers[0][0].input_shape[3],
+                        self.layers[0][0].input_shape[1],
                     )
                     nn_input = np.transpose(np.reshape(nn_input, shape), (2, 0, 1))
                 if self.normalize:
@@ -466,7 +489,7 @@ class CodeGenerator(ABC):
                 # - li[i][j] is an input for i computed from preceding layer j
                 # - li[i][i] is the input for layers with no predecessors
                 layer_inputs: dict[int, dict[int, np.ndarray]] = {
-                    i.idx: {i.idx: nn_input} for i in self.layers
+                    i.idx: {i.idx: nn_input} for i in self.layers[0]
                 }
 
                 def gather_inputs(
@@ -490,7 +513,7 @@ class CodeGenerator(ABC):
 
                 # Forward computation layer by layer
                 #   (Assumes layers are topologically sorted)
-                for layer in self.layers:
+                for layer in self.layers[0]:
                     # Ensure all inputs of layer are ready
                     if any(
                         p.idx not in layer_inputs[layer.idx]
@@ -593,76 +616,94 @@ class CodeGenerator(ABC):
         output_dir: Path,
     ) -> None:
         """Generate C code for graph test dataset."""
-        # Generate test header file
-        template = (
-            Path(self.template_path) / "template_test_dataset_header.c.tpl"
-        ).read_text()
-        with Path.open(output_dir / "test_dataset.h", "w+") as test_dataset_header:
-            test_dataset_header.write(
-                pystache.render(
-                    template,
-                    {
-                        "nb_tests": self.nb_tests,
-                        "nb_inputs": self.layers[0].size,
-                        "nb_outputs": self.layers[-1].size,
-                        "data_type": self.data_type,
-                        "read_input": self.read_ext_input,
-                    },
-                ),
-            )
-            logging.info("Generated test_dataset header file.")
+        for core_nb in range(len(self.layers)):
+            # Generate test header file
+            template = (
+                Path(self.template_path) / "template_test_dataset_header.c.tpl"
+            ).read_text()
+            with (Path.open(output_dir / f"core_{core_nb}" / "test_dataset.h", "w+")
+                  as test_dataset_header):
+                test_dataset_header.write(
+                    pystache.render(
+                        template,
+                        {
+                            "nb_tests": self.nb_tests,
+                            "nb_inputs": self.get_max_input_size(),
+                            "nb_outputs": self.get_max_output_size(),
+                            "data_type": self.data_type,
+                            "read_input": self.read_ext_input,
+                        },
+                    ),
+                )
+            logging.info(f"Generated test_dataset header file for core {core_nb}.")
 
     def generate_test_dataset_value_file(
             self: Self,
             output_dir: Path,
     ) -> None:
         """Generate C code for graph test dataset."""
-        if self.bin_dataset:
-            with Path.open(output_dir / "test_dataset.dat", "w+") as test_dataset_bin:
-                self.test_dataset.tofile(test_dataset_bin)
-        elif not self.read_ext_input:
-            # Generate test source file
-            dataset = "{"
-            if self.test_dataset is not None:
-                dataset += ",".join(
-                    map(self.flatten_array_order_c, self.test_dataset),
-                )
-            dataset += "};\n"
-            template = (
-                Path(self.template_path) / "template_test_dataset_source.c.tpl"
-            ).read_text()
-            with Path.open(output_dir / "test_dataset.c", "w+") as test_dataset_source:
-                test_dataset_source.write(
-                    pystache.render(
-                        template,
-                        {"data_type": self.data_type, "dataset": dataset},
-                    ),
-                )
-        logging.info("Generated test_dataset value file.")
+        for core_nb in range(len(self.layers)):
+            if self.bin_dataset:
+                with Path.open(output_dir / "test_dataset.dat", "w+") as test_dataset_bin:
+                    self.test_dataset.tofile(test_dataset_bin)
+            elif not self.read_ext_input:
+                # Generate test source file
+                dataset = "{"
+                if self.test_dataset is not None:
+                    dataset += ",".join(
+                        map(self.flatten_array_order_c, self.test_dataset),
+                    )
+                dataset += "};\n"
+                template = (
+                    Path(self.template_path) / "template_test_dataset_source.c.tpl"
+                ).read_text()
+                with Path.open(output_dir / f"core_{core_nb}" / "test_dataset.c", "w+") as test_dataset_source:
+                    test_dataset_source.write(
+                        pystache.render(
+                            template,
+                            {"data_type": self.data_type, "dataset": dataset},
+                        ),
+                    )
+            logging.info(f"Generated test_dataset value file for core {core_nb}.")
 
     def generate_main_file(
         self: Self,
         output_dir: Path,
     ) -> None:
         """Generate entry point C code."""
-        template = (Path(self.template_path) / "template_main_file.c.tpl").read_text()
-        with (output_dir / "main.c").open("a+") as main_file:
-            main_file.write(
-                pystache.render(
-                    template,
-                    {
-                        "data_type": self.data_type,
-                        "read_input": self.read_ext_input,
-                        "verbose": self.verbose,
-                        "format": (
-                            "%d"
-                            if np.issubdtype(self.data_type_py, np.integer)
-                            else "%a" if self.to_hex else "%9g"
-                        ),
-                        "synch_flags_instantiation": "test",
-                    },
-                ),
+        template = (self.template_path / "template_main_file.c.tpl").read_text()
+        for core in range(len(self.layers)):
+            synchro_init_template = (
+                self.template_path / "parallelization" / "template_synch_flags_init.c.tpl"
+            ).read_text()
+            flags = [
+                {"src": f"{i:02d}", "dst": f"{j:02d}"}
+                for i in range(len(self.layers))
+                for j in range(len(self.layers))
+                if i != j
+            ]
+            synchro_init = pystache.render(
+                synchro_init_template, {"flags": flags, "main_core": core == 0}
             )
+            with (output_dir / f"core_{core}" / "main.c").open("a+") as main_file:
+                main_file.write(
+                    pystache.render(
+                        template,
+                        {
+                            "data_type": self.data_type,
+                            "read_input": self.read_ext_input,
+                            "verbose": self.verbose,
+                            "format": (
+                                "%d"
+                                if np.issubdtype(self.data_type_py, np.integer)
+                                else "%a"
+                                if self.to_hex
+                                else "%9g"
+                            ),
+                            "synch_flags_instantiation": synchro_init,
+                        },
+                    ),
+                )
         logging.info("Generated main file.")
 
     def _get_makefile_properties(self) -> dict[str, str | list[str]]:
@@ -680,38 +721,39 @@ class CodeGenerator(ABC):
         output_dir: Path,
     ) -> None:
         """Generate Makefile build script."""
-        header_files = []
-        source_files = []
-        for filename in self.files_to_gen:
-            if ".c" in filename:
-                source_files.append(filename)
-            elif ".h" in filename:
-                header_files.append(filename)
+        for core_nb in range(len(self.layers)):
+            header_files = []
+            source_files = []
+            for filename in self.files_to_gen:
+                if ".c" in filename:
+                    source_files.append(filename)
+                elif ".h" in filename:
+                    header_files.append(filename)
 
-        properties = self._get_makefile_properties()
-        # Configure Makefile template
-        template = TemplateMakefile(
-            self.function_name,
-            compiler=properties["compiler"],
-            compiler_flags=properties["compiler_flags"],
-            linker_flags=properties["linker_flags"],
-            header_files=header_files,
-            source_files=source_files,
-        )
-        if self.target_cfg is not None:
-            if "cflags" in self.target_cfg:
-                template.add_compiler_flags(self.target_cfg["cflags"])
-            if "ldflags" in self.target_cfg:
-                template.add_linker_flags(self.target_cfg["ldflags"])
-            if "compiler" in self.target_cfg:
-                template.set_compiler(self.target_cfg["compiler"])
-        if self.bin_dataset:
-            template.set_binary_test_dataset()
-            template.symtab = self.symtab
-        # Generate Makefile
-        with (output_dir / "Makefile").open("a+") as makefile:
-            makefile.write(pystache.render(template))
-        logging.info("Generated Makefile.")
+            properties = self._get_makefile_properties()
+            # Configure Makefile template
+            template = TemplateMakefile(
+                self.function_name,
+                compiler=properties["compiler"],
+                compiler_flags=properties["compiler_flags"],
+                linker_flags=properties["linker_flags"],
+                header_files=header_files,
+                source_files=source_files,
+            )
+            if self.target_cfg is not None:
+                if "cflags" in self.target_cfg:
+                    template.add_compiler_flags(self.target_cfg["cflags"])
+                if "ldflags" in self.target_cfg:
+                    template.add_linker_flags(self.target_cfg["ldflags"])
+                if "compiler" in self.target_cfg:
+                    template.set_compiler(self.target_cfg["compiler"])
+            if self.bin_dataset:
+                template.set_binary_test_dataset()
+                template.symtab = self.symtab
+            # Generate Makefile
+            with (output_dir / f"core_{core_nb}" / "Makefile").open("a+") as makefile:
+                makefile.write(pystache.render(template))
+            logging.info(f"Generated Makefile for core {core_nb}.")
 
     def generate_c_files(
         self: Self,
@@ -720,14 +762,22 @@ class CodeGenerator(ABC):
         """Generate C code implementation of current graph."""
         # Prepare output directory
         c_files_directory = Path(c_files_directory)
-        c_files_directory.mkdir(exist_ok=True, parents=True)
+        for core_nb in range(len(self.layers)):
+            (c_files_directory / f"core_{core_nb}").mkdir(
+                exist_ok=True,
+                parents=True,
+            )
 
         for file in self.files_to_gen:
-            if (c_files_directory / file).exists():
-                raise FileExistsError(c_files_directory / file)
+            for core_nb in range(len(self.layers)):
+                if (c_files_directory / f"core_{core_nb}" / file).exists():
+                    raise FileExistsError(c_files_directory / f"core_{core_nb}" / file)
 
-        self.versions = self.select_layers_implementation(self.versions)
-        self.layers = versioning(self.layers, self.versions)
+        self.versions = self.select_layers_implementation(None)
+        if isinstance(self.layers[0], list):
+            self.layers = [versioning(core, self.versions) for core in self.layers]
+        else:
+            self.layers = versioning(self.layers, self.versions)
         self.quantize_layers()
 
         for k in self.generation_functions:
@@ -743,9 +793,10 @@ class CodeGenerator(ABC):
         template = (
             Path(self.template_path) / self.target / "template_target_file.c.tpl"
         ).read_text()
-        with (output_dir / "target.c").open("a+") as source_file:
-            source_file.write(pystache.render(template, mustach_hash))
-            logging.info("Generated target file.")
+        for core_nb in range(len(self.layers)):
+            with (output_dir / f"core_{core_nb}" / "target.c").open("a+") as source_file:
+                source_file.write(pystache.render(template, mustach_hash))
+            logging.info(f"Generated target file for core {core_nb}.")
 
     def generate_target_header_file(self: Self, output_dir: Path) -> None:
         logging.info("Generation of target header file")
@@ -755,289 +806,322 @@ class CodeGenerator(ABC):
         template = (
             Path(self.template_path) / self.target / "template_target_file.h.tpl"
         ).read_text()
-        with (output_dir / "target.h").open("a+") as source_file:
-            source_file.write(pystache.render(template, mustach_hash))
-            logging.info("Generated target header file.")
+        for core_nb in range(len(self.layers)):
+            with (output_dir / f"core_{core_nb}" / "target.h").open("a+") as source_file:
+                source_file.write(pystache.render(template, mustach_hash))
+            logging.info(f"Generated target header file for core {core_nb}.")
 
     def generate_function_source_file(
         self: Self,
         output_dir: Path,
     ) -> None:
         """Generate C Code for inference function."""
-        mustach_hash = {
-            "data_type": self.data_type,
-            "input_size": self.layers[0].size,
-            "output_size": self.layers[-1].size,
-        }
-
-        if self.target != "generic":
-            mustach_hash["target_specific"] = True
-
-        # Tag Gather-type layers
-        if any(isinstance(i, Gather | GatherElements) for i in self.layers):
-
-            def gather_indices_to_str(array: np.ndarray) -> str:
-                """Generate C flat array initializer in C order."""
-                flattened_aray = array.flatten(order="C")
-                s = "\n        {"
-                s += ", ".join([str(int(d)) for d in flattened_aray])
-                s += "}"
-                return s
-
-            gather_layers = [
-                i for i in self.layers if isinstance(i, Gather | GatherElements)
-            ]
-            mustach_hash["is_gather"] = True
-            indices = []
-            for gather in gather_layers:
-                indices.append(
-                    {
-                        "idx": f"{gather.idx:02d}",
-                        "length": len(gather.indices.flatten()),
-                        "list": gather_indices_to_str(gather.indices),
-                    },
-                )
-            mustach_hash["indices"] = indices
-
-        self.l_size_max = max((i.size for i in self.layers), default=1)
-
-        if any(isinstance(i, Pooling2D | Conv2D | Gemm) for i in self.layers):
-            mustach_hash["p"] = True
-
-        if any(
-            isinstance(
-                i,
-                Conv2D6loops | Conv2DStdGemm | Conv2DGemmTarget | Pooling2D | Gemm,
-            )
-            for i in self.layers
-        ):
-            mustach_hash["hw"] = True
-
-        if any(isinstance(i, Dense | MatMul) for i in self.layers):
-            mustach_hash["is_dense"] = True
-
-        if any(
-            isinstance(i, Conv2D6loops | AveragePooling2D | Softmax)
-            for i in self.layers
-        ):
-            mustach_hash["is_sum"] = True
-
-        if any(isinstance(i, MaxPooling2D) for i in self.layers):
-            mustach_hash["is_max"] = True
-
-        if any(isinstance(i, AveragePooling2D) for i in self.layers):
-            mustach_hash["is_count"] = True
-
-        if any(
-            isinstance(i, ResizeLinear | ResizeCubic | ResizeNearest)
-            for i in self.layers
-        ):
-            mustach_hash["is_resize"] = True
-
-        if any(isinstance(layer, ResizeCubic) for layer in self.layers):
-            mustach_hash["is_cubic_interpolation"] = True
-
-        if any(isinstance(layer, ResizeLinear) for layer in self.layers):
-            mustach_hash["is_linear_interpolation"] = True
-
-        if any(isinstance(layer, Reduce) for layer in self.layers):
-            mustach_hash["is_reduced"] = True
-
-        if self.debug_mode in ["onnx", "keras"]:
-            mustach_hash["debug_file"] = output_dir / "debug_file.txt"
-
-        if self.debug_mode in ["time"]:
-            mustach_hash["time"] = True
-
-        mustach_hash["temp_data_type"] = (
-            self.target_cfg["quantization"]["temp_dtype"]
-            if self.target_cfg is not None and "quantization" in self.target_cfg
-            else self.data_type
-        )
-
-        # Generate parameters per layer
-        mustach_hash["layers"] = []
-        for layer in self.layers:
-            layer_hash = {
-                "inference_function": layer.generate_inference_code_layer(),
-                "path": layer.path,
-                "size": layer.size,
+        for core_nb in range(len(self.layers)):
+            mustach_hash = {
+                "data_type": self.data_type,
+                "input_size": self.layers[core_nb][0].size,
+                "output_size": self.layers[core_nb][-1].size,
             }
 
-            if self.dict_cst and layer.idx in self.dict_cst:
-                layer_hash["cst"] = True
-                layer_hash["cst_name"] = self.dict_cst[layer.idx]
+            if self.target != "generic":
+                mustach_hash["target_specific"] = True
 
-            if (self.debug_mode in ["onnx", "keras"] and layer.idx in self.debug_target
-                    and not isinstance(layer, ConstantLayer)):
-                layer_hash["debug_layer"] = True
-                layer_hash["name"] = layer.name
-                layer_hash["idx"] = layer.idx
-                layer_hash["to_transpose"] = 0
-                if (self.data_format == "channels_last") and (
-                    hasattr(layer, "output_channels")
-                ):
-                    layer_hash["to_transpose"] = 1
-                    layer_hash["channels"] = layer.output_channels
-                    layer_hash["height"] = layer.output_height
-                    layer_hash["width"] = layer.output_width
+            # Tag Gather-type layers
+            if any(isinstance(i, Gather | GatherElements) for i in self.layers[core_nb]):
+
+                def gather_indices_to_str(array: np.ndarray) -> str:
+                    """Generate C flat array initializer in C order."""
+                    flattened_aray = array.flatten(order="C")
+                    s = "\n        {"
+                    s += ", ".join([str(int(d)) for d in flattened_aray])
+                    s += "}"
+                    return s
+
+                gather_layers = [
+                    i
+                    for i in self.layers[core_nb]
+                    if isinstance(i, Gather | GatherElements)
+                ]
+                mustach_hash["is_gather"] = True
+                indices = []
+                for gather in gather_layers:
+                    indices.append(
+                        {
+                            "idx": f"{gather.idx:02d}",
+                            "length": len(gather.indices.flatten()),
+                            "list": gather_indices_to_str(gather.indices),
+                        },
+                    )
+                mustach_hash["indices"] = indices
+
+            self.l_size_max = max((i.size for i in self.layers[core_nb]), default=1)
+
+            if any(isinstance(i, Pooling2D | Conv2D | Gemm) for i in self.layers[core_nb]):
+                mustach_hash["p"] = True
+
+            if any(
+                isinstance(
+                    i,
+                    Conv2D6loops | Conv2DStdGemm | Conv2DGemmTarget | Pooling2D | Gemm,
+                )
+                for i in self.layers[core_nb]
+            ):
+                mustach_hash["hw"] = True
+
+            if any(isinstance(i, Dense | MatMul) for i in self.layers[core_nb]):
+                mustach_hash["is_dense"] = True
+
+            if any(
+                isinstance(i, Conv2D6loops | AveragePooling2D | Softmax)
+                for i in self.layers[core_nb]
+            ):
+                mustach_hash["is_sum"] = True
+
+            if any(isinstance(i, MaxPooling2D) for i in self.layers[core_nb]):
+                mustach_hash["is_max"] = True
+
+            if any(isinstance(i, AveragePooling2D) for i in self.layers[core_nb]):
+                mustach_hash["is_count"] = True
+
+            if any(
+                isinstance(i, ResizeLinear | ResizeCubic | ResizeNearest)
+                for i in self.layers[core_nb]
+            ):
+                mustach_hash["is_resize"] = True
+
+            if any(isinstance(layer, ResizeCubic) for layer in self.layers[core_nb]):
+                mustach_hash["is_cubic_interpolation"] = True
+
+            if any(isinstance(layer, ResizeLinear) for layer in self.layers[core_nb]):
+                mustach_hash["is_linear_interpolation"] = True
+
+            if any(isinstance(layer, Reduce) for layer in self.layers[core_nb]):
+                mustach_hash["is_reduced"] = True
+
+            if self.debug_mode in ["onnx", "keras"]:
+                mustach_hash["debug_file"] = output_dir / "debug_file.txt"
 
             if self.debug_mode in ["time"]:
-                layer_hash["time"] = True
-                layer_hash["name"] = layer.name
-                layer_hash["idx"] = layer.idx
+                mustach_hash["time"] = True
 
-            mustach_hash["layers"].append(layer_hash)
+            mustach_hash["temp_data_type"] = (
+                self.target_cfg["quantization"]["temp_dtype"]
+                if self.target_cfg is not None and "quantization" in self.target_cfg
+                else self.data_type
+            )
 
-        # Generate code to output graph data
-        output_hash = {"path": self.layers[-1].path}
-        if (self.data_format == "channels_last") and (
-            hasattr(self.layers[-1], "output_channels")
-        ):
-            output_hash["output_channels"] = self.layers[-1].output_channels
-            output_hash["output_height"] = self.layers[-1].output_height
-            output_hash["output_width"] = self.layers[-1].output_width
+            # Generate parameters per layer
+            mustach_hash["layers"] = []
+            for layer in self.layers[core_nb]:
+                layer_hash = {
+                    "inference_function": layer.generate_inference_code_layer(),
+                    "path": layer.path,
+                    "size": layer.size,
+                }
 
+                if self.dict_cst and layer.idx in self.dict_cst:
+                    layer_hash["cst"] = True
+                    layer_hash["cst_name"] = self.dict_cst[layer.idx]
+
+                if (
+                    self.debug_mode in ["onnx", "keras"]
+                    and layer.idx in self.debug_target
+                    and not isinstance(layer, ConstantLayer)
+                ):
+                    layer_hash["debug_layer"] = True
+                    layer_hash["name"] = layer.name
+                    layer_hash["idx"] = layer.idx
+                    layer_hash["to_transpose"] = 0
+                    if (self.data_format == "channels_last") and (
+                        hasattr(layer, "output_channels")
+                    ):
+                        layer_hash["to_transpose"] = 1
+                        layer_hash["channels"] = layer.output_channels
+                        layer_hash["height"] = layer.output_height
+                        layer_hash["width"] = layer.output_width
+
+                if self.debug_mode in ["time"]:
+                    layer_hash["time"] = True
+                    layer_hash["name"] = layer.name
+                    layer_hash["idx"] = layer.idx
+
+                mustach_hash["layers"].append(layer_hash)
+
+            # Generate code to output graph data
+            output_hash = {"path": self.layers[core_nb][-1].path}
+            if any(
+                not layer.next_layer
+                for layer in self.layers[core_nb]
+                if not isinstance(layer, LiberationLayer | WritingLayer | WaitingLayer)
+            ):
+                if (self.data_format == "channels_last") and (
+                    hasattr(self.layers[core_nb][-1], "output_channels")
+                ):
+                    output_hash["output_channels"] = self.layers[core_nb][
+                        -1
+                    ].output_channels
+                    output_hash["output_height"] = self.layers[core_nb][-1].output_height
+                    output_hash["output_width"] = self.layers[core_nb][-1].output_width
+
+                    template = (
+                        Path(self.template_path)
+                        / "memory_layout/template_channels_last_output.c.tpl"
+                    ).read_text()
+                    mustach_hash["output_str"] = pystache.render(template, output_hash)
+                else:
+                    output_hash["output_size"] = self.layers[core_nb][-1].size
+                    if self.data_format == "channels_first":
+                        output_hash["comment"] = (
+                            "Returning the output in channels first (ACETONE compute the result in channels first)"
+                        )
+                    else:
+                        output_hash["comment"] = "Returning the output (output flatten)"
+
+                    template = (
+                        Path(self.template_path)
+                        / "memory_layout/template_channels_first_output.c.tpl"
+                    ).read_text()
+                    mustach_hash["output_str"] = pystache.render(template, output_hash)
+
+            if self.normalize:
+                mustach_hash["pre_processing"] = self.Normalizer.write_pre_processing()
+                mustach_hash["post_processing"] = self.Normalizer.write_post_processing()
+
+            # Generate C code
             template = (
-                Path(self.template_path)
-                / "memory_layout/template_channels_last_output.c.tpl"
+                Path(self.template_path) / "template_source_file.c.tpl"
             ).read_text()
-            mustach_hash["output_str"] = pystache.render(template, output_hash)
-        else:
-            output_hash["output_size"] = self.layers[-1].size
-            if self.data_format == "channels_first":
-                output_hash["comment"] = (
-                    "Returning the output in channels first (ACETONE compute the result in channels first)"
-                )
-            else:
-                output_hash["comment"] = "Returning the output (output flatten)"
-
-            template = (
-                Path(self.template_path)
-                / "memory_layout/template_channels_first_output.c.tpl"
-            ).read_text()
-            mustach_hash["output_str"] = pystache.render(template, output_hash)
-
-        if self.normalize:
-            mustach_hash["pre_processing"] = self.Normalizer.write_pre_processing()
-            mustach_hash["post_processing"] = self.Normalizer.write_post_processing()
-
-        # Generate C code
-        template = (Path(self.template_path) / "template_source_file.c.tpl").read_text()
-        with (output_dir / "inference.c").open("a+") as source_file:
-            source_file.write(pystache.render(template, mustach_hash))
-        logging.info("Generated function source file.")
+            with ((output_dir / f"core_{core_nb}" / "inference.c").open("a+")
+                  as source_file):
+                source_file.write(pystache.render(template, mustach_hash))
+            logging.info(f"Generated function source file for core {core_nb}.")
 
     def generate_function_header_file(
         self: Self,
         output_dir: Path,
     ) -> None:
         """Generate C Code for graph structure."""
-        mustach_hash = {
-            "data_type": self.data_type,
-            "path": list(range(self.maxpath)),
-        }
-        mustach_hash["temp_data_type"] = (
-            self.target_cfg["quantization"]["temp_dtype"]
-            if self.target_cfg is not None and "quantization" in self.target_cfg
-            else self.data_type
-        )
-
-        self.nb_weights_max = 1
-        self.nb_biases_max = 1
-
-        self.patches_size_max = 1
-        self.concate_size_max = 0
-        for layer in self.layers:
-            if (
-                isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget)
-                and layer.patches_size > self.patches_size_max
-            ):
-                self.patches_size_max = layer.patches_size
-            if isinstance(layer, Concatenate):
-                self.patches_size_max = max(self.patches_size_max, layer.size)
-
-        if any(
-            isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget) for layer in self.layers
-        ):
-            mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
-        else:
-            mustach_hash["path_size"] = self.l_size_max
-
-        mustach_hash["cst"] = []
-        written = {}
-        for idx in self.dict_cst:
-            for l in self.layers:
-                if l.idx == idx:
-                    layer = l
-                    break
-
-            if self.dict_cst[idx] not in written:
-                written[self.dict_cst[idx]] = layer.size
-            else:
-                written[self.dict_cst[idx]] = max(
-                    written[self.dict_cst[idx]],
-                    layer.size,
-                )
-
-        for cst, s in written.items():
-            mustach_hash["cst"].append({"name": cst, "size": s})
-
-        # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
-        mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
-
-        # Collect layer parameters
-        mustach_hash["layers"] = []
-        for layer in self.layers:
-            to_print = False
-            layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
-
-            if hasattr(layer, "weights"):
-                layer_hash["nb_weights"] = layer.nb_weights
-                self.nb_weights_max = max(layer.nb_weights, self.nb_weights_max)
-                to_print = True
-
-            if isinstance(layer, ConstantLayer):
-                layer_hash["nb_weights"] = layer.nb_weights
-                to_print = True
-
-            if hasattr(layer, "biases"):
-                layer_hash["nb_biases"] = layer.nb_biases
-                self.nb_biases_max = max(layer.nb_biases, self.nb_biases_max)
-                to_print = True
-
-            if isinstance(layer, Conv2DIndirectGemm):
-                layer_hash["patches_size"] = layer.patches_size
-                to_print = True
-
-            if isinstance(layer, BatchNormalization):
-                layer_hash["channels"] = layer.output_channels
-                to_print = True
-
-            if isinstance(layer, Broadcast) and layer.constant is not None:
-                layer_hash["constant_size"] = layer.constant_size
-                to_print = True
-
-            if to_print:
-                mustach_hash["layers"].append(layer_hash)
-
-        if self.normalize:
-            mustach_hash["normalization_cst"] = (
-                self.Normalizer.write_normalization_cst_in_header_file()
+        for core_nb in range(len(self.layers)):
+            mustach_hash = {
+                "data_type": self.data_type,
+                "path": list(range(self.maxpath)),
+            }
+            mustach_hash["temp_data_type"] = (
+                self.target_cfg["quantization"]["temp_dtype"]
+                if self.target_cfg is not None and "quantization" in self.target_cfg
+                else self.data_type
             )
 
-        # Generate header code
-        template = (Path(self.template_path) / "template_header_file.c.tpl").read_text()
-        with (output_dir / "inference.h").open("a+") as header_file:
-            header_file.write(pystache.render(template, mustach_hash))
-        logging.info("Generated function header file.")
+            self.nb_weights_max = 1
+            self.nb_biases_max = 1
+
+            self.patches_size_max = 1
+            self.concate_size_max = 0
+            for layer in self.layers[core_nb]:
+                if (
+                    isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget)
+                    and layer.patches_size > self.patches_size_max
+                ):
+                    self.patches_size_max = layer.patches_size
+                if isinstance(layer, Concatenate):
+                    self.patches_size_max = max(self.patches_size_max, layer.size)
+
+            if any(
+                isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget)
+                for layer in self.layers[core_nb]
+            ):
+                mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
+            else:
+                mustach_hash["path_size"] = self.l_size_max
+
+            mustach_hash["cst"] = []
+            written = {}
+            for idx in self.dict_cst:
+                for l in self.layers[core_nb]:
+                    if l.idx == idx:
+                        layer = l
+                        break
+
+                if self.dict_cst[idx] not in written:
+                    written[self.dict_cst[idx]] = layer.size
+                else:
+                    written[self.dict_cst[idx]] = max(
+                        written[self.dict_cst[idx]],
+                        layer.size,
+                    )
+
+            for cst, s in written.items():
+                mustach_hash["cst"].append({"name": cst, "size": s})
+
+            # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
+            mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
+
+            # Collect layer parameters
+            mustach_hash["layers"] = []
+            for layer in self.layers[core_nb]:
+                to_print = False
+                layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
+
+                if hasattr(layer, "weights"):
+                    layer_hash["nb_weights"] = layer.nb_weights
+                    self.nb_weights_max = max(layer.nb_weights, self.nb_weights_max)
+                    to_print = True
+
+                if isinstance(layer, ConstantLayer):
+                    layer_hash["nb_weights"] = layer.nb_weights
+                    to_print = True
+
+                if hasattr(layer, "biases"):
+                    layer_hash["nb_biases"] = layer.nb_biases
+                    self.nb_biases_max = max(layer.nb_biases, self.nb_biases_max)
+                    to_print = True
+
+                if isinstance(layer, Conv2DIndirectGemm):
+                    layer_hash["patches_size"] = layer.patches_size
+                    to_print = True
+
+                if isinstance(layer, BatchNormalization):
+                    layer_hash["channels"] = layer.output_channels
+                    to_print = True
+
+                if isinstance(layer, Broadcast) and layer.constant is not None:
+                    layer_hash["constant_size"] = layer.constant_size
+                    to_print = True
+
+                if to_print:
+                    mustach_hash["layers"].append(layer_hash)
+
+            if self.normalize:
+                mustach_hash["normalization_cst"] = (
+                    self.Normalizer.write_normalization_cst_in_header_file()
+                )
+
+            if self.target_cfg is not None and "parallelization" in self.target_cfg:
+                flags, comms = self.generate_synchro_mustach_hash()
+
+                synchro_template = (
+                    self.template_path
+                    / "parallelization"
+                    / "template_synch_var_declaration.c.tpl"
+                ).read_text()
+                mustach_hash["synchro"] = pystache.render(
+                    synchro_template, {"flags": flags, "comms": comms}
+                )
+
+            # Generate header code
+            template = (self.template_path / "template_header_file.c.tpl").read_text()
+            with (output_dir / f"core_{core_nb}" / "inference.h").open(
+                "a+"
+            ) as header_file:
+                header_file.write(pystache.render(template, mustach_hash))
+        logging.info(f"Generated function header file for core {core_nb}.")
 
     def quantize_layers(self):
         """Use the target_cfg file fixed point notation Qn.m to quantize MatMul and Add parameters
         and compute the rescaling (integer shift right) in MatMul
         """
         if self.target_cfg is not None and "quantization" in self.target_cfg:
-            for l in self.layers:
+            for l in [layer for core in self.layers for layer in core]:
                 try:
                     layer_qconf = self.target_cfg["quantization"]["layers"][
                         l.original_name
@@ -1092,119 +1176,143 @@ class CodeGenerator(ABC):
 
     def generate_parameter_file(self: Self, output_dir: Path) -> None:
         """Generate C Code for layer data."""
-        mustach_hash = {
-            "data_type": self.data_type,
-            "path": list(range(self.maxpath)),
-            "page_size": self.target_page_size,
-        }
-        mustach_hash["layers"] = []
-        symtab = {}
-        if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
-            mustach_hash["zero"] = True
-            symtab["zero"] = np.array([0.0], dtype=np.float32)
+        for core_nb in range(len(self.layers)):
+            mustach_hash = {
+                "data_type": self.data_type,
+                "path": list(range(self.maxpath)),
+                "page_size": self.target_page_size,
+            }
+            mustach_hash["layers"] = []
+            symtab = {}
+            if any(
+                isinstance(layer, Conv2DIndirectGemm) for layer in self.layers[core_nb]
+            ):
+                mustach_hash["zero"] = True
+                symtab["zero"] = np.array([0.0], dtype=np.float32)
 
-        for layer in self.layers:
-            layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
+            for layer in self.layers[core_nb]:
+                layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
 
-            if (w := getattr(layer, "weights", None)) is not None:
-                layer_hash["nb_weights"] = layer.nb_weights
-                layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
-                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
+                if (w := getattr(layer, "weights", None)) is not None:
+                    layer_hash["nb_weights"] = layer.nb_weights
+                    layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
+                    symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
 
-            if isinstance(layer, ConstantLayer):
-                layer_hash["nb_weights"] = layer.constant.size
-                layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
-                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
+                if isinstance(layer, ConstantLayer):
+                    layer_hash["nb_weights"] = layer.constant.size
+                    layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
+                    symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
 
-            if hasattr(layer, "biases"):
-                layer_hash["nb_biases"] = layer.nb_biases
-                layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
-                symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
+                if hasattr(layer, "biases"):
+                    layer_hash["nb_biases"] = layer.nb_biases
+                    layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
+                    symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
 
-            if type(layer) is Conv2DIndirectGemm:
-                layer_hash["patches_size"] = layer.patches_size
-                layer_hash["patches"] = layer.create_ppatches()
+                if type(layer) is Conv2DIndirectGemm:
+                    layer_hash["patches_size"] = layer.patches_size
+                    layer_hash["patches"] = layer.create_ppatches()
 
-            if issubclass(type(layer), BatchNormalization):
-                layer_hash["channels"] = layer.output_channels
-                layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
-                layer_hash["var"] = self.flatten_array_order_c(layer.var)
-                layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
+                if issubclass(type(layer), BatchNormalization):
+                    layer_hash["channels"] = layer.output_channels
+                    layer_hash["mean"] = self.flatten_array_order_c(layer.mean)
+                    layer_hash["var"] = self.flatten_array_order_c(layer.var)
+                    layer_hash["scale"] = self.flatten_array_order_c(layer.scale)
 
-            if issubclass(type(layer), Broadcast) and layer.constant is not None:
-                layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
-                layer_hash["constant_size"] = layer.constant_size
+                if issubclass(type(layer), Broadcast) and layer.constant is not None:
+                    layer_hash["constant"] = self.flatten_array_order_c(layer.constant)
+                    layer_hash["constant_size"] = layer.constant_size
 
-            if len(layer_hash.keys()) > 2:
-                mustach_hash["layers"].append(layer_hash)
-        template = Path(
-            self.template_path + "template_parameter_file.c.tpl",
-        ).read_text()
-        if self.bin_dataset:
-            with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
-                self.symtab = ""
-                for s in symtab:
-                    self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
-                    symtab[s].tofile(parameters_bin)
-        else:
-            with (output_dir / "parameters.c").open("a+") as parameter_file:
-                parameter_file.write(pystache.render(template, mustach_hash))
-        logging.info("Generated parameter .c file.")
+                if len(layer_hash.keys()) > 2:
+                    mustach_hash["layers"].append(layer_hash)
+            template = (
+                self.template_path / "template_parameter_file.c.tpl"
+            ).read_text()
+            if self.bin_dataset:
+                with Path.open(
+                    output_dir / f"core_{core_nb}" / "parameters.dat", "w+"
+                ) as parameters_bin:
+                    self.symtab = ""
+                    for s in symtab:
+                        self.symtab += (
+                            f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
+                        )
+                        symtab[s].tofile(parameters_bin)
+            else:
+                with (output_dir / f"core_{core_nb}" / "parameters.c").open(
+                    "a+"
+                ) as parameter_file:
+                    parameter_file.write(pystache.render(template, mustach_hash))
+            logging.info(f"Generated parameter.c file for core {core_nb}.")
 
     def generate_globalvars_file(
         self: Self,
         output_dir: Path,
     ) -> None:
         """Generate C Code for layer data."""
-        mustach_hash = {
-            "data_type": self.data_type,
-            "path": list(range(self.maxpath)),
-            "page_size": self.target_page_size,
-        }
+        for core_nb in range(len(self.layers)):
+            mustach_hash = {
+                "data_type": self.data_type,
+                "path": list(range(self.maxpath)),
+                "page_size": self.target_page_size,
+            }
 
-        if any(
-            isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget) for layer in self.layers
-        ):
-            mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
-        else:
-            mustach_hash["path_size"] = self.l_size_max
-
-        mustach_hash["cst"] = []
-        written = {}
-        for idx in self.dict_cst:
-            for l in self.layers:
-                if l.idx == idx:
-                    layer = l
-                    break
-
-            if self.dict_cst[idx] not in written:
-                written[self.dict_cst[idx]] = layer.size
+            if any(
+                isinstance(layer, Conv2DStdGemm | Conv2DGemmTarget)
+                for layer in self.layers[core_nb]
+            ):
+                mustach_hash["path_size"] = max(self.l_size_max, self.patches_size_max)
             else:
-                written[self.dict_cst[idx]] = max(
-                    written[self.dict_cst[idx]],
-                    layer.size,
+                mustach_hash["path_size"] = self.l_size_max
+
+            mustach_hash["cst"] = []
+            written = {}
+            for idx in self.dict_cst:
+                for l in self.layers[core_nb]:
+                    if l.idx == idx:
+                        layer = l
+                        break
+
+                if self.dict_cst[idx] not in written:
+                    written[self.dict_cst[idx]] = layer.size
+                else:
+                    written[self.dict_cst[idx]] = max(
+                        written[self.dict_cst[idx]],
+                        layer.size,
+                    )
+
+            for cst in written:
+                mustach_hash["cst"].append({"name": cst, "size": written[cst]})
+
+            # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
+            mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
+            mustach_hash["temp_data_type"] = (
+                self.target_cfg["quantization"]["temp_dtype"]
+                if self.target_cfg is not None and "quantization" in self.target_cfg
+                else self.data_type
+            )
+
+            if self.target_cfg is not None and "parallelization" in self.target_cfg:
+                flags, comms = self.generate_synchro_mustach_hash()
+
+                synchro_template = (
+                    self.template_path
+                    / "parallelization"
+                    / "template_synch_var_instantiation.c.tpl"
+                ).read_text()
+                mustach_hash["synchro"] = pystache.render(
+                    synchro_template, {"flags": flags, "comms": comms}
                 )
 
-        for cst in written:
-            mustach_hash["cst"].append({"name": cst, "size": written[cst]})
-
-        # FIXME not all layers use the temp buffer but the list of layer types who do is unclear
-        mustach_hash["temp_size"] = max(self.l_size_max, self.patches_size_max)
-        mustach_hash["temp_data_type"] = (
-            self.target_cfg["quantization"]["temp_dtype"]
-            if self.target_cfg is not None and "quantization" in self.target_cfg
-            else self.data_type
-        )
-
-        template = Path(
-            self.template_path + "template_global_var_file.c.tpl",
-        ).read_text()
-        with (output_dir / "global_vars.c").open("a+") as globalvars_file:
-            globalvars_file.write(pystache.render(template, mustach_hash))
-            if self.normalize:
-                globalvars_file.write(
-                    self.Normalizer.write_normalization_cst_in_globalvars_file(),
-                )
+            template = (self.template_path / "template_global_var_file.c.tpl").read_text()
+            with (output_dir / f"core_{core_nb}" / "global_vars.c").open(
+                "a+"
+            ) as globalvars_file:
+                globalvars_file.write(pystache.render(template, mustach_hash))
+                if self.normalize:
+                    globalvars_file.write(
+                        self.Normalizer.write_normalization_cst_in_globalvars_file(),
+                    )
+            logging.info(f"Generated global_vars.c file for core {core_nb}.")
 
     def _acetone_ir_to_graph(self:Self)->Graph:
         """Create the graph object to schedule."""
@@ -1265,6 +1373,7 @@ class CodeGenerator(ABC):
 
         for prec_idx, src_core, layer_idx, dst_core in sync_to_add:
             layer_pos = [l.idx for l in layers[dst_core]].index(layer_idx)
+            path = layers[dst_core][layer_pos].path
             layers[dst_core].insert(
                 layer_pos,
                 WaitingLayer(
@@ -1272,6 +1381,7 @@ class CodeGenerator(ABC):
                     idx=l.idx * 2,
                     src_core=src_core,
                     current_core=dst_core,
+                    path=path,
                 ),
             )
             layers[dst_core].insert(
@@ -1281,6 +1391,7 @@ class CodeGenerator(ABC):
                     idx=l.idx * 2,
                     src_core=src_core,
                     current_core=dst_core,
+                    path=path,
                 ),
             )
             prec_pos = [l.idx for l in layers[src_core]].index(prec_idx)
@@ -1292,6 +1403,8 @@ class CodeGenerator(ABC):
                     dst_core=dst_core,
                     current_core=src_core,
                     size=layers[src_core][prec_pos].size,
+                    path=layers[src_core][prec_pos].path,
+                    previous_layer=layers[src_core][prec_pos],
                 ),
             )
 
@@ -1323,8 +1436,8 @@ class CodeGenerator(ABC):
 
         return layers
 
-    def generate_synchro_mustach_hash(self:Self) -> [list[dict[str, str | int]],
-                                                     list[dict[str, str | int]]]:
+    def generate_synchro_mustach_hash(self:Self) -> tuple[list[dict[str, str | int] | None],
+                                                     list[dict[str, str | int] | None]]:
         """Generate the mustach hash for the synchro layers."""
 
         def next_aligned(n:int, align:int) -> int:
@@ -1363,12 +1476,12 @@ class CodeGenerator(ABC):
                 for j in range(nb_core):
                     if i!=j:
                         flag = {
-                            "src":i,
-                            "dst":j,
+                            "src":f"{i:02d}",
+                            "dst":f"{j:02d}",
                         }
                         comm = {
-                            "src":i,
-                            "dst":j,
+                            "src":f"{i:02d}",
+                            "dst":f"{j:02d}",
                             "data_type":self.data_type,
                             "page_size":self.target_page_size,
                         }

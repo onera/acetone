@@ -18,7 +18,7 @@ int main(int argc, char** argv)
 {
     int i;
     int j;
-    {{{synch_flags_instantiation}}}
+{{{synch_flags_instantiation}}}
 
     char *path = argv[1];
     {{#read_input}}

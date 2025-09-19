@@ -128,62 +128,73 @@ class ImporterTestCase(unittest.TestCase):
             raise AssertionError(err_msg)
 
         length = len(actual)
+        for core_nb in range(length):
 
-        mismatched_type = []
-        for i in range(length):
-            if not issubclass(type(actual[i]), acetone_nnet.Layer):
-                mismatched_type.append(actual[i])
-            if not issubclass(type(desired[i]), acetone_nnet.Layer):
-                mismatched_type.append(desired[i])
-        if mismatched_type:
-            err_msg = "Class mismatch (not a subclass of Layer): "
-            for mismatch in mismatched_type:
-                err_msg += str(type(mismatch)) + " "
-            raise AssertionError(err_msg)
+            if len(actual[core_nb]) != len(desired[core_nb]):
+                err_msg = (
+                    f"Shape error in core  {core_nb}: "
+                    f"{len(actual[core_nb])} !=  {len(desired[core_nb])}"
+                )
+                raise AssertionError(err_msg)
+
+            core_length = len(actual[core_nb])
+            mismatched_type = []
+            for layer_nb in range(core_length):
+                if not issubclass(type(actual[core_nb][layer_nb]), acetone_nnet.Layer):
+                    mismatched_type.append(actual[core_nb][layer_nb])
+                if not issubclass(type(desired[core_nb][layer_nb]), acetone_nnet.Layer):
+                    mismatched_type.append(desired[core_nb][layer_nb])
+            if mismatched_type:
+                err_msg = "Class mismatch (not a subclass of Layer): "
+                for mismatch in mismatched_type:
+                    err_msg += str(type(mismatch)) + " "
+                raise AssertionError(err_msg)
 
         err_msg = []
-        for i in range(length):
-            layer1 = actual[i]
-            layer2 = desired[i]
-            if layer1 != layer2:
-                layer_msg = "Layer " + str(i) + "\n"
-                if not isinstance(layer1, type(layer2)) or not isinstance(
-                    layer2,
-                    type(layer1),
-                ):
-                    layer_msg += (
-                        "Type mismatch: "
-                        + type(layer1).__name__
-                        + " and "
-                        + type(layer2).__name__
-                    )
-                else:
-                    keys = list(layer1.__dict__.keys())
-                    mismatched_keys = []
-                    for attribute in keys:
-                        if attribute in ("previous_layer", "next_layer"):
-                            continue
-
-                        if type(layer1.__dict__[attribute]) is np.ndarray:
-                            if not (
-                                layer1.__dict__[attribute] == layer2.__dict__[attribute]
-                            ).all():
-                                mismatched_keys.append(attribute)
-                        elif layer1.__dict__[attribute] != layer2.__dict__[attribute]:
-                            mismatched_keys.append(attribute)
-                    layer_msg += "Attribute mismatch: \n"
-                    msg = []
-                    for mismatch in mismatched_keys:
-                        msg.append(
-                            mismatch
-                            + " ("
-                            + str(layer1.__dict__[mismatch])
+        for core_nb in range(length):
+            core_length = len(actual[core_nb])
+            for layer_nb in range(core_length):
+                layer1 = actual[core_nb][layer_nb]
+                layer2 = desired[core_nb][layer_nb]
+                if layer1 != layer2:
+                    layer_msg = f"Layer {layer_nb} of core {core_nb}\n"
+                    if not isinstance(layer1, type(layer2)) or not isinstance(
+                        layer2,
+                        type(layer1),
+                    ):
+                        layer_msg += (
+                            "Type mismatch: "
+                            + type(layer1).__name__
                             + " and "
-                            + str(layer2.__dict__[mismatch])
-                            + ")",
+                            + type(layer2).__name__
                         )
-                    layer_msg += "\n".join(msg)
-                err_msg.append(layer_msg)
+                    else:
+                        keys = list(layer1.__dict__.keys())
+                        mismatched_keys = []
+                        for attribute in keys:
+                            if attribute in ("previous_layer", "next_layer"):
+                                continue
+
+                            if type(layer1.__dict__[attribute]) is np.ndarray:
+                                if not (
+                                    layer1.__dict__[attribute] == layer2.__dict__[attribute]
+                                ).all():
+                                    mismatched_keys.append(attribute)
+                            elif layer1.__dict__[attribute] != layer2.__dict__[attribute]:
+                                mismatched_keys.append(attribute)
+                        layer_msg += "Attribute mismatch: \n"
+                        msg = []
+                        for mismatch in mismatched_keys:
+                            msg.append(
+                                mismatch
+                                + " ("
+                                + str(layer1.__dict__[mismatch])
+                                + " and "
+                                + str(layer2.__dict__[mismatch])
+                                + ")",
+                            )
+                        layer_msg += "\n".join(msg)
+                    err_msg.append(layer_msg)
 
         if err_msg and verbose:
             nb_err = len(err_msg)

@@ -1,5 +1,7 @@
 #include "inference.h"
 
+{{{synchro}}}
+
 {{#path}}
 // output list for path {{.}}
 

@@ -1,6 +1,8 @@
 #ifndef INFERENCE_H_ 
 #define INFERENCE_H_ 
 
+{{{synchro}}}
+
 {{#path}}
 // output list for path {{.}}
 extern {{data_type}} output_{{.}}[{{path_size}}];

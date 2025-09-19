@@ -115,14 +115,15 @@ def run_acetone_for_test(
     tmpdir_name: str,
     model: str | Path,
     datatest_path: str | np.ndarray | None = None,
+    *,
     conv_algo: str = "std_gemm_nn",
-    normalize=False,
+    normalize: bool=False,
     optimization: bool = False,
     verbose:bool = True,
-    run_generated=True,
-    run_reference=True,
-    target="generic",
-    bin_dataset=False
+    run_generated: bool=True,
+    run_reference: bool=True,
+    target: str="generic",
+    bin_dataset: bool=False,
 ):
     cli_acetone(
         model_file=model,
@@ -147,19 +148,19 @@ def run_acetone_for_test(
         output_python = None
 
     if run_generated:
-        cmd = ["make", "-C", tmpdir_name, "all"]
+        cmd = ["make", "-C", tmpdir_name + "/core_0", "all"]
         result = subprocess.run(cmd, check=False).returncode
         if result != 0:
             print("\nC code compilation failed")
             return np.array([]), output_python
 
-        cmd = [tmpdir_name + "/inference", tmpdir_name + "/output_c.txt"]
+        cmd = [tmpdir_name + "/core_0" + "/inference", tmpdir_name + "/core_0" + "/output_c.txt"]
         result = subprocess.run(cmd, check=False).returncode
         if result != 0:
             print("\nC code inference failed")
             return np.array([]), output_python
 
-        output_c = read_output_c(tmpdir_name + "/output_c.txt", target).flatten()
+        output_c = read_output_c(tmpdir_name + "/core_0" + "/output_c.txt", target).flatten()
     else:
         output_c = None
 
