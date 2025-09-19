@@ -89,7 +89,7 @@ class Node(ABC):
             return False
         if self.parents != other.parents:
             return False
-        return self.children != other.children
+        return self.children == other.children
 
 
 class Edge(ABC):
