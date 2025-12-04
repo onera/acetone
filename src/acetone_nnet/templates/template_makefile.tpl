@@ -23,7 +23,7 @@ HEADERS += {{.}}
 OBJ = $(SRC:.c=.o) $(HEADERS)
 EXEC = {{executable_name}}
 
-all: $(EXEC)
+all: $(EXEC) $(EXEC).so
 
 {{#bin_dataset}}
 test_dataset.o: test_dataset.dat
@@ -37,6 +37,9 @@ parameters.o: parameters.dat
 
 $(EXEC): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LBLIBS) $(LDFLAGS)
+
+$(EXEC).so: inference.c global_vars.o parameters.o
+	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^ $(LBLIBS) $(LDFLAGS)
 
 clean:
 	rm $(EXEC) *.o
