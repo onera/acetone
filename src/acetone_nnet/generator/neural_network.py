@@ -431,7 +431,6 @@ class CodeGenerator(ABC):
             "data_type": self.data_type,
             "path": list(range(self.maxpath))
         }
-
         memcpy_names=[]
         sizes=[]
         for layer in self.layers:
@@ -445,7 +444,7 @@ class CodeGenerator(ABC):
                 memcpy_names.append(f"biases_{layer.name}_{layer.idx:02d}")
                 sizes.append(layer.nb_biases)
         mustach_hash["memcpy_params"]=',\n'.join([f"\t{self.data_type} *model_{name}" for name in memcpy_names])
-        mustach_hash["memcpy_code"]='\n'.join([f"\tmemcpy({name},model_{name},{size});" for name,size in list(zip(memcpy_names,sizes))])
+        mustach_hash["memcpy_code"]='\n'.join([f"\tmemcpy({name},model_{name},{size}*sizeof({self.data_type}));" for name,size in list(zip(memcpy_names,sizes))])
         template = Path(
             self.template_path + "template_train_hook_file.c.tpl",
         ).read_text()
