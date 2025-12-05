@@ -434,13 +434,13 @@ class CodeGenerator(ABC):
         memcpy_names=[]
         sizes=[]
         for layer in self.layers:
-            if (w := getattr(layer, "weights", None)) is not None:
+            if (w := getattr(layer, "weights", None)) is not None and layer.nb_weights > 0:
                 memcpy_names.append(f"weights_{layer.name}_{layer.idx:02d}")
                 sizes.append(layer.nb_weights)
-            if isinstance(layer, ConstantLayer):
+            if isinstance(layer, ConstantLayer) and layer.constant.size > 0:
                 memcpy_names.append(f"weights_{layer.name}_{layer.idx:02d}")
                 sizes.append(layer.constant.size)
-            if hasattr(layer, "biases"):
+            if hasattr(layer, "biases") and layer.nb_biases > 0:
                 memcpy_names.append(f"biases_{layer.name}_{layer.idx:02d}")
                 sizes.append(layer.nb_biases)
         mustach_hash["memcpy_params"]=',\n'.join([f"\t{self.data_type} *model_{name}" for name in memcpy_names])
@@ -1133,6 +1133,7 @@ class CodeGenerator(ABC):
                 layer_hash["nb_weights"] = layer.constant.size
                 layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
                 symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
+                logging.info(f"generate weight {layer.name}_{layer.idx:02d} {layer.constant}")
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
@@ -1155,6 +1156,8 @@ class CodeGenerator(ABC):
 
             if len(layer_hash.keys()) > 2:
                 mustach_hash["layers"].append(layer_hash)
+        logging.info(f"generate musta {mustach_hash}")
+
         template = Path(
             self.template_path + "template_parameter_file.c.tpl",
         ).read_text()
