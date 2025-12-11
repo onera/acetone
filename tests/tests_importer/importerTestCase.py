@@ -27,7 +27,7 @@ from keras.engine.sequential import Sequential
 
 import acetone_nnet
 from acetone_nnet import Layer
-
+from torch.export import ExportedProgram
 
 def create_initializer_tensor(
     name: str,
@@ -57,7 +57,7 @@ class ImporterTestCase(unittest.TestCase):
 
     def import_layers(
         self,
-        file: str | onnx.ModelProto | Functional | Sequential,
+        file: str | onnx.ModelProto | Functional | Sequential | ExportedProgram,
         versions: dict[int, str] | dict[str, str] | None = None,
     ) -> acetone_nnet.generator.CodeGenerator:
         """Create the CodeGenerator object from the file."""

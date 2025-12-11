@@ -69,7 +69,9 @@ from .layers import (
     Softmax,
 )
 
-MODEL_TYPE = str | Path | onnx.ModelProto
+from torch.export import ExportedProgram
+
+MODEL_TYPE = str | Path | onnx.ModelProto | ExportedProgram
 if (3, 12) > version_info >= (3, 10):
     MODEL_TYPE = MODEL_TYPE | Sequential | Functional
 
