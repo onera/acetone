@@ -275,8 +275,9 @@ class CodeGenerator(ABC):
                 lambda s, path: s.generate_function_header_file(path),
                 lambda s, path: s.generate_globalvars_file(path),
                 lambda s, path: s.generate_parameter_file(path),
+                lambda s, path: s.generate_train_hook_file(path),
             ]
-            file_names.extend(["inference.c", "inference.h","global_vars.c","parameters.c"])
+            file_names.extend(["inference.c", "inference.h","global_vars.c","parameters.c","train_hook.c"])
 
         if "Makefile" not in custom_generation_functions:
             generation_functions["Makefile"] = [
@@ -423,6 +424,33 @@ class CodeGenerator(ABC):
         )
         self.test_dataset = dataset
         return dataset
+
+    def generate_train_hook_file(self: Self, output_dir: Path) -> np.ndarray:
+        """Generate C Code for layer data."""
+        mustach_hash = {
+            "data_type": self.data_type,
+            "path": list(range(self.maxpath))
+        }
+        memcpy_names=[]
+        sizes=[]
+        for layer in self.layers:
+            if (w := getattr(layer, "weights", None)) is not None and layer.nb_weights > 0:
+                memcpy_names.append(f"weights_{layer.name}_{layer.idx:02d}")
+                sizes.append(layer.nb_weights)
+            if isinstance(layer, ConstantLayer) and layer.constant.size > 0:
+                memcpy_names.append(f"weights_{layer.name}_{layer.idx:02d}")
+                sizes.append(layer.constant.size)
+            if hasattr(layer, "biases") and layer.nb_biases > 0:
+                memcpy_names.append(f"biases_{layer.name}_{layer.idx:02d}")
+                sizes.append(layer.nb_biases)
+        mustach_hash["memcpy_params"]=',\n'.join([f"\t{self.data_type} *model_{name}" for name in memcpy_names])
+        mustach_hash["memcpy_code"]='\n'.join([f"\tmemcpy({name},model_{name},{size}*sizeof({self.data_type}));" for name,size in list(zip(memcpy_names,sizes))])
+        template = Path(
+            self.template_path + "template_train_hook_file.c.tpl",
+        ).read_text()
+        with (output_dir / "train_hook.c").open("a+") as train_hook_file:
+            train_hook_file.write(pystache.render(template, mustach_hash))
+        logging.info("Generated train hook .c file.")
 
     def compute_inference(
         self: Self,
@@ -1105,6 +1133,7 @@ class CodeGenerator(ABC):
                 layer_hash["nb_weights"] = layer.constant.size
                 layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
                 symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
+                logging.info(f"generate weight {layer.name}_{layer.idx:02d} {layer.constant}")
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
@@ -1127,6 +1156,8 @@ class CodeGenerator(ABC):
 
             if len(layer_hash.keys()) > 2:
                 mustach_hash["layers"].append(layer_hash)
+        logging.info(f"generate musta {mustach_hash}")
+
         template = Path(
             self.template_path + "template_parameter_file.c.tpl",
         ).read_text()
