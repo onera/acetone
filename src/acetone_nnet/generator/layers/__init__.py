@@ -76,6 +76,7 @@ from .gather_elements import GatherElements, GatherElementsDefault
 from .gemm import Gemm, GemmDefault
 from .input import InputLayer, InputLayerDefault
 from .matmul import MatMul, MatMulDefault
+from .lstm import LSTM, LSTMDefault
 from .padding import (
     ConstantPad,
     ConstantPadDefault,
@@ -126,6 +127,7 @@ __all__ = (
     flatten.__all__,
     gather.__all__,
     gemm.__all__,
+    lstm.__all__,
     input.__all__,
     matmul.__all__,
     softmax.__all__,
