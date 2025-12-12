@@ -31,7 +31,6 @@ class ActivationFunctions:
 
     def __init__(self: Self) -> None:
         """Initiate an activation function."""
-        self.name = None
         self.name = ""
         self.comment = ""
 
@@ -71,7 +70,11 @@ class ActivationFunctions:
             return False
         return True
 
+    def __repr__(self):
+        return self.name
 
+    def __str__(self):
+        return self.__repr__()
 class Sigmoid(ActivationFunctions):
     """Sigmoid layer."""
 

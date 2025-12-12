@@ -201,3 +201,9 @@ class Layer(ABCHasTraits):
             elif other.__dict__[key] != self.__dict__[key]:
                 return False
         return True
+    
+    def __repr__(self):
+        return f"{{Layer id:{self.idx}, type:{self.name}, name:{self.original_name}, size:{self.size}, act:{self.activation_function} }}"
+
+    def __str__(self):
+        return self.__repr__()

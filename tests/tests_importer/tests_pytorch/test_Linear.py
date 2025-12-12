@@ -18,13 +18,16 @@
 """
 
 from tests.tests_importer import importerTestCase
-from torch.nn import Linear, Sequential
+from torch.nn import Linear, Sequential, ReLU
 from torch.export import export, ExportedProgram
 import torch
+import logging
 class TestLinear(importerTestCase.ImporterTestCase):
     """Test for MatMul Layer."""
+    logging.basicConfig(level=logging.INFO , format='%(asctime)s - %(levelname)s - %(message)s')
 
     def test_linear_1(self) -> None:
-        model = Sequential(*[Linear(3,4)])
+        model = Sequential(*[Linear(3,4),ReLU(),Linear(4,1)])
         program:ExportedProgram = export(model,(torch.rand(3),))
         cgen = self.import_layers(program)
+        logging.info(cgen.layers)
