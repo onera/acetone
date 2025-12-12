@@ -6,3 +6,4 @@ tensorflow==2.12.0
 pystache==0.6.5
 traits~=7.0
 onnxscript==0.3.2
+torch==2.9.1 --index-url https://download.pytorch.org/whl/cpu

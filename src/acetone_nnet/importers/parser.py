@@ -31,6 +31,7 @@ if (3, 12) > version_info >= (3, 10):
 
 from acetone_nnet.ir import Layer
 
+from torch.export import ExportedProgram
 
 def parser(
         file_to_parse: Any,
@@ -78,7 +79,11 @@ def parser(
     if type(file_to_parse) is onnx.ModelProto:
         from .ONNX_importer.parser_ONNX import load_onnx
         return load_onnx(file_to_parse)
-
+    
+    if type(file_to_parse) is ExportedProgram:
+        from .PYTORCH_importer.parse_pytorch import load_pytorch
+        return load_pytorch(file_to_parse)
+    
     # TODO Conditional import/test if keras is available
     if ((3, 12) > version_info >= (3, 10) and
             (type(file_to_parse) is Functional or type(file_to_parse) is Sequential)):
