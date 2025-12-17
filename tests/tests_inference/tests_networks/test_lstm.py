@@ -20,10 +20,11 @@
 from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
 import numpy as np
-
+import unittest
 class TestLSTM_ONNX(acetoneTestCase.AcetoneTestCase):
     """Inference test for Quantized ACAS COC, ONNX model."""
 
+    @unittest.skip("need a model to test")
     def test_lstm_onnx_python(self) -> None:
         model_path = MODELS_DIR / "lstm" / "lstm.onnx"
         fdata = np.random.rand(16,1,22).astype(np.float32)
