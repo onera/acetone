@@ -31,7 +31,7 @@ class TestAcasPytorch(acetoneTestCase.AcetoneTestCase):
             program:ExportedProgram = export(model,(data,))
         
             acetone_result, reference = acetoneTestCase.run_acetone_for_test(
-                self.tmpdir_name,
+                "test",
                 program,
                 data.unsqueeze(0).numpy(),
                 bin_dataset=True)
