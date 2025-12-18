@@ -42,4 +42,4 @@ $(EXEC).so: inference.c global_vars.o parameters.o train_hook.c
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^ $(LBLIBS) $(LDFLAGS)
 
 clean:
-	rm $(EXEC) *.o
+	rm -f $(EXEC) *.o
