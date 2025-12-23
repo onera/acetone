@@ -424,7 +424,7 @@ def export_pool(
         outputs=[output_name],
         strides=(pool_layer.strides, pool_layer.strides),
         kernel_shape=(pool_layer.pool_size, pool_layer.pool_size),
-        pads=(pool_layer.pad_right, pool_layer.pad_left, pool_layer.pad_bottom, pool_layer.pad_top)
+        pads=(pool_layer.pad_left, pool_layer.pad_top, pool_layer.pad_right, pool_layer.pad_bottom)
     )
 
     return node, []
@@ -884,7 +884,7 @@ def export_input(
     """Export ACETONE Input layer to ONNX input value info."""
     tensor_dtype = np_dtype_to_tensor_dtype(np.dtype(datatype_py.__name__))
     shape = getattr(input_layer,"input_shape", None)
-    if type(shape) is not None:
+    if shape is not None:
         for i in range(len(shape)):
             if shape[i] is None:
                 shape[i] = 1
