@@ -22,10 +22,35 @@ import onnxruntime as rt
 
 from tests.common import MODELS_DIR
 from tests.tests_inference import acetoneTestCase
-
-
+from torch.export import export, ExportedProgram
+import torch
+from tests.models.resnet.resnet import resnet18
 class TestResnet(acetoneTestCase.AcetoneTestCase):
     """Inference test for resnet model."""
+
+    def test_resnet_pytorch(self) -> None:
+        with torch.no_grad():
+            #model structure
+            pytorch_model = resnet18()
+            #model weights from torchvision
+            pytorch_model.load_state_dict(torch.load(MODELS_DIR / "resnet" / "resnet18-f37072fd.pth"))
+            pytorch_model.eval()
+            #model Clip max values (precomputed upper bound analysis)
+            model_bound = torch.load(MODELS_DIR / "resnet" / "resnet18_bound.pt")
+            # update ReluN (Clip) upper bound
+            for k,v in model_bound.items():
+                pytorch_model.get_submodule(k).n = v
+            data = torch.rand(1,3,224,224, requires_grad=False, dtype=torch.float32)
+            program : ExportedProgram = export(pytorch_model,(data,))
+            acetone_result,python_result = acetoneTestCase.run_acetone_for_test(
+                    self.tmpdir_name,
+                    program,
+                    data.numpy(),
+                    bin_dataset=True
+                )
+            self.assertListAlmostEqual(acetone_result, python_result)
+            self.assertListAlmostEqual(pytorch_model(data).detach().numpy()[0], python_result)
+
 
     def test_resnet_onnx(self) -> None:
         """Test resnet model, compare between keras et C code."""

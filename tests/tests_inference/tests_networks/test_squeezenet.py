@@ -89,8 +89,9 @@ class TestSqueezenet(acetoneTestCase.AcetoneTestCase):
 
     def test_squeezenet_pytorch(self) -> None:
         with torch.no_grad():
-            data = torch.rand(1,3,224,224, requires_grad=False)
+            data = torch.rand(1,3,224,224, requires_grad=False, dtype=torch.float32)
             pytorch_model = SqueezeNetv11(relun=1000)
+            pytorch_model.eval()
             program : ExportedProgram = export(pytorch_model,(data,))
             acetone_result,python_result = acetoneTestCase.run_acetone_for_test(
                 self.tmpdir_name,
