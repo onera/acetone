@@ -87,14 +87,14 @@ class SqueezeNetv11(nn.Module):
 class TestSqueezenet(acetoneTestCase.AcetoneTestCase):
     """Inference test for squeezenet model."""
 
-    def test_aaaaaaaaaaa_squeezenet_pytorch(self) -> None:
+    def test_squeezenet_pytorch(self) -> None:
         with torch.no_grad():
             data = torch.rand(1,3,224,224, requires_grad=False, dtype=torch.float32)
             pytorch_model = SqueezeNetv11(relun=1000)
             pytorch_model.eval()
             program : ExportedProgram = export(pytorch_model,(data,))
             acetone_result,python_result = acetoneTestCase.run_acetone_for_test(
-                "test",
+                self.tmpdir_name,
                 program,
                 data.numpy(),
                 bin_dataset=True

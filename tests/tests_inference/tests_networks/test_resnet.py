@@ -43,7 +43,7 @@ class TestResnet(acetoneTestCase.AcetoneTestCase):
             data = torch.rand(1,3,224,224, requires_grad=False, dtype=torch.float32)
             program : ExportedProgram = export(pytorch_model,(data,))
             acetone_result,python_result = acetoneTestCase.run_acetone_for_test(
-                    "test",
+                    self.tmpdir_name,
                     program,
                     data.numpy(),
                     bin_dataset=True
