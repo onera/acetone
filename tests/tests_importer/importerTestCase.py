@@ -22,8 +22,19 @@ import unittest
 
 import numpy as np
 import onnx
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
+import keras
+kerver = [int(v) for v in keras.__version__.split('.')]
+if kerver[0]>=3:
+    if kerver[1]>=3:
+        from keras.src.models.functional import Functional
+        from keras.src.models.sequential import Sequential
+    else:
+        from keras.models.functional import Functional
+        from keras.models.sequential import Sequential
+else:
+    from keras.engine.functional import Functional
+    from keras.engine.sequential import Sequential
+
 
 import acetone_nnet
 from acetone_nnet import Layer
