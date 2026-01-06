@@ -24,8 +24,16 @@ from sys import version_info
 from typing import Any
 
 import onnx
-
-if (3, 12) > version_info >= (3, 10):
+import keras
+kerver = [int(v) for v in keras.__version__.split('.')]
+if kerver[0]>=3:
+    if kerver[1]>=3:
+        from keras.src.models.functional import Functional
+        from keras.src.models.sequential import Sequential
+    else:
+        from keras.models.functional import Functional
+        from keras.models.sequential import Sequential
+else:
     from keras.engine.functional import Functional
     from keras.engine.sequential import Sequential
 

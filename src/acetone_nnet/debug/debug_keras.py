@@ -23,12 +23,17 @@ from pathlib import Path
 
 import keras
 import numpy as np
-try:
+kerver = [int(v) for v in keras.__version__.split('.')]
+if kerver[0]>=3:
+    if kerver[1]>=3:
+        from keras.src.models.functional import Functional
+        from keras.src.models.sequential import Sequential
+    else:
+        from keras.models.functional import Functional
+        from keras.models.sequential import Sequential
+else:
     from keras.engine.functional import Functional
     from keras.engine.sequential import Sequential
-except ImportError:
-    from keras import Model as Functional
-    from keras import Sequential
 
 
 def extract_node_outputs(model: Sequential | Functional) -> list[str]:

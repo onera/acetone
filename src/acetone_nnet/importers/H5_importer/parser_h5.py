@@ -24,9 +24,21 @@ from itertools import islice
 import keras
 import numpy as np
 from keras import activations
-from keras.engine.base_layer import Layer
-from keras.engine.functional import Functional
-from keras.engine.sequential import Sequential
+kerver = [int(v) for v in keras.__version__.split('.')]
+if kerver[0]>=3:
+    if kerver[1]>=3:
+        from keras.src.models.functional import Functional
+        from keras.src.models.sequential import Sequential
+        from keras.layers import Layer
+    else:
+        from keras.models.functional import Functional
+        from keras.models.sequential import Sequential
+        from keras.models.base_layer import Layer
+else:
+    from keras.engine.functional import Functional
+    from keras.engine.sequential import Sequential
+    from keras.engine.base_layer import Layer
+
 
 from acetone_nnet.generator import (
     ActivationFunctions,
