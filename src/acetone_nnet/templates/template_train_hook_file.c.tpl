@@ -19,7 +19,7 @@ void copy_weights(
     {{/nb_params}}
 }
 
-int save_weights(file_path){
+int save_weights(char *file_path){
     FILE *f;
     int nb_written=0;
     f = fopen(file_path,"wb");
