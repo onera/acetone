@@ -285,7 +285,7 @@ class CodeGenerator(ABC):
                 lambda s, path: s.generate_function_source_file(path),
                 lambda s, path: s.generate_function_header_file(path),
                 lambda s, path: s.generate_globalvars_file(path),
-                lambda s, path: s.generate_parameter_file(path),
+                lambda s, path: s.generate_bin_parameter_file(path) if self.bin_dataset else s.generate_parameter_file(path),
                 lambda s, path: s.generate_train_hook_file(path),
             ]
             file_names.extend(["inference.c", "inference.h","global_vars.c","parameters.c","train_hook.c"])
@@ -1121,6 +1121,29 @@ class CodeGenerator(ABC):
                             f"Cannot quantize layer {l.name}_{l.idx}, missing data in target config",
                         )
 
+    def generate_bin_parameter_file(self: Self, output_dir: Path) -> None:
+        """Generate binary file for layer data."""
+        symtab = {}
+        if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
+            symtab["zero"] = np.array([0.0], dtype=np.float32)
+
+        for layer in self.layers:
+            if (w := getattr(layer, "weights", None)) is not None:
+                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
+
+            if isinstance(layer, ConstantLayer):
+                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
+
+            if hasattr(layer, "biases"):
+                symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
+
+        with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
+            self.symtab = ""
+            for s in symtab:
+                self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
+                symtab[s].tofile(parameters_bin)
+        logging.info("Generated parameter .dat file.")
+
     def generate_parameter_file(self: Self, output_dir: Path) -> None:
         """Generate C Code for layer data."""
         mustach_hash = {
@@ -1129,10 +1152,8 @@ class CodeGenerator(ABC):
             "page_size": self.target_page_size,
         }
         mustach_hash["layers"] = []
-        symtab = {}
         if any(isinstance(layer, Conv2DIndirectGemm) for layer in self.layers):
             mustach_hash["zero"] = True
-            symtab["zero"] = np.array([0.0], dtype=np.float32)
 
         for layer in self.layers:
             layer_hash = {"name": layer.name, "idx": f"{layer.idx:02d}"}
@@ -1140,18 +1161,14 @@ class CodeGenerator(ABC):
             if (w := getattr(layer, "weights", None)) is not None:
                 layer_hash["nb_weights"] = layer.nb_weights
                 layer_hash["weights"] = self.flatten_array_order_c(layer.weights)
-                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
 
             if isinstance(layer, ConstantLayer):
                 layer_hash["nb_weights"] = layer.constant.size
                 layer_hash["weights"] = self.flatten_array_order_c(layer.constant)
-                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant
-                logging.info(f"generate weight {layer.name}_{layer.idx:02d} {layer.constant}")
 
             if hasattr(layer, "biases"):
                 layer_hash["nb_biases"] = layer.nb_biases
                 layer_hash["biases"] = self.flatten_array_order_c(layer.biases)
-                symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
 
             if type(layer) is Conv2DIndirectGemm:
                 layer_hash["patches_size"] = layer.patches_size
@@ -1169,20 +1186,12 @@ class CodeGenerator(ABC):
 
             if len(layer_hash.keys()) > 2:
                 mustach_hash["layers"].append(layer_hash)
-        logging.info(f"generate musta {mustach_hash}")
 
         template = Path(
             self.template_path + "template_parameter_file.c.tpl",
         ).read_text()
-        if self.bin_dataset:
-            with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
-                self.symtab = ""
-                for s in symtab:
-                    self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
-                    symtab[s].tofile(parameters_bin)
-        else:
-            with (output_dir / "parameters.c").open("a+") as parameter_file:
-                parameter_file.write(pystache.render(template, mustach_hash))
+        with (output_dir / "parameters.c").open("a+") as parameter_file:
+            parameter_file.write(pystache.render(template, mustach_hash))
         logging.info("Generated parameter .c file.")
 
     def generate_globalvars_file(
