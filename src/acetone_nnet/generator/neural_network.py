@@ -1328,6 +1328,8 @@ class CodeGenerator(ABC):
         edges = []
         for i in range(len(self.layers[0])):
             layer = self.layers[0][i]
+            if isinstance(layer, ConstantLayer):
+                continue
             curr_node = Node(tag=layer.idx, wcet=1)
             for j in [par.idx for par in layer.previous_layer]:
                 par_node = None
