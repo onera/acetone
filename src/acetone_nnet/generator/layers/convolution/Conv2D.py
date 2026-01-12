@@ -27,7 +27,7 @@ from typing_extensions import Self
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
 from acetone_nnet.versioning.layer_factories import conv2d_factory
-
+import logging
 
 class Conv2D(Layer):
     """Convolution layer class."""
@@ -244,7 +244,7 @@ class Conv2D(Layer):
         )
 
         output = np.zeros((self.nb_filters, self.output_height, self.output_width))
-        print(self.weights.shape)
+        logging.info(self.weights.shape)
 
         if self.pad_right or self.pad_left or self.pad_top or self.pad_bottom:
             input_padded = np.zeros(

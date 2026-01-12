@@ -180,6 +180,9 @@ class ShapeAwareVisitor(FXGraphVisitor):
             this_layer.previous_layer.append(self.layerdic[node.args[0].name][0])
             self.layerdic[node.name] = (this_layer, node.meta['val'].shape)
             self.idx+=1
+            if not hasattr(self,"mem_format"):
+                self.mem_format = "channels_last" if self.module.state_dict()[node.args[1].target].is_contiguous(memory_format=torch.channels_last) else "channels_first"
+                logging.info(f"[LAYOUT] : {self.mem_format}")
         elif "batch_norm" in target_name:
             # Fusing batch normalization to previous conv2d https://pytorch-cn.com/tutorials/intermediate/fx_conv_bn_fuser.html
             self.layerdic[node.name] = self.layerdic[node.args[0].name]
@@ -291,4 +294,4 @@ def load_pytorch(program : ExportedProgram):
     layers, max_road, dict_cst = graph_interpretor.tri_topo([l[0] for l in visitor.layerdic.values()])
     layers = [x.find_output_str(dict_cst) for x in layers]
     print("Finished model initialization.")    
-    return layers, "float", np.float32, "channels_first",max_road, dict_cst
+    return layers, "float", np.float32, visitor.mem_format,max_road, dict_cst
