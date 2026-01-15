@@ -740,9 +740,11 @@ class CodeGenerator(ABC):
                 template.add_linker_flags(self.target_cfg["ldflags"])
             if "compiler" in self.target_cfg:
                 template.set_compiler(self.target_cfg["compiler"])
+        
         if self.bin_dataset:
             template.set_binary_test_dataset()
             template.symtab = self.symtab
+            template.align = self.target_page_size
         # Generate Makefile
         with (output_dir / "Makefile").open("a+") as makefile:
             makefile.write(pystache.render(template))
@@ -1137,9 +1139,13 @@ class CodeGenerator(ABC):
             if hasattr(layer, "biases"):
                 symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
 
+        def align_up(value, alignment):
+            return (value + (alignment - 1)) & ~(alignment - 1)
+
         with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
             self.symtab = ""
             for s in symtab:
+                parameters_bin.seek(align_up(parameters_bin.tell(),self.target_page_size),0)
                 self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
                 symtab[s].tofile(parameters_bin)
         logging.info("Generated parameter .dat file.")

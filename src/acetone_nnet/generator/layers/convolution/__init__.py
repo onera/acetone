@@ -25,6 +25,7 @@ from .Conv2DGemm import Conv2DGemm
 from .Conv2DGemmTarget import Conv2DGemmTarget
 from .Conv2DIndirectGemm import Conv2DIndirectGemm
 from .Conv2DStdGemm import Conv2DStdGemm
+from .Conv2Ddirect_block import Conv2Ddirect_block
 
 __all__ = (
     "Conv2D",
@@ -33,4 +34,5 @@ __all__ = (
     "Conv2DGemmTarget",
     "Conv2DIndirectGemm",
     "Conv2DStdGemm",
+    "Conv2Ddirect_block"
 )
