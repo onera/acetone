@@ -49,6 +49,7 @@ class Conv2D(Layer):
         weights: np.ndarray,
         biases: np.ndarray,
         activation_function: ActivationFunctions,
+        data_format = "channels_first"
     ) -> None:
         """Build a Conv2D layer."""
         super().__init__()
@@ -79,6 +80,7 @@ class Conv2D(Layer):
         self.weights = weights
         self.biases = biases
         self.activation_function = activation_function
+        self.data_format = data_format
         self.local_var = "sum"
 
         self.nb_weights = self.count_elements_array(self.weights)
@@ -244,7 +246,7 @@ class Conv2D(Layer):
         )
 
         output = np.zeros((self.nb_filters, self.output_height, self.output_width))
-        logging.info(self.weights.shape)
+        logging.info(f"[Conv2D shape] {self.weights.shape}")
 
         if self.pad_right or self.pad_left or self.pad_top or self.pad_bottom:
             input_padded = np.zeros(

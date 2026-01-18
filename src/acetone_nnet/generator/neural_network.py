@@ -1131,7 +1131,11 @@ class CodeGenerator(ABC):
 
         for layer in self.layers:
             if (w := getattr(layer, "weights", None)) is not None:
-                symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
+                if (w := getattr(layer, "layout", None)) is not None:
+                    #logging.info(f"[LAYOUT] {layer.layout.shape}")
+                    symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.layout
+                else:
+                    symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.weights
 
             if isinstance(layer, ConstantLayer):
                 symtab[f"weights_{layer.name}_{layer.idx:02d}"] = layer.constant

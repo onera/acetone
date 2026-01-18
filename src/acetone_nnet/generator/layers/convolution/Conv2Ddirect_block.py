@@ -31,8 +31,9 @@ def transform_to_6d_blocked_layout(weight, block_k, block_c):
     # KCHW -> [NB_K][NB_C][KH][KW][BLOCK_C][BLOCK_K]
     K, C, KH, KW = weight.shape
     nb_k, nb_c = K // block_k, C // block_c
-    weight = weight.reshape(nb_k, block_k, nb_c, block_c, KH, KW)
-    return weight.transpose(0, 2, 4, 5, 3, 1).copy("C")
+    layout = weight.copy()
+    layout = layout.reshape(nb_k, block_k, nb_c, block_c, KH, KW)
+    return layout.transpose(0, 2, 4, 5, 3, 1).copy("C")
 
 class Conv2Ddirect_block(Conv2D):
     """Implements Conv2D using the six-loops algorithm (direct conv) with blocking of channels."""
@@ -40,6 +41,7 @@ class Conv2Ddirect_block(Conv2D):
     def __init__(self: Self, **kwargs: Any) -> None:
         """Build a Convolution layer with 6 loops implementation."""
         super().__init__(**kwargs)
+        self.layout = transform_to_6d_blocked_layout(self.weights,min(64,self.nb_filters),self.input_channels)
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""

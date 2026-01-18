@@ -42,6 +42,7 @@ class Pooling2D(Layer):
             input_shape: list[int],
             output_shape: list[int],
             activation_function: ActivationFunctions,
+            data_format = "channels_first",
             **kwargs: int,
     ) -> None:
         """Instantiate a Pooling layer."""
@@ -67,7 +68,7 @@ class Pooling2D(Layer):
         self.output_var = ""
 
         self.activation_function = activation_function
-
+        self.data_format = data_format
         self.pad_right, self.pad_left, self.pad_bottom, self.pad_top = self.compute_padding(
             self.padding,
             self.input_height,

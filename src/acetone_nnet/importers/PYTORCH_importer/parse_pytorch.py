@@ -156,6 +156,10 @@ class ShapeAwareVisitor(FXGraphVisitor):
             )
             self.layerdic[node.name] = self.layerdic[node.args[0].name] # register 
         elif "conv2d" in target_name:
+            #first call to conv2d is expected to decide memory layout format based on its input tensor
+            if not hasattr(self,"data_format"):
+                self.data_format = "channels_last" if self.module.state_dict()[node.args[1].target].is_contiguous(memory_format=torch.channels_last) else "channels_first"
+                logging.info(f"[LAYOUT] : {self.data_format}")
             stride = node.args[3][0] if len(node.args) > 3 else 1
             padding = node.args[4] + node.args[4] if len(node.args) > 4 else [0,0,0,0]
             dilation = node.args[5][0] if len(node.args) > 5 else 1
@@ -175,14 +179,12 @@ class ShapeAwareVisitor(FXGraphVisitor):
                     weights=self.module.state_dict()[node.args[1].target].numpy(),
                     biases=self.module.state_dict()[node.args[2].target].numpy() if node.args[2] is not None else np.zeros(node.meta['val'].shape[1],dtype=np.float32),
                     activation_function=Linear(),
+                    data_format=self.data_format
                 )
             self.layerdic[node.args[0].name][0].next_layer.append(this_layer)
             this_layer.previous_layer.append(self.layerdic[node.args[0].name][0])
             self.layerdic[node.name] = (this_layer, node.meta['val'].shape)
             self.idx+=1
-            if not hasattr(self,"mem_format"):
-                self.mem_format = "channels_last" if self.module.state_dict()[node.args[1].target].is_contiguous(memory_format=torch.channels_last) else "channels_first"
-                logging.info(f"[LAYOUT] : {self.mem_format}")
         elif "batch_norm" in target_name:
             # Fusing batch normalization to previous conv2d https://pytorch-cn.com/tutorials/intermediate/fx_conv_bn_fuser.html
             self.layerdic[node.name] = self.layerdic[node.args[0].name]
@@ -249,6 +251,7 @@ class ShapeAwareVisitor(FXGraphVisitor):
                     input_shape=self.layerdic[node.args[0].name][1],
                     output_shape=node.meta['val'].shape,
                     activation_function=Linear(),
+                    data_format=self.data_format
                 )            
             self.layerdic[node.args[0].name][0].next_layer.append(this_layer)
             this_layer.previous_layer.append(self.layerdic[node.args[0].name][0])
@@ -265,6 +268,7 @@ class ShapeAwareVisitor(FXGraphVisitor):
                 input_shape=self.layerdic[node.args[0].name][1],
                 output_shape=node.meta['val'].shape,
                 activation_function=Linear(),
+                data_format=self.data_format
             )
             self.layerdic[node.args[0].name][0].next_layer.append(this_layer)
             this_layer.previous_layer.append(self.layerdic[node.args[0].name][0])
@@ -294,4 +298,4 @@ def load_pytorch(program : ExportedProgram):
     layers, max_road, dict_cst = graph_interpretor.tri_topo([l[0] for l in visitor.layerdic.values()])
     layers = [x.find_output_str(dict_cst) for x in layers]
     print("Finished model initialization.")    
-    return layers, "float", np.float32, visitor.mem_format,max_road, dict_cst
+    return layers, "float", np.float32, visitor.data_format,max_road, dict_cst

@@ -61,7 +61,6 @@ class MaxPooling2DDefault(MaxPooling2D):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.output_var)
 
         mustach_hash["input_channels"] = self.input_channels
         mustach_hash["output_height"] = self.output_height
@@ -73,11 +72,20 @@ class MaxPooling2DDefault(MaxPooling2D):
         mustach_hash["pad_top"] = self.pad_top
         mustach_hash["input_height"] = self.input_height
         mustach_hash["input_width"] = self.input_width
+        suffix = ""
+        if self.data_format == "channels_last":
+            mustach_hash["output_str"] = output_str
+            suffix = "_HWC"
+            mustach_hash["is_maxpool"] = True
+            if self.activation_function.name != "linear":
+                mustach_hash["activation_function"] = self.activation_function.write_activation_str("o_ptr[c]")
+        else:
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.output_var)
+
         mustach_hash["specific_function"] = self.specific_function(
-            f"jj + {self.input_width}*(ii + {self.input_height}*f)", output_str)
+        f"f + {self.input_width}*(ii + {self.input_height}*jj)", output_str)
 
-
-        with open(self.template_path / "layers" / "template_Pooling2D.c.tpl") as template_file:
+        with open(self.template_path / "layers" / f"template_Pooling2D{suffix}.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -99,6 +107,7 @@ def max_pooling_default_implementation(
         input_shape=[1,old_layer.input_channels,old_layer.input_height,old_layer.input_width],
         output_shape=[1,old_layer.output_channels,old_layer.output_height,old_layer.output_width],
         activation_function=old_layer.activation_function,
+        data_format=old_layer.data_format
     )
 
 max_pooling_factory.register_implementation(
