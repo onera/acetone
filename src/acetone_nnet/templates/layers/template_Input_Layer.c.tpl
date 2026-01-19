@@ -1,13 +1,25 @@
     // {{name}}_{{idx}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
-{{^channels_last}}
-    // Loading the input in channels_first
+{{#keep_channels}}
     for (k = 0; k < {{size}}; ++k)
     {
         output_{{road}}[k] = nn_input[k];
     }
-{{/channels_last}}
-{{#channels_last}}
-    // Loading the input and changing it from channels_last to channels_first format
+{{/keep_channels}}
+{{#channels_first_to_last}}
+    // Loading the input and channels first to channels last
+    for(f = 0; f < {{input_channels}}; ++f)
+    {
+        for (i = 0; i < {{input_height}}; ++i)
+        {
+            for (j = 0; j < {{input_width}};  ++j)
+            {
+                output_{{road}}[(i*{{input_width}} + j)*{{input_channels}} + f] = nn_input[(i + {{input_height}}*f)*{{input_width}} + j];
+            }
+        }
+    }
+{{/channels_first_to_last}}
+{{#channels_last_to_first}}
+    // Loading the input and channels last to channels first
     for(f = 0; f < {{input_channels}}; ++f)
     {
         for (i = 0; i < {{input_height}}; ++i)
@@ -18,4 +30,4 @@
             }
         }
     }
-{{/channels_last}}
+{{/channels_last_to_first}}

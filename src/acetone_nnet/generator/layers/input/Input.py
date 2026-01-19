@@ -35,6 +35,7 @@ class InputLayer(Layer):
             size: int,
             input_shape: np.ndarray | list,
             data_format: str,
+            gen_data_format: str = "channels_first"
     ) -> None:
         """Build a Input layer."""
         super().__init__()
@@ -42,10 +43,16 @@ class InputLayer(Layer):
         self.size = size
         self.input_shape = input_shape
         if len(self.input_shape) == 4:
-            self.output_channels = self.input_shape[1]
-            self.output_height = self.input_shape[2]
-            self.output_width = self.input_shape[3]
+            if data_format=="channels_first":
+                self.output_channels = self.input_shape[1]
+                self.output_height = self.input_shape[2]
+                self.output_width = self.input_shape[3]
+            else:
+                self.output_channels = self.input_shape[3]
+                self.output_height = self.input_shape[1]
+                self.output_width = self.input_shape[2]
         self.data_format = data_format
+        self.gen_data_format = gen_data_format
         self.name = "Input_layer"
         if original_name == "":
             self.original_name = f"{self.name}_{self.idx}"
@@ -65,9 +72,6 @@ class InputLayer(Layer):
         if any(type(shape) is not int for shape in self.input_shape[1:]):
             msg += "Error: input_shape in Input Layer (all dim must be int)"
             msg += "\n"
-        if type(self.data_format) is not str:
-            msg += "Error: data format type in Input Layer"
-            msg += "\n"
         if msg:
             raise TypeError(msg)
 
@@ -80,9 +84,6 @@ class InputLayer(Layer):
 
         if self.size != prod:
             msg += f"Error: size value in Input Layer ({self.size}!={prod})"
-            msg += "\n"
-        if self.data_format not in ["channels_last", "channels_first"]:
-            msg += f"Error: data format value in Input Layer ({self.data_format})"
             msg += "\n"
         if msg:
             raise ValueError(msg)

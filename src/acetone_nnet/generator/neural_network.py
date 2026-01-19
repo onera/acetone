@@ -52,8 +52,8 @@ from acetone_nnet.quantize import qform
 from acetone_nnet.quantize.activation import QuantizeShiftActivation
 from acetone_nnet.templates.template_makefile import TemplateMakefile
 from acetone_nnet.versioning.versioning import versioning
-
 from .layers import (
+    InputLayer,
     AveragePooling2D,
     BatchNormalization,
     Broadcast,
@@ -107,6 +107,7 @@ class CodeGenerator(ABC):
         makefile_properties: dict[str, str | list[str]] | None = None,
         optimization: bool = False,
         custom_generation_functions: dict[str, list[tuple[str, Callable]]] | None = None,
+        gen_data_format:str = "channels_first",
         **kwargs,
     ) -> None:
         """Initialize the class."""
@@ -120,6 +121,7 @@ class CodeGenerator(ABC):
         self.to_hex = to_hex
         self.target_cfg = None
         self.bin_dataset = bin_dataset
+        self.gen_data_format = gen_data_format
         if target != "generic":
             try:
                 self.target_cfg = json.loads(
@@ -147,11 +149,13 @@ class CodeGenerator(ABC):
             )
             self.Normalizer = normalizer
 
+        if isinstance(l[0],InputLayer):
+            l[0].gen_data_format = gen_data_format
         self.maxpath = maxpath
         self.data_format = data_format
         self.dict_cst = dict_cst
         self.layers: list[Any] = l
-
+        
         if self.optimization:
             self.layers, self.log = pattern_matcher.match(self.layers, self.dict_cst)
 
@@ -924,33 +928,26 @@ class CodeGenerator(ABC):
 
         # Generate code to output graph data
         output_hash = {"path": self.layers[-1].path}
-        if (self.data_format == "channels_last") and (
-            hasattr(self.layers[-1], "output_channels")
-        ):
+        if hasattr(self.layers[-1], "output_channels"):
+            if (self.data_format == "channels_first") and (self.gen_data_format=="channels_last"):
+                output_hash["channels_last_to_first"] = True
+            elif (self.data_format == "channels_last") and (self.gen_data_format=="channels_first"):
+                output_hash["channels_first_to_last"] = True   
+            else:
+                output_hash["keep_channels"] = True
+                output_hash["output_size"] = self.layers[-1].size
             output_hash["output_channels"] = self.layers[-1].output_channels
             output_hash["output_height"] = self.layers[-1].output_height
             output_hash["output_width"] = self.layers[-1].output_width
-
-            template = (
-                Path(self.template_path)
-                / "memory_layout/template_channels_last_output.c.tpl"
-            ).read_text()
-            mustach_hash["output_str"] = pystache.render(template, output_hash)
         else:
+            output_hash["keep_channels"] = True
             output_hash["output_size"] = self.layers[-1].size
-            if self.data_format == "channels_first":
-                output_hash["comment"] = (
-                    "Returning the output in channels first (ACETONE compute the result in channels first)"
-                )
-            else:
-                output_hash["comment"] = "Returning the output (output flatten)"
 
-            template = (
-                Path(self.template_path)
-                / "memory_layout/template_channels_first_output.c.tpl"
-            ).read_text()
-            mustach_hash["output_str"] = pystache.render(template, output_hash)
-
+        template = (
+            Path(self.template_path)
+            / "memory_layout/template_output.c.tpl"
+        ).read_text()
+        mustach_hash["output_str"] = pystache.render(template, output_hash)
         if self.normalize:
             mustach_hash["pre_processing"] = self.Normalizer.write_pre_processing()
             mustach_hash["post_processing"] = self.Normalizer.write_post_processing()
@@ -1149,6 +1146,7 @@ class CodeGenerator(ABC):
         with Path.open(output_dir / "parameters.dat", "w+") as parameters_bin:
             self.symtab = ""
             for s in symtab:
+                #print(f"{s} {symtab[s].shape} {symtab[s].dtype}")
                 parameters_bin.seek(align_up(parameters_bin.tell(),self.target_page_size),0)
                 self.symtab += f"--add-symbol {s}=.rodata:{parameters_bin.tell()} "
                 symtab[s].tofile(parameters_bin)

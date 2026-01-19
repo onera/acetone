@@ -40,6 +40,7 @@ def cli_acetone(
     *,
     normalize: bool = False,
     optimization: bool = False,
+    gen_data_format: str = "channels_first"
 ) -> None:
     logging.basicConfig(level=logging.INFO if verbose else logging.WARNING, format='%(asctime)s - %(levelname)s - %(message)s')
     """Generate code with ACETONE."""
@@ -58,7 +59,8 @@ def cli_acetone(
         verbose=verbose,
         to_hex=to_hex,
         optimization=optimization,
-        bin_dataset = bin_dataset
+        bin_dataset = bin_dataset,
+        gen_data_format=gen_data_format
     )
     net.generate_c_files(output_dir)
     net.compute_inference(output_dir)

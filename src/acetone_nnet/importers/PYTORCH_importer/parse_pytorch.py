@@ -124,8 +124,10 @@ class ShapeAwareVisitor(FXGraphVisitor):
             idx=self.idx,
             size=node.meta['val'].numel(),
             input_shape=node.meta['val'].shape,
-            data_format="channels_first",
+            data_format="channels_last" if node.meta['val'].is_contiguous(memory_format=torch.channels_last) else "channels_first",
         )
+        self.data_format = this_layer.data_format
+        logging.info(f"[LAYOUT] : {self.data_format}")
         self.layerdic[node.name] = (this_layer, node.meta['val'].shape)
         self.idx+=1
 
