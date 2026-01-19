@@ -928,9 +928,9 @@ class CodeGenerator(ABC):
 
         # Generate code to output graph data
         output_hash = {"path": self.layers[-1].path}
-        output_hash["output_height"] = self.layers[-1].output_height
-        output_hash["output_width"] = self.layers[-1].output_width
         if hasattr(self.layers[-1], "output_channels"):
+            output_hash["output_height"] = self.layers[-1].output_height
+            output_hash["output_width"] = self.layers[-1].output_width
             output_hash["output_channels"] = self.layers[-1].output_channels
             if (self.data_format == "channels_first") and (self.gen_data_format=="channels_last"):
                 output_hash["channels_last_to_first"] = True

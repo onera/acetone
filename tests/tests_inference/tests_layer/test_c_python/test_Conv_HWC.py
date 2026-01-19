@@ -42,7 +42,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         with torch.no_grad():
             torch_out = model(data)
         acetone_result = acetoneTestCase.run_acetone_for_test(
-            "output", 
+            self.tmpdir_name, 
             program,
             conv_algo="direct_block",
             bin_dataset=True,
