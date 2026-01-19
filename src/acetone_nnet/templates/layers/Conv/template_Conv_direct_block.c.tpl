@@ -25,7 +25,7 @@
                         const int ih = oh * {{STRIDE}} - {{PAD}} + kh;
                         for (int kw = kw_s; kw < kw_e; ++kw) {
                             const int iw = ow * {{STRIDE}} - {{PAD}} + kw;
-                            const float* restrict i_ptr = &{{output_str}}[(ih * {{W_in}} + iw) * {{IC}} + c_base];
+                            const float* restrict i_ptr = &{{output_str}}[(ih * {{W_in}} + iw) * {{BLOCK_C}}*{{NB_BLOCK_C}} + c_base];
                             const float* restrict w_ptr_base = &weights_{{name}}_{{idx}}[((((bk * {{NB_BLOCK_C}} + bc) * {{KH}} + kh) * {{KW}} + kw) * {{BLOCK_C}} * {{BLOCK_K}})];
                             for (int c = 0; c < {{BLOCK_C}}; ++c) {
                                 float iv = i_ptr[c];
