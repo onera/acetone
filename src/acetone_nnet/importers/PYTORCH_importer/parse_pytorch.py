@@ -180,8 +180,7 @@ class ShapeAwareVisitor(FXGraphVisitor):
                     output_shape=node.meta['val'].shape,
                     weights=self.module.state_dict()[node.args[1].target].numpy(),
                     biases=self.module.state_dict()[node.args[2].target].numpy() if node.args[2] is not None else np.zeros(node.meta['val'].shape[1],dtype=np.float32),
-                    activation_function=Linear(),
-                    data_format=self.data_format
+                    activation_function=Linear()
                 )
             self.layerdic[node.args[0].name][0].next_layer.append(this_layer)
             this_layer.previous_layer.append(self.layerdic[node.args[0].name][0])

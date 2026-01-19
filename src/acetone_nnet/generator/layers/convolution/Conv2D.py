@@ -48,8 +48,7 @@ class Conv2D(Layer):
         output_shape: list[int],
         weights: np.ndarray,
         biases: np.ndarray,
-        activation_function: ActivationFunctions,
-        data_format = "channels_first"
+        activation_function: ActivationFunctions
     ) -> None:
         """Build a Conv2D layer."""
         super().__init__()
@@ -80,7 +79,6 @@ class Conv2D(Layer):
         self.weights = weights
         self.biases = biases
         self.activation_function = activation_function
-        self.data_format = data_format
         self.local_var = "sum"
 
         self.nb_weights = self.count_elements_array(self.weights)
