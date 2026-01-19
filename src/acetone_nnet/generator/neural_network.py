@@ -659,7 +659,7 @@ class CodeGenerator(ABC):
         """Generate C code for graph test dataset."""
         if self.bin_dataset:
             with Path.open(output_dir / "test_dataset.dat", "w+") as test_dataset_bin:
-                self.test_dataset.tofile(test_dataset_bin)
+                self.test_dataset.copy("C").tofile(test_dataset_bin)
         elif not self.read_ext_input:
             # Generate test source file
             dataset = "{"
@@ -928,7 +928,10 @@ class CodeGenerator(ABC):
 
         # Generate code to output graph data
         output_hash = {"path": self.layers[-1].path}
+        output_hash["output_height"] = self.layers[-1].output_height
+        output_hash["output_width"] = self.layers[-1].output_width
         if hasattr(self.layers[-1], "output_channels"):
+            output_hash["output_channels"] = self.layers[-1].output_channels
             if (self.data_format == "channels_first") and (self.gen_data_format=="channels_last"):
                 output_hash["channels_last_to_first"] = True
             elif (self.data_format == "channels_last") and (self.gen_data_format=="channels_first"):
@@ -936,9 +939,6 @@ class CodeGenerator(ABC):
             else:
                 output_hash["keep_channels"] = True
                 output_hash["output_size"] = self.layers[-1].size
-            output_hash["output_channels"] = self.layers[-1].output_channels
-            output_hash["output_height"] = self.layers[-1].output_height
-            output_hash["output_width"] = self.layers[-1].output_width
         else:
             output_hash["keep_channels"] = True
             output_hash["output_size"] = self.layers[-1].size

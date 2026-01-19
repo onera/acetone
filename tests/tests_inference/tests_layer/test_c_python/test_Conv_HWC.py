@@ -35,9 +35,9 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
 
     def testConv_direct_bloc(self):
         model = TestModel()
-        #model = model.to(memory_format=torch.channels_last)
+        model = model.to(memory_format=torch.channels_last)
         data = torch.rand(1,4,10,10,requires_grad=False,dtype=torch.float32)
-        #data = data.to(memory_format=torch.channels_last)
+        data = data.to(memory_format=torch.channels_last)
         program = export(model,(data,)) # torch fx export
         with torch.no_grad():
             torch_out = model(data)
@@ -46,12 +46,11 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
             program,
             conv_algo="direct_block",
             bin_dataset=True,
-            datatest_path=data.numpy(),
+            datatest_path=data.permute(0,2,3,1).numpy(),
             gen_data_format="channels_last"
             )
-        self.assertListAlmostEqual(acetone_result[1], torch_out.numpy().ravel())
-        self.assertListAlmostEqual(acetone_result[0], torch_out.numpy().ravel())
-#        self.assertListAlmostEqual(acetone_result[0], acetone_result[1])        
+        self.assertListAlmostEqual(acetone_result[1], torch_out.permute(0,2,3,1).numpy().ravel())
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))        
 
 if __name__ == "__main__":
     acetoneTestCase.main()

@@ -41,17 +41,8 @@ class InputLayer(Layer):
         super().__init__()
         self.idx = idx
         self.size = size
-        self.input_shape = input_shape
-        if len(self.input_shape) == 4:
-            if data_format=="channels_first":
-                self.output_channels = self.input_shape[1]
-                self.output_height = self.input_shape[2]
-                self.output_width = self.input_shape[3]
-            else:
-                self.output_channels = self.input_shape[3]
-                self.output_height = self.input_shape[1]
-                self.output_width = self.input_shape[2]
         self.data_format = data_format
+        self.input_shape = input_shape
         self.gen_data_format = gen_data_format
         self.name = "Input_layer"
         if original_name == "":
