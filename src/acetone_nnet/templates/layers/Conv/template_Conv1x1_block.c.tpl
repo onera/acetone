@@ -1,45 +1,34 @@
     // Conv2D 1x1 :
-    // Input HWC [{{IN_H}}][{{IN_W}}][{{C_IN}}]
-    // Output channel [{{C_OUT}}] bloc [{{C_OUT_BLOCK}}]
+    // Input HWC [{{H_in}}][{{W_in}}][{{C}}]
+    // Output channel [{{K}}] = [{{NB_BLOCK_K}}x{{BLOCK_K}}]
     // Stride: {{STRIDE}}    
-    for (int oh = 0; oh < {{IN_H}} / {{STRIDE}}; ++oh) {
-        for (int ow = 0; ow < {{IN_W}} / {{STRIDE}}; ++ow) {
-            
-            // Calculate input offset based on stride
-            int ih = oh * {{STRIDE}};
-            int iw = ow * {{STRIDE}};
-            const float* restrict pixel_in = &{{output_str}}[(ih * {{IN_W}} + iw) * {{C_IN}}];
-            float* restrict pixel_out = &tensor_temp[(oh * ({{IN_W}} / {{STRIDE}}) + ow) * {{C_OUT}}];
+    for (int oh = 0; oh < {{H_in}} / {{STRIDE}}; ++oh) {
+        for (int ow = 0; ow < {{W_in}} / {{STRIDE}}; ++ow) {            
+            const float* restrict pixel_in = &{{output_str}}[(oh * {{STRIDE}} * {{W_in}} + ow * {{STRIDE}}) * {{C}}];
+            float* restrict o_ptr = &tensor_temp[(oh * ({{W_in}} / {{STRIDE}}) + ow) * {{K}}];
 
-            for (int oc_b = 0; oc_b < {{C_OUT}}; oc_b += {{C_OUT_BLOCK}}) {
+            for (int ok_b = 0; ok_b < {{K}}; ok_b += {{BLOCK_K}}) {
                 
-                float sum_array[{{C_OUT_BLOCK}}] __attribute__((aligned(64)));
-                for (int k = 0; k < {{C_OUT_BLOCK}}; ++k)
-                    sum_array[k] = biases_{{name}}_{{idx}}[oc_b + k];
+                for (int k = 0; k < {{BLOCK_K}}; ++k)
+                    o_ptr[ok_b+k] = biases_{{name}}_{{idx}}[ok_b + k];
 
-                for (int ic = 0; ic < {{C_IN}}; ++ic) {
+                for (int ic = 0; ic < {{C}}; ++ic) {
                     float val_in = pixel_in[ic];
-
-                    // Weights layout: [Groups of BK][C_IN][BK]
-                    const float* restrict w_ptr = &weights_{{name}}_{{idx}}[(oc_b / {{C_OUT_BLOCK}}) * {{C_IN}} * {{C_OUT_BLOCK}} + (ic * {{C_OUT_BLOCK}})];
-
+                    // Weights layout: [NB_BK][C][BK] = [{{NB_BLOCK_K}}][{{C}}][{{BLOCK_K}}]
+                    const float* restrict w_ptr = &weights_{{name}}_{{idx}}[(ok_b / {{BLOCK_K}}) * {{C}} * {{BLOCK_K}} + (ic * {{BLOCK_K}})];
                     #pragma omp simd
-                    for (int b = 0; b < {{C_OUT_BLOCK}}; ++b) {
-                        sum_array[b] += val_in * w_ptr[b];
-                    }
+                    for (int k = 0; k < {{BLOCK_K}}; ++k)
+                        o_ptr[ok_b+k] += val_in * w_ptr[k];
                 }
-
-                // Store blocked result to NHWC output
-                {{#activation_function}}
-                for (int b = 0; b < {{C_OUT_BLOCK}}; ++b)
-                           sum_array[b] = {{{activation_function}}};
-                {{/activation_function}}
-                for (int b = 0; b < {{C_OUT_BLOCK}}; ++b)
-                    pixel_out[oc_b + b] = sum_array[b];
             }
-        }
+       }
     }
     for (k = 0; k < {{size}}; ++k)
     {
+        {{#activation_function}}
+        output_{{road}}[k] = {{{activation_function}}};
+        {{/activation_function}}
+        {{^activation_function}}
         output_{{road}}[k] = tensor_temp[k];
+        {{/activation_function}}
     }

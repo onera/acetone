@@ -26,14 +26,34 @@ from acetone_nnet.versioning.layer_factories import conv2d_factory
 
 from .Conv2D import Conv2D
 import logging
+import numpy as np
 
-def transform_to_6d_blocked_layout(weight, block_k, block_c):
-    # KCHW -> [NB_K][NB_C][KH][KW][BLOCK_C][BLOCK_K]
+def winograd_weight_transform(g):
+    G = np.array([[1.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.0, 0.0, 1.0]])
+    return G @ g @ G.T
+
+def transform_to_6d_blocked_layout(weight, block_k, block_c, strides):
     K, C, KH, KW = weight.shape
     nb_k, nb_c = K // block_k, C // block_c
     layout = weight.copy()
-    layout = layout.reshape(nb_k, block_k, nb_c, block_c, KH, KW)
-    return layout.transpose(0, 2, 4, 5, 3, 1).copy("C")
+    #case conv1x1
+    if layout.shape[2]==1 and layout.shape[3]==1:
+        layout = layout.reshape(nb_k, block_k, C) #no bloc_c for 1x1 conv
+        return layout.transpose(0, 2, 1).copy("C")
+    #case winograd 3x3 stride 1
+    elif layout.shape[2]==3 and layout.shape[3]==3 and strides==1:
+        w_orig = layout
+        w_win = np.zeros((nb_k, 4, 4, C, K), dtype=np.float32)
+        for kb in range(nb_k):
+            for ic in range(C):
+                for bk in range(block_k):
+                    oc = kb * block_k + bk
+                    w_win[kb, :, :, ic, bk] = winograd_weight_transform(w_orig[oc, ic])
+        return w_win
+    else:
+        # KCHW -> [NB_K][NB_C][KH][KW][BLOCK_C][BLOCK_K]
+        layout = layout.reshape(nb_k, block_k, nb_c, block_c, KH, KW)
+        return layout.transpose(0, 2, 4, 5, 3, 1).copy("C")
 
 class Conv2Ddirect_block(Conv2D):
     """Implements Conv2D using the six-loops algorithm (direct conv) with blocking of channels."""
@@ -41,7 +61,7 @@ class Conv2Ddirect_block(Conv2D):
     def __init__(self: Self, **kwargs: Any) -> None:
         """Build a Convolution layer with 6 loops implementation."""
         super().__init__(**kwargs)
-        self.layout = transform_to_6d_blocked_layout(self.weights,min(64,self.nb_filters),self.input_channels)
+        self.layout = transform_to_6d_blocked_layout(self.weights,min(64,self.nb_filters),self.input_channels, self.strides)
 
     def generate_inference_code_layer(self: Self) -> str:
         """Generate computation code for layer."""
@@ -56,7 +76,7 @@ class Conv2Ddirect_block(Conv2D):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
         if self.activation_function.name != "linear":
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str("o_ptr[k]")
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
 
         assert(self.pad_left == self.pad_top)
         assert(self.dilation_rate == 1)
@@ -78,8 +98,13 @@ class Conv2Ddirect_block(Conv2D):
         params["NB_BLOCK_K"] = self.nb_filters // params["BLOCK_K"]
 
         mustach_hash.update(params)
-
-        with open(self.template_path / "layers" / "Conv" / "template_Conv_direct_block.c.tpl") as template_file:
+        if self.kernel_h==3 and self.kernel_w==3 and self.strides==1:
+            tpl = "template_Conv3x3_winograd.c.tpl"
+        elif self.kernel_h==1 and self.kernel_w==1:
+            tpl = "template_Conv1x1_block.c.tpl"
+        else:
+            tpl = "template_Conv_direct_block.c.tpl"
+        with open(self.template_path / "layers" / "Conv" / tpl) as template_file:
             template = template_file.read()
         template_file.close()
 

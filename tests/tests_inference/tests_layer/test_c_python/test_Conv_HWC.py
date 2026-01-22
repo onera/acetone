@@ -24,17 +24,15 @@ import torch
 from tests.tests_inference import acetoneTestCase
 from torch.export import export
 class TestModel(torch.nn.Module):
-    def __init__(self):
+    def __init__(self,kernel,stride=1,padding=0):
         super(TestModel, self).__init__()        
-        self.conv = torch.nn.Conv2d(4,5,3,padding=1)
+        self.conv = torch.nn.Conv2d(4,5,kernel, stride=stride, padding=padding)
+        self.act = torch.nn.ReLU()
     def forward(self, x):
-        return self.conv(x)
+        return self.act(self.conv(x))
 
-class TestConv(acetoneTestCase.AcetoneTestCase):
-    """Test for Conv Layer"""
-
-    def testConv_direct_bloc(self):
-        model = TestModel()
+def test_HWC_conv(tester, kernel, padding=0, stride=1):
+        model = TestModel(kernel,stride=stride,padding=padding)
         model = model.to(memory_format=torch.channels_last)
         data = torch.rand(1,4,10,10,requires_grad=False,dtype=torch.float32)
         data = data.to(memory_format=torch.channels_last)
@@ -42,15 +40,41 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
         with torch.no_grad():
             torch_out = model(data)
         acetone_result = acetoneTestCase.run_acetone_for_test(
-            self.tmpdir_name, 
+            tester.tmpdir_name, 
             program,
             conv_algo="direct_block",
             bin_dataset=True,
             datatest_path=data.permute(0,2,3,1).numpy(),
             gen_data_format="channels_last"
             )
-        self.assertListAlmostEqual(acetone_result[1], torch_out.permute(0,2,3,1).numpy().ravel())
-        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))        
+        tester.assertListAlmostEqual(acetone_result[1], torch_out.permute(0,2,3,1).numpy().ravel())
+        tester.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))        
+
+
+class TestConv(acetoneTestCase.AcetoneTestCase):
+    def testConv_direct_bloc(self):
+        test_HWC_conv(self,5)
+
+    def testConv_direct_bloc_pad1(self):
+        test_HWC_conv(self,5,1)
+
+    def testConv_direct_bloc_pad1_str2(self):
+        test_HWC_conv(self,5,1,2)
+
+    def testConv_winograd(self):
+        test_HWC_conv(self,3)
+
+    def testConv_winograd_pad1(self):
+        test_HWC_conv(self,3,1)
+
+    def testConv_winograd_pad1_str2(self):
+        test_HWC_conv(self,3,1,2)
+
+    def testConv_1x1(self):
+        test_HWC_conv(self,1)
+
+    def testConv_1x1_str2(self):
+        test_HWC_conv(self,1,stride=2)
 
 if __name__ == "__main__":
     acetoneTestCase.main()

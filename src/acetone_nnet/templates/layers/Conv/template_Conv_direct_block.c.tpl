@@ -35,13 +35,15 @@
                         }
                     }
                 }
-                {{#activation_function}}
-                for (int k = 0; k < {{BLOCK_K}}; ++k) o_ptr[k] = {{{activation_function}}};
-                {{/activation_function}}
             }
         }
     }
     for (k = 0; k < {{size}}; ++k)
     {
+        {{#activation_function}}
+        output_{{road}}[k] = {{{activation_function}}};
+        {{/activation_function}}
+        {{^activation_function}}
         output_{{road}}[k] = tensor_temp[k];
+        {{/activation_function}}
     }
