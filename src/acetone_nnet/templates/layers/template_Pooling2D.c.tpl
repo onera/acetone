@@ -1,4 +1,4 @@
-    // {{name}}_{{idx}}{{comment}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
+    // {{name}}_{{idx}}{{comment}} CHW layout {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
     for (f = 0; f < {{input_channels}}; ++f)
     {
         for (i = 0; i < {{output_height}}; ++i)

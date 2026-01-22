@@ -43,13 +43,23 @@ class InputLayerDefault(InputLayer):
         mustach_hash["original_name"] = self.original_name
         mustach_hash["idx"] = f"{self.idx:02d}"
         mustach_hash["road"] = self.path
-
-        if self.data_format == "channels_last" and len(self.input_shape) == 4:
-            mustach_hash["channels_last"] = True
-            mustach_hash["input_channels"] = self.output_channels
-            mustach_hash["input_height"] = self.output_height
-            mustach_hash["input_width"] = self.output_width
+        if len(self.input_shape) == 4:
+            output_channels = self.input_shape[1]
+            output_height = self.input_shape[2]
+            output_width = self.input_shape[3]
+        if len(self.input_shape) == 4:
+            if self.data_format=="channels_first" and self.gen_data_format == "channels_last":
+                mustach_hash["channels_first_to_last"] = True
+            elif self.data_format=="channels_last" and self.gen_data_format == "channels_first":
+                mustach_hash["channels_last_to_first"] = True
+            else:
+                mustach_hash["keep_channels"] = True
+                mustach_hash["size"] = self.size
+            mustach_hash["input_channels"] = output_channels
+            mustach_hash["input_height"] = output_height
+            mustach_hash["input_width"] = output_width
         else:
+            mustach_hash["keep_channels"] = True
             mustach_hash["size"] = self.size
 
         with open(
@@ -73,6 +83,7 @@ def input_default_implementation(
         size=old_layer.size,
         input_shape=old_layer.input_shape,
         data_format=old_layer.data_format,
+        gen_data_format=old_layer.gen_data_format
     )
 
 

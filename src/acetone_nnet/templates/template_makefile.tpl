@@ -30,7 +30,7 @@ test_dataset.o: test_dataset.dat
 	objcopy -I binary  -O {{.}} --add-symbol nn_test_inputs=.rodata:0 --rename-section .data=.rodata $< $@
 
 parameters.o: parameters.dat
-	objcopy -I binary  -O {{.}} {{symtab}} --rename-section .data=.rodata $< $@
+	objcopy -I binary  -O {{.}} {{symtab}} --set-section-alignment .data={{align}} --rename-section .data=.rodata $< $@
 
 {{/bin_dataset}}
 

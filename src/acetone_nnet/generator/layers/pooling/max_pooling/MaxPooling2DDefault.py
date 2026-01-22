@@ -61,7 +61,6 @@ class MaxPooling2DDefault(MaxPooling2D):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.output_var)
 
         mustach_hash["input_channels"] = self.input_channels
         mustach_hash["output_height"] = self.output_height
@@ -73,11 +72,22 @@ class MaxPooling2DDefault(MaxPooling2D):
         mustach_hash["pad_top"] = self.pad_top
         mustach_hash["input_height"] = self.input_height
         mustach_hash["input_width"] = self.input_width
-        mustach_hash["specific_function"] = self.specific_function(
-            f"jj + {self.input_width}*(ii + {self.input_height}*f)", output_str)
+        suffix = ""
+        if self.version == "channels_last":
+            mustach_hash["channels_last"] = True
+            mustach_hash["output_str"] = output_str
+            suffix = "_HWC"
+            mustach_hash["is_maxpool"] = True
+            if self.activation_function.name != "linear":
+                mustach_hash["activation_function"] = self.activation_function.write_activation_str("o_ptr[c]")
+            mustach_hash["specific_function"] = self.specific_function(
+            f"f + {self.input_width}*(ii + {self.input_height}*jj)", output_str)
+        else:
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.output_var)
+            mustach_hash["specific_function"] = self.specific_function(
+                f"jj + {self.input_width}*(ii + {self.input_height}*f)", output_str)
 
-
-        with open(self.template_path / "layers" / "template_Pooling2D.c.tpl") as template_file:
+        with open(self.template_path / "layers" / f"template_Pooling2D{suffix}.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -107,5 +117,9 @@ max_pooling_factory.register_implementation(
 )
 max_pooling_factory.register_implementation(
     "default",
+    max_pooling_default_implementation,
+)
+max_pooling_factory.register_implementation(
+    "channels_last",
     max_pooling_default_implementation,
 )

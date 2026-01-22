@@ -25,7 +25,7 @@ from typing_extensions import Self
 from acetone_nnet.versioning.layer_factories import average_pooling_factory
 
 from .AveragePooling2D import AveragePooling2D
-
+import logging
 
 class AveragePooling2DDefault(AveragePooling2D):
     """AveragePooling layer with default implementation class."""
@@ -62,9 +62,6 @@ class AveragePooling2DDefault(AveragePooling2D):
         mustach_hash["comment"] = self.activation_function.comment
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
-
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.output_var)
-
         mustach_hash["input_channels"] = self.input_channels
         mustach_hash["output_height"] = self.output_height
         mustach_hash["output_width"] = self.output_width
@@ -75,10 +72,23 @@ class AveragePooling2DDefault(AveragePooling2D):
         mustach_hash["pad_top"] = self.pad_top
         mustach_hash["input_height"] = self.input_height
         mustach_hash["input_width"] = self.input_width
-        mustach_hash["specific_function"] = self.specific_function(
-            f"jj + {self.input_width}*(ii + {self.input_height}*f)", output_str)
 
-        with open(self.template_path / "layers" / "template_Pooling2D.c.tpl") as template_file:
+        suffix = ""
+        if self.version == "channels_last":
+            mustach_hash["channels_last"] = True
+            mustach_hash["output_str"] = output_str
+            suffix = "_HWC"
+            mustach_hash["is_avgpool"] = True
+            if self.activation_function.name != "linear":
+                mustach_hash["activation_function"] = self.activation_function.write_activation_str("o_ptr[c]")
+            mustach_hash["specific_function"] = self.specific_function(
+            f"f + {self.input_width}*(ii + {self.input_height}*jj)", output_str)
+        else:
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str(self.output_var)
+            mustach_hash["specific_function"] = self.specific_function(
+                f"jj + {self.input_width}*(ii + {self.input_height}*f)", output_str)
+
+        with open(self.template_path / "layers" / f"template_Pooling2D{suffix}.c.tpl") as template_file:
             template = template_file.read()
         template_file.close()
 
@@ -108,5 +118,9 @@ average_pooling_factory.register_implementation(
 )
 average_pooling_factory.register_implementation(
     "default",
+    average_pooling_default_implementation,
+)
+average_pooling_factory.register_implementation(
+    "channels_last",
     average_pooling_default_implementation,
 )
