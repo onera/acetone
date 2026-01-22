@@ -1,7 +1,8 @@
-    // Conv2D 1x1 :
-    // Input HWC [{{H_in}}][{{W_in}}][{{C}}]
-    // Output channel [{{K}}] = [{{NB_BLOCK_K}}x{{BLOCK_K}}]
-    // Stride: {{STRIDE}}    
+    /* {{name}}_{{idx}} 1x1 - Format HWC {{comment}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
+     * Input HWC [{{H_in}}][{{W_in}}][{{C}}]
+     * Output channel [{{K}}] = [{{NB_BLOCK_K}}x{{BLOCK_K}}]
+     * Stride: {{STRIDE}}
+     */
     for (int oh = 0; oh < {{H_in}} / {{STRIDE}}; ++oh) {
         for (int ow = 0; ow < {{W_in}} / {{STRIDE}}; ++ow) {            
             const float* restrict pixel_in = &{{output_str}}[(oh * {{STRIDE}} * {{W_in}} + ow * {{STRIDE}}) * {{C}}];

@@ -74,6 +74,7 @@ class MaxPooling2DDefault(MaxPooling2D):
         mustach_hash["input_width"] = self.input_width
         suffix = ""
         if self.version == "channels_last":
+            mustach_hash["channels_last"] = True
             mustach_hash["output_str"] = output_str
             suffix = "_HWC"
             mustach_hash["is_maxpool"] = True

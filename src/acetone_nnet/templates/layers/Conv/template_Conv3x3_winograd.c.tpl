@@ -1,9 +1,9 @@
     /**
-    * Conv2D 3x3 Noyau Winograd F(2,2, 3,3) - Format HWC
+    * {{name}}_{{idx}} 3x3 Winograd F(2,2, 3,3) - Format HWC {{comment}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
     * In HWC: [{{H_in}}][{{W_in}}][{{C}}]
     * Out HWK: [{{H_out}}][{{W_out}}][{{K}}]
     * Bloc K : {{BLOCK_K}}
-    * Pad HW: [{{PAD}}][{{PAD}}] 
+    * Pad : [{{PAD}}] Stride : 1
     */
     for (int k_base = 0; k_base < {{K}}; k_base += {{BLOCK_K}}){
         /* Parcours direct de l'image par tuiles de 2x2 */

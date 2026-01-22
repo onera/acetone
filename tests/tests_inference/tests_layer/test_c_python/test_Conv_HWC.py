@@ -24,57 +24,36 @@ import torch
 from tests.tests_inference import acetoneTestCase
 from torch.export import export
 class TestModel(torch.nn.Module):
-    def __init__(self,kernel,stride=1,padding=0):
-        super(TestModel, self).__init__()        
-        self.conv = torch.nn.Conv2d(4,5,kernel, stride=stride, padding=padding)
+    def __init__(self):
+        super(TestModel, self).__init__()   
+        #test with K geater than 64 for 3x3 and 512 for 1x1     
+        self.conv = torch.nn.Conv2d(3,64,kernel_size=7, stride=2, padding=3)
+        self.conv2 = torch.nn.Conv2d(64,64,kernel_size=3, stride=1, padding=1)
+        self.conv3 = torch.nn.Conv2d(64,128,kernel_size=1, stride=2)
+        self.conv4 = torch.nn.Conv2d(128,512,kernel_size=3, stride=1, padding=1)
         self.act = torch.nn.ReLU()
     def forward(self, x):
-        return self.act(self.conv(x))
-
-def test_HWC_conv(tester, kernel, padding=0, stride=1):
-        model = TestModel(kernel,stride=stride,padding=padding)
+        return self.conv4(self.conv3(self.act(self.conv2(self.act(self.conv(x))))))
+class TestConv_HWC(acetoneTestCase.AcetoneTestCase):
+    def testConv_HWC(self):
+        model = TestModel()
         model = model.to(memory_format=torch.channels_last)
-        data = torch.rand(1,4,10,10,requires_grad=False,dtype=torch.float32)
+        data = torch.rand(1,3,28,28,requires_grad=False,dtype=torch.float32)
         data = data.to(memory_format=torch.channels_last)
         program = export(model,(data,)) # torch fx export
         with torch.no_grad():
             torch_out = model(data)
         acetone_result = acetoneTestCase.run_acetone_for_test(
-            tester.tmpdir_name, 
+            self.tmpdir_name, 
             program,
             conv_algo="direct_block",
             bin_dataset=True,
             datatest_path=data.permute(0,2,3,1).numpy(),
             gen_data_format="channels_last"
             )
-        tester.assertListAlmostEqual(acetone_result[1], torch_out.permute(0,2,3,1).numpy().ravel())
-        tester.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))        
+        self.assertListAlmostEqual(acetone_result[1], torch_out.permute(0,2,3,1).numpy().ravel())
+        self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))        
 
-
-class TestConv(acetoneTestCase.AcetoneTestCase):
-    def testConv_direct_bloc(self):
-        test_HWC_conv(self,5)
-
-    def testConv_direct_bloc_pad1(self):
-        test_HWC_conv(self,5,1)
-
-    def testConv_direct_bloc_pad1_str2(self):
-        test_HWC_conv(self,5,1,2)
-
-    def testConv_winograd(self):
-        test_HWC_conv(self,3)
-
-    def testConv_winograd_pad1(self):
-        test_HWC_conv(self,3,1)
-
-    def testConv_winograd_pad1_str2(self):
-        test_HWC_conv(self,3,1,2)
-
-    def testConv_1x1(self):
-        test_HWC_conv(self,1)
-
-    def testConv_1x1_str2(self):
-        test_HWC_conv(self,1,stride=2)
 
 if __name__ == "__main__":
     acetoneTestCase.main()

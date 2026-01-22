@@ -75,6 +75,7 @@ class AveragePooling2DDefault(AveragePooling2D):
 
         suffix = ""
         if self.version == "channels_last":
+            mustach_hash["channels_last"] = True
             mustach_hash["output_str"] = output_str
             suffix = "_HWC"
             mustach_hash["is_avgpool"] = True
