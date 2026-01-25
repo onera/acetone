@@ -9,6 +9,6 @@
                 output += {{#alpha}}{{.}}*{{/alpha}}{{A}}[p*{{m}}+i]*{{#direct}}*{{/direct}}({{B}}[p*{{n}}+j]);
             }   
             output += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[j];
-            tensor_temp[i*{{n}} + j] = {{{activation_function}}};
+            ctx->tensor_temp[i*{{n}} + j] = {{{activation_function}}};
         }
     }

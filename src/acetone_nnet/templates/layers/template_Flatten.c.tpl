@@ -7,12 +7,12 @@
         {
             for (j = 0; j < {{input_width}};  ++j)
             {
-                tensor_temp[(i*{{input_width}} + j)*{{input_channels}} + f] = output_{{path}}[(f*{{input_height}} + i)*{{input_width}} + j];
+                ctx->tensor_temp[(i*{{input_width}} + j)*{{input_channels}} + f] = output_{{path}}[(f*{{input_height}} + i)*{{input_width}} + j];
             }
         }
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{path}}[k] = tensor_temp[k];
+        output_{{path}}[k] = ctx->tensor_temp[k];
     }
 {{/channels_last}}

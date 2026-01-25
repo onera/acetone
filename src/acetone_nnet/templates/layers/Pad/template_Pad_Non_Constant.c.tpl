@@ -11,17 +11,17 @@
 
                 {{{change_indice}}}
 
-                tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{output_str}}[new_j + {{input_width}} * (new_i + {{input_height}} * new_f)];
+                ctx->tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = ctx->{{output_str}}[new_j + {{input_width}} * (new_i + {{input_height}} * new_f)];
                 {{^linear}}
-                tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{{activation_function}}};
+                ctx->tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{{activation_function}}};
                 {{/linear}}
                 {{#activation_function}}
-                tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{{activation_function}}};
+                ctx->tensor_temp[j + {{output_width}} * (i + {{output_height}} * f)] = {{{activation_function}}};
                 {{/activation_function}}
             }
         }
     }
     for(k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = tensor_temp[k];
+        ctx->output_{{road}}[k] = ctx->tensor_temp[k];
     }

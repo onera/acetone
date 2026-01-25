@@ -12,9 +12,9 @@
                 int jj = w * {{strides}} - {{pad_left}} + j_offset;
                 int j = w*{{output_height}} + h;
                 if (ii >= 0 && ii < {{input_height}} && jj >= 0 && jj < {{input_width}})
-                    output_{{road}}[j*{{patches_height}} + i] = {{output_str}}[(c_offset*{{input_height}} + ii)*{{input_width}} + jj];
+                    ctx->output_{{road}}[j*{{patches_height}} + i] = ctx->{{output_str}}[(c_offset*{{input_height}} + ii)*{{input_width}} + jj];
                 else
-                    output_{{road}}[j*{{patches_height}} + i] = 0;
+                    ctx->output_{{road}}[j*{{patches_height}} + i] = 0;
             }
         }
     }
