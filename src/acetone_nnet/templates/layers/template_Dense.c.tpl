@@ -4,13 +4,13 @@
         dotproduct = 0;
         for (j = 0; j < {{prev_size}}; ++j)
         {
-            dotproduct += {{output_str}}[j] * weights_{{name}}_{{idx}}[((j * {{size}}) + i)];
+            dotproduct += ctx->{{output_str}}[j] * weights_{{name}}_{{idx}}[((j * {{size}}) + i)];
         }
         dotproduct += biases_{{name}}_{{idx}}[i];
-        tensor_temp[i] = {{{activation_function}}};
+        ctx->tensor_temp[i] = {{{activation_function}}};
 
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = tensor_temp[k];
+        ctx->output_{{road}}[k] = ctx->tensor_temp[k];
     }

@@ -787,6 +787,7 @@ class CodeGenerator(ABC):
     def generate_target_header_file(self: Self, output_dir: Path) -> None:
         logging.info("Generation of target header file")
         mustach_hash = {}
+
         # mustach_hash[self.target] = True
         # Generate C code
         template = (
@@ -966,6 +967,7 @@ class CodeGenerator(ABC):
         mustach_hash = {
             "data_type": self.data_type,
             "path": list(range(self.maxpath)),
+            "max_batch_size":32
         }
         mustach_hash["temp_data_type"] = (
             self.target_cfg["quantization"]["temp_dtype"]

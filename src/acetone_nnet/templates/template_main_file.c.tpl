@@ -1,6 +1,7 @@
 #include <stdio.h> 
 #include <math.h> 
 #include <time.h> 
+#include <omp.h> 
 #include "test_dataset.h" 
 #include "inference.h"
 {{#max}}
@@ -13,6 +14,7 @@
 {{/min}}
 
 struct timeval GetTimeStamp();
+
 int main(int argc, char** argv)
 {
     int i;
@@ -39,9 +41,13 @@ int main(int argc, char** argv)
     static {{data_type}} predictions[nb_samples][nn_output_size];
 
     clock_t t0 = clock();
-    for (i = 0; i < nb_samples; ++i)
-    {
-        inference(predictions[i], nn_test_inputs[i]);
+    for (j = 0; j < nb_samples; j+=MAX_BATCH_SIZE){
+        int fin_bloc = j + MAX_BATCH_SIZE > nb_samples ? nb_samples % MAX_BATCH_SIZE : MAX_BATCH_SIZE;
+        #pragma omp parallel for num_threads(MAX_BATCH_SIZE)
+        for (i = 0; i < fin_bloc; ++i)
+        {
+            inference(&Context[i],&predictions[j+i], &nn_test_inputs[j+i]);
+        }
     }
     clock_t t1 = clock();
 

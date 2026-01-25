@@ -38,7 +38,7 @@ parameters.o: parameters.dat
 $(EXEC): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LBLIBS) $(LDFLAGS)
 
-$(EXEC).so: inference.c global_vars.o parameters.o train_hook.c
+$(EXEC).so: inference.c parameters.o train_hook.c global_vars.c
 	$(CC) $(CFLAGS) -fPIC -shared -o $@ $^ $(LBLIBS) $(LDFLAGS)
 
 clean:
