@@ -6,7 +6,7 @@
             register float weight = {{A}}[i*{{ldA}}+p];
             for(j = 0; j < {{n}}; ++j)
             {
-                ctx->tensor_temp[i*{{ldC}} + j] += weight * {{#direct}}*{{/direct}}({{B}}[p*{{ldB}} + j]);
+                ctx->tensor_temp[i*{{ldC}} + j] += weight * {{#direct}}*{{/direct}}(ctx->{{B}}[p*{{ldB}} + j]);
             }
         }
         for(j = 0; j < {{n}}; ++j)
