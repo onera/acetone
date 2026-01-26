@@ -5,15 +5,15 @@
         {
             for (j = 0; j < {{output_width}}; ++j)
             {
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = 0;
+                ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = 0;
                 for (k = 0; k < {{shared_dimension}}; ++k)
                 {
-                    tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] += {{output_str_left}}[k + {{shared_dimension}}*(i + {{output_height}}*f)]*{{output_str_right}}[j + {{output_width}}*(k + {{shared_dimension}}*f)];
+                    ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] += ctx->{{output_str_left}}[k + {{shared_dimension}}*(i + {{output_height}}*f)]*ctx->{{output_str_right}}[j + {{output_width}}*(k + {{shared_dimension}}*f)];
                 }
             }
         }
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = {{#activation}}tensor_temp[k]{{/activation}};
+        ctx->output_{{road}}[k] = {{#activation}}ctx->tensor_temp[k]{{/activation}};
     }

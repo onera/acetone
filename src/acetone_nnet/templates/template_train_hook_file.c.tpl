@@ -1,13 +1,19 @@
 #include <string.h>
 #include <stdio.h>
+#include <omp.h>
 #include "inference.h"
 #include "test_dataset.h"
-void batch_loop(float *prediction, float *nn_input, int batch_size)
+
+void batch_loop(float * restrict predictions, float * restrict nn_input, int batch_size)
 {
-    int i;
-    for (i = 0; i < batch_size; ++i)
-    {
-        inference(&prediction[i*nn_output_size], &nn_input[i*nn_input_size]);
+    int i,j;
+    for (j = 0; j < batch_size; j+=MAX_BATCH_SIZE){
+        int fin_bloc = j + MAX_BATCH_SIZE > batch_size ? batch_size % MAX_BATCH_SIZE : MAX_BATCH_SIZE;
+        #pragma omp parallel for num_threads(MAX_BATCH_SIZE)
+        for (i = 0; i < fin_bloc; ++i)
+        {
+            inference(&Context[i],&predictions[(j+i)*nn_output_size], &nn_input[(j+i)*nn_input_size]);
+        }
     }
 }
 

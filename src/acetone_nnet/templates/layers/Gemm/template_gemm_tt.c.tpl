@@ -6,9 +6,9 @@
             float register sum = 0;
             for (p = 0; p < {{k}}; ++p)
             {
-                sum += {{#alpha}}{{.}}*{{/alpha}}{{A}}[p*{{m}} +i]*{{#direct}}*{{/direct}}({{B}}[j*{{k}}+p]);
+                sum += {{#alpha}}{{.}}*{{/alpha}}ctx->{{A}}[p*{{m}} +i]*{{#direct}}*{{/direct}}({{B}}[j*{{k}}+p]);
             }
             sum += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[j];
-            tensor_temp[i*{{n}}+j] = {{{activation_function}}};
+            ctx->tensor_temp[i*{{n}}+j] = {{{activation_function}}};
         }
     }

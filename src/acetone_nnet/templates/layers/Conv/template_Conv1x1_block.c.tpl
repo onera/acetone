@@ -5,8 +5,8 @@
      */
     for (int oh = 0; oh < {{H_in}} / {{STRIDE}}; ++oh) {
         for (int ow = 0; ow < {{W_in}} / {{STRIDE}}; ++ow) {            
-            const float* restrict pixel_in = &{{output_str}}[(oh * {{STRIDE}} * {{W_in}} + ow * {{STRIDE}}) * {{C}}];
-            float* restrict o_ptr = &tensor_temp[(oh * ({{W_in}} / {{STRIDE}}) + ow) * {{K}}];
+            const float* restrict pixel_in = &ctx->{{output_str}}[(oh * {{STRIDE}} * {{W_in}} + ow * {{STRIDE}}) * {{C}}];
+            float* restrict o_ptr = &ctx->tensor_temp[(oh * ({{W_in}} / {{STRIDE}}) + ow) * {{K}}];
 
             for (int ok_b = 0; ok_b < {{K}}; ok_b += {{BLOCK_K}}) {
                 
@@ -27,9 +27,9 @@
     for (k = 0; k < {{size}}; ++k)
     {
         {{#activation_function}}
-        output_{{road}}[k] = {{{activation_function}}};
+        ctx->output_{{road}}[k] = {{{activation_function}}};
         {{/activation_function}}
         {{^activation_function}}
-        output_{{road}}[k] = tensor_temp[k];
+        ctx->output_{{road}}[k] = ctx->tensor_temp[k];
         {{/activation_function}}
     }

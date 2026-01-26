@@ -29,13 +29,13 @@
             {
                 j = indice_Gather_{{idx}}[k];
     {{/widths}}
-                tensor_temp[position] = {{output_str}}[j + {{input_width}}*(i + {{input_height}}*f)];
-                tensor_temp[position] = {{{activation_function}}};
+                ctx->tensor_temp[position] = ctx->{{output_str}}[j + {{input_width}}*(i + {{input_height}}*f)];
+                ctx->tensor_temp[position] = {{{activation_function}}};
                 position++;
             }
         }
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = tensor_temp[k];
+        ctx->output_{{road}}[k] = ctx->tensor_temp[k];
     }

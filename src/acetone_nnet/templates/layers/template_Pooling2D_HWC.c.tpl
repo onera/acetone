@@ -17,7 +17,7 @@
                 
                 int temp_w_end = {{input_width}} + {{pad_left}} - ow * {{strides}};
                 int kw_end = ({{pool_size}} < temp_w_end) ? {{pool_size}} : temp_w_end;
-                float* out_ptr = &tensor_temp[(oh * {{output_width}} + ow) * {{input_channels}}];
+                float* out_ptr = &ctx->tensor_temp[(oh * {{output_width}} + ow) * {{input_channels}}];
 
                 // Initialize channel accumulators
                 for (int c = 0; c < {{input_channels}}; ++c) {
@@ -31,7 +31,7 @@
                     for (int kw = kw_start; kw < kw_end; ++kw) {
                         int iw = ow * {{strides}} + kw - {{pad_left}};
                         
-                        const float* in_ptr = &{{output_str}}[(ih * {{input_width}} + iw) * {{input_channels}}];
+                        const float* in_ptr = &ctx->{{output_str}}[(ih * {{input_width}} + iw) * {{input_channels}}];
 
                         // Innermost Channel Loop 
                         for (int c = 0; c < {{input_channels}}; ++c) {
@@ -61,6 +61,6 @@
         }
         for (k = 0; k < {{size}}; ++k)
         {
-            output_{{road}}[k] = tensor_temp[k];
+            ctx->output_{{road}}[k] = ctx->tensor_temp[k];
         }
     }

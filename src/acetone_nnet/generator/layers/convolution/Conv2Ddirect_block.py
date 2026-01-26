@@ -78,7 +78,7 @@ class Conv2Ddirect_block(Conv2D):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
         if self.activation_function.name != "linear":
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str("ctx->tensor_temp[k]")
 
         assert(self.pad_left == self.pad_top)
         assert(self.dilation_rate == 1)

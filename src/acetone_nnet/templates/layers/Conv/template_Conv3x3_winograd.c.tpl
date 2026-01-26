@@ -18,7 +18,7 @@
                 /* Chargement du bloc 4x4 d'entrée avec gestion du padding sans IF */
                 for(int r = 0; r < 4; ++r) {
                     int ih = oh + r - {{PAD}};
-                    const float* row_ptr = &{{output_str}}[ih * {{W_in}} * {{C}} + ic];
+                    const float* row_ptr = &ctx->{{output_str}}[ih * {{W_in}} * {{C}} + ic];
                     int valid_h = (ih >= 0 && ih < {{H_in}});
                     
                     for(int c = 0; c < 4; ++c) {
@@ -72,22 +72,22 @@
 
             }
             {
-                float *restrict o_ptr = &tensor_temp[((oh + 0) * {{W_out}} + (ow + 0)) * {{K}} + k_base];
+                float *restrict o_ptr = &ctx->tensor_temp[((oh + 0) * {{W_out}} + (ow + 0)) * {{K}} + k_base];
                 for (int k = 0; k < {{BLOCK_K}}; k++)
                     o_ptr[k] = m_temp[0][0][k] + m_temp[0][1][k] + m_temp[0][2][k] + biases_{{name}}_{{idx}}[k_base + k];
             }
             {    
-                float *restrict o_ptr = &tensor_temp[((oh + 0) * {{W_out}} + (ow + 1)) * {{K}} + k_base];
+                float *restrict o_ptr = &ctx->tensor_temp[((oh + 0) * {{W_out}} + (ow + 1)) * {{K}} + k_base];
                 for (int k = 0; k < {{BLOCK_K}}; k++)
                     o_ptr[k] = m_temp[0][1][k] - m_temp[0][2][k] - m_temp[0][3][k] + biases_{{name}}_{{idx}}[k_base + k];
             }
             {
-                float *restrict o_ptr = &tensor_temp[((oh + 1) * {{W_out}} + (ow + 0)) * {{K}} + k_base];
+                float *restrict o_ptr = &ctx->tensor_temp[((oh + 1) * {{W_out}} + (ow + 0)) * {{K}} + k_base];
                 for (int k = 0; k < {{BLOCK_K}}; k++)
                     o_ptr[k] = m_temp[1][0][k] + m_temp[1][1][k] + m_temp[1][2][k] + biases_{{name}}_{{idx}}[k_base + k];
             }
             {    
-                float *restrict o_ptr = &tensor_temp[((oh + 1) * {{W_out}} + (ow + 1)) * {{K}} + k_base];
+                float *restrict o_ptr = &ctx->tensor_temp[((oh + 1) * {{W_out}} + (ow + 1)) * {{K}} + k_base];
                 for (int k = 0; k < {{BLOCK_K}}; k++)
                     o_ptr[k] = m_temp[1][1][k] - m_temp[1][2][k] - m_temp[1][3][k] + biases_{{name}}_{{idx}}[k_base + k];
             }        
@@ -97,9 +97,9 @@
     for (k = 0; k < {{size}}; ++k)
     {
         {{#activation_function}}
-        output_{{road}}[k] = {{{activation_function}}};
+        ctx->output_{{road}}[k] = {{{activation_function}}};
         {{/activation_function}}
         {{^activation_function}}
-        output_{{road}}[k] = tensor_temp[k];
+        ctx->output_{{road}}[k] = ctx->tensor_temp[k];
         {{/activation_function}}
     }

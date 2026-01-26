@@ -15,7 +15,7 @@ unsigned long long int start, end, difference;
 #define event_id 0x11
 {{/time}}
 
-int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[{{input_size}}]){
+int inference(inference_t *ctx, {{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[{{input_size}}]){
     {{#debug_file}}
     FILE *fp = fopen("{{debug_file}}", "w+");
 
@@ -111,7 +111,7 @@ int inference({{data_type}} prediction[{{output_size}}], {{data_type}} nn_input[
     {{#cst}}
     for (k = 0; k < {{size}}; k++)
     {
-        cst_{{cst_name}}[k] = output_{{path}}[k];
+        ctx->cst_{{cst_name}}[k] = ctx->output_{{path}}[k];
     }
     {{/cst}}
 {{/layers}}

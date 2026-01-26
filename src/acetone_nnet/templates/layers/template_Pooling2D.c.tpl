@@ -18,12 +18,12 @@
                         }
                     }
                 }
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
+                ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
             }
         }
     }
 
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = tensor_temp[k];
+        ctx->output_{{road}}[k] = ctx->tensor_temp[k];
     }

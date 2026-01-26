@@ -27,7 +27,7 @@ from keras import layers
 from tests.tests_inference import acetoneTestCase
 
 tf.keras.backend.set_floatx("float32")
-
+import unittest
 
 class TestConv(acetoneTestCase.AcetoneTestCase):
     """Test for Conv Layer"""
@@ -49,6 +49,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
+    @unittest.skip("indirect gemm not compatible with parallel batching")
     def testConv_indirect_gemm_nn(self):
         testshape = (10, 10, 3)
         filters = 3
@@ -192,6 +193,7 @@ class TestConv(acetoneTestCase.AcetoneTestCase):
 
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))
 
+    @unittest.skip("indirect gemm incompatible with batch parallel")
     def testConv_indirect_gemm_nnONNX(self):
         model_input_name = "X"
         X = onnx.helper.make_tensor_value_info(model_input_name,

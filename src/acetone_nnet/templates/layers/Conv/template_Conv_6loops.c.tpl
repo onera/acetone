@@ -16,16 +16,16 @@
                             int jj = j*{{strides}} + w*{{dilation_rate}} - {{pad_left}};
 
                             if (ii >= 0 && ii < {{input_height}} && jj >= 0 && jj < {{input_width}})
-                                sum += {{output_str}}[jj + {{input_width}}*(ii + {{input_height}}*p)] * weights_{{name}}_{{idx}}[w + {{kernel_w}}*(h + {{kernel_h}}*(p + {{input_channels}}*f))];
+                                sum += ctx->{{output_str}}[jj + {{input_width}}*(ii + {{input_height}}*p)] * weights_{{name}}_{{idx}}[w + {{kernel_w}}*(h + {{kernel_h}}*(p + {{input_channels}}*f))];
                         }
                     }
                 }
                 sum += biases_{{name}}_{{idx}}[f];
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
+                ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{{activation_function}}};
             }
         }
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = tensor_temp[k];
+        ctx->output_{{road}}[k] = ctx->tensor_temp[k];
     }

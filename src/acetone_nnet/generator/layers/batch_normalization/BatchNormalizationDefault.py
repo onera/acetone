@@ -50,7 +50,7 @@ class BatchNormalizationDefault(BatchNormalization):
         mustach_hash["path"] = self.path
 
         mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-            f"output_{self.path}[k + {self.output_height * self.output_width}*f]")
+            f"ctx->output_{self.path}[k + {self.output_height * self.output_width}*f]")
 
         mustach_hash["input_channels"] = self.output_channels
         mustach_hash["channel_size"] = self.output_height * self.output_width

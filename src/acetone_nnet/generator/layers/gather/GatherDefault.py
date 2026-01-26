@@ -49,7 +49,7 @@ class GatherDefault(Gather):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[position]")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str("ctx->tensor_temp[position]")
 
         mustach_hash["indices_len"] = len(self.indices.flatten())
         mustach_hash["input_width"] = self.input_width

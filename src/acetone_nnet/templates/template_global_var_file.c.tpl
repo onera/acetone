@@ -1,17 +1,6 @@
 #include "inference.h"
 
-{{#path}}
-// output list for path {{.}}
-
-{{data_type}} output_{{.}}[{{path_size}}] __attribute__((aligned({{page_size}})));
-{{/path}}
-
-{{#cst}}
-{{data_type}} cst_{{name}}[{{size}}] __attribute__((aligned({{page_size}})));
-{{/cst}}
-
-{{#temp_size}}
-{{temp_data_type}} tensor_temp[{{temp_size}}] __attribute__((aligned({{page_size}})));
-
-{{/temp_size}}
+#define MAX_BATCH_SIZE {{max_batch_size}}
+/* Activation and temp tensor allocation */
+inference_t Context[MAX_BATCH_SIZE];
 

@@ -45,7 +45,7 @@ class AveragePooling2DDefault(AveragePooling2D):
     def specific_function(self: Self, index: str, input_of_layer: str) -> str:
         """Generate pooling function code."""
         # Computes the average in this subclass AveragePooling2D
-        s = f"{self.local_var} += {input_of_layer} [{index}];\n"
+        s = f"{self.local_var} += ctx->{input_of_layer} [{index}];\n"
         s += f"                            {self.local_var_2}++;\n"
 
         return s

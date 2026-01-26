@@ -69,7 +69,7 @@ class ResizeNearestDefault(ResizeNearest):
         mustach_hash["size"] = self.size
 
         mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-            f"{output_str}[y0 + {self.input_width}*(x0 + {self.input_height}*f)]")
+            f"ctx->{output_str}[y0 + {self.input_width}*(x0 + {self.input_height}*f)]")
 
         mustach_hash["output_channels"] = self.output_channels
         mustach_hash["output_height"] = self.output_height

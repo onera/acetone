@@ -5,11 +5,11 @@
         {
             for (j = 0; j < {{output_width}}; j++)
             {
-                tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = {{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f%{{input_channels}}))];
+                ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = ctx->{{output_str}}[(j%{{input_width}}) + {{input_width}}*((i%{{input_height}}) + {{input_height}}*(f%{{input_channels}}))];
             }
         }
     }
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = {{{activation_function}}};
+        ctx->output_{{road}}[k] = {{{activation_function}}};
     }

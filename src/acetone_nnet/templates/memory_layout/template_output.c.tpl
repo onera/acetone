@@ -2,7 +2,7 @@
     // Output is in same data_format as Input
     for (k = 0; k < {{output_size}}; ++k)
     {
-        prediction[k] = output_{{path}}[k];
+        prediction[k] = ctx->output_{{path}}[k];
     }
 {{/keep_channels}}
 {{#channels_first_to_last}}
@@ -13,7 +13,7 @@
         {
             for (j = 0; j < {{output_width}};  ++j)
             {
-                prediction[(i*{{output_width}} + j)*{{output_channels}} + f] = output_{{path}}[(f*{{output_height}} + i)*{{output_width}} + j];
+                prediction[(i*{{output_width}} + j)*{{output_channels}} + f] = ctx->output_{{path}}[(f*{{output_height}} + i)*{{output_width}} + j];
             }
         }
     }
@@ -26,7 +26,7 @@
         {
             for (j = 0; j < {{output_width}};  ++j)
             {
-                prediction[(f*{{output_height}} + i)*{{output_width}} + j] = output_{{path}}[(i*{{output_width}} + j)*{{output_channels}} + f];
+                prediction[(f*{{output_height}} + i)*{{output_width}} + j] = ctx->output_{{path}}[(i*{{output_width}} + j)*{{output_channels}} + f];
             }
         }
     }    

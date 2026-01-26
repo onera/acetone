@@ -49,7 +49,7 @@ class GatherElementsDefault(GatherElements):
         mustach_hash["road"] = self.path
         mustach_hash["size"] = self.size
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str("ctx->tensor_temp[k]")
 
         mustach_hash["input_width"] = self.input_width
         mustach_hash["input_height"] = self.input_height

@@ -71,7 +71,7 @@ class EdgePadDefault(EdgePad):
         mustach_hash["road"] = self.path
 
         mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-            "tensor_temp[j + " + str(self.output_width) + " * (i + " + str(self.output_height) + " * f)]")
+            "ctx->tensor_temp[j + " + str(self.output_width) + " * (i + " + str(self.output_height) + " * f)]")
 
         mustach_hash["output_channels"] = self.output_channels
         mustach_hash["output_height"] = self.output_height

@@ -2,7 +2,7 @@
 {{#keep_channels}}
     for (k = 0; k < {{size}}; ++k)
     {
-        output_{{road}}[k] = nn_input[k];
+        ctx->output_{{road}}[k] = nn_input[k];
     }
 {{/keep_channels}}
 {{#channels_first_to_last}}
@@ -13,7 +13,7 @@
         {
             for (j = 0; j < {{input_width}};  ++j)
             {
-                output_{{road}}[(i*{{input_width}} + j)*{{input_channels}} + f] = nn_input[(i + {{input_height}}*f)*{{input_width}} + j];
+                ctx->output_{{road}}[(i*{{input_width}} + j)*{{input_channels}} + f] = nn_input[(i + {{input_height}}*f)*{{input_width}} + j];
             }
         }
     }
@@ -26,7 +26,7 @@
         {
             for (j = 0; j < {{input_width}};  ++j)
             {
-                output_{{road}}[(i + {{input_height}}*f)*{{input_width}} + j] = nn_input[(i*{{input_width}} + j)*{{input_channels}} + f];
+                ctx->output_{{road}}[(i + {{input_height}}*f)*{{input_width}} + j] = nn_input[(i*{{input_width}} + j)*{{input_channels}} + f];
             }
         }
     }

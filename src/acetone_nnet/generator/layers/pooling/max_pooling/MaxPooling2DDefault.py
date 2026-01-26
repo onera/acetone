@@ -43,8 +43,8 @@ class MaxPooling2DDefault(MaxPooling2D):
 
     def specific_function(self: Self, index: str, input_of_layer: str) -> str:
         """Generate pooling function code."""
-        s = f"if ({input_of_layer}[{index}] > {self.local_var})\n"
-        s += f"                                {self.local_var} = {input_of_layer}[{index}];\n"
+        s = f"if (ctx->{input_of_layer}[{index}] > {self.local_var})\n"
+        s += f"                                {self.local_var} = ctx->{input_of_layer}[{index}];\n"
 
         return s
 
