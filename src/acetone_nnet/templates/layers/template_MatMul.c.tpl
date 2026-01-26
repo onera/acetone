@@ -8,7 +8,7 @@
                 ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] = 0;
                 for (k = 0; k < {{shared_dimension}}; ++k)
                 {
-                    ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] += {{output_str_left}}[k + {{shared_dimension}}*(i + {{output_height}}*f)]*{{output_str_right}}[j + {{output_width}}*(k + {{shared_dimension}}*f)];
+                    ctx->tensor_temp[j + {{output_width}}*(i + {{output_height}}*f)] += ctx->{{output_str_left}}[k + {{shared_dimension}}*(i + {{output_height}}*f)]*ctx->{{output_str_right}}[j + {{output_width}}*(k + {{shared_dimension}}*f)];
                 }
             }
         }

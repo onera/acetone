@@ -52,7 +52,7 @@ class ResizeCubicDefault(ResizeCubic):
         mustach_hash["size"] = self.size
 
         mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-            f"tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
+            f"ctx->tensor_temp[j + {self.output_width}*(i + {self.output_height}*f)]")
 
         mustach_hash["cubic_coeff_a"] = self.cubic_coeff_a
         mustach_hash["output_channels"] = self.output_channels

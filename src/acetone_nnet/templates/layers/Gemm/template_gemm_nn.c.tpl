@@ -6,9 +6,9 @@
             register float output = 0;
             for (p = 0; p < {{k}}; ++p)
             {
-                output += {{#alpha}}{{.}}*{{/alpha}}{{A}}[(i * {{k}}) + p]*({{B}}[(p * {{n}}) + j]);
+                output += {{#alpha}}{{.}}*{{/alpha}}ctx->{{A}}[(i * {{k}}) + p]*({{B}}[(p * {{n}}) + j]);
             }
             output += {{#beta}}{{.}}*{{/beta}}biases_{{name}}_{{idx}}[j];
-            ctx->ctx->tensor_temp[(i * {{n}}) + j] = {{{activation_function}}};
+            ctx->tensor_temp[(i * {{n}}) + j] = {{{activation_function}}};
         }
     }

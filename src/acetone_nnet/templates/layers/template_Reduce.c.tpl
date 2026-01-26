@@ -1,6 +1,6 @@
     // {{name}}_{{idx}}{{comment}} {{#original_name}}(layer {{original_name}} in  input model){{/original_name}}
     {{#all}}
-    reduced = {{starting_value}};
+    reduced = {{{starting_value}}};
     for (k = 0; k < {{size}}; ++k)
     {
         {{#Max}}
@@ -28,7 +28,7 @@
     {{#two}}
     for (f = 0; f < {{output_dimension}}; ++f)
     {
-        ctx->tensor_temp[f] = {{starting_value}};
+        ctx->tensor_temp[f] = {{{starting_value}}};
 
         for (i = 0; i < {{reduced_dimension_1}}; ++i)
         {
@@ -66,7 +66,7 @@
     {
         for (i = 0; i < {{output_dimension_2}}; ++i)
         {
-            ctx->tensor_temp[{{position_1}}] = {{starting_value}};
+            ctx->tensor_temp[{{position_1}}] = {{{starting_value}}};
             for (j = 0; j < {{reduced_dimension}}; ++j)
             {
                 {{#Max}}

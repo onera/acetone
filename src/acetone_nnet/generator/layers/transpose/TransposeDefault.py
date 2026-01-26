@@ -48,7 +48,7 @@ class TransposeDefault(Transpose):
         mustach_hash["road"] = self.path
         mustach_hash["output_str"] = output_str
 
-        mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
+        mustach_hash["activation_function"] = self.activation_function.write_activation_str("ctx->tensor_temp[k]")
 
         mustach_hash["output_channels"] = self.output_channels
         mustach_hash["output_height"] = self.output_height

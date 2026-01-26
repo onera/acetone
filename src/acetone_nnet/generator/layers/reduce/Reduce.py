@@ -172,17 +172,17 @@ class Reduce(Layer):
             if self.noop_with_empty_axes:
                 mustach_hash["none"] = True
                 mustach_hash["activation_function"] = self.activation_function.write_activation_str(
-                    f"output_{self.path}[k]")
+                    f"ctx->output_{self.path}[k]")
             else:
                 mustach_hash["all"] = True
                 mustach_hash["activation_function"] = self.activation_function.write_activation_str("reduced")
                 mustach_hash["size"] = self.input_channels * self.input_height * self.input_width
                 if self.reduce_func in ("Max", "Min"):
-                    mustach_hash["starting_value"] = f"{output_str}[0]"
+                    mustach_hash["starting_value"] = f"ctx->{output_str}[0]"
 
         elif len(which_dim_to_reduc) == 1:
             mustach_hash["one"] = True
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str("ctx->tensor_temp[k]")
 
             if which_dim_to_reduc == "c":
                 mustach_hash["output_dimension_1"] = self.output_height
@@ -191,7 +191,7 @@ class Reduce(Layer):
                 mustach_hash["position_1"] = f"i + {self.output_width}*f"
                 mustach_hash["position_2"] = f"i + {self.input_width}*(f + {self.input_height}*j)"
                 if self.reduce_func in ("Max", "Min"):
-                    mustach_hash["starting_value"] = f"{output_str}[i + {self.input_width}*f]"
+                    mustach_hash["starting_value"] = f"ctx->{output_str}[i + {self.input_width}*f]"
 
             elif which_dim_to_reduc == "h":
                 mustach_hash["output_dimension_1"] = self.output_channels
@@ -200,7 +200,7 @@ class Reduce(Layer):
                 mustach_hash["position_1"] = f"i + {self.output_width}*f"
                 mustach_hash["position_2"] = f"i + {self.input_width}*(j + {self.input_height}*f)"
                 if self.reduce_func in ("Max", "Min"):
-                    mustach_hash["starting_value"] = f"{output_str}[i + {self.input_width * self.input_height}*f]"
+                    mustach_hash["starting_value"] = f"ctx->{output_str}[i + {self.input_width * self.input_height}*f]"
 
             elif which_dim_to_reduc == "w":
                 mustach_hash["output_dimension_1"] = self.output_channels
@@ -209,11 +209,11 @@ class Reduce(Layer):
                 mustach_hash["position_1"] = f"i + {self.output_height}*f"
                 mustach_hash["position_2"] = f"j + {self.input_width}*(i + {self.input_height}*f)"
                 if self.reduce_func in ("Max", "Min"):
-                    mustach_hash["starting_value"] = f"{output_str}[{self.input_width}*(i + {self.input_height}*f)]"
+                    mustach_hash["starting_value"] = f"ctx->{output_str}[{self.input_width}*(i + {self.input_height}*f)]"
 
         elif len(which_dim_to_reduc) == 2:
             mustach_hash["two"] = True
-            mustach_hash["activation_function"] = self.activation_function.write_activation_str("tensor_temp[k]")
+            mustach_hash["activation_function"] = self.activation_function.write_activation_str("ctx->tensor_temp[k]")
 
             if which_dim_to_reduc == "ch":
                 mustach_hash["output_dimension"] = self.output_width
@@ -221,7 +221,7 @@ class Reduce(Layer):
                 mustach_hash["reduced_dimension_2"] = self.input_height
                 mustach_hash["position"] = f"f + {self.input_width}*(j + {self.input_height}*i)"
                 if self.reduce_func in ("Max", "Min"):
-                    mustach_hash["starting_value"] = f"{output_str}[{self.input_width}*f]"
+                    mustach_hash["starting_value"] = f"ctx->{output_str}[{self.input_width}*f]"
 
             elif which_dim_to_reduc == "cw":
                 mustach_hash["output_dimension"] = self.output_height
@@ -229,7 +229,7 @@ class Reduce(Layer):
                 mustach_hash["reduced_dimension_2"] = self.input_width
                 mustach_hash["position"] = f"j + {self.input_width}*(f + {self.input_height}*i)"
                 if self.reduce_func in ("Max", "Min"):
-                    mustach_hash["starting_value"] = f"{output_str}[{self.input_height}*f]"
+                    mustach_hash["starting_value"] = f"ctx->{output_str}[{self.input_height}*f]"
 
             elif which_dim_to_reduc == "hw":
                 mustach_hash["output_dimension"] = self.output_channels
@@ -237,7 +237,7 @@ class Reduce(Layer):
                 mustach_hash["reduced_dimension_2"] = self.input_width
                 mustach_hash["position"] = f"j + {self.input_width}*(i + {self.input_height}*f)"
                 if self.reduce_func in ("Max", "Min"):
-                    mustach_hash["starting_value"] = f"{output_str}[{self.input_channels}*f]"
+                    mustach_hash["starting_value"] = f"ctx->{output_str}[{self.input_channels}*f]"
 
             if self.reduce_func == "Mean":
                 mustach_hash["nb_elements"] = mustach_hash["reduced_dimension_1"] * mustach_hash["reduced_dimension_2"]
@@ -247,7 +247,7 @@ class Reduce(Layer):
             mustach_hash["activation_function"] = self.activation_function.write_activation_str("reduced")
             mustach_hash["size"] = self.input_channels * self.input_height * self.input_width
             if self.reduce_func in ("Max", "Min"):
-                mustach_hash["starting_value"] = output_str + "[0]"
+                mustach_hash["starting_value"] = f"ctx->{output_str}[0]"
 
         with open(self.template_path / "layers" / "template_Reduce.c.tpl") as template_file:
             template = template_file.read()
