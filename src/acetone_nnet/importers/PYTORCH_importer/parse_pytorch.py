@@ -165,6 +165,7 @@ class ShapeAwareVisitor(FXGraphVisitor):
             stride = node.args[3][0] if len(node.args) > 3 else 1
             padding = node.args[4] + node.args[4] if len(node.args) > 4 else [0,0,0,0]
             dilation = node.args[5][0] if len(node.args) > 5 else 1
+            group = node.args[6] if len(node.args) > 6 else 1
             this_layer = Conv2D(
                     conv_algorithm="specs",
                     original_name=node.name,
@@ -172,6 +173,7 @@ class ShapeAwareVisitor(FXGraphVisitor):
                     size=node.meta['val'].numel(),
                     padding=padding,
                     strides=stride,
+                    group=group,
                     kernel_h=self.module.state_dict()[node.args[1].target].shape[-1],
                     kernel_w=self.module.state_dict()[node.args[1].target].shape[-1],
                     dilation_rate=dilation,

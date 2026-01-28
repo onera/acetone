@@ -46,7 +46,7 @@ int main(int argc, char** argv)
         #pragma omp parallel for num_threads(MAX_BATCH_SIZE)
         for (i = 0; i < fin_bloc; ++i)
         {
-            inference(&Context[i],&predictions[j+i], &nn_test_inputs[j+i]);
+            inference(&Context[i],predictions[j+i], nn_test_inputs[j+i]);
         }
     }
     clock_t t1 = clock();
