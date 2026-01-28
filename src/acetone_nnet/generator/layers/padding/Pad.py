@@ -26,7 +26,7 @@ from typing_extensions import Self
 
 from acetone_nnet.generator.activation_functions import ActivationFunctions
 from acetone_nnet.ir import Layer
-
+import logging
 
 # The Pad Layers
 # Pad alongside each dimmensions
@@ -54,7 +54,7 @@ class Pad(Layer):
         self.size = size
         self.pads = pads
         self.constant_value = constant_value
-        print(self.constant_value)
+        logging.info(f'[Pad] value {self.constant_value}')
         self.axes = axes
         self.name = "Pad"
         if original_name == "":

@@ -22,7 +22,7 @@ import numpy as np
 from typing_extensions import Self
 
 from acetone_nnet.generator.layers.padding.Pad import Pad
-
+import logging
 
 # The Constant mode of the Pad layers
 # Use a constant to fill paddings
@@ -48,7 +48,7 @@ class ConstantPad(Pad):
         nb_dim = len(self.pads) // 2
         pad_width = [(self.pads[i], self.pads[i + nb_dim]) for i in
                      range(1, nb_dim)]  # Constructing the pads accordingly to the numpy nomenclature
-        print(self.constant_value)
+        logging.info(f'[ConstantPad] value {self.constant_value}')
         return self.activation_function.compute(
             np.pad(input_array, pad_width=pad_width, mode="constant", constant_values=self.constant_value),
         )
