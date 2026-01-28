@@ -1,0 +1,24 @@
+name: Delete old workflow runs
+on:
+       workflow_dispatch:
+        inputs:
+          days:
+            description: "Days to retain runs"
+            default: "30"
+          minimum_runs:
+            description: "Minimum runs to keep"
+            default: "6"
+jobs:
+  delete-runs:
+        runs-on: ubuntu-latest
+        permissions:
+           actions: write
+           contents: read
+        steps:
+          - name: Delete workflow runs
+            uses: Mattraks/delete-workflow-runs@v2
+            with:
+              token: ${{ github.token }}
+              repository: ${{ github.repository }}
+              retain_days: 30
+              keep_minimum_runs: 6
