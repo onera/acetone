@@ -28,11 +28,6 @@ from .Conv2D import Conv2D
 import logging
 import numpy as np
 
-def winograd_weight_transform(g):
-    G = np.array([[1.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.0, 0.0, 1.0]])
-    return G @ g @ G.T
-
-
 class Conv2Ddirect_block(Conv2D):
     """Implements Conv2D using the six-loops algorithm (direct conv) with blocking of channels."""
 
@@ -56,12 +51,9 @@ class Conv2Ddirect_block(Conv2D):
         #case winograd 3x3 stride 1
         elif layout.shape[2]==3 and layout.shape[3]==3 and self.strides==1 and even_image:
             w_orig = layout
-            w_win = np.zeros((nb_k, 4, 4, C, self.block_k), dtype=np.float32)
-            for kb in range(nb_k):
-                for ic in range(C):
-                    for k in range(self.block_k):
-                        oc = kb * self.block_k + k
-                        w_win[kb, :, :, ic, k] = winograd_weight_transform(w_orig[oc, ic])
+            G = np.array([[1.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.5, -0.5, 0.5], [0.0, 0.0, 1.0]],dtype=np.float32)
+            w_win = np.einsum('ij,okjl,ml->okim',G,layout,G,optimize=True)
+            w_win = w_win.reshape(nb_k, self.block_k, C, 4, 4).transpose(0, 3, 4, 2, 1).copy("C")
             return w_win
         else:
             # KCHW -> [NB_K][NB_C][KH][KW][BLOCK_C][BLOCK_K]
