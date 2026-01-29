@@ -25,9 +25,9 @@ from tests.tests_inference import acetoneTestCase
 from torch.export import export, ExportedProgram
 import torch
 from tests.models.resnet.resnet import resnet18
+import unittest
 class TestResnet(acetoneTestCase.AcetoneTestCase):
     """Inference test for resnet model."""
-
     def test_resnet_pytorch(self) -> None:
         with torch.no_grad():
             #model structure
@@ -51,7 +51,6 @@ class TestResnet(acetoneTestCase.AcetoneTestCase):
             self.assertListAlmostEqual(acetone_result, python_result)
             self.assertListAlmostEqual(pytorch_model(data).detach().numpy()[0], python_result)
 
-
     def test_resnet_onnx(self) -> None:
         """Test resnet model, compare between keras et C code."""
         model_path = MODELS_DIR / "resnet" / "resnet18-v2-7.onnx"
@@ -70,6 +69,7 @@ class TestResnet(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             model_path,
             self.tmpdir_name + "/dataset.txt",
+            bin_dataset=True
         )
         self.assertListAlmostEqual(acetone_result, onnx_result)
         self.assertListAlmostEqual(python_result, onnx_result)
@@ -92,7 +92,7 @@ class TestResnet(acetoneTestCase.AcetoneTestCase):
             self.tmpdir_name,
             model_path,
             self.tmpdir_name + "/dataset.txt",
-            optimization=True,
+            optimization=True
         )
         self.assertListAlmostEqual(acetone_result, onnx_result)
         self.assertListAlmostEqual(python_result, onnx_result)

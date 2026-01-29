@@ -48,7 +48,8 @@ class Conv2D(Layer):
         output_shape: list[int],
         weights: np.ndarray,
         biases: np.ndarray,
-        activation_function: ActivationFunctions
+        activation_function: ActivationFunctions,
+        group: int=1,
     ) -> None:
         """Build a Conv2D layer."""
         super().__init__()
@@ -62,6 +63,7 @@ class Conv2D(Layer):
             self.original_name = original_name
         self.padding = padding
         self.strides = strides
+        self.group = group
         self.kernel_h = kernel_h
         self.kernel_w = kernel_w
         self.dilation_rate = dilation_rate
@@ -165,13 +167,13 @@ class Conv2D(Layer):
             msg += "\n"
         if self.weights.shape != (
             self.nb_filters,
-            self.input_channels,
+            self.input_channels//self.group,
             self.kernel_h,
             self.kernel_w,
         ):
             msg += (
                 f"Error: non consistency between weight shape and operation parameters in Conv2D "
-                f"({self.weights.shape}!=({self.nb_filters}, {self.input_channels}, {self.kernel_h}, {self.kernel_w}))"
+                f"({self.weights.shape}!=({self.nb_filters}, {self.input_channels//self.group}, {self.kernel_h}, {self.kernel_w}))"
             )
             msg += "\n"
         if len(self.biases.shape) != 1 or self.biases.shape[0] != self.nb_filters:
@@ -271,7 +273,7 @@ class Conv2D(Layer):
                     w = (
                         self.weights[f, :, :, :]
                         * input_padded[
-                            :,
+                            ::self.group,
                             i * self.strides : i * self.strides + self.kernel_h,
                             j * self.strides : j * self.strides + self.kernel_w,
                         ]

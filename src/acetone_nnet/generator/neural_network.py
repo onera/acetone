@@ -1142,6 +1142,11 @@ class CodeGenerator(ABC):
             if hasattr(layer, "biases"):
                 symtab[f"biases_{layer.name}_{layer.idx:02d}"] = layer.biases
 
+            if issubclass(type(layer), BatchNormalization):
+                symtab[f"mean_{layer.name}_{layer.idx:02d}"] = layer.mean
+                symtab[f"var_{layer.name}_{layer.idx:02d}"] = layer.var
+                symtab[f"scale_{layer.name}_{layer.idx:02d}"] = layer.scale
+
         def align_up(value, alignment):
             return (value + (alignment - 1)) & ~(alignment - 1)
 
