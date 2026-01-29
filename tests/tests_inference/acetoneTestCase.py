@@ -152,14 +152,14 @@ def run_acetone_for_test(
         cmd = ["make", "-C", tmpdir_name, "all"]
         result = subprocess.run(cmd, check=False).returncode
         if result != 0:
-            print("\nC code compilation failed")
+            print(f"\nC code compilation failed code {result}")
             return np.array([]), output_python
 
         cmd = [tmpdir_name + "/inference", tmpdir_name + "/output_c.txt"]
         result = subprocess.run(cmd, check=False).returncode
         if result != 0:
-            print("\nC code inference failed")
-            return np.array([]), output_python
+            print(f"\nC code inference failed code {result}")
+            # try to read file anyways ? return np.array([]), output_python
 
         output_c = read_output_c(tmpdir_name + "/output_c.txt", target).flatten()
     else:

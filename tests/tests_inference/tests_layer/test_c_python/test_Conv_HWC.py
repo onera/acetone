@@ -24,27 +24,21 @@ import torch
 from tests.tests_inference import acetoneTestCase
 from torch.export import export
 import unittest
-class TestModel(torch.nn.Module):
-    def __init__(self):
-        super(TestModel, self).__init__()   
-        #test with K geater than 64 for 3x3 and 512 for 1x1     
-        self.conv = torch.nn.Conv2d(3,64,kernel_size=7, stride=2, padding=3)
-        self.conv2 = torch.nn.Conv2d(64,64,kernel_size=3, stride=1, padding=1)
-        self.conv3 = torch.nn.Conv2d(64,128,kernel_size=1, stride=2)
-        self.conv4 = torch.nn.Conv2d(128,512,kernel_size=3, stride=1, padding=1)
-        self.act = torch.nn.ReLU()
-    def forward(self, x):
-        return self.conv4(self.conv3(self.act(self.conv2(self.act(self.conv(x))))))
 
-class TestDepthWise(torch.nn.Module):
-    def __init__(self, dim):
-        super(TestDepthWise, self).__init__()
-        self.conv = torch.nn.Conv2d(dim,dim,kernel_size=1, stride=1, padding=0, groups=dim)
-    def forward(self, x):
-        return self.conv(x)
 
 class TestConv_HWC(acetoneTestCase.AcetoneTestCase):
     def testConv_HWC(self):
+        class TestModel(torch.nn.Module):
+            def __init__(self):
+                super(TestModel, self).__init__()   
+                #test with K geater than 64 for 3x3 and 512 for 1x1     
+                self.conv = torch.nn.Conv2d(3,64,kernel_size=7, stride=2, padding=3)
+                self.conv2 = torch.nn.Conv2d(64,64,kernel_size=3, stride=1, padding=1)
+                self.conv3 = torch.nn.Conv2d(64,128,kernel_size=1, stride=2)
+                self.conv4 = torch.nn.Conv2d(128,512,kernel_size=3, stride=1, padding=1)
+                self.act = torch.nn.ReLU()
+            def forward(self, x):
+                return self.conv4(self.conv3(self.act(self.conv2(self.act(self.conv(x))))))
         model = TestModel()
         model = model.to(memory_format=torch.channels_last)
         data = torch.rand(1,3,28,28,requires_grad=False,dtype=torch.float32)
@@ -64,6 +58,12 @@ class TestConv_HWC(acetoneTestCase.AcetoneTestCase):
         self.assertListAlmostEqual(list(acetone_result[0]), list(acetone_result[1]))        
 
     def testConv_depth_wise(self):
+        class TestDepthWise(torch.nn.Module):
+            def __init__(self, dim):
+                super(TestDepthWise, self).__init__()
+                self.conv = torch.nn.Conv2d(dim,dim,kernel_size=1, stride=1, padding=0, groups=dim)
+            def forward(self, x):
+                return self.conv(x)
         dim=4
         model = TestDepthWise(dim)
         model = model.to(memory_format=torch.channels_last)
