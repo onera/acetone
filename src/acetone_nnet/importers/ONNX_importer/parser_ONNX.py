@@ -91,7 +91,8 @@ def load_onnx(
         idx += 1
 
     # Create constant for all initializers
-    for initializer in model.graph.initializer:
+    init_dict = {i.name:i for i in model.graph.initializer}
+    '''for initializer in model.graph.initializer:
         layers.append(
             create_initializer_layer(
                 idx,
@@ -99,7 +100,7 @@ def load_onnx(
                 dict_output,
             ),
         )
-        idx += 1
+        idx += 1'''
 
     # Going through all the nodes to create the layers and add them to the list
     for node in model.graph.node:
@@ -130,6 +131,15 @@ def load_onnx(
         for input_name in layer_inputs:
             # Going through all the inputs to that layer
             # Localising the indices of the parent layer in the output dictionary
+            if input_name not in dict_output.keys():
+                layers.append(
+                    create_initializer_layer(
+                        idx,
+                        init_dict[input_name],
+                        dict_output,
+                    ),
+                )
+                idx += 1                       
             parent = layers[dict_output[input_name]]
             layer.previous_layer.append(parent)
             parent.next_layer.append(layer)
